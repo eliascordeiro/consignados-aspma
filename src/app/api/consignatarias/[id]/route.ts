@@ -22,7 +22,7 @@ const empresaSchema = z.object({
 //PUT - Atualizar consignatária
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -31,7 +31,8 @@ export async function PUT(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
-    const id = parseInt(params.id)
+    const { id: paramId } = await params
+    const id = parseInt(paramId)
     const body = await request.json()
     const validatedData = empresaSchema.parse(body)
 
@@ -86,7 +87,7 @@ export async function PUT(
 // DELETE - Excluir consignatária
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -95,7 +96,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
-    const id = parseInt(params.id)
+    const { id: paramId } = await params
+    const id = parseInt(paramId)
 
     // Verificar se a empresa pertence ao usuário
     const existing = await prisma.empresa.findUnique({
