@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String
+  password      String
+  role          UserRole     @default(USER)
+  cpf           String?      @unique
+  phone         String?
+  active        Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  createdById   String?
+  // Relacionamentos
+  consignados   Consignado[]
+  empresas      Empresa[]    // Cliente gerencia consignatárias
+  socios        Socio[]      // Cliente gerencia sócios/funcionários
+  convenios     Convenio[]   // Cliente gerencia convênios
+  createdBy     User?        @relation("CreatedUsers", fields: [createdById], references: [id])
+  users         User[]       @relation("CreatedUsers")
+
+  @@map("users")
+}
+
+model Consignado {
+  id             String           @id @default(cuid())
+  userId         String
+  tipo           TipoConsignado
+  valor          Decimal          @db.Decimal(10, 2)
+  valorParcela   Decimal          @db.Decimal(10, 2)
+  numeroParcelas Int
+  parcelasPagas  Int              @default(0)
+  dataInicio     DateTime
+  dataTermino    DateTime
+  status         StatusConsignado @default(ATIVO)
+  consignataria  String?
+  observacoes    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id])
+
+  @@map("consignados")
+}
+
+// Empresa = Consignatária (ex: Prefeitura, Fundo de Previdência)
+// Gerenciada pelo User (Cliente)
+model Empresa {
+  id            Int            @id @default(autoincrement())
+  userId        String         // FK: Cliente que gerencia esta consignatária
+  nome          String         // Ex: "Prefeitura de Araucária", "Fundo de Previdência"
+  cnpj          String?        @unique
+  tipo          TipoEmpresa    @default(PUBLICO)
+  telefone      String?
+  email         String?
+  contato       String?        // Nome da pessoa de contato
+  cep           String?
+  rua           String?
+  numero        String?
+  bairro        String?
+  cidade        String?
+  uf            String?
+  ativo         Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  // Relacionamentos
+  user          User           @relation(fields: [userId], references: [id])
+  socios        Socio[]        // Funcionários da consignatária
+  autorizacoes  Autorizacao[]  // Locais autorizados para esta consignatária
+
+  @@map("empresas")
+}
+
+// Socio = Funcionário vinculado a uma Empresa/Consignatária
+model Socio {
+  id             String    @id @default(cuid())
+  userId         String?   // FK: Usuário que gerencia este sócio (ex: A.S.P.M.A)
+  nome           String
+  cpf            String    @unique
+  matricula      String?   @unique
+  empresaId      Int       // FK para Empresa (tipo na tabela original)
+  setor          String?
+  salario        Decimal?  @db.Decimal(10, 2)
+  margemConsig   Decimal?  @db.Decimal(10, 2)
+  email          String?
+  telefone       String?
+  endereco       String?
+  dataAdmissao   DateTime?
+  dataNascimento DateTime?
+  ativo          Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User?     @relation(fields: [userId], references: [id])
+  empresa        Empresa   @relation(fields: [empresaId], references: [id])
+
+  @@map("socios")
+}
+
+// Convenio = Comércio ou Banco onde funcionários consomem margem
+// Mapeado da tabela existente "convenio"
+model Convenio {
+  id            Int            @id @default(autoincrement())
+  userId        String?        // FK: Usuário que gerencia este convênio (ex: A.S.P.M.A)
+  codigo        String?        // Código do convênio
+  data          DateTime?      // Data de cadastro
+  razao_soc     String?        // Razão social
+  fantasia      String?        // Nome fantasia
+  desconto      Decimal?       @db.Decimal(5, 2)  // Percentual de desconto
+  cgc           String?        // CNPJ/CGC
+  ie            String?        // Inscrição Estadual
+  cpf           String?        // CPF (pessoa física)
+  rg            String?        // RG
+  endereco      String?        // Endereço
+  bairro        String?        // Bairro
+  cep           String?        // CEP
+  cidade        String?        // Cidade
+  uf            String?        // Estado/UF
+  fone          String?        // Telefone
+  fax           String?        // Fax
+  contato       String?        // Pessoa de contato
+  agencia       String?        // Agência bancária
+  conta         String?        // Conta bancária
+  banco         String?        // Banco
+  usuario       String?        // Usuário de acesso
+  senha         String?        // Senha de acesso
+  parcelas      Int?           // Número de parcelas
+  mensagem      String?        // Mensagem
+  libera        String?        // Flag de liberação
+  email         String?        // Email
+  chave         String?        // Chave de acesso
+  convenio      Int?           // Referência ao convênio pai
+  // Campos adicionais para compatibilidade
+  nome          String         @default("")  // Nome (derivado de razao_soc ou fantasia)
+  cnpj          String?        // Alias para cgc
+  tipo          String?        // Tipo do convênio (BANCO, COMERCIO, etc)
+  estado        String?        // Alias para uf
+  telefone      String?        // Alias para fone
+  ativo         Boolean        @default(true)
+  createdAt     DateTime?      @default(now())
+  updatedAt     DateTime?      @updatedAt
+  user          User?          @relation(fields: [userId], references: [id])
+  autorizacoes  Autorizacao[]  // Empresas autorizadas neste convênio
+
+  @@map("convenio")
+}
+
+// Autorizacao = Define quais empresas podem usar quais convênios
+model Autorizacao {
+  id          String   @id @default(cuid())
+  empresaId   Int      // FK: Consignatária
+  convenioId  Int      // FK: Convênio (Comércio/Banco)
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // Relacionamentos
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  convenio    Convenio @relation(fields: [convenioId], references: [id])
+
+  @@unique([empresaId, convenioId]) // Não duplicar autorização
+  @@map("autorizacoes")
+}
+
+enum UserRole {
+  ADMIN    // Você (administra tudo)
+  MANAGER  // Cliente (gerencia suas consignatárias e locais)
+  OPERATOR // Operador (acesso limitado)
+  USER     // Usuário comum
+}
+
+enum TipoEmpresa {
+  PUBLICO  // Ex: Prefeitura, Órgão Público
+  PRIVADO  // Ex: Empresa Privada, Fundo de Previdência
+}
+
+enum TipoConsignado {
+  EMPRESTIMO
+  CARTAO_CREDITO
+  SEGURO
+  PLANO_SAUDE
+  OUTROS
+}
+
+enum StatusConsignado {
+  ATIVO
+  QUITADO
+  CANCELADO
+  SUSPENSO
+}

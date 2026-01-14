@@ -1,0 +1,25 @@
+                                Table "public.funcionarios"
+     Column     |              Type              | Collation | Nullable |      Default      
+----------------+--------------------------------+-----------+----------+-------------------
+ id             | text                           |           | not null | 
+ nome           | text                           |           | not null | 
+ cpf            | text                           |           | not null | 
+ matricula      | text                           |           |          | 
+ tipo           | "TipoFuncionario"              |           | not null | 
+ orgao          | text                           |           | not null | 
+ setor          | text                           |           |          | 
+ salario        | numeric(10,2)                  |           |          | 
+ margemConsig   | numeric(10,2)                  |           |          | 
+ email          | text                           |           |          | 
+ telefone       | text                           |           |          | 
+ endereco       | text                           |           |          | 
+ dataAdmissao   | timestamp(3) without time zone |           |          | 
+ dataNascimento | timestamp(3) without time zone |           |          | 
+ ativo          | boolean                        |           | not null | true
+ createdAt      | timestamp(3) without time zone |           | not null | CURRENT_TIMESTAMP
+ updatedAt      | timestamp(3) without time zone |           | not null | 
+Indexes:
+    "funcionarios_pkey" PRIMARY KEY, btree (id)
+    "funcionarios_cpf_key" UNIQUE, btree (cpf)
+    "funcionarios_matricula_key" UNIQUE, btree (matricula)
+
