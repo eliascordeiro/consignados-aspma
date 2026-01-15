@@ -42,23 +42,41 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const search = searchParams.get("search") || ""
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "50")
+    const skip = (page - 1) * limit
 
-    const convenios = await db.convenio.findMany({
-      where: {
-        userId: session.user.id,
-        ...(search && {
-          OR: [
-            { nome: { contains: search, mode: "insensitive" } },
-            { cnpj: { contains: search, mode: "insensitive" } },
-            { tipo: { contains: search, mode: "insensitive" } },
-            { cidade: { contains: search, mode: "insensitive" } },
-          ],
-        }),
-      },
-      orderBy: { nome: "asc" },
+    const where = {
+      ...(search && {
+        OR: [
+          { nome_completo: { contains: search, mode: "insensitive" as const } },
+          { nome_abreviado: { contains: search, mode: "insensitive" as const } },
+          { cnpj: { contains: search, mode: "insensitive" as const } },
+          { tipo: { contains: search, mode: "insensitive" as const } },
+          { cidade: { contains: search, mode: "insensitive" as const } },
+        ],
+      }),
+    }
+
+    const [convenios, total] = await Promise.all([
+      db.convenio.findMany({
+        where,
+        orderBy: { nome_completo: "asc" },
+        take: limit,
+        skip,
+      }),
+      db.convenio.count({ where })
+    ])
+
+    return NextResponse.json({
+      data: convenios,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     })
-
-    return NextResponse.json(convenios)
   } catch (error) {
     console.error("Erro ao buscar convênios:", error)
     return NextResponse.json(
