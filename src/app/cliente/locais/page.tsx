@@ -239,9 +239,9 @@ export default function LocaisPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Locais (Convênios)</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Convênios</h1>
           <p className="text-muted-foreground">
-            Gerencie os locais de compra autorizados (bancos, comércios, etc)
+            Gerencie os convênios autorizados (bancos, comércios, cooperativas, etc)
           </p>
         </div>
 

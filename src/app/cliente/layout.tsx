@@ -31,7 +31,7 @@ const navigation = [
   { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard },
   { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
   { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
-  { name: "Locais", href: "/cliente/locais", icon: Store },
+  { name: "Convênios", href: "/cliente/locais", icon: Store },
 ]
 
 export default function ClienteLayout({

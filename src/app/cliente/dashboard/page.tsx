@@ -15,7 +15,7 @@ export default async function ClienteDashboard() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Portal do Cliente</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          Gerencie suas consignatárias, funcionários e locais de desconto
+          Gerencie suas consignatárias, funcionários e convênios de desconto
         </p>
       </div>
 
@@ -44,7 +44,7 @@ export default async function ClienteDashboard() {
 
         <Card className="border-2 hover:shadow-lg transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Locais</CardTitle>
+            <CardTitle className="text-sm font-medium">Convênios</CardTitle>
             <Store className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 transition-colors" />
           </CardHeader>
           <CardContent>
@@ -74,7 +74,7 @@ export default async function ClienteDashboard() {
               </li>
               <li className="flex items-start gap-2">
                 <Store className="h-4 w-4 text-purple-600 mt-0.5" />
-                <span><strong>Autorizar Locais:</strong> Defina onde os funcionários podem usar suas margens</span>
+                <span><strong>Autorizar Convênios:</strong> Defina onde os funcionários podem usar suas margens</span>
               </li>
             </ul>
           </CardContent>
@@ -111,7 +111,7 @@ export default async function ClienteDashboard() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Configure autorizações</p>
-                <p className="text-xs text-muted-foreground">Defina os locais autorizados</p>
+                <p className="text-xs text-muted-foreground">Defina os convênios autorizados</p>
               </div>
             </div>
           </CardContent>
