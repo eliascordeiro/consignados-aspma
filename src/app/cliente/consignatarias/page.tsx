@@ -490,23 +490,23 @@ function VirtualizedEmpresasTable({
                   className="border-b hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors"
                 >
                   {/* Layout Mobile - Cards */}
-                  <div className="md:hidden p-4 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-950">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
                           {empresa.nome}
                         </div>
                         {formattedCNPJ && (
-                          <div className="font-mono text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                          <div className="font-mono text-xs text-gray-600 dark:text-gray-400 mt-1">
                             {formattedCNPJ}
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-1 ml-2">
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-9 w-9"
                           onClick={() => onEdit(empresa)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -514,41 +514,50 @@ function VirtualizedEmpresasTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-9 w-9"
                           onClick={() => onDelete(empresa)}
                         >
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    
+                    <div className="space-y-2">
                       {(empresa.contato || empresa.telefone) && (
-                        <div className="col-span-2">
-                          <span className="text-gray-500">Contato:</span>{' '}
-                          {empresa.contato && <span className="font-medium">{empresa.contato}</span>}
-                          {empresa.telefone && <span className="text-gray-600 ml-1">{empresa.telefone}</span>}
+                        <div className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                          <span className="text-muted-foreground">Contato:</span>{' '}
+                          {empresa.contato && <span className="font-medium text-gray-900 dark:text-gray-100">{empresa.contato}</span>}
+                          {empresa.telefone && (
+                            <span className="text-gray-600 dark:text-gray-400 ml-1">• {empresa.telefone}</span>
+                          )}
                         </div>
                       )}
-                      <div>
-                        <Badge 
-                          variant="outline"
-                          className={empresa.tipo === "PUBLICO" 
-                            ? "bg-blue-50 text-blue-700 border-blue-200" 
-                            : "bg-purple-50 text-purple-700 border-purple-200"
-                          }
-                        >
-                          {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
-                        </Badge>
-                      </div>
-                      <div>
-                        <Badge 
-                          className={empresa.ativo 
-                            ? "bg-green-500 text-white border-0" 
-                            : "bg-gray-200 text-gray-700 border-0"
-                          }
-                        >
-                          {empresa.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Tipo:</span>
+                          <Badge 
+                            variant="outline"
+                            className={empresa.tipo === "PUBLICO" 
+                              ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300" 
+                              : "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300"
+                            }
+                          >
+                            {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Status:</span>
+                          <Badge 
+                            className={empresa.ativo 
+                              ? "bg-green-500 text-white border-0" 
+                              : "bg-gray-200 text-gray-700 border-0 dark:bg-gray-700 dark:text-gray-300"
+                            }
+                          >
+                            {empresa.ativo ? "✓ Ativo" : "Inativo"}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>

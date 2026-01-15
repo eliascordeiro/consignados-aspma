@@ -667,19 +667,21 @@ function VirtualizedTable({
                   className="border-b hover:bg-muted/50"
                 >
                   {/* Layout Mobile - Cards */}
-                  <div className="md:hidden p-4 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">{convenio.razao_soc || convenio.nome}</div>
+                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-950">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
+                          {convenio.razao_soc || convenio.nome}
+                        </div>
                         {convenio.fantasia && (
-                          <div className="text-xs text-muted-foreground mt-0.5">{convenio.fantasia}</div>
+                          <div className="text-xs text-muted-foreground mt-1 leading-tight">{convenio.fantasia}</div>
                         )}
                       </div>
-                      <div className="flex gap-1 ml-2">
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-9 w-9"
                           onClick={() => onEdit(convenio)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -687,43 +689,49 @@ function VirtualizedTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-9 w-9"
                           onClick={() => onDelete(convenio.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
-                        <span className="text-muted-foreground">Código:</span>{' '}
-                        <span className="font-mono">{convenio.codigo || "-"}</span>
-                      </div>
-                      <div>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs">
+                          <span className="text-muted-foreground">Código:</span>{' '}
+                          <span className="font-mono font-medium">{convenio.codigo || "-"}</span>
+                        </div>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                           convenio.tipo === 'BANCO' 
-                            ? 'bg-blue-50 text-blue-700' 
+                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' 
                             : convenio.tipo === 'COOPERATIVA'
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-purple-50 text-purple-700'
+                            ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
+                            : 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
                         }`}>
                           {convenio.tipo}
                         </span>
                       </div>
+                      
                       {convenio.banco && (
-                        <div className="col-span-2">
+                        <div className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded">
                           <span className="text-muted-foreground">Banco:</span>{' '}
-                          <span className="font-medium">{convenio.banco}</span>
-                          {convenio.agencia && <span className="text-muted-foreground ml-1">(Ag: {convenio.agencia})</span>}
+                          <span className="font-medium text-gray-900 dark:text-gray-100">{convenio.banco}</span>
+                          {convenio.agencia && (
+                            <span className="text-muted-foreground ml-1">• Ag: {convenio.agencia}</span>
+                          )}
                         </div>
                       )}
-                      <div>
+                      
+                      <div className="flex items-center">
+                        <span className="text-xs text-muted-foreground mr-2">Status:</span>
                         {convenio.ativo ? (
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700">
-                            Ativo
+                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                            ✓ Ativo
                           </span>
                         ) : (
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-50 text-gray-700">
+                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                             Inativo
                           </span>
                         )}
