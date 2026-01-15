@@ -67,7 +67,7 @@ export default function ClienteLayout({
                 <CreditCard className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   ConsigExpress
                 </h1>
                 <span className="text-xs text-muted-foreground">Portal do Cliente</span>
