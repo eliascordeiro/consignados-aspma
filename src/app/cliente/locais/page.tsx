@@ -609,53 +609,64 @@ function VirtualizedTable({
   const rowVirtualizer = useVirtualizer({
     count: convenios.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 73, // Altura estimada de cada linha
+    estimateSize: () => 65, // Altura estimada de cada linha
     overscan: 5, // Renderiza 5 linhas extras fora da view
   })
 
   return (
-    <div 
-      ref={parentRef}
-      className="overflow-auto"
-      style={{ height: '600px' }}
-    >
-      <Table>
-        <TableHeader className="sticky top-0 bg-background z-10">
-          <TableRow>
-            <TableHead>Código</TableHead>
-            <TableHead>Nome</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Banco</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <tr style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-            <td style={{ position: 'relative' }}>
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const convenio = convenios[virtualRow.index]
-                return (
-                  <TableRow
-                    key={convenio.id}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    <TableCell className="font-mono text-xs">{convenio.codigo || "-"}</TableCell>
-                    <TableCell className="font-medium">
+    <div className="border rounded-md">
+      <div 
+        ref={parentRef}
+        className="overflow-auto"
+        style={{ height: '600px' }}
+      >
+        <div className="w-full">
+          {/* Header fixo */}
+          <div className="sticky top-0 bg-background z-10 border-b">
+            <div className="grid grid-cols-[100px_2fr_150px_150px_100px_120px] gap-4 p-3 font-medium text-sm">
+              <div>Código</div>
+              <div>Nome</div>
+              <div>Tipo</div>
+              <div>Banco</div>
+              <div>Status</div>
+              <div className="text-right">Ações</div>
+            </div>
+          </div>
+          
+          {/* Virtual scrolling container */}
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const convenio = convenios[virtualRow.index]
+              return (
+                <div
+                  key={convenio.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  className="border-b hover:bg-muted/50"
+                >
+                  <div className="grid grid-cols-[100px_2fr_150px_150px_100px_120px] gap-4 p-3 items-center text-sm">
+                    <div className="font-mono text-xs">{convenio.codigo || "-"}</div>
+                    <div className="font-medium">
                       <div className="flex flex-col">
                         <span>{convenio.razao_soc || convenio.nome}</span>
                         {convenio.fantasia && (
                           <span className="text-xs text-muted-foreground">{convenio.fantasia}</span>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div>
                       <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                         convenio.tipo === 'BANCO' 
                           ? 'bg-blue-50 text-blue-700' 
@@ -665,16 +676,16 @@ function VirtualizedTable({
                       }`}>
                         {convenio.tipo}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-sm">
+                    </div>
+                    <div>
                       {convenio.banco ? (
                         <div className="flex flex-col text-xs">
                           <span className="font-medium">{convenio.banco}</span>
                           {convenio.agencia && <span className="text-muted-foreground">Ag: {convenio.agencia}</span>}
                         </div>
                       ) : "-"}
-                    </TableCell>
-                    <TableCell>
+                    </div>
+                    <div>
                       {convenio.ativo ? (
                         <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
                           Ativo
@@ -684,34 +695,32 @@ function VirtualizedTable({
                           Inativo
                         </span>
                       )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(convenio)}
-                          title="Editar"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(convenio.id)}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </td>
-          </tr>
-        </TableBody>
-      </Table>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(convenio)}
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(convenio.id)}
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
