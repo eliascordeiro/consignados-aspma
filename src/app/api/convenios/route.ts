@@ -49,10 +49,9 @@ export async function GET(req: NextRequest) {
     const where = {
       ...(search && {
         OR: [
-          { nome_completo: { contains: search, mode: "insensitive" as const } },
-          { nome_abreviado: { contains: search, mode: "insensitive" as const } },
-          { cnpj: { contains: search, mode: "insensitive" as const } },
-          { tipo: { contains: search, mode: "insensitive" as const } },
+          { razao_soc: { contains: search, mode: "insensitive" as const } },
+          { fantasia: { contains: search, mode: "insensitive" as const } },
+          { cgc: { contains: search, mode: "insensitive" as const } },
           { cidade: { contains: search, mode: "insensitive" as const } },
         ],
       }),
@@ -61,7 +60,7 @@ export async function GET(req: NextRequest) {
     const [convenios, total] = await Promise.all([
       db.convenio.findMany({
         where,
-        orderBy: { nome_completo: "asc" },
+        orderBy: { razao_soc: "asc" },
         take: limit,
         skip,
       }),
