@@ -418,11 +418,19 @@ function VirtualizedEmpresasTable({
   onDelete: (empresa: Empresa) => void
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
   const rowVirtualizer = useVirtualizer({
     count: empresas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
+    estimateSize: () => isMobile ? 160 : 72,
     overscan: 5,
   })
 
@@ -442,17 +450,19 @@ function VirtualizedEmpresasTable({
         style={{ height: '600px' }}
       >
         <div className="w-full">
-          {/* Header fixo */}
-          <div className="sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 border-b">
-            <div className="grid grid-cols-[3fr_200px_200px_130px_100px_120px] gap-4 px-4 py-3.5 font-semibold text-sm text-gray-700 dark:text-gray-300">
-              <div>Nome da Empresa</div>
-              <div>CNPJ</div>
-              <div>Contato</div>
-              <div>Tipo</div>
-              <div>Status</div>
-              <div className="text-right">Ações</div>
+          {/* Header fixo - apenas desktop */}
+          {!isMobile && (
+            <div className="sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 border-b">
+              <div className="hidden md:grid md:grid-cols-[2.5fr_180px_180px_120px_90px_100px] lg:grid-cols-[3fr_200px_200px_130px_100px_120px] gap-3 lg:gap-4 px-3 lg:px-4 py-3.5 font-semibold text-sm text-gray-700 dark:text-gray-300">
+                <div>Nome da Empresa</div>
+                <div>CNPJ</div>
+                <div>Contato</div>
+                <div>Tipo</div>
+                <div>Status</div>
+                <div className="text-right">Ações</div>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Virtual scrolling container */}
           <div
@@ -479,9 +489,74 @@ function VirtualizedEmpresasTable({
                   }}
                   className="border-b hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors"
                 >
-                  <div className="grid grid-cols-[3fr_200px_200px_130px_100px_120px] gap-4 px-4 py-4 items-center">
-                    <div>
-                      <div className="font-semibold text-gray-900 dark:text-gray-100">
+                  {/* Layout Mobile - Cards */}
+                  <div className="md:hidden p-4 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                          {empresa.nome}
+                        </div>
+                        {formattedCNPJ && (
+                          <div className="font-mono text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            {formattedCNPJ}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onEdit(empresa)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onDelete(empresa)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {(empresa.contato || empresa.telefone) && (
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Contato:</span>{' '}
+                          {empresa.contato && <span className="font-medium">{empresa.contato}</span>}
+                          {empresa.telefone && <span className="text-gray-600 ml-1">{empresa.telefone}</span>}
+                        </div>
+                      )}
+                      <div>
+                        <Badge 
+                          variant="outline"
+                          className={empresa.tipo === "PUBLICO" 
+                            ? "bg-blue-50 text-blue-700 border-blue-200" 
+                            : "bg-purple-50 text-purple-700 border-purple-200"
+                          }
+                        >
+                          {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <Badge 
+                          className={empresa.ativo 
+                            ? "bg-green-500 text-white border-0" 
+                            : "bg-gray-200 text-gray-700 border-0"
+                          }
+                        >
+                          {empresa.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Layout Desktop/Tablet - Grid */}
+                  <div className="hidden md:grid md:grid-cols-[2.5fr_180px_180px_120px_90px_100px] lg:grid-cols-[3fr_200px_200px_130px_100px_120px] gap-3 lg:gap-4 px-3 lg:px-4 py-4 items-center">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                         {empresa.nome}
                       </div>
                     </div>
@@ -492,7 +567,7 @@ function VirtualizedEmpresasTable({
                       )}
                     </div>
                     
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 min-w-0">
                       {empresa.contato || empresa.telefone ? (
                         <div className="flex flex-col gap-0.5">
                           {empresa.contato && (

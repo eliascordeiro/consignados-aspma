@@ -605,12 +605,20 @@ function VirtualizedTable({
   onDelete: (id: number) => void
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
   const rowVirtualizer = useVirtualizer({
     count: convenios.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 65, // Altura estimada de cada linha
-    overscan: 5, // Renderiza 5 linhas extras fora da view
+    estimateSize: () => isMobile ? 180 : 65,
+    overscan: 5,
   })
 
   return (
@@ -621,17 +629,19 @@ function VirtualizedTable({
         style={{ height: '600px' }}
       >
         <div className="w-full">
-          {/* Header fixo */}
-          <div className="sticky top-0 bg-background z-10 border-b">
-            <div className="grid grid-cols-[100px_2fr_150px_150px_100px_120px] gap-4 p-3 font-medium text-sm">
-              <div>Código</div>
-              <div>Nome</div>
-              <div>Tipo</div>
-              <div>Banco</div>
-              <div>Status</div>
-              <div className="text-right">Ações</div>
+          {/* Header fixo - apenas desktop */}
+          {!isMobile && (
+            <div className="sticky top-0 bg-background z-10 border-b">
+              <div className="hidden md:grid md:grid-cols-[80px_2fr_140px_140px_90px_110px] lg:grid-cols-[100px_2fr_150px_150px_100px_120px] gap-3 lg:gap-4 p-3 font-medium text-sm">
+                <div>Código</div>
+                <div>Nome</div>
+                <div>Tipo</div>
+                <div>Banco</div>
+                <div>Status</div>
+                <div className="text-right">Ações</div>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Virtual scrolling container */}
           <div
@@ -656,13 +666,79 @@ function VirtualizedTable({
                   }}
                   className="border-b hover:bg-muted/50"
                 >
-                  <div className="grid grid-cols-[100px_2fr_150px_150px_100px_120px] gap-4 p-3 items-center text-sm">
-                    <div className="font-mono text-xs">{convenio.codigo || "-"}</div>
-                    <div className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{convenio.razao_soc || convenio.nome}</span>
+                  {/* Layout Mobile - Cards */}
+                  <div className="md:hidden p-4 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm">{convenio.razao_soc || convenio.nome}</div>
                         {convenio.fantasia && (
-                          <span className="text-xs text-muted-foreground">{convenio.fantasia}</span>
+                          <div className="text-xs text-muted-foreground mt-0.5">{convenio.fantasia}</div>
+                        )}
+                      </div>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onEdit(convenio)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onDelete(convenio.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Código:</span>{' '}
+                        <span className="font-mono">{convenio.codigo || "-"}</span>
+                      </div>
+                      <div>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          convenio.tipo === 'BANCO' 
+                            ? 'bg-blue-50 text-blue-700' 
+                            : convenio.tipo === 'COOPERATIVA'
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-purple-50 text-purple-700'
+                        }`}>
+                          {convenio.tipo}
+                        </span>
+                      </div>
+                      {convenio.banco && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Banco:</span>{' '}
+                          <span className="font-medium">{convenio.banco}</span>
+                          {convenio.agencia && <span className="text-muted-foreground ml-1">(Ag: {convenio.agencia})</span>}
+                        </div>
+                      )}
+                      <div>
+                        {convenio.ativo ? (
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-50 text-green-700">
+                            Ativo
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-50 text-gray-700">
+                            Inativo
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Layout Desktop/Tablet - Grid */}
+                  <div className="hidden md:grid md:grid-cols-[80px_2fr_140px_140px_90px_110px] lg:grid-cols-[100px_2fr_150px_150px_100px_120px] gap-3 lg:gap-4 p-3 items-center text-sm">
+                    <div className="font-mono text-xs">{convenio.codigo || "-"}</div>
+                    <div className="font-medium min-w-0">
+                      <div className="flex flex-col">
+                        <span className="truncate">{convenio.razao_soc || convenio.nome}</span>
+                        {convenio.fantasia && (
+                          <span className="text-xs text-muted-foreground truncate">{convenio.fantasia}</span>
                         )}
                       </div>
                     </div>
@@ -677,11 +753,11 @@ function VirtualizedTable({
                         {convenio.tipo}
                       </span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       {convenio.banco ? (
                         <div className="flex flex-col text-xs">
-                          <span className="font-medium">{convenio.banco}</span>
-                          {convenio.agencia && <span className="text-muted-foreground">Ag: {convenio.agencia}</span>}
+                          <span className="font-medium truncate">{convenio.banco}</span>
+                          {convenio.agencia && <span className="text-muted-foreground truncate">Ag: {convenio.agencia}</span>}
                         </div>
                       ) : "-"}
                     </div>
