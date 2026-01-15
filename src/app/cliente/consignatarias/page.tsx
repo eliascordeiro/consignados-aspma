@@ -247,9 +247,6 @@ export default function ConsignatariasPage() {
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
-                </TableBody>
-              </Table>
-            </div>
           )}
         </CardContent>
       </Card>
