@@ -59,7 +59,7 @@ export default function LoginPage() {
               <CreditCard style={{ color: '#ffffff', width: '28px', height: '28px' }} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 ConsigExpress
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">Plataforma de Consignados</p>
