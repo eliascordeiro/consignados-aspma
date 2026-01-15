@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -241,63 +242,11 @@ export default function ConsignatariasPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50 dark:bg-gray-900/50">
-                    <TableHead className="font-semibold">Nome</TableHead>
-                    <TableHead className="font-semibold">CNPJ</TableHead>
-                    <TableHead className="font-semibold">Cidade/UF</TableHead>
-                    <TableHead className="font-semibold">Contato</TableHead>
-                    <TableHead className="font-semibold">Tipo</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="text-right font-semibold">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {empresas.map((empresa) => (
-                    <TableRow key={empresa.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
-                      <TableCell className="font-medium">{empresa.nome}</TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.cnpj || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {empresa.cidade && empresa.uf ? `${empresa.cidade}/${empresa.uf}` : "-"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{empresa.contato || "-"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={empresa.ativo ? "default" : "secondary"}
-                          className={empresa.ativo ? "bg-green-500 hover:bg-green-600 text-white" : ""}
-                        >
-                          {empresa.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleEdit(empresa)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
-                            onClick={() => handleDelete(empresa)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+            <VirtualizedEmpresasTable 
+              empresas={empresas}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
                 </TableBody>
               </Table>
             </div>
@@ -457,6 +406,118 @@ export default function ConsignatariasPage() {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+// Componente de tabela virtualizada para empresas
+function VirtualizedEmpresasTable({ 
+  empresas, 
+  onEdit, 
+  onDelete 
+}: { 
+  empresas: Empresa[]
+  onEdit: (empresa: Empresa) => void
+  onDelete: (empresa: Empresa) => void
+}) {
+  const parentRef = useRef<HTMLDivElement>(null)
+  
+  const rowVirtualizer = useVirtualizer({
+    count: empresas.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 60,
+    overscan: 5,
+  })
+
+  return (
+    <div className="border rounded-md">
+      <div 
+        ref={parentRef}
+        className="overflow-auto"
+        style={{ height: '600px' }}
+      >
+        <div className="w-full">
+          {/* Header fixo */}
+          <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 z-10 border-b">
+            <div className="grid grid-cols-[2fr_150px_150px_150px_120px_100px_120px] gap-4 p-3 font-semibold text-sm">
+              <div>Nome</div>
+              <div>CNPJ</div>
+              <div>Cidade/UF</div>
+              <div>Contato</div>
+              <div>Tipo</div>
+              <div>Status</div>
+              <div className="text-right">Ações</div>
+            </div>
+          </div>
+          
+          {/* Virtual scrolling container */}
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const empresa = empresas[virtualRow.index]
+              return (
+                <div
+                  key={empresa.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                  className="border-b hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                >
+                  <div className="grid grid-cols-[2fr_150px_150px_150px_120px_100px_120px] gap-4 p-3 items-center text-sm">
+                    <div className="font-medium">{empresa.nome}</div>
+                    <div className="text-muted-foreground">{empresa.cnpj || "-"}</div>
+                    <div className="text-muted-foreground">
+                      {empresa.cidade && empresa.uf ? `${empresa.cidade}/${empresa.uf}` : "-"}
+                    </div>
+                    <div className="text-muted-foreground">{empresa.contato || "-"}</div>
+                    <div>
+                      <Badge variant="outline">
+                        {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
+                      </Badge>
+                    </div>
+                    <div>
+                      <Badge 
+                        variant={empresa.ativo ? "default" : "secondary"}
+                        className={empresa.ativo ? "bg-green-500 hover:bg-green-600 text-white" : ""}
+                      >
+                        {empresa.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => onEdit(empresa)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
+                        onClick={() => onDelete(empresa)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
