@@ -77,6 +77,13 @@ function getLiberaFromTipo(tipo: string): string {
   return 'C' // COMERCIO
 }
 
+// Função helper para normalizar o valor de libera
+function normalizeLiberaValue(libera: string | null | undefined): string {
+  if (libera === 'X') return 'X'
+  if (libera === 'T') return 'T'
+  return 'C' // Qualquer outro valor (incluindo vazio, null, etc) vira 'C'
+}
+
 export default function LocaisPage() {
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [loading, setLoading] = useState(true)
@@ -174,14 +181,15 @@ export default function LocaisPage() {
 
   const handleEdit = (convenio: Convenio) => {
     setEditingConvenio(convenio)
+    const normalizedLibera = normalizeLiberaValue(convenio.libera)
     setFormData({
       codigo: convenio.codigo || "",
       razao_soc: convenio.razao_soc || "",
       fantasia: convenio.fantasia || "",
       nome: convenio.nome || "",
       cnpj: convenio.cnpj || convenio.cgc || "",
-      tipo: getTipoFromLibera(convenio.libera),
-      libera: convenio.libera || "C",
+      tipo: getTipoFromLibera(normalizedLibera),
+      libera: normalizedLibera,
       desconto: convenio.desconto?.toString() || "",
       parcelas: convenio.parcelas?.toString() || "",
       endereco: convenio.endereco || "",
@@ -328,7 +336,7 @@ export default function LocaisPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione a categoria" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="X">Banco</SelectItem>
