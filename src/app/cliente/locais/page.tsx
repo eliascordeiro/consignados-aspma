@@ -67,14 +67,14 @@ interface Convenio {
 function getTipoFromLibera(libera: string | null | undefined): string {
   if (libera === 'X') return 'BANCO'
   if (libera === 'T') return 'TESTE'
-  return 'COMERCIO' // em branco ou qualquer outro valor
+  return 'COMERCIO' // 'C', em branco ou qualquer outro valor
 }
 
 // Função helper para converter tipo em libera
 function getLiberaFromTipo(tipo: string): string {
   if (tipo === 'BANCO') return 'X'
   if (tipo === 'TESTE') return 'T'
-  return '' // COMERCIO
+  return 'C' // COMERCIO
 }
 
 export default function LocaisPage() {
@@ -90,8 +90,8 @@ export default function LocaisPage() {
     fantasia: "",
     nome: "",
     cnpj: "",
-    tipo: "BANCO",
-    libera: "X",
+    tipo: "COMERCIO",
+    libera: "C",
     desconto: "",
     parcelas: "",
     endereco: "",
@@ -181,7 +181,7 @@ export default function LocaisPage() {
       nome: convenio.nome || "",
       cnpj: convenio.cnpj || convenio.cgc || "",
       tipo: getTipoFromLibera(convenio.libera),
-      libera: convenio.libera || "",
+      libera: convenio.libera || "C",
       desconto: convenio.desconto?.toString() || "",
       parcelas: convenio.parcelas?.toString() || "",
       endereco: convenio.endereco || "",
@@ -230,8 +230,8 @@ export default function LocaisPage() {
       fantasia: "",
       nome: "",
       cnpj: "",
-      tipo: "BANCO",
-      libera: "X",
+      tipo: "COMERCIO",
+      libera: "C",
       desconto: "",
       parcelas: "",
       endereco: "",
@@ -332,7 +332,7 @@ export default function LocaisPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="X">Banco</SelectItem>
-                        <SelectItem value="">Comércio</SelectItem>
+                        <SelectItem value="C">Comércio</SelectItem>
                         <SelectItem value="T">Teste</SelectItem>
                       </SelectContent>
                     </Select>
