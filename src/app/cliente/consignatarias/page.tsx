@@ -422,12 +422,20 @@ function VirtualizedEmpresasTable({
   const rowVirtualizer = useVirtualizer({
     count: empresas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 60,
+    estimateSize: () => 72,
     overscan: 5,
   })
 
+  // Formata CNPJ: 00.000.000/0000-00
+  const formatCNPJ = (cnpj: string | undefined) => {
+    if (!cnpj) return null
+    const cleaned = cnpj.replace(/\D/g, '')
+    if (cleaned.length !== 14) return cnpj
+    return `${cleaned.slice(0,2)}.${cleaned.slice(2,5)}.${cleaned.slice(5,8)}/${cleaned.slice(8,12)}-${cleaned.slice(12,14)}`
+  }
+
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md bg-white dark:bg-gray-950">
       <div 
         ref={parentRef}
         className="overflow-auto"
@@ -435,11 +443,11 @@ function VirtualizedEmpresasTable({
       >
         <div className="w-full">
           {/* Header fixo */}
-          <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 z-10 border-b">
-            <div className="grid grid-cols-[2fr_150px_150px_150px_120px_100px_120px] gap-4 p-3 font-semibold text-sm">
-              <div>Nome</div>
+          <div className="sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 border-b">
+            <div className="grid grid-cols-[2.5fr_180px_160px_180px_110px_90px_110px] gap-4 px-4 py-3.5 font-semibold text-sm text-gray-700 dark:text-gray-300">
+              <div>Nome da Empresa</div>
               <div>CNPJ</div>
-              <div>Cidade/UF</div>
+              <div>Localização</div>
               <div>Contato</div>
               <div>Tipo</div>
               <div>Status</div>
@@ -457,6 +465,8 @@ function VirtualizedEmpresasTable({
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const empresa = empresas[virtualRow.index]
+              const formattedCNPJ = formatCNPJ(empresa.cnpj)
+              
               return (
                 <div
                   key={empresa.id}
@@ -468,34 +478,77 @@ function VirtualizedEmpresasTable({
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
-                  className="border-b hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                  className="border-b hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors"
                 >
-                  <div className="grid grid-cols-[2fr_150px_150px_150px_120px_100px_120px] gap-4 p-3 items-center text-sm">
-                    <div className="font-medium">{empresa.nome}</div>
-                    <div className="text-muted-foreground">{empresa.cnpj || "-"}</div>
-                    <div className="text-muted-foreground">
-                      {empresa.cidade && empresa.uf ? `${empresa.cidade}/${empresa.uf}` : "-"}
-                    </div>
-                    <div className="text-muted-foreground">{empresa.contato || "-"}</div>
+                  <div className="grid grid-cols-[2.5fr_180px_160px_180px_110px_90px_110px] gap-4 px-4 py-4 items-center">
                     <div>
-                      <Badge variant="outline">
+                      <div className="font-semibold text-gray-900 dark:text-gray-100">
+                        {empresa.nome}
+                      </div>
+                    </div>
+                    
+                    <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
+                      {formattedCNPJ || (
+                        <span className="text-gray-400 dark:text-gray-600 italic">Não informado</span>
+                      )}
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {empresa.cidade && empresa.uf ? (
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{empresa.cidade}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-500">{empresa.uf}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600 italic">Não informado</span>
+                      )}
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {empresa.contato || empresa.telefone ? (
+                        <div className="flex flex-col gap-0.5">
+                          {empresa.contato && (
+                            <span className="font-medium text-gray-700 dark:text-gray-300 truncate">{empresa.contato}</span>
+                          )}
+                          {empresa.telefone && (
+                            <span className="text-xs text-gray-500 dark:text-gray-500">{empresa.telefone}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600 italic">Não informado</span>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Badge 
+                        variant="outline"
+                        className={empresa.tipo === "PUBLICO" 
+                          ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800" 
+                          : "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800"
+                        }
+                      >
                         {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
                       </Badge>
                     </div>
+                    
                     <div>
                       <Badge 
-                        variant={empresa.ativo ? "default" : "secondary"}
-                        className={empresa.ativo ? "bg-green-500 hover:bg-green-600 text-white" : ""}
+                        className={empresa.ativo 
+                          ? "bg-green-500 hover:bg-green-600 text-white border-0" 
+                          : "bg-gray-200 text-gray-700 border-0 dark:bg-gray-700 dark:text-gray-300"
+                        }
                       >
                         {empresa.ativo ? "Ativo" : "Inativo"}
                       </Badge>
                     </div>
-                    <div className="flex justify-end gap-2">
+                    
+                    <div className="flex justify-end gap-1.5">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950"
                         onClick={() => onEdit(empresa)}
+                        title="Editar empresa"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -504,6 +557,7 @@ function VirtualizedEmpresasTable({
                         size="sm"
                         className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/50"
                         onClick={() => onDelete(empresa)}
+                        title="Excluir empresa"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
