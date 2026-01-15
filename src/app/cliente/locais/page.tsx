@@ -84,6 +84,14 @@ function normalizeLiberaValue(libera: string | null | undefined): string {
   return 'C' // Qualquer outro valor (incluindo vazio, null, etc) vira 'C'
 }
 
+// Função helper para exibir o valor na coluna Tipo
+function getDisplayTipo(convenio: Convenio): string {
+  if (convenio.libera === 'X') return 'X'
+  if (convenio.libera === 'T') return 'T'
+  // Se libera for vazio, null, 'C' ou qualquer outro, retorna vazio
+  return ''
+}
+
 export default function LocaisPage() {
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [loading, setLoading] = useState(true)
@@ -760,15 +768,15 @@ function VirtualizedTable({
                           <span className="text-muted-foreground">Código:</span>{' '}
                           <span className="font-mono font-medium">{convenio.codigo || "-"}</span>
                         </div>
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                          convenio.tipo === 'BANCO' 
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' 
-                            : convenio.tipo === 'COOPERATIVA'
-                            ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
-                            : 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
-                        }`}>
-                          {convenio.tipo}
-                        </span>
+                        {getDisplayTipo(convenio) && (
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                            convenio.libera === 'X'
+                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300' 
+                              : 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+                          }`}>
+                            {getDisplayTipo(convenio)}
+                          </span>
+                        )}
                       </div>
                       
                       {convenio.banco && (
@@ -807,16 +815,8 @@ function VirtualizedTable({
                         )}
                       </div>
                     </div>
-                    <div>
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        convenio.tipo === 'BANCO' 
-                          ? 'bg-blue-50 text-blue-700' 
-                          : convenio.tipo === 'COOPERATIVA'
-                          ? 'bg-green-50 text-green-700'
-                          : 'bg-purple-50 text-purple-700'
-                      }`}>
-                        {convenio.tipo}
-                      </span>
+                    <div className="font-mono text-xs">
+                      {getDisplayTipo(convenio) || "-"}
                     </div>
                     <div className="min-w-0">
                       {convenio.banco ? (
