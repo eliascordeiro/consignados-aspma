@@ -103,7 +103,7 @@ export default function LocaisPage() {
   const loadConvenios = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/convenios?search=${searchTerm}`)
+      const response = await fetch(`/api/convenios?search=${searchTerm}&limit=1000`)
       if (!response.ok) throw new Error("Erro ao carregar convênios")
       const result = await response.json()
       // API agora retorna { data, pagination }
