@@ -45,6 +45,7 @@ interface Convenio {
   tipo?: string | null
   desconto?: number | null
   parcelas?: number | null
+  libera?: string | null
   endereco?: string | null
   bairro?: string | null
   cep?: string | null
@@ -62,6 +63,20 @@ interface Convenio {
   ativo: boolean
 }
 
+// Função helper para converter o campo libera em tipo
+function getTipoFromLibera(libera: string | null | undefined): string {
+  if (libera === 'X') return 'BANCO'
+  if (libera === 'T') return 'TESTE'
+  return 'COMERCIO' // em branco ou qualquer outro valor
+}
+
+// Função helper para converter tipo em libera
+function getLiberaFromTipo(tipo: string): string {
+  if (tipo === 'BANCO') return 'X'
+  if (tipo === 'TESTE') return 'T'
+  return '' // COMERCIO
+}
+
 export default function LocaisPage() {
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,6 +91,7 @@ export default function LocaisPage() {
     nome: "",
     cnpj: "",
     tipo: "BANCO",
+    libera: "X",
     desconto: "",
     parcelas: "",
     endereco: "",
@@ -164,7 +180,8 @@ export default function LocaisPage() {
       fantasia: convenio.fantasia || "",
       nome: convenio.nome || "",
       cnpj: convenio.cnpj || convenio.cgc || "",
-      tipo: convenio.tipo || "COMERCIO",
+      tipo: getTipoFromLibera(convenio.libera),
+      libera: convenio.libera || "",
       desconto: convenio.desconto?.toString() || "",
       parcelas: convenio.parcelas?.toString() || "",
       endereco: convenio.endereco || "",
@@ -214,6 +231,7 @@ export default function LocaisPage() {
       nome: "",
       cnpj: "",
       tipo: "BANCO",
+      libera: "X",
       desconto: "",
       parcelas: "",
       endereco: "",
@@ -298,23 +316,36 @@ export default function LocaisPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="tipo">Tipo *</Label>
+                    <Label htmlFor="libera">Categoria *</Label>
                     <Select
-                      value={formData.tipo}
+                      value={formData.libera}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, tipo: value })
+                        setFormData({ 
+                          ...formData, 
+                          libera: value,
+                          tipo: getTipoFromLibera(value)
+                        })
                       }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="BANCO">Banco</SelectItem>
-                        <SelectItem value="COOPERATIVA">Cooperativa</SelectItem>
-                        <SelectItem value="COMERCIO">Comércio</SelectItem>
-                        <SelectItem value="OUTROS">Outros</SelectItem>
+                        <SelectItem value="X">Banco</SelectItem>
+                        <SelectItem value="">Comércio</SelectItem>
+                        <SelectItem value="T">Teste</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tipo">Tipo (Calculado)</Label>
+                    <Input
+                      id="tipo"
+                      value={formData.tipo}
+                      disabled
+                      className="bg-muted"
+                    />
                   </div>
 
                   <div className="sm:col-span-2 lg:col-span-2 xl:col-span-2">

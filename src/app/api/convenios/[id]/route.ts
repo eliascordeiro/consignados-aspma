@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
 
+// Função helper para converter o campo libera em tipo
+function getTipoFromLibera(libera: string | null | undefined): string {
+  if (libera === 'X') return 'BANCO'
+  if (libera === 'T') return 'TESTE'
+  return 'COMERCIO' // em branco ou qualquer outro valor
+}
+
 const convenioSchema = z.object({
   codigo: z.string().optional(),
   razao_soc: z.string().min(1, "Razão Social é obrigatória"),
@@ -11,6 +18,7 @@ const convenioSchema = z.object({
   cnpj: z.string().optional(),
   cgc: z.string().optional(),
   tipo: z.string().optional(),
+  libera: z.string().optional(),
   desconto: z.union([z.string(), z.number()]).optional().transform(val => {
     if (!val) return null
     const num = typeof val === 'string' ? parseFloat(val) : val
@@ -101,6 +109,7 @@ export async function PUT(
       cgc: data.cnpj || data.cgc || existing.cgc,
       uf: data.estado || data.uf || existing.uf,
       fone: data.telefone || data.fone || existing.fone,
+      tipo: getTipoFromLibera(data.libera),
     }
 
     const convenio = await db.convenio.update({
