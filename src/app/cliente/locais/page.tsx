@@ -105,8 +105,9 @@ export default function LocaisPage() {
       setLoading(true)
       const response = await fetch(`/api/convenios?search=${searchTerm}`)
       if (!response.ok) throw new Error("Erro ao carregar convênios")
-      const data = await response.json()
-      setConvenios(data)
+      const result = await response.json()
+      // API agora retorna { data, pagination }
+      setConvenios(result.data || result)
     } catch (error) {
       toast.error("Erro ao carregar convênios")
       console.error(error)
