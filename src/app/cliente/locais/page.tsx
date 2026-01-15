@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,6 +67,7 @@ export default function LocaisPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingConvenio, setEditingConvenio] = useState<Convenio | null>(null)
+  const tableContainerRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState({
     codigo: "",
     razao_soc: "",
@@ -580,88 +582,136 @@ export default function LocaisPage() {
               Nenhum convênio encontrado
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Banco</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {convenios.map((convenio) => (
-                    <TableRow key={convenio.id}>
-                      <TableCell className="font-mono text-xs">{convenio.codigo || "-"}</TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span>{convenio.razao_soc || convenio.nome}</span>
-                          {convenio.fantasia && (
-                            <span className="text-xs text-muted-foreground">{convenio.fantasia}</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          convenio.tipo === 'BANCO' 
-                            ? 'bg-blue-50 text-blue-700' 
-                            : convenio.tipo === 'COOPERATIVA'
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-purple-50 text-purple-700'
-                        }`}>
-                          {convenio.tipo}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {convenio.banco ? (
-                          <div className="flex flex-col text-xs">
-                            <span className="font-medium">{convenio.banco}</span>
-                            {convenio.agencia && <span className="text-muted-foreground">Ag: {convenio.agencia}</span>}
-                          </div>
-                        ) : "-"}
-                      </TableCell>
-                      <TableCell>
-                        {convenio.ativo ? (
-                          <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
-                            Ativo
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700">
-                            Inativo
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(convenio)}
-                            title="Editar"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(convenio.id)}
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <VirtualizedTable 
+              convenios={convenios}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           )}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+// Componente de tabela virtualizada
+function VirtualizedTable({ 
+  convenios, 
+  onEdit, 
+  onDelete 
+}: { 
+  convenios: Convenio[]
+  onEdit: (convenio: Convenio) => void
+  onDelete: (id: number) => void
+}) {
+  const parentRef = useRef<HTMLDivElement>(null)
+  
+  const rowVirtualizer = useVirtualizer({
+    count: convenios.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 73, // Altura estimada de cada linha
+    overscan: 5, // Renderiza 5 linhas extras fora da view
+  })
+
+  return (
+    <div 
+      ref={parentRef}
+      className="overflow-auto"
+      style={{ height: '600px' }}
+    >
+      <Table>
+        <TableHeader className="sticky top-0 bg-background z-10">
+          <TableRow>
+            <TableHead>Código</TableHead>
+            <TableHead>Nome</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Banco</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <tr style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            <td style={{ position: 'relative' }}>
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const convenio = convenios[virtualRow.index]
+                return (
+                  <TableRow
+                    key={convenio.id}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <TableCell className="font-mono text-xs">{convenio.codigo || "-"}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span>{convenio.razao_soc || convenio.nome}</span>
+                        {convenio.fantasia && (
+                          <span className="text-xs text-muted-foreground">{convenio.fantasia}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                        convenio.tipo === 'BANCO' 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : convenio.tipo === 'COOPERATIVA'
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-purple-50 text-purple-700'
+                      }`}>
+                        {convenio.tipo}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {convenio.banco ? (
+                        <div className="flex flex-col text-xs">
+                          <span className="font-medium">{convenio.banco}</span>
+                          {convenio.agencia && <span className="text-muted-foreground">Ag: {convenio.agencia}</span>}
+                        </div>
+                      ) : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {convenio.ativo ? (
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
+                          Ativo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700">
+                          Inativo
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(convenio)}
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(convenio.id)}
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </td>
+          </tr>
+        </TableBody>
+      </Table>
     </div>
   )
 }
