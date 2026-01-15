@@ -16,6 +16,11 @@ const convenioSchema = z.object({
     const num = typeof val === 'string' ? parseFloat(val) : val
     return isNaN(num) ? null : num
   }),
+  parcelas: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (!val) return null
+    const num = typeof val === 'string' ? parseInt(val) : val
+    return isNaN(num) ? null : num
+  }),
   endereco: z.string().optional(),
   bairro: z.string().optional(),
   cep: z.string().optional(),

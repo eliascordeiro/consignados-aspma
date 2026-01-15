@@ -44,6 +44,7 @@ interface Convenio {
   cgc?: string | null
   tipo?: string | null
   desconto?: number | null
+  parcelas?: number | null
   endereco?: string | null
   bairro?: string | null
   cep?: string | null
@@ -76,6 +77,7 @@ export default function LocaisPage() {
     cnpj: "",
     tipo: "BANCO",
     desconto: "",
+    parcelas: "",
     endereco: "",
     bairro: "",
     cep: "",
@@ -164,6 +166,7 @@ export default function LocaisPage() {
       cnpj: convenio.cnpj || convenio.cgc || "",
       tipo: convenio.tipo || "COMERCIO",
       desconto: convenio.desconto?.toString() || "",
+      parcelas: convenio.parcelas?.toString() || "",
       endereco: convenio.endereco || "",
       bairro: convenio.bairro || "",
       cep: convenio.cep || "",
@@ -212,6 +215,7 @@ export default function LocaisPage() {
       cnpj: "",
       tipo: "BANCO",
       desconto: "",
+      parcelas: "",
       endereco: "",
       bairro: "",
       cep: "",
@@ -348,6 +352,20 @@ export default function LocaisPage() {
                         setFormData({ ...formData, desconto: e.target.value })
                       }
                       placeholder="3.00"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="parcelas">Parcelas</Label>
+                    <Input
+                      id="parcelas"
+                      type="number"
+                      min="1"
+                      value={formData.parcelas}
+                      onChange={(e) =>
+                        setFormData({ ...formData, parcelas: e.target.value })
+                      }
+                      placeholder="Ex: 12"
                     />
                   </div>
                 </div>
