@@ -444,10 +444,9 @@ function VirtualizedEmpresasTable({
         <div className="w-full">
           {/* Header fixo */}
           <div className="sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 border-b">
-            <div className="grid grid-cols-[2.5fr_180px_160px_180px_110px_90px_110px] gap-4 px-4 py-3.5 font-semibold text-sm text-gray-700 dark:text-gray-300">
+            <div className="grid grid-cols-[3fr_200px_200px_130px_100px_120px] gap-4 px-4 py-3.5 font-semibold text-sm text-gray-700 dark:text-gray-300">
               <div>Nome da Empresa</div>
               <div>CNPJ</div>
-              <div>Localização</div>
               <div>Contato</div>
               <div>Tipo</div>
               <div>Status</div>
@@ -480,7 +479,7 @@ function VirtualizedEmpresasTable({
                   }}
                   className="border-b hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors"
                 >
-                  <div className="grid grid-cols-[2.5fr_180px_160px_180px_110px_90px_110px] gap-4 px-4 py-4 items-center">
+                  <div className="grid grid-cols-[3fr_200px_200px_130px_100px_120px] gap-4 px-4 py-4 items-center">
                     <div>
                       <div className="font-semibold text-gray-900 dark:text-gray-100">
                         {empresa.nome}
@@ -489,17 +488,6 @@ function VirtualizedEmpresasTable({
                     
                     <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
                       {formattedCNPJ || (
-                        <span className="text-gray-400 dark:text-gray-600 italic">Não informado</span>
-                      )}
-                    </div>
-                    
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {empresa.cidade && empresa.uf ? (
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">{empresa.cidade}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-500">{empresa.uf}</span>
-                        </div>
-                      ) : (
                         <span className="text-gray-400 dark:text-gray-600 italic">Não informado</span>
                       )}
                     </div>
