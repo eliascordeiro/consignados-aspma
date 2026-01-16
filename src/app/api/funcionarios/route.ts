@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         banco: data.banco || null,
         bloqueio: data.bloqueio || null,
         motivoBloqueio: data.motivoBloqueio || null,
-        codTipo: data.codTipo || null,
+        codTipo: data.codTipo && !isNaN(parseInt(data.codTipo)) ? parseInt(data.codTipo) : null,
         senha: data.senha || null,
         dataExclusao: data.dataExclusao ? new Date(data.dataExclusao) : null,
         motivoExclusao: data.motivoExclusao || null,

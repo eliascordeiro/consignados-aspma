@@ -161,7 +161,7 @@ model Socio {
   devolucao       Decimal?  @db.Decimal(10, 2)
   bloqueio        String?
   motivoBloqueio  String?
-  codTipo         String?
+  codTipo         Int?
   senha           String?
   dataExclusao    DateTime?
   motivoExclusao  String?

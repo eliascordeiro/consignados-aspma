@@ -120,9 +120,9 @@ export async function PUT(
       updateData.numCompras = parseInt(data.numCompras)
     }
 
-    // codTipo é String no schema, não Int
-    if (data.codTipo) {
-      updateData.codTipo = data.codTipo.toString()
+    // codTipo é Int no schema
+    if (data.codTipo && !isNaN(parseInt(data.codTipo))) {
+      updateData.codTipo = parseInt(data.codTipo)
     }
 
     // Adicionar relacionamento empresa apenas se existir empresaId válido
