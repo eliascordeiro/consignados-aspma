@@ -63,7 +63,7 @@ model users {
 }
 
 model convenio {
-  id         String    @id @default(cuid())
+  id         Int       @id @default(autoincrement())
   userId     String?
   codigo     String?
   data       DateTime?
