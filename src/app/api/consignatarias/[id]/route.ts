@@ -6,7 +6,7 @@ import { z } from "zod"
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   cnpj: z.string().optional(),
-  tipo: z.enum(["PUBLICO", "PRIVADO"]),
+  tipo: z.enum(["PUBLICA", "PRIVADA"]),
   telefone: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   contato: z.string().optional(),
