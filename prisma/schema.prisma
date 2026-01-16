@@ -7,31 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  name          String
-  password      String
-  role          UserRole     @default(USER)
-  cpf           String?      @unique
-  phone         String?
-  active        Boolean      @default(true)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  createdById   String?
-  // Relacionamentos
-  consignados   Consignado[]
-  empresas      Empresa[]    // Cliente gerencia consignatárias
-  socios        Socio[]      // Cliente gerencia sócios/funcionários
-  convenios     Convenio[]   // Cliente gerencia convênios
-  createdBy     User?        @relation("CreatedUsers", fields: [createdById], references: [id])
-  users         User[]       @relation("CreatedUsers")
-
-  @@map("users")
-}
-
-model Consignado {
-  id             String           @id @default(cuid())
+model consignados {
+  id             String           @id
   userId         String
   tipo           TipoConsignado
   valor          Decimal          @db.Decimal(10, 2)
@@ -44,139 +21,163 @@ model Consignado {
   consignataria  String?
   observacoes    String?
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  user           User             @relation(fields: [userId], references: [id])
-
-  @@map("consignados")
+  updatedAt      DateTime
+  users          users            @relation(fields: [userId], references: [id])
 }
 
-// Empresa = Consignatária (ex: Prefeitura, Fundo de Previdência)
-// Gerenciada pelo User (Cliente)
-model Empresa {
-  id            Int            @id @default(autoincrement())
-  userId        String         // FK: Cliente que gerencia esta consignatária
-  nome          String         // Ex: "Prefeitura de Araucária", "Fundo de Previdência"
-  cnpj          String?        @unique
-  tipo          TipoEmpresa    @default(PUBLICO)
-  telefone      String?
-  email         String?
-  contato       String?        // Nome da pessoa de contato
-  cep           String?
-  rua           String?
-  numero        String?
-  bairro        String?
-  cidade        String?
-  uf            String?
-  ativo         Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  // Relacionamentos
-  user          User           @relation(fields: [userId], references: [id])
-  socios        Socio[]        // Funcionários da consignatária
-  autorizacoes  Autorizacao[]  // Locais autorizados para esta consignatária
-
-  @@map("empresas")
-}
-
-// Socio = Funcionário vinculado a uma Empresa/Consignatária
-model Socio {
-  id             String    @id @default(cuid())
-  userId         String?   // FK: Usuário que gerencia este sócio (ex: A.S.P.M.A)
+model funcionarios {
+  id             String          @id
   nome           String
-  cpf            String    @unique
-  matricula      String?   @unique
-  empresaId      Int       // FK para Empresa (tipo na tabela original)
+  cpf            String          @unique
+  matricula      String?         @unique
+  tipo           TipoFuncionario
+  orgao          String
   setor          String?
-  salario        Decimal?  @db.Decimal(10, 2)
-  margemConsig   Decimal?  @db.Decimal(10, 2)
+  salario        Decimal?        @db.Decimal(10, 2)
+  margemConsig   Decimal?        @db.Decimal(10, 2)
   email          String?
   telefone       String?
   endereco       String?
   dataAdmissao   DateTime?
   dataNascimento DateTime?
-  ativo          Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  user           User?     @relation(fields: [userId], references: [id])
-  empresa        Empresa   @relation(fields: [empresaId], references: [id])
+  ativo          Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime
+}
+
+model users {
+  id          String        @id
+  email       String        @unique
+  name        String
+  password    String
+  role        UserRole      @default(USER)
+  cpf         String?       @unique
+  phone       String?
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  createdById String?
+  consignados consignados[]
+  users       users?        @relation("usersTousers", fields: [createdById], references: [id])
+  other_users users[]       @relation("usersTousers")
+}
+
+model convenio {
+  id         String    @id @default(cuid())
+  userId     String?
+  codigo     String?
+  data       DateTime?
+  razao_soc  String
+  fantasia   String?
+  desconto   Decimal?  @db.Decimal(10, 2)
+  cgc        String?
+  ie         String?
+  cpf        String?
+  rg         String?
+  endereco   String?
+  bairro     String?
+  cep        String?
+  cidade     String?
+  uf         String?
+  fone       String?
+  fax        String?
+  contato    String?
+  agencia    String?
+  conta      String?
+  banco      String?
+  usuario    String?
+  senha      String?
+  parcelas   Int?
+  mensagem   String?
+  libera     String?
+  email      String?
+  chave      String?
+  convenio   String?
+  nome       String?
+  cnpj       String?
+  tipo       String?
+  estado     String?
+  telefone   String?
+  ativo      Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Empresa {
+  id        Int       @id @default(autoincrement())
+  userId    String?
+  nome      String
+  cnpj      String?
+  tipo      TipoEmpresa?
+  telefone  String?
+  email     String?
+  contato   String?
+  cep       String?
+  rua       String?
+  numero    String?
+  bairro    String?
+  cidade    String?
+  uf        String?
+  ativo     Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  socios    Socio[]
+
+  @@map("empresas")
+}
+
+model Socio {
+  id              String    @id @default(cuid())
+  userId          String?
+  nome            String
+  cpf             String?
+  rg              String?
+  matricula       String?
+  empresaId       Int?
+  funcao          String?
+  lotacao         String?
+  endereco        String?
+  bairro          String?
+  cep             String?
+  cidade          String?
+  telefone        String?
+  celular         String?
+  email           String?
+  contato         String?
+  dataCadastro    DateTime?
+  dataAdmissao    DateTime?
+  dataNascimento  DateTime?
+  limite          Decimal?  @db.Decimal(10, 2)
+  margemConsig    Decimal?  @db.Decimal(10, 2)
+  gratificacao    Decimal?  @db.Decimal(10, 2)
+  autorizado      Boolean   @default(false)
+  sexo            String?
+  estadoCivil     String?
+  numCompras      Int?
+  tipo            String?
+  agencia         String?
+  conta           String?
+  banco           String?
+  devolucao       Boolean   @default(false)
+  bloqueio        Boolean   @default(false)
+  motivoBloqueio  String?
+  codTipo         String?
+  senha           String?
+  dataExclusao    DateTime?
+  motivoExclusao  String?
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  empresa         Empresa?  @relation(fields: [empresaId], references: [id])
 
   @@map("socios")
 }
 
-// Convenio = Comércio ou Banco onde funcionários consomem margem
-// Mapeado da tabela existente "convenio"
-model Convenio {
-  id            Int            @id @default(autoincrement())
-  userId        String?        // FK: Usuário que gerencia este convênio (ex: A.S.P.M.A)
-  codigo        String?        // Código do convênio
-  data          DateTime?      // Data de cadastro
-  razao_soc     String?        // Razão social
-  fantasia      String?        // Nome fantasia
-  desconto      Decimal?       @db.Decimal(5, 2)  // Percentual de desconto
-  cgc           String?        // CNPJ/CGC
-  ie            String?        // Inscrição Estadual
-  cpf           String?        // CPF (pessoa física)
-  rg            String?        // RG
-  endereco      String?        // Endereço
-  bairro        String?        // Bairro
-  cep           String?        // CEP
-  cidade        String?        // Cidade
-  uf            String?        // Estado/UF
-  fone          String?        // Telefone
-  fax           String?        // Fax
-  contato       String?        // Pessoa de contato
-  agencia       String?        // Agência bancária
-  conta         String?        // Conta bancária
-  banco         String?        // Banco
-  usuario       String?        // Usuário de acesso
-  senha         String?        // Senha de acesso
-  parcelas      Int?           // Número de parcelas
-  mensagem      String?        // Mensagem
-  libera        String?        // Flag de liberação
-  email         String?        // Email
-  chave         String?        // Chave de acesso
-  convenio      Int?           // Referência ao convênio pai
-  // Campos adicionais para compatibilidade
-  nome          String         @default("")  // Nome (derivado de razao_soc ou fantasia)
-  cnpj          String?        // Alias para cgc
-  tipo          String?        // Tipo do convênio (BANCO, COMERCIO, etc)
-  estado        String?        // Alias para uf
-  telefone      String?        // Alias para fone
-  ativo         Boolean        @default(true)
-  createdAt     DateTime?      @default(now())
-  updatedAt     DateTime?      @updatedAt
-  user          User?          @relation(fields: [userId], references: [id])
-  autorizacoes  Autorizacao[]  // Empresas autorizadas neste convênio
-
-  @@map("convenio")
-}
-
-// Autorizacao = Define quais empresas podem usar quais convênios
-model Autorizacao {
-  id          String   @id @default(cuid())
-  empresaId   Int      // FK: Consignatária
-  convenioId  Int      // FK: Convênio (Comércio/Banco)
-  ativo       Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  // Relacionamentos
-  empresa     Empresa  @relation(fields: [empresaId], references: [id])
-  convenio    Convenio @relation(fields: [convenioId], references: [id])
-
-  @@unique([empresaId, convenioId]) // Não duplicar autorização
-  @@map("autorizacoes")
-}
-
-enum UserRole {
-  ADMIN    // Você (administra tudo)
-  MANAGER  // Cliente (gerencia suas consignatárias e locais)
-  OPERATOR // Operador (acesso limitado)
-  USER     // Usuário comum
-}
-
-enum TipoEmpresa {
-  PUBLICO  // Ex: Prefeitura, Órgão Público
-  PRIVADO  // Ex: Empresa Privada, Fundo de Previdência
+enum StatusConsignado {
+  ATIVO
+  QUITADO
+  CANCELADO
+  SUSPENSO
 }
 
 enum TipoConsignado {
@@ -187,9 +188,21 @@ enum TipoConsignado {
   OUTROS
 }
 
-enum StatusConsignado {
-  ATIVO
-  QUITADO
-  CANCELADO
-  SUSPENSO
+enum TipoFuncionario {
+  PUBLICO
+  PRIVADO
+  APOSENTADO
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  USER
+}
+
+enum TipoEmpresa {
+  PUBLICA
+  PRIVADA
+  MISTA
 }

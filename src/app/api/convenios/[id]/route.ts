@@ -74,11 +74,14 @@ export async function PUT(
       )
     }
 
-    if (existing.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Sem permissão para editar este convênio" },
-        { status: 403 }
-      )
+    // Apenas verificar ownership se não for MANAGER/ADMIN
+    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
+      if (existing.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: "Sem permissão para editar este convênio" },
+          { status: 403 }
+        )
+      }
     }
 
     const body = await req.json()
@@ -89,7 +92,6 @@ export async function PUT(
       const duplicate = await db.convenio.findFirst({
         where: {
           cnpj: data.cnpj,
-          userId: session.user.id,
           NOT: { id },
         },
       })
@@ -165,11 +167,14 @@ export async function DELETE(
       )
     }
 
-    if (existing.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Sem permissão para excluir este convênio" },
-        { status: 403 }
-      )
+    // Apenas verificar ownership se não for MANAGER/ADMIN
+    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
+      if (existing.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: "Sem permissão para excluir este convênio" },
+          { status: 403 }
+        )
+      }
     }
 
     // Verificar se há autorizações vinculadas

@@ -31,14 +31,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
 
+    // MANAGER e ADMIN podem ver todas as empresas
+    const where: any = session.user.role === "MANAGER" || session.user.role === "ADMIN"
+      ? {}
+      : { userId: session.user.id }
+
+    if (search) {
+      where.nome = {
+        contains: search,
+        mode: "insensitive"
+      }
+    }
+
     const empresas = await prisma.empresa.findMany({
-      where: {
-        userId: session.user.id,
-        nome: {
-          contains: search,
-          mode: "insensitive"
-        }
-      },
+      where,
       orderBy: {
         nome: "asc",
       },

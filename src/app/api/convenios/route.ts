@@ -113,7 +113,6 @@ export async function POST(req: NextRequest) {
       const existing = await db.convenio.findFirst({
         where: {
           cnpj: data.cnpj,
-          userId: session.user.id,
         },
       })
 
@@ -133,7 +132,7 @@ export async function POST(req: NextRequest) {
       uf: data.estado || data.uf,
       fone: data.telefone || data.fone,
       tipo: getTipoFromLibera(data.libera),
-      userId: session.user.id,
+      userId: session.user.role === "MANAGER" || session.user.role === "ADMIN" ? null : session.user.id,
     }
 
     const convenio = await db.convenio.create({

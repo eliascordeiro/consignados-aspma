@@ -36,16 +36,26 @@ export async function PUT(
     const body = await request.json()
     const validatedData = empresaSchema.parse(body)
 
-    // Verificar se a empresa pertence ao usuário
+    // Verificar se a empresa pertence ao usuário (ou se é MANAGER/ADMIN)
     const existing = await prisma.empresa.findUnique({
       where: { id }
     })
 
-    if (!existing || existing.userId !== session.user.id) {
+    if (!existing) {
       return NextResponse.json(
         { error: "Consignatária não encontrada" },
         { status: 404 }
       )
+    }
+
+    // Apenas verificar ownership se não for MANAGER/ADMIN
+    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
+      if (existing.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: "Consignatária não encontrada" },
+          { status: 404 }
+        )
+      }
     }
 
     // Verificar se CNPJ já existe em outra empresa
@@ -99,16 +109,26 @@ export async function DELETE(
     const { id: paramId } = await params
     const id = parseInt(paramId)
 
-    // Verificar se a empresa pertence ao usuário
+    // Verificar se a empresa pertence ao usuário (ou se é MANAGER/ADMIN)
     const existing = await prisma.empresa.findUnique({
       where: { id }
     })
 
-    if (!existing || existing.userId !== session.user.id) {
+    if (!existing) {
       return NextResponse.json(
         { error: "Consignatária não encontrada" },
         { status: 404 }
       )
+    }
+
+    // Apenas verificar ownership se não for MANAGER/ADMIN
+    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
+      if (existing.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: "Consignatária não encontrada" },
+          { status: 404 }
+        )
+      }
     }
 
     // Verificar se há sócios vinculados
