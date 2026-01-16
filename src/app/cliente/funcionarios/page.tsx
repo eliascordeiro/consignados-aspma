@@ -353,17 +353,18 @@ export default function FuncionariosPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Funcionários</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Funcionários</h1>
+          <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
             Gerencie os funcionários das consignatárias
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Funcionário
+        <Button onClick={handleNew} size="sm" className="flex-shrink-0">
+          <Plus className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Novo Funcionário</span>
+          <span className="md:hidden">Novo</span>
         </Button>
       </div>
 
@@ -399,30 +400,63 @@ export default function FuncionariosPage() {
           )}
           
           {!loading && funcionarios.length > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Mostrando {((page - 1) * 50) + 1} a {Math.min(page * 50, total)} de {total} funcionários
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Anterior
-                </Button>
-                <div className="flex items-center gap-2 text-sm">
-                  Página {page} de {totalPages}
+            <div className="mt-4 pt-4 border-t">
+              {/* Mobile: Layout em coluna */}
+              <div className="flex flex-col gap-3 sm:hidden">
+                <div className="text-xs text-center text-muted-foreground">
+                  {((page - 1) * 50) + 1}-{Math.min(page * 50, total)} de {total}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >
-                  Próxima
-                </Button>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="flex-1 max-w-[100px]"
+                  >
+                    ← Ant
+                  </Button>
+                  <div className="text-sm font-medium px-3 py-1 bg-muted rounded-md whitespace-nowrap">
+                    {page}/{totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="flex-1 max-w-[100px]"
+                  >
+                    Prox →
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Desktop: Layout em linha */}
+              <div className="hidden sm:flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {((page - 1) * 50) + 1} a {Math.min(page * 50, total)} de {total} funcionários
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm px-3 py-1 bg-muted rounded-md">
+                    Página {page} de {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
               </div>
             </div>
           )}
