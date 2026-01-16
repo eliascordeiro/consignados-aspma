@@ -274,20 +274,21 @@ export default function LocaisPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Convênios</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Convênios</h1>
+          <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
             Gerencie os convênios autorizados (bancos, comércios, cooperativas, etc)
           </p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Convênio
+            <Button size="sm" className="flex-shrink-0">
+              <Plus className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Novo Convênio</span>
+              <span className="md:hidden">Novo</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="w-full max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">

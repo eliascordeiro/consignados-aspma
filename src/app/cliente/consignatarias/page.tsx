@@ -190,17 +190,18 @@ export default function ConsignatariasPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Consignatárias</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Consignatárias</h1>
+          <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
             Gerencie as empresas consignatárias
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Consignatária
+        <Button onClick={handleNew} size="sm" className="flex-shrink-0">
+          <Plus className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Nova Consignatária</span>
+          <span className="md:hidden">Nova</span>
         </Button>
       </div>
 
