@@ -29,7 +29,7 @@ model funcionarios {
   id             String          @id
   nome           String
   cpf            String          @unique
-  matricula      String?         @unique
+  matricula      String?
   tipo           TipoFuncionario
   orgao          String
   setor          String?

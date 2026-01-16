@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         searchFilters.push({ cpf: { contains: cpfNumbers, mode: "insensitive" } })
       }
       
+      console.log("Search filters:", JSON.stringify(searchFilters, null, 2))
       where.AND.push({ OR: searchFilters })
     }
 
