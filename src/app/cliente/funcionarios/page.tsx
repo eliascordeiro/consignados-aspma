@@ -492,7 +492,7 @@ export default function FuncionariosPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-50 dark:bg-slate-900">
+        <DialogContent className="max-w-4xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {selectedFuncionario ? "Editar Funcionário" : "Novo Funcionário"}
@@ -501,16 +501,17 @@ export default function FuncionariosPage() {
               Preencha os dados do funcionário
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <Tabs defaultValue="pessoais" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <Tabs defaultValue="pessoais" className="w-full flex flex-col flex-1 overflow-hidden">
+              <TabsList className="grid w-full grid-cols-4 shrink-0">
                 <TabsTrigger value="pessoais">Pessoais</TabsTrigger>
                 <TabsTrigger value="profissionais">Profissionais</TabsTrigger>
                 <TabsTrigger value="financeiros">Financeiros</TabsTrigger>
                 <TabsTrigger value="outros">Outros</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="pessoais" className="space-y-4 py-4">
+              <div className="flex-1 overflow-y-auto">
+              <TabsContent value="pessoais" className="space-y-4 py-4 mt-0">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
                     <Label htmlFor="empresaId">Consignatária *</Label>
@@ -678,7 +679,7 @@ export default function FuncionariosPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="profissionais" className="space-y-4 py-4">
+              <TabsContent value="profissionais" className="space-y-4 py-4 mt-0">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="funcao">Função</Label>
@@ -738,7 +739,7 @@ export default function FuncionariosPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="financeiros" className="space-y-4 py-4">
+              <TabsContent value="financeiros" className="space-y-4 py-4 mt-0">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="limite">Limite de Crédito</Label>
@@ -822,7 +823,7 @@ export default function FuncionariosPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="outros" className="space-y-4 py-4">
+              <TabsContent value="outros" className="space-y-4 py-4 mt-0">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="bloqueio">Bloqueio</Label>
@@ -906,9 +907,10 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
               </TabsContent>
+              </div>
             </Tabs>
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="mt-6 shrink-0">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>

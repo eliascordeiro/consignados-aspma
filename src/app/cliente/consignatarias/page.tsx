@@ -243,8 +243,8 @@ export default function ConsignatariasPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-slate-900 consignado:bg-blue-50 consignado:dark:bg-slate-900 flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>
               {selectedEmpresa ? "Editar Consignatária" : "Nova Consignatária"}
             </DialogTitle>
@@ -252,9 +252,9 @@ export default function ConsignatariasPage() {
               Preencha os dados da consignatária
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="grid gap-4 py-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome *</Label>
                   <Input
@@ -274,7 +274,7 @@ export default function ConsignatariasPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="tipo">Tipo *</Label>
                   <Select value={formData.tipo} onValueChange={(value) => setFormData({ ...formData, tipo: value })}>
@@ -297,7 +297,7 @@ export default function ConsignatariasPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -317,7 +317,7 @@ export default function ConsignatariasPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="cep">CEP</Label>
                   <Input
@@ -326,7 +326,7 @@ export default function ConsignatariasPage() {
                     onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="rua">Rua</Label>
                   <Input
                     id="rua"
@@ -336,7 +336,7 @@ export default function ConsignatariasPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="numero">Número</Label>
                   <Input
@@ -383,7 +383,7 @@ export default function ConsignatariasPage() {
                 <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="shrink-0">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>

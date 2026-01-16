@@ -295,8 +295,8 @@ export default function LocaisPage() {
               <span className="md:hidden">Novo</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-            <DialogHeader>
+          <DialogContent className="w-full max-w-5xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-slate-900 consignado:bg-blue-50 consignado:dark:bg-slate-900 flex flex-col p-4 sm:p-6">
+            <DialogHeader className="shrink-0">
               <DialogTitle className="text-xl sm:text-2xl">
                 {editingConvenio ? "Editar Convênio" : "Novo Convênio"}
               </DialogTitle>
@@ -305,7 +305,8 @@ export default function LocaisPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+              <div className="space-y-4 sm:space-y-6 overflow-y-auto flex-1">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide border-b pb-2">
                   Dados Principais
@@ -604,8 +605,9 @@ export default function LocaisPage() {
                     Convênio ativo
                   </Label>
                 </div>
+              </div>
 
-                <DialogFooter className="flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <DialogFooter className="flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
                   <Button
                     type="button"
                     variant="outline"
