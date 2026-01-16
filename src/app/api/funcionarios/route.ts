@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
     // Se não há filtros, remover a estrutura AND vazia
     const finalWhere = where.AND.length > 0 ? where : {}
 
-    // Se não há filtros, remover a estrutura AND vazia
-    const finalWhere = where.AND.length > 0 ? where : {}
+    console.log("Search params:", { search, empresaId, role: session.user.role })
+    console.log("Final where:", JSON.stringify(finalWhere, null, 2))
 
     const funcionarios = await prisma.socio.findMany({
       where: finalWhere,
