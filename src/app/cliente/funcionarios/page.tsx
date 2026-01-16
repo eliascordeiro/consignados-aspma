@@ -479,7 +479,7 @@ export default function FuncionariosPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <DialogHeader>
             <DialogTitle>
               {selectedFuncionario ? "Editar Funcionário" : "Novo Funcionário"}
@@ -519,8 +519,8 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2 md:col-span-1">
                     <Label htmlFor="matricula">Matrícula *</Label>
                     <Input
                       id="matricula"
@@ -529,7 +529,7 @@ export default function FuncionariosPage() {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="nome">Nome Completo *</Label>
                     <Input
                       id="nome"
@@ -572,7 +572,7 @@ export default function FuncionariosPage() {
                   <div className="space-y-2">
                     <Label htmlFor="sexo">Sexo</Label>
                     <Select value={formData.sexo} onValueChange={(value) => setFormData({ ...formData, sexo: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 w-full">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -584,7 +584,7 @@ export default function FuncionariosPage() {
                   <div className="space-y-2">
                     <Label htmlFor="estadoCivil">Estado Civil</Label>
                     <Select value={formData.estadoCivil} onValueChange={(value) => setFormData({ ...formData, estadoCivil: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10 w-full">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
