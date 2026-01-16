@@ -417,7 +417,7 @@ function VirtualizedEmpresasTable({
   const rowVirtualizer = useVirtualizer({
     count: empresas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => isMobile ? 160 : 72,
+    estimateSize: () => isMobile ? 180 : 72,
     overscan: 5,
   })
 
@@ -467,10 +467,10 @@ function VirtualizedEmpresasTable({
                   className="border-b hover:bg-muted/50"
                 >
                   {/* Layout Mobile - Cards */}
-                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-950">
-                    <div className="flex items-start justify-between gap-3">
+                  <div className="md:hidden p-3 space-y-2.5 bg-white dark:bg-gray-950">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
+                        <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-snug break-words">
                           {empresa.nome}
                         </div>
                       </div>
@@ -478,37 +478,43 @@ function VirtualizedEmpresasTable({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9"
+                          className="h-8 w-8"
                           onClick={() => onEdit(empresa)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9"
+                          className="h-8 w-8"
                           onClick={() => onDelete(empresa)}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 text-xs">
                       {(empresa.contato || empresa.telefone) && (
-                        <div className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                          <span className="text-muted-foreground">Contato:</span>{' '}
-                          {empresa.contato && <span className="font-medium text-gray-900 dark:text-gray-100">{empresa.contato}</span>}
+                        <div className="bg-gray-50 dark:bg-gray-900 p-2 rounded-md">
+                          <div className="text-muted-foreground mb-0.5">Contato:</div>
+                          {empresa.contato && (
+                            <div className="font-medium text-gray-900 dark:text-gray-100 break-words">
+                              {empresa.contato}
+                            </div>
+                          )}
                           {empresa.telefone && (
-                            <span className="text-gray-600 dark:text-gray-400 ml-1">• {empresa.telefone}</span>
+                            <div className="text-gray-600 dark:text-gray-400">
+                              {empresa.telefone}
+                            </div>
                           )}
                         </div>
                       )}
                       
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Tipo:</span>
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Tipo:</span>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
                             empresa.tipo === "PUBLICO" 
                               ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" 
                               : "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
@@ -517,14 +523,14 @@ function VirtualizedEmpresasTable({
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Status:</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground">Status:</span>
                           {empresa.ativo ? (
-                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                               ✓ Ativo
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                               Inativo
                             </span>
                           )}
