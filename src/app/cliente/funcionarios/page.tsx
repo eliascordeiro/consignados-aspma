@@ -500,6 +500,36 @@ export default function FuncionariosPage() {
               <TabsContent value="pessoais" className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
+                    <Label htmlFor="empresaId">Consignatária *</Label>
+                    <Select 
+                      value={formData.empresaId} 
+                      onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a consignatária" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {empresas.map((empresa) => (
+                          <SelectItem key={empresa.id} value={empresa.id.toString()}>
+                            {empresa.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="matricula">Matrícula *</Label>
+                    <Input
+                      id="matricula"
+                      value={formData.matricula}
+                      onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="nome">Nome Completo *</Label>
                     <Input
                       id="nome"
@@ -636,36 +666,6 @@ export default function FuncionariosPage() {
               </TabsContent>
 
               <TabsContent value="profissionais" className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="matricula">Matrícula *</Label>
-                    <Input
-                      id="matricula"
-                      value={formData.matricula}
-                      onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="empresaId">Consignatária *</Label>
-                    <Select 
-                      value={formData.empresaId} 
-                      onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a consignatária" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {empresas.map((empresa) => (
-                          <SelectItem key={empresa.id} value={empresa.id.toString()}>
-                            {empresa.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="funcao">Função</Label>
