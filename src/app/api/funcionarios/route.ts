@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         limite: data.limite ? parseFloat(data.limite) : null,
         margemConsig: data.margemConsig ? parseFloat(data.margemConsig) : null,
         gratificacao: data.gratificacao ? parseFloat(data.gratificacao) : null,
-        autorizado: data.autorizado === "X" || data.autorizado === true,
+        autorizado: data.autorizado || null,
         sexo: data.sexo || null,
         estadoCivil: data.estadoCivil || null,
         numCompras: data.numCompras ? parseInt(data.numCompras) : null,

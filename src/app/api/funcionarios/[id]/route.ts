@@ -99,7 +99,7 @@ export async function PUT(
       ativo: data.ativo !== undefined ? data.ativo : true,
       // Campos Boolean
       bloqueio: data.bloqueio === "X" || data.bloqueio === true,
-      autorizado: data.autorizado === "X" || data.autorizado === true,
+      autorizado: data.autorizado || null,
       devolucao: data.devolucao === "X" || data.devolucao === true || (!isNaN(parseFloat(data.devolucao)) && parseFloat(data.devolucao) > 0),
     }
 
