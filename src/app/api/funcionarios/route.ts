@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
     const empresaId = searchParams.get("empresaId")
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "50")
+    const skip = (page - 1) * limit
 
     // Construir filtros base
     const where: any = {
@@ -72,23 +75,44 @@ export async function GET(request: NextRequest) {
     // Se não há filtros, remover a estrutura AND vazia
     const finalWhere = where.AND.length > 0 ? where : {}
 
-    console.log("Search params:", { search, empresaId, role: session.user.role, useExactMatch })
-    console.log("Final where:", JSON.stringify(finalWhere, null, 2))
+    console.log("Search params:", { search, empresaId, role: session.user.role, useExactMatch, page, limit })
 
+    // Buscar total de registros para paginação
+    const total = await prisma.socio.count({ where: finalWhere })
+
+    // Buscar funcionários com paginação e apenas campos necessários
     const funcionarios = await prisma.socio.findMany({
       where: finalWhere,
-      include: {
+      select: {
+        id: true,
+        nome: true,
+        cpf: true,
+        matricula: true,
+        empresaId: true,
         empresa: {
           select: {
             id: true,
             nome: true,
           },
         },
+        limite: true,
+        margemConsig: true,
+        ativo: true,
       },
       orderBy: { nome: "asc" },
+      skip,
+      take: limit,
     })
 
-    return NextResponse.json(funcionarios)
+    return NextResponse.json({
+      data: funcionarios,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    })
   } catch (error) {
     console.error("Erro ao buscar funcionários:", error)
     return NextResponse.json(

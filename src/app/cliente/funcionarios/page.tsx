@@ -93,6 +93,9 @@ export default function FuncionariosPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedFuncionario, setSelectedFuncionario] = useState<Funcionario | null>(null)
   const [formData, setFormData] = useState({
@@ -138,10 +141,12 @@ export default function FuncionariosPage() {
   const loadFuncionarios = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/funcionarios?search=${searchTerm}`)
+      const response = await fetch(`/api/funcionarios?search=${searchTerm}&page=${page}&limit=50`)
       if (response.ok) {
-        const data = await response.json()
-        setFuncionarios(data)
+        const result = await response.json()
+        setFuncionarios(result.data || [])
+        setTotalPages(result.pagination?.totalPages || 1)
+        setTotal(result.pagination?.total || 0)
       }
     } catch (error) {
       console.error("Erro ao carregar funcionários:", error)
@@ -175,10 +180,11 @@ export default function FuncionariosPage() {
       loadFuncionarios()
       loadEmpresas()
     }
-  }, [status])
+  }, [status, page])
 
   useEffect(() => {
     if (status === "authenticated") {
+      setPage(1) // Resetar para primeira página ao buscar
       const debounce = setTimeout(() => {
         loadFuncionarios()
       }, 500)
@@ -390,6 +396,35 @@ export default function FuncionariosPage() {
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
+          )}
+          
+          {!loading && funcionarios.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Mostrando {((page - 1) * 50) + 1} a {Math.min(page * 50, total)} de {total} funcionários
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-2 text-sm">
+                  Página {page} de {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
