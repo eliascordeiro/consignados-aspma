@@ -147,9 +147,6 @@ export async function DELETE(
     // Verificar se o convênio existe e pertence ao usuário
     const existing = await db.convenio.findUnique({
       where: { id },
-      include: {
-        autorizacoes: true,
-      },
     })
 
     if (!existing) {
@@ -167,14 +164,6 @@ export async function DELETE(
           { status: 403 }
         )
       }
-    }
-
-    // Verificar se há autorizações vinculadas
-    if (existing.autorizacoes.length > 0) {
-      return NextResponse.json(
-        { error: "Não é possível excluir convênio com autorizações vinculadas" },
-        { status: 400 }
-      )
     }
 
     await db.convenio.delete({
