@@ -13,25 +13,40 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
     const empresaId = searchParams.get("empresaId")
 
-    // MANAGER pode ver todos os funcionários, outros roles apenas os seus
-    const where: any = session.user.role === "MANAGER" || session.user.role === "ADMIN"
-      ? {}
-      : { userId: session.user.id }
+    // Construir filtros base
+    const where: any = {
+      AND: []
+    }
 
+    // MANAGER/ADMIN pode ver todos os funcionários, outros roles apenas os seus
+    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
+      where.AND.push({ userId: session.user.id })
+    }
+
+    // Filtro de busca por nome, CPF ou matrícula
     if (search) {
-      where.OR = [
-        { nome: { contains: search, mode: "insensitive" } },
-        { cpf: { contains: search.replace(/\D/g, ""), mode: "insensitive" } },
-        { matricula: { contains: search, mode: "insensitive" } },
-      ]
+      where.AND.push({
+        OR: [
+          { nome: { contains: search, mode: "insensitive" } },
+          { cpf: { contains: search.replace(/\D/g, ""), mode: "insensitive" } },
+          { matricula: { contains: search, mode: "insensitive" } },
+        ]
+      })
     }
 
+    // Filtro por empresa
     if (empresaId) {
-      where.empresaId = parseInt(empresaId)
+      where.AND.push({ empresaId: parseInt(empresaId) })
     }
+
+    // Se não há filtros, remover a estrutura AND vazia
+    const finalWhere = where.AND.length > 0 ? where : {}
+
+    // Se não há filtros, remover a estrutura AND vazia
+    const finalWhere = where.AND.length > 0 ? where : {}
 
     const funcionarios = await prisma.socio.findMany({
-      where,
+      where: finalWhere,
       include: {
         empresa: {
           select: {
