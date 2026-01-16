@@ -31,7 +31,7 @@ export async function PUT(
     const validatedData = updateUserSchema.parse(body)
 
     // Verificar se usuário existe
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { id },
     })
 
@@ -44,7 +44,7 @@ export async function PUT(
 
     // Se email foi alterado, verificar se já existe
     if (validatedData.email && validatedData.email !== existingUser.email) {
-      const emailExists = await prisma.user.findUnique({
+      const emailExists = await prisma.users.findUnique({
         where: { email: validatedData.email },
       })
 
@@ -71,7 +71,7 @@ export async function PUT(
       updateData.password = await bcrypt.hash(validatedData.password, 10)
     }
 
-    const user = await prisma.user.update({
+    const user = await prisma.users.update({
       where: { id },
       data: updateData,
       select: {
@@ -118,7 +118,7 @@ export async function DELETE(
     const { id } = await params
 
     // Verificar se usuário existe
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { id },
     })
 
@@ -137,7 +137,7 @@ export async function DELETE(
       )
     }
 
-    await prisma.user.delete({
+    await prisma.users.delete({
       where: { id },
     })
 
