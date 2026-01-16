@@ -56,11 +56,7 @@ export async function PUT(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
-    const { id: paramId } = await params
-    const id = parseInt(paramId)
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 })
-    }
+    const { id } = await params
 
     // Verificar se o convênio existe e pertence ao usuário
     const existing = await db.convenio.findUnique({
@@ -146,11 +142,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
-    const { id: paramId } = await params
-    const id = parseInt(paramId)
-    if (isNaN(id)) {
-      return NextResponse.json({ error: "ID inválido" }, { status: 400 })
-    }
+    const { id } = await params
 
     // Verificar se o convênio existe e pertence ao usuário
     const existing = await db.convenio.findUnique({
