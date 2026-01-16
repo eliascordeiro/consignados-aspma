@@ -174,23 +174,36 @@ export default function FuncionariosPage() {
     }
   }, [status, router])
 
-  // Carregar dados apenas quando autenticado
+  // Carregar empresas uma única vez
+  useEffect(() => {
+    if (status === "authenticated") {
+      loadEmpresas()
+    }
+  }, [status])
+
+  // Resetar página quando searchTerm mudar
+  useEffect(() => {
+    if (searchTerm !== "") {
+      setPage(1)
+    }
+  }, [searchTerm])
+
+  // Carregar funcionários quando page mudar
   useEffect(() => {
     if (status === "authenticated") {
       loadFuncionarios()
-      loadEmpresas()
     }
   }, [status, page])
 
+  // Aplicar debounce no search
   useEffect(() => {
-    if (status === "authenticated") {
-      setPage(1) // Resetar para primeira página ao buscar
+    if (status === "authenticated" && searchTerm !== "") {
       const debounce = setTimeout(() => {
         loadFuncionarios()
       }, 500)
       return () => clearTimeout(debounce)
     }
-  }, [searchTerm, status])
+  }, [searchTerm])
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return ""

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +43,7 @@ export default function ClienteLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 consignado:from-blue-50 consignado:to-slate-100">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -150,7 +150,7 @@ export default function ClienteLayout({
           
           <div className="flex-1" />
           
-          <ThemeToggle />
+          <ThemeSwitcher />
         </header>
 
         {/* Page content */}

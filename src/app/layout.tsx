@@ -24,9 +24,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="consignado"
           enableSystem
           disableTransitionOnChange
+          themes={["light", "dark", "consignado"]}
         >
           <SessionProvider>{children}</SessionProvider>
           <Toaster position="top-right" richColors />

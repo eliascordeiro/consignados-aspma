@@ -124,15 +124,19 @@ export default function LocaisPage() {
     ativo: true,
   })
 
+  // Carregar convênios apenas uma vez ao montar
   useEffect(() => {
     loadConvenios()
   }, [])
 
+  // Aplicar debounce apenas quando search mudar
   useEffect(() => {
-    const timer = setTimeout(() => {
-      loadConvenios()
-    }, 500)
-    return () => clearTimeout(timer)
+    if (searchTerm !== "") {
+      const timer = setTimeout(() => {
+        loadConvenios()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
   }, [searchTerm])
 
   const loadConvenios = async () => {

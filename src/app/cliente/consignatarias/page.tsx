@@ -85,15 +85,19 @@ export default function ConsignatariasPage() {
     }
   }
 
+  // Carregar empresas apenas uma vez ao montar
   useEffect(() => {
     loadEmpresas()
   }, [])
 
+  // Aplicar debounce apenas quando search mudar
   useEffect(() => {
-    const debounce = setTimeout(() => {
-      loadEmpresas()
-    }, 500)
-    return () => clearTimeout(debounce)
+    if (searchTerm !== "") {
+      const debounce = setTimeout(() => {
+        loadEmpresas()
+      }, 500)
+      return () => clearTimeout(debounce)
+    }
   }, [searchTerm])
 
   const handleEdit = (empresa: Empresa) => {
