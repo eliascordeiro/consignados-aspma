@@ -197,48 +197,63 @@ export default function FuncionariosPage() {
     return new Date(dateString).toISOString().split("T")[0]
   }
 
-  const handleEdit = (funcionario: Funcionario) => {
-    setSelectedFuncionario(funcionario)
-    setFormData({
-      nome: funcionario.nome,
-      cpf: funcionario.cpf || "",
-      rg: funcionario.rg || "",
-      matricula: funcionario.matricula || "",
-      empresaId: funcionario.empresaId?.toString() || "",
-      funcao: funcionario.funcao || "",
-      lotacao: funcionario.lotacao || "",
-      endereco: funcionario.endereco || "",
-      bairro: funcionario.bairro || "",
-      cep: funcionario.cep || "",
-      cidade: funcionario.cidade || "",
-      telefone: funcionario.telefone || "",
-      celular: funcionario.celular || "",
-      email: funcionario.email || "",
-      contato: funcionario.contato || "",
-      dataCadastro: formatDate(funcionario.dataCadastro),
-      dataAdmissao: formatDate(funcionario.dataAdmissao),
-      dataNascimento: formatDate(funcionario.dataNascimento),
-      limite: funcionario.limite?.toString() || "",
-      margemConsig: funcionario.margemConsig?.toString() || "",
-      gratificacao: funcionario.gratificacao?.toString() || "",
-      autorizado: funcionario.autorizado ? "X" : "",
-      sexo: funcionario.sexo || "",
-      estadoCivil: funcionario.estadoCivil || "",
-      numCompras: funcionario.numCompras?.toString() || "",
-      tipo: funcionario.tipo || "",
-      agencia: funcionario.agencia || "",
-      conta: funcionario.conta || "",
-      banco: funcionario.banco || "",
-      devolucao: funcionario.devolucao ? "X" : "",
-      bloqueio: funcionario.bloqueio ? "X" : "N",
-      motivoBloqueio: funcionario.motivoBloqueio || "",
-      codTipo: funcionario.codTipo || "",
-      senha: funcionario.senha || "",
-      dataExclusao: formatDate(funcionario.dataExclusao),
-      motivoExclusao: funcionario.motivoExclusao || "",
-      ativo: funcionario.ativo,
-    })
-    setDialogOpen(true)
+  const handleEdit = async (funcionario: Funcionario) => {
+    try {
+      setLoading(true)
+      // Buscar dados completos do funcionário
+      const response = await fetch(`/api/funcionarios/${funcionario.id}`)
+      if (!response.ok) {
+        throw new Error("Erro ao carregar dados do funcionário")
+      }
+      
+      const funcionarioCompleto = await response.json()
+      
+      setSelectedFuncionario(funcionarioCompleto)
+      setFormData({
+        nome: funcionarioCompleto.nome,
+        cpf: funcionarioCompleto.cpf || "",
+        rg: funcionarioCompleto.rg || "",
+        matricula: funcionarioCompleto.matricula || "",
+        empresaId: funcionarioCompleto.empresaId?.toString() || "",
+        funcao: funcionarioCompleto.funcao || "",
+        lotacao: funcionarioCompleto.lotacao || "",
+        endereco: funcionarioCompleto.endereco || "",
+        bairro: funcionarioCompleto.bairro || "",
+        cep: funcionarioCompleto.cep || "",
+        cidade: funcionarioCompleto.cidade || "",
+        telefone: funcionarioCompleto.telefone || "",
+        celular: funcionarioCompleto.celular || "",
+        email: funcionarioCompleto.email || "",
+        contato: funcionarioCompleto.contato || "",
+        dataCadastro: formatDate(funcionarioCompleto.dataCadastro),
+        dataAdmissao: formatDate(funcionarioCompleto.dataAdmissao),
+        dataNascimento: formatDate(funcionarioCompleto.dataNascimento),
+        limite: funcionarioCompleto.limite?.toString() || "",
+        margemConsig: funcionarioCompleto.margemConsig?.toString() || "",
+        gratificacao: funcionarioCompleto.gratificacao?.toString() || "",
+        autorizado: funcionarioCompleto.autorizado || "",
+        sexo: funcionarioCompleto.sexo || "",
+        estadoCivil: funcionarioCompleto.estadoCivil || "",
+        numCompras: funcionarioCompleto.numCompras?.toString() || "",
+        tipo: funcionarioCompleto.tipo || "",
+        agencia: funcionarioCompleto.agencia || "",
+        conta: funcionarioCompleto.conta || "",
+        banco: funcionarioCompleto.banco || "",
+        devolucao: funcionarioCompleto.devolucao?.toString() || "",
+        bloqueio: funcionarioCompleto.bloqueio || "",
+        motivoBloqueio: funcionarioCompleto.motivoBloqueio || "",
+        codTipo: funcionarioCompleto.codTipo?.toString() || "",
+        senha: funcionarioCompleto.senha || "",
+        dataExclusao: formatDate(funcionarioCompleto.dataExclusao),
+        motivoExclusao: funcionarioCompleto.motivoExclusao || "",
+        ativo: funcionarioCompleto.ativo,
+      })
+      setDialogOpen(true)
+    } catch (error) {
+      console.error("Erro ao carregar funcionário:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleNew = () => {
