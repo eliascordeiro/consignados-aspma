@@ -97,10 +97,13 @@ export async function PUT(
       dataExclusao: data.dataExclusao ? new Date(data.dataExclusao) : null,
       motivoExclusao: data.motivoExclusao || null,
       ativo: data.ativo !== undefined ? data.ativo : true,
-      // Campos Boolean
-      bloqueio: data.bloqueio === "X" || data.bloqueio === true,
+      bloqueio: data.bloqueio || null,
       autorizado: data.autorizado || null,
-      devolucao: data.devolucao === "X" || data.devolucao === true || (!isNaN(parseFloat(data.devolucao)) && parseFloat(data.devolucao) > 0),
+    }
+
+    // Adicionar devolucao se for número válido
+    if (data.devolucao && !isNaN(parseFloat(data.devolucao))) {
+      updateData.devolucao = parseFloat(data.devolucao)
     }
 
     // Adicionar campos numéricos apenas se forem válidos

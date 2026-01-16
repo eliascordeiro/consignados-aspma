@@ -158,8 +158,8 @@ model Socio {
   agencia         String?
   conta           String?
   banco           String?
-  devolucao       Boolean   @default(false)
-  bloqueio        Boolean   @default(false)
+  devolucao       Decimal?  @db.Decimal(10, 2)
+  bloqueio        String?
   motivoBloqueio  String?
   codTipo         String?
   senha           String?
