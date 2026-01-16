@@ -25,13 +25,18 @@ export async function GET(request: NextRequest) {
 
     // Filtro de busca por nome, CPF ou matrícula
     if (search) {
-      where.AND.push({
-        OR: [
-          { nome: { contains: search, mode: "insensitive" } },
-          { cpf: { contains: search.replace(/\D/g, ""), mode: "insensitive" } },
-          { matricula: { contains: search, mode: "insensitive" } },
-        ]
-      })
+      const searchFilters: any[] = [
+        { nome: { contains: search, mode: "insensitive" } },
+        { matricula: { contains: search, mode: "insensitive" } },
+      ]
+      
+      // Só adiciona filtro de CPF se houver números no termo de busca
+      const cpfNumbers = search.replace(/\D/g, "")
+      if (cpfNumbers.length > 0) {
+        searchFilters.push({ cpf: { contains: cpfNumbers, mode: "insensitive" } })
+      }
+      
+      where.AND.push({ OR: searchFilters })
     }
 
     // Filtro por empresa
