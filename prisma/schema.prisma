@@ -92,7 +92,7 @@ model convenio {
   libera     String?
   email      String?
   chave      String?
-  convenio   String?
+  convenio   Int?
   nome       String?
   cnpj       String?
   tipo       String?
