@@ -24,20 +24,44 @@ export async function GET(request: NextRequest) {
     }
 
     // Filtro de busca por nome, CPF ou matrícula
+    let useExactMatch = false
     if (search) {
-      const searchFilters: any[] = [
-        { nome: { contains: search, mode: "insensitive" } },
-        { matricula: { contains: search, mode: "insensitive" } },
-      ]
-      
-      // Só adiciona filtro de CPF se houver números no termo de busca
       const cpfNumbers = search.replace(/\D/g, "")
-      if (cpfNumbers.length > 0) {
-        searchFilters.push({ cpf: { contains: cpfNumbers, mode: "insensitive" } })
+      const isOnlyNumbers = cpfNumbers === search
+      
+      // Se for apenas números, tentar busca exata de matrícula primeiro
+      if (isOnlyNumbers) {
+        const exactMatch = await prisma.socio.findFirst({
+          where: {
+            matricula: search,
+            ...(session.user.role !== "MANAGER" && session.user.role !== "ADMIN" 
+              ? { userId: session.user.id } 
+              : {}),
+            ...(empresaId ? { empresaId: parseInt(empresaId) } : {})
+          }
+        })
+        
+        if (exactMatch) {
+          // Se encontrou matrícula exata, usar apenas esse filtro
+          useExactMatch = true
+          where.AND.push({ matricula: { equals: search } })
+        }
       }
       
-      console.log("Search filters:", JSON.stringify(searchFilters, null, 2))
-      where.AND.push({ OR: searchFilters })
+      // Se não encontrou matrícula exata, fazer busca ampla
+      if (!useExactMatch) {
+        const searchFilters: any[] = [
+          { nome: { contains: search, mode: "insensitive" } },
+          { matricula: { contains: search, mode: "insensitive" } },
+        ]
+        
+        // Só adiciona filtro de CPF se houver números no termo de busca
+        if (cpfNumbers.length > 0) {
+          searchFilters.push({ cpf: { contains: cpfNumbers, mode: "insensitive" } })
+        }
+        
+        where.AND.push({ OR: searchFilters })
+      }
     }
 
     // Filtro por empresa
@@ -48,7 +72,7 @@ export async function GET(request: NextRequest) {
     // Se não há filtros, remover a estrutura AND vazia
     const finalWhere = where.AND.length > 0 ? where : {}
 
-    console.log("Search params:", { search, empresaId, role: session.user.role })
+    console.log("Search params:", { search, empresaId, role: session.user.role, useExactMatch })
     console.log("Final where:", JSON.stringify(finalWhere, null, 2))
 
     const funcionarios = await prisma.socio.findMany({
