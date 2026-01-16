@@ -512,7 +512,7 @@ export default function FuncionariosPage() {
 
               <div className="flex-1 overflow-y-auto">
               <TabsContent value="pessoais" className="space-y-4 py-4 mt-0">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
                     <Label htmlFor="empresaId">Consignatária *</Label>
                     <Select 
@@ -554,7 +554,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="cpf">CPF</Label>
                     <Input
@@ -582,7 +582,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="sexo">Sexo</Label>
                     <Select value={formData.sexo} onValueChange={(value) => setFormData({ ...formData, sexo: value })}>
@@ -611,7 +611,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="telefone">Telefone</Label>
                     <Input
@@ -640,7 +640,7 @@ export default function FuncionariosPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="cep">CEP</Label>
                     <Input
@@ -659,7 +659,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="bairro">Bairro</Label>
                     <Input
@@ -680,7 +680,7 @@ export default function FuncionariosPage() {
               </TabsContent>
 
               <TabsContent value="profissionais" className="space-y-4 py-4 mt-0">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="funcao">Função</Label>
                     <Input
@@ -699,7 +699,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="dataCadastro">Data de Cadastro</Label>
                     <Input
@@ -740,7 +740,7 @@ export default function FuncionariosPage() {
               </TabsContent>
 
               <TabsContent value="financeiros" className="space-y-4 py-4 mt-0">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="limite">Limite de Crédito</Label>
                     <Input
@@ -773,7 +773,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="banco">Banco</Label>
                     <Input
@@ -800,7 +800,7 @@ export default function FuncionariosPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="numCompras">Número de Compras</Label>
                     <Input
@@ -824,7 +824,7 @@ export default function FuncionariosPage() {
               </TabsContent>
 
               <TabsContent value="outros" className="space-y-4 py-4 mt-0">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="bloqueio">Bloqueio</Label>
                     <Select value={formData.bloqueio || "N"} onValueChange={(value) => setFormData({ ...formData, bloqueio: value })}>
@@ -856,7 +856,7 @@ export default function FuncionariosPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="dataExclusao">Data de Exclusão</Label>
                     <Input
@@ -886,7 +886,7 @@ export default function FuncionariosPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="senha">Senha</Label>
                     <Input
