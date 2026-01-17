@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "prisma migrate resolve --rolled-back 20260117001937_add_password_reset_fields || prisma migrate deploy && next start",
+    "start": "(prisma migrate resolve --rolled-back 20260117001937_add_password_reset_fields || true) && prisma migrate deploy && next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },
