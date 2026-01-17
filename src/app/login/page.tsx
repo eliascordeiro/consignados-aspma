@@ -112,6 +112,12 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              <div className="flex items-center justify-end">
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                  Esqueceu sua senha?
+                </Link>
+              </div>
+
               {error && (
                 <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 text-sm text-red-600 dark:text-red-400">
                   <AlertCircle className="h-4 w-4" />
