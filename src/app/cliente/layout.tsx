@@ -26,13 +26,7 @@ import {
   CreditCard
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
-
-const navigation = [
-  { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard },
-  { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
-  { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
-  { name: "Convênios", href: "/cliente/locais", icon: Store },
-]
+import { AVAILABLE_PERMISSIONS, getUserPermissions } from "@/config/permissions"
 
 export default function ClienteLayout({
   children,
@@ -42,6 +36,10 @@ export default function ClienteLayout({
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { data: session } = useSession()
+
+  // Filtrar navegação baseado nas permissões do usuário
+  const userPermissions = (session?.user as any)?.permissions || []
+  const navigation = getUserPermissions(userPermissions)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 consignado:from-blue-50 consignado:to-slate-100">

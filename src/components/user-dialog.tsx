@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { AVAILABLE_PERMISSIONS } from "@/config/permissions"
 
 interface User {
   id: string
@@ -28,6 +30,7 @@ interface User {
   cpf?: string
   phone?: string
   active: boolean
+  permissions?: string[]
 }
 
 interface UserDialogProps {
@@ -48,6 +51,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
     cpf: "",
     phone: "",
     active: true,
+    permissions: [] as string[],
   })
 
   useEffect(() => {
@@ -60,6 +64,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
         cpf: user.cpf || "",
         phone: user.phone || "",
         active: user.active,
+        permissions: user.permissions || [],
       })
     } else {
       setFormData({
@@ -70,6 +75,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
         cpf: "",
         phone: "",
         active: true,
+        permissions: defaultRole === "MANAGER" ? AVAILABLE_PERMISSIONS.map(p => p.id) : [],
       })
     }
   }, [user, defaultRole])
@@ -108,7 +114,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{user ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
           <DialogDescription>
@@ -200,6 +206,79 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
                 />
               </div>
             </div>
+
+            {formData.role === "MANAGER" && (
+              <div className="grid gap-3 p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Permissões de Acesso</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ 
+                        ...formData, 
+                        permissions: AVAILABLE_PERMISSIONS.map(p => p.id) 
+                      })}
+                    >
+                      Selecionar Todos
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, permissions: [] })}
+                    >
+                      Limpar
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Selecione quais áreas do sistema o cliente poderá acessar
+                </p>
+                <div className="grid gap-3 mt-2">
+                  {AVAILABLE_PERMISSIONS.map((permission) => {
+                    const Icon = permission.icon
+                    return (
+                      <div
+                        key={permission.id}
+                        className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/30 transition-colors"
+                      >
+                        <Checkbox
+                          id={permission.id}
+                          checked={formData.permissions.includes(permission.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setFormData({
+                                ...formData,
+                                permissions: [...formData.permissions, permission.id]
+                              })
+                            } else {
+                              setFormData({
+                                ...formData,
+                                permissions: formData.permissions.filter(p => p !== permission.id)
+                              })
+                            }
+                          }}
+                        />
+                        <div className="flex-1">
+                          <label
+                            htmlFor={permission.id}
+                            className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            <Icon className="h-4 w-4" />
+                            {permission.name}
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {permission.description}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

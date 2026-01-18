@@ -54,6 +54,7 @@ model users {
   cpf               String?       @unique
   phone             String?
   active            Boolean       @default(true)
+  permissions       String[]      @default([])
   resetToken        String?
   resetTokenExpiry  DateTime?
   createdAt         DateTime      @default(now())

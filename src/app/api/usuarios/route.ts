@@ -12,6 +12,7 @@ const userSchema = z.object({
   cpf: z.string().optional(),
   phone: z.string().optional(),
   active: z.boolean().default(true),
+  permissions: z.array(z.string()).optional(),
 })
 
 // GET - Listar usuários
@@ -47,6 +48,7 @@ export async function GET(request: NextRequest) {
         cpf: true,
         phone: true,
         active: true,
+        permissions: true,
         createdAt: true,
       },
       orderBy: {
@@ -103,6 +105,7 @@ export async function POST(request: NextRequest) {
         cpf: validatedData.cpf,
         phone: validatedData.phone,
         active: validatedData.active,
+        permissions: validatedData.permissions || [],
       },
       select: {
         id: true,
@@ -112,6 +115,7 @@ export async function POST(request: NextRequest) {
         cpf: true,
         phone: true,
         active: true,
+        permissions: true,
         createdAt: true,
       },
     })

@@ -12,6 +12,7 @@ const updateUserSchema = z.object({
   cpf: z.string().optional(),
   phone: z.string().optional(),
   active: z.boolean().optional(),
+  permissions: z.array(z.string()).optional(),
 })
 
 // PUT - Atualizar usuário
@@ -64,6 +65,7 @@ export async function PUT(
       cpf: validatedData.cpf,
       phone: validatedData.phone,
       active: validatedData.active,
+      permissions: validatedData.permissions,
     }
 
     // Se senha foi fornecida, fazer hash
@@ -82,6 +84,7 @@ export async function PUT(
         cpf: true,
         phone: true,
         active: true,
+        permissions: true,
         createdAt: true,
       },
     })
