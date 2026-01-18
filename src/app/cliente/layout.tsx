@@ -25,7 +25,7 @@ import {
   X,
   CreditCard
 } from "lucide-react"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 
 const navigation = [
   { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard },
@@ -41,6 +41,7 @@ export default function ClienteLayout({
 }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { data: session } = useSession()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 consignado:from-blue-50 consignado:to-slate-100">
@@ -150,7 +151,7 @@ export default function ClienteLayout({
           
           <div className="flex-1 flex items-center">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Manger
+              {session?.user?.name || "Cliente"}
             </h2>
           </div>
           
