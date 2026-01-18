@@ -140,18 +140,28 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="password">
-                Senha {user ? "(deixe em branco para manter)" : "*"}
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required={!user}
-              />
-            </div>
+            {formData.role !== "MANAGER" && (
+              <div className="grid gap-2">
+                <Label htmlFor="password">
+                  Senha {user ? "(deixe em branco para manter)" : "*"}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required={!user}
+                />
+              </div>
+            )}
+
+            {formData.role === "MANAGER" && !user && (
+              <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 p-3 border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  ℹ️ O cliente receberá um email e deverá usar "Esqueceu sua senha" para criar a senha inicial.
+                </p>
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="role">Função *</Label>
