@@ -148,7 +148,11 @@ export default function ClienteLayout({
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="flex-1" />
+          <div className="flex-1 flex items-center">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Manger
+            </h2>
+          </div>
           
           <ThemeSwitcher />
         </header>
