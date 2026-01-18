@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { AVAILABLE_PERMISSIONS } from "@/config/permissions"
+import { PERMISSION_MODULES, AVAILABLE_PERMISSIONS } from "@/config/permissions"
+import { Badge } from "@/components/ui/badge"
 
 interface User {
   id: string
@@ -208,9 +209,14 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
             </div>
 
             {formData.role === "MANAGER" && (
-              <div className="grid gap-3 p-4 border rounded-lg bg-muted/50">
+              <div className="grid gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base font-semibold">Permissões de Acesso</Label>
+                  <div>
+                    <Label className="text-base font-semibold">Permissões de Acesso</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Dashboard está sempre disponível. Configure permissões específicas por módulo.
+                    </p>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -233,45 +239,93 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Selecione quais áreas do sistema o cliente poderá acessar
-                </p>
-                <div className="grid gap-3 mt-2">
-                  {AVAILABLE_PERMISSIONS.map((permission) => {
-                    const Icon = permission.icon
+
+                <div className="grid gap-4 mt-2">
+                  {PERMISSION_MODULES.map((module) => {
+                    const ModuleIcon = module.icon
+                    const modulePermissions = module.permissions
+                    const allModuleSelected = modulePermissions.every(p => formData.permissions.includes(p.id))
+                    const someModuleSelected = modulePermissions.some(p => formData.permissions.includes(p.id))
+                    
                     return (
-                      <div
-                        key={permission.id}
-                        className="flex items-start space-x-3 p-3 rounded-md hover:bg-muted/30 transition-colors"
-                      >
-                        <Checkbox
-                          id={permission.id}
-                          checked={formData.permissions.includes(permission.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setFormData({
-                                ...formData,
-                                permissions: [...formData.permissions, permission.id]
-                              })
-                            } else {
-                              setFormData({
-                                ...formData,
-                                permissions: formData.permissions.filter(p => p !== permission.id)
-                              })
-                            }
-                          }}
-                        />
-                        <div className="flex-1">
-                          <label
-                            htmlFor={permission.id}
-                            className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      <div key={module.id} className="border rounded-lg p-3 bg-background">
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                          <div className="flex items-center gap-2">
+                            <ModuleIcon className="h-5 w-5 text-primary" />
+                            <Label className="text-sm font-semibold">{module.name}</Label>
+                            {someModuleSelected && (
+                              <Badge variant="secondary" className="text-xs">
+                                {modulePermissions.filter(p => formData.permissions.includes(p.id)).length}/{modulePermissions.length}
+                              </Badge>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (allModuleSelected) {
+                                setFormData({
+                                  ...formData,
+                                  permissions: formData.permissions.filter(
+                                    p => !modulePermissions.find(mp => mp.id === p)
+                                  )
+                                })
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  permissions: [...new Set([
+                                    ...formData.permissions,
+                                    ...modulePermissions.map(p => p.id)
+                                  ])]
+                                })
+                              }
+                            }}
                           >
-                            <Icon className="h-4 w-4" />
-                            {permission.name}
-                          </label>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {permission.description}
-                          </p>
+                            {allModuleSelected ? "Desmarcar Todos" : "Marcar Todos"}
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {modulePermissions.map((permission) => {
+                            const PermIcon = permission.icon
+                            return (
+                              <div
+                                key={permission.id}
+                                className="flex items-start space-x-2 p-2 rounded hover:bg-muted/30 transition-colors"
+                              >
+                                <Checkbox
+                                  id={permission.id}
+                                  checked={formData.permissions.includes(permission.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setFormData({
+                                        ...formData,
+                                        permissions: [...formData.permissions, permission.id]
+                                      })
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        permissions: formData.permissions.filter(p => p !== permission.id)
+                                      })
+                                    }
+                                  }}
+                                />
+                                <div className="flex-1">
+                                  <label
+                                    htmlFor={permission.id}
+                                    className="flex items-center gap-2 text-sm font-medium leading-none cursor-pointer"
+                                  >
+                                    {PermIcon && <PermIcon className="h-3.5 w-3.5" />}
+                                    {permission.name}
+                                  </label>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {permission.description}
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )

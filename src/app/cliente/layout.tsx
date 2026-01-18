@@ -26,7 +26,15 @@ import {
   CreditCard
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
-import { AVAILABLE_PERMISSIONS, getUserPermissions } from "@/config/permissions"
+import { getUserModules } from "@/config/permissions"
+
+// Dashboard é sempre visível, outros módulos baseados em permissões
+const dashboardNav = { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard }
+const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = {
+  consignatarias: { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
+  funcionarios: { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
+  convenios: { name: "Convênios", href: "/cliente/locais", icon: Store },
+}
 
 export default function ClienteLayout({
   children,
@@ -39,7 +47,13 @@ export default function ClienteLayout({
 
   // Filtrar navegação baseado nas permissões do usuário
   const userPermissions = (session?.user as any)?.permissions || []
-  const navigation = getUserPermissions(userPermissions)
+  const userModules = getUserModules(userPermissions)
+  
+  // Dashboard sempre visível + módulos com permissão
+  const navigation = [
+    dashboardNav,
+    ...userModules.map(module => moduleRoutes[module.id]).filter(Boolean)
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 consignado:from-blue-50 consignado:to-slate-100">
