@@ -80,9 +80,9 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Esqueceu sua senha?</CardTitle>
+          <CardTitle>Criar ou Redefinir Senha</CardTitle>
           <CardDescription>
-            Digite seu email e enviaremos um link para redefinir sua senha
+            Digite seu email e enviaremos um link para configurar ou alterar sua senha
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

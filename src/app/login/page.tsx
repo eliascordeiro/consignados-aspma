@@ -115,7 +115,7 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-end">
                 <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                  Esqueceu sua senha?
+                  Criar ou Redefinir Senha
                 </Link>
               </div>
 
