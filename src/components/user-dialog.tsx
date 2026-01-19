@@ -92,10 +92,30 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
       
       const method = user ? "PUT" : "POST"
       
+      // Preparar dados - só incluir permissions se for MANAGER
+      const submitData: any = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        cpf: formData.cpf,
+        phone: formData.phone,
+        active: formData.active,
+      }
+
+      // Adicionar senha se fornecida
+      if (formData.password) {
+        submitData.password = formData.password
+      }
+
+      // Adicionar permissions apenas para MANAGER
+      if (formData.role === "MANAGER") {
+        submitData.permissions = formData.permissions
+      }
+      
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (!response.ok) {
