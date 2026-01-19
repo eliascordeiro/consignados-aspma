@@ -12,7 +12,6 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
     const empresaId = searchParams.get("empresaId")
-    const ativo = searchParams.get("ativo")
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "50")
     const skip = (page - 1) * limit
@@ -27,9 +26,19 @@ export async function GET(request: NextRequest) {
       where.AND.push({ userId: session.user.id })
     }
 
-    // Filtro de busca por nome, CPF ou matrícula
+    // Detectar se a busca é por status
+    let statusFilter: boolean | null = null
+    const searchLower = search.toLowerCase().trim()
+    
+    if (searchLower === 'ativo' || searchLower === 'ativos') {
+      statusFilter = true
+    } else if (searchLower === 'inativo' || searchLower === 'inativos') {
+      statusFilter = false
+    }
+
+    // Filtro de busca por nome, CPF, matrícula ou status
     let useExactMatch = false
-    if (search) {
+    if (search && statusFilter === null) {
       const cpfNumbers = search.replace(/\D/g, "")
       const isOnlyNumbers = cpfNumbers === search
       
@@ -73,9 +82,9 @@ export async function GET(request: NextRequest) {
       where.AND.push({ empresaId: parseInt(empresaId) })
     }
 
-    // Filtro por status (ativo/inativo)
-    if (ativo !== null && ativo !== undefined) {
-      where.AND.push({ ativo: ativo === 'true' })
+    // Filtro por status se detectado na busca
+    if (statusFilter !== null) {
+      where.AND.push({ ativo: statusFilter })
     }
 
     // Se não há filtros, remover a estrutura AND vazia

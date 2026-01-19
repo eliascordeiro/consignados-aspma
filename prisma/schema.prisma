@@ -173,6 +173,10 @@ model Socio {
   updatedAt       DateTime  @updatedAt
   empresa         Empresa?  @relation(fields: [empresaId], references: [id])
 
+  @@index([nome])
+  @@index([matricula])
+  @@index([ativo])
+  @@index([empresaId])
   @@map("socios")
 }
 
