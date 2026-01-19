@@ -434,6 +434,8 @@ export default function FuncionariosPage() {
               funcionarios={funcionarios}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
           )}
           
@@ -939,11 +941,15 @@ export default function FuncionariosPage() {
 function VirtualizedFuncionariosTable({ 
   funcionarios, 
   onEdit, 
-  onDelete 
+  onDelete,
+  canEdit,
+  canDelete
 }: { 
   funcionarios: Funcionario[]
   onEdit: (funcionario: Funcionario) => void
   onDelete: (funcionario: Funcionario) => void
+  canEdit: boolean
+  canDelete: boolean
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
