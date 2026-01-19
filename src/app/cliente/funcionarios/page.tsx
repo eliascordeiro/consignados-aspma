@@ -206,10 +206,10 @@ export default function FuncionariosPage() {
 
   // Aplicar debounce no search
   useEffect(() => {
-    if (status === "authenticated" && searchTerm !== "") {
+    if (status === "authenticated") {
       const debounce = setTimeout(() => {
         loadFuncionarios()
-      }, 500)
+      }, searchTerm === "" ? 0 : 500)
       return () => clearTimeout(debounce)
     }
   }, [searchTerm])
