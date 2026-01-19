@@ -416,7 +416,7 @@ export default function FuncionariosPage() {
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, matrícula ou status (ativo/inativo)..."
+                placeholder="Buscar por nome, matrícula, CPF ou status (ativo/inativo)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
