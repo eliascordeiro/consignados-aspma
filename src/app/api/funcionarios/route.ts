@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
     const empresaId = searchParams.get("empresaId")
+    const ativo = searchParams.get("ativo")
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "50")
     const skip = (page - 1) * limit
@@ -70,6 +71,11 @@ export async function GET(request: NextRequest) {
     // Filtro por empresa
     if (empresaId) {
       where.AND.push({ empresaId: parseInt(empresaId) })
+    }
+
+    // Filtro por status (ativo/inativo)
+    if (ativo !== null && ativo !== undefined) {
+      where.AND.push({ ativo: ativo === 'true' })
     }
 
     // Se não há filtros, remover a estrutura AND vazia

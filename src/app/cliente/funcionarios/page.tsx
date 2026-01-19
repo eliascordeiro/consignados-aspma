@@ -102,6 +102,7 @@ export default function FuncionariosPage() {
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("todos")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -150,7 +151,17 @@ export default function FuncionariosPage() {
   const loadFuncionarios = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/funcionarios?search=${searchTerm}&page=${page}&limit=50`)
+      const params = new URLSearchParams({
+        search: searchTerm,
+        page: page.toString(),
+        limit: '50',
+      })
+      
+      if (statusFilter !== 'todos') {
+        params.append('ativo', statusFilter)
+      }
+      
+      const response = await fetch(`/api/funcionarios?${params.toString()}`)
       if (response.ok) {
         const result = await response.json()
         setFuncionarios(result.data || [])
@@ -190,19 +201,19 @@ export default function FuncionariosPage() {
     }
   }, [status])
 
-  // Resetar página quando searchTerm mudar
+  // Resetar página quando searchTerm ou statusFilter mudar
   useEffect(() => {
-    if (searchTerm !== "") {
+    if (searchTerm !== "" || statusFilter !== "todos") {
       setPage(1)
     }
-  }, [searchTerm])
+  }, [searchTerm, statusFilter])
 
-  // Carregar funcionários quando page mudar
+  // Carregar funcionários quando page ou statusFilter mudar
   useEffect(() => {
     if (status === "authenticated") {
       loadFuncionarios()
     }
-  }, [status, page])
+  }, [status, page, statusFilter])
 
   // Aplicar debounce no search
   useEffect(() => {
@@ -412,7 +423,7 @@ export default function FuncionariosPage() {
           <CardTitle>Funcionários Cadastrados</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 space-y-3">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -421,6 +432,19 @@ export default function FuncionariosPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
               />
+            </div>
+            <div className="flex gap-2 items-center">
+              <label className="text-sm font-medium whitespace-nowrap">Status:</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="true">Ativos</SelectItem>
+                  <SelectItem value="false">Inativos</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
