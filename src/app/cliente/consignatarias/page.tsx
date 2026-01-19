@@ -55,6 +55,7 @@ export default function ConsignatariasPage() {
   const userPermissions = (session?.user as any)?.permissions || []
   
   // Verificar permissões
+  const canView = hasPermission(userPermissions, "consignatarias.view")
   const canCreate = hasPermission(userPermissions, "consignatarias.create")
   const canEdit = hasPermission(userPermissions, "consignatarias.edit")
   const canDelete = hasPermission(userPermissions, "consignatarias.delete")
@@ -249,6 +250,7 @@ export default function ConsignatariasPage() {
               empresas={empresas}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              canView={canView}
               canEdit={canEdit}
               canDelete={canDelete}
             />
@@ -401,9 +403,11 @@ export default function ConsignatariasPage() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Salvando..." : "Salvar"}
-              </Button>
+              {canEdit && (
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Salvando..." : "Salvar"}
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </DialogContent>
@@ -417,12 +421,14 @@ function VirtualizedEmpresasTable({
   empresas, 
   onEdit, 
   onDelete,
+  canView,
   canEdit,
   canDelete
 }: { 
   empresas: Empresa[]
   onEdit: (empresa: Empresa) => void
   onDelete: (empresa: Empresa) => void
+  canView: boolean
   canEdit: boolean
   canDelete: boolean
 }) {
@@ -496,9 +502,9 @@ function VirtualizedEmpresasTable({
                           {empresa.nome}
                         </div>
                       </div>
-                      {(canEdit || canDelete) && (
+                      {((canView || canEdit) || canDelete) && (
                         <div className="flex gap-1 flex-shrink-0">
-                          {canEdit && (
+                          {(canView || canEdit) && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -610,9 +616,9 @@ function VirtualizedEmpresasTable({
                       )}
                     </div>
                     
-                    {(canEdit || canDelete) && (
+                    {((canView || canEdit) || canDelete) && (
                       <div className="flex justify-end gap-2">
-                        {canEdit && (
+                        {(canView || canEdit) && (
                           <Button
                             variant="ghost"
                             size="icon"
