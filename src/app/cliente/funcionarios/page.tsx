@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useVirtualizer } from "@tanstack/react-virtual"
+import { hasPermission } from "@/config/permissions"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -89,6 +90,13 @@ interface Funcionario {
 export default function FuncionariosPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const userPermissions = (session?.user as any)?.permissions || []
+  
+  // Verificar permissões
+  const canCreate = hasPermission(userPermissions, "funcionarios.create")
+  const canEdit = hasPermission(userPermissions, "funcionarios.edit")
+  const canDelete = hasPermission(userPermissions, "funcionarios.delete")
+  
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [loading, setLoading] = useState(true)
@@ -389,11 +397,13 @@ export default function FuncionariosPage() {
             Gerencie os funcionários das consignatárias
           </p>
         </div>
-        <Button onClick={handleNew} size="sm" className="flex-shrink-0">
-          <Plus className="h-4 w-4 md:mr-2" />
-          <span className="hidden md:inline">Novo Funcionário</span>
-          <span className="md:hidden">Novo</span>
-        </Button>
+        {canCreate && (
+          <Button onClick={handleNew} size="sm" className="flex-shrink-0">
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Novo Funcionário</span>
+            <span className="md:hidden">Novo</span>
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -1013,24 +1023,30 @@ function VirtualizedFuncionariosTable({
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9"
-                          onClick={() => onEdit(funcionario)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9"
-                          onClick={() => onDelete(funcionario)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                      {(canEdit || canDelete) && (
+                        <div className="flex gap-1 flex-shrink-0">
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9"
+                              onClick={() => onEdit(funcionario)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9"
+                              onClick={() => onDelete(funcionario)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
@@ -1086,24 +1102,30 @@ function VirtualizedFuncionariosTable({
                       )}
                     </div>
                     
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(funcionario)}
-                        title="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(funcionario)}
-                        title="Excluir"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    {(canEdit || canDelete) && (
+                      <div className="flex justify-end gap-2">
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(funcionario)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(funcionario)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )

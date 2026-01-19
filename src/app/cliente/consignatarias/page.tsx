@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useSession } from "next-auth/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
+import { hasPermission } from "@/config/permissions"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -49,6 +51,14 @@ interface Empresa {
 }
 
 export default function ConsignatariasPage() {
+  const { data: session } = useSession()
+  const userPermissions = (session?.user as any)?.permissions || []
+  
+  // Verificar permissões
+  const canCreate = hasPermission(userPermissions, "consignatarias.create")
+  const canEdit = hasPermission(userPermissions, "consignatarias.edit")
+  const canDelete = hasPermission(userPermissions, "consignatarias.delete")
+  
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -202,11 +212,13 @@ export default function ConsignatariasPage() {
             Gerencie as empresas consignatárias
           </p>
         </div>
-        <Button onClick={handleNew} size="sm" className="flex-shrink-0">
-          <Plus className="h-4 w-4 md:mr-2" />
-          <span className="hidden md:inline">Nova Consignatária</span>
-          <span className="md:hidden">Nova</span>
-        </Button>
+        {canCreate && (
+          <Button onClick={handleNew} size="sm" className="flex-shrink-0">
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Nova Consignatária</span>
+            <span className="md:hidden">Nova</span>
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -237,6 +249,8 @@ export default function ConsignatariasPage() {
               empresas={empresas}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
           )}
         </CardContent>
@@ -402,11 +416,15 @@ export default function ConsignatariasPage() {
 function VirtualizedEmpresasTable({ 
   empresas, 
   onEdit, 
-  onDelete 
+  onDelete,
+  canEdit,
+  canDelete
 }: { 
   empresas: Empresa[]
   onEdit: (empresa: Empresa) => void
   onDelete: (empresa: Empresa) => void
+  canEdit: boolean
+  canDelete: boolean
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -478,24 +496,30 @@ function VirtualizedEmpresasTable({
                           {empresa.nome}
                         </div>
                       </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onEdit(empresa)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onDelete(empresa)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
-                      </div>
+                      {(canEdit || canDelete) && (
+                        <div className="flex gap-1 flex-shrink-0">
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => onEdit(empresa)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => onDelete(empresa)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="space-y-1.5 text-xs">
@@ -586,24 +610,30 @@ function VirtualizedEmpresasTable({
                       )}
                     </div>
                     
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(empresa)}
-                        title="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(empresa)}
-                        title="Excluir"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    {(canEdit || canDelete) && (
+                      <div className="flex justify-end gap-2">
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEdit(empresa)}
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onDelete(empresa)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
