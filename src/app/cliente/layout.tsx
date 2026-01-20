@@ -15,6 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { 
   LayoutDashboard, 
   Building2,
@@ -121,29 +127,58 @@ export default function ClienteLayout({
 
           {/* User menu */}
           <div className="border-t border-gray-200 dark:border-gray-800 p-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3">
-                  <Avatar className="h-10 w-10 border-2 border-green-500">
-                    <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
-                      CL
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start text-sm">
-                    <span className="font-semibold">Cliente</span>
-                    <span className="text-xs text-muted-foreground">cliente@example.com</span>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <TooltipProvider>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3">
+                    <Avatar className="h-10 w-10 border-2 border-green-500">
+                      <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
+                        {session?.user?.name
+                          ?.split(' ')
+                          .map(n => n[0])
+                          .join('')
+                          .substring(0, 2)
+                          .toUpperCase() || 'CL'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start text-sm overflow-hidden flex-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="font-semibold truncate w-full text-left">
+                            {session?.user?.name || 'Cliente'}
+                          </span>
+                        </TooltipTrigger>
+                        {session?.user?.name && session.user.name.length > 20 && (
+                          <TooltipContent side="top" align="start">
+                            <p>{session.user.name}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-xs text-muted-foreground truncate w-full text-left">
+                            {session?.user?.email || 'cliente@example.com'}
+                          </span>
+                        </TooltipTrigger>
+                        {session?.user?.email && session.user.email.length > 25 && (
+                          <TooltipContent side="top" align="start">
+                            <p>{session.user.email}</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TooltipProvider>
           </div>
         </div>
       </aside>
