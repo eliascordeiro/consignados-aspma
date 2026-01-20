@@ -103,12 +103,10 @@ export default function ConsignatariasPage() {
 
   // Aplicar debounce apenas quando search mudar
   useEffect(() => {
-    if (searchTerm !== "") {
-      const debounce = setTimeout(() => {
-        loadEmpresas()
-      }, 500)
-      return () => clearTimeout(debounce)
-    }
+    const debounce = setTimeout(() => {
+      loadEmpresas()
+    }, searchTerm === "" ? 0 : 500)
+    return () => clearTimeout(debounce)
   }, [searchTerm])
 
   const handleEdit = (empresa: Empresa) => {
@@ -231,7 +229,7 @@ export default function ConsignatariasPage() {
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar consignatárias..."
+                placeholder="Buscar por nome, CNPJ ou status (ativo/inativo)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"

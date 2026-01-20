@@ -131,12 +131,10 @@ export default function LocaisPage() {
 
   // Aplicar debounce apenas quando search mudar
   useEffect(() => {
-    if (searchTerm !== "") {
-      const timer = setTimeout(() => {
-        loadConvenios()
-      }, 500)
-      return () => clearTimeout(timer)
-    }
+    const timer = setTimeout(() => {
+      loadConvenios()
+    }, searchTerm === "" ? 0 : 500)
+    return () => clearTimeout(timer)
   }, [searchTerm])
 
   const loadConvenios = async () => {
@@ -639,7 +637,7 @@ export default function LocaisPage() {
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, CNPJ, tipo ou cidade..."
+                placeholder="Buscar por nome, CNPJ, tipo, cidade ou status (ativo/inativo)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"

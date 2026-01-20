@@ -36,11 +36,25 @@ export async function GET(request: NextRequest) {
       ? {}
       : { userId: session.user.id }
 
-    if (search) {
-      where.nome = {
-        contains: search,
-        mode: "insensitive"
-      }
+    // Detectar se a busca é por status
+    const searchLower = search.toLowerCase().trim()
+    let statusFilter: boolean | null = null
+    
+    if (searchLower === 'ativo' || searchLower === 'ativos') {
+      statusFilter = true
+    } else if (searchLower === 'inativo' || searchLower === 'inativos') {
+      statusFilter = false
+    }
+
+    // Se for busca por status, aplicar filtro
+    if (statusFilter !== null) {
+      where.ativo = statusFilter
+    } else if (search) {
+      // Senão, buscar por nome ou CNPJ
+      where.OR = [
+        { nome: { contains: search, mode: "insensitive" } },
+        { cnpj: { contains: search, mode: "insensitive" } }
+      ]
     }
 
     const empresas = await prisma.empresa.findMany({

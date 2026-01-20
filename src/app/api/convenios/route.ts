@@ -59,15 +59,28 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50")
     const skip = (page - 1) * limit
 
+    // Detectar se a busca é por status
+    const searchLower = search.toLowerCase().trim()
+    let statusFilter: boolean | null = null
+    
+    if (searchLower === 'ativo' || searchLower === 'ativos') {
+      statusFilter = true
+    } else if (searchLower === 'inativo' || searchLower === 'inativos') {
+      statusFilter = false
+    }
+
     const where = {
-      ...(search && {
-        OR: [
-          { razao_soc: { contains: search, mode: "insensitive" as const } },
-          { fantasia: { contains: search, mode: "insensitive" as const } },
-          { cgc: { contains: search, mode: "insensitive" as const } },
-          { cidade: { contains: search, mode: "insensitive" as const } },
-        ],
-      }),
+      ...(statusFilter !== null 
+        ? { ativo: statusFilter }
+        : search && {
+            OR: [
+              { razao_soc: { contains: search, mode: "insensitive" as const } },
+              { fantasia: { contains: search, mode: "insensitive" as const } },
+              { cgc: { contains: search, mode: "insensitive" as const } },
+              { cidade: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+      ),
     }
 
     const [convenios, total] = await Promise.all([
