@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "50")
+    const skip = (page - 1) * limit
 
     // MANAGER e ADMIN podem ver todas as empresas
     const where: any = session.user.role === "MANAGER" || session.user.role === "ADMIN"
@@ -57,14 +60,27 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const empresas = await prisma.empresa.findMany({
-      where,
-      orderBy: {
-        nome: "asc",
-      },
-    })
+    const [empresas, total] = await Promise.all([
+      prisma.empresa.findMany({
+        where,
+        orderBy: {
+          nome: "asc",
+        },
+        take: limit,
+        skip,
+      }),
+      prisma.empresa.count({ where })
+    ])
 
-    return NextResponse.json(empresas)
+    return NextResponse.json({
+      data: empresas,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error("Erro ao listar consignatárias:", error)
     return NextResponse.json(

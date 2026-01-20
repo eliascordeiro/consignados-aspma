@@ -96,6 +96,9 @@ export default function LocaisPage() {
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingConvenio, setEditingConvenio] = useState<Convenio | null>(null)
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -129,6 +132,18 @@ export default function LocaisPage() {
     loadConvenios()
   }, [])
 
+  // Resetar página quando searchTerm mudar
+  useEffect(() => {
+    if (searchTerm !== "") {
+      setPage(1)
+    }
+  }, [searchTerm])
+
+  // Carregar convênios quando page mudar
+  useEffect(() => {
+    loadConvenios()
+  }, [page])
+
   // Aplicar debounce apenas quando search mudar
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -140,11 +155,13 @@ export default function LocaisPage() {
   const loadConvenios = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/convenios?search=${searchTerm}&limit=1000`)
+      const response = await fetch(`/api/convenios?search=${searchTerm}&page=${page}&limit=50`)
       if (!response.ok) throw new Error("Erro ao carregar convênios")
       const result = await response.json()
-      // API agora retorna { data, pagination }
+      // API retorna { data, pagination }
       setConvenios(result.data || result)
+      setTotalPages(result.pagination?.totalPages || 1)
+      setTotal(result.pagination?.total || 0)
     } catch (error) {
       toast.error("Erro ao carregar convênios")
       console.error(error)
@@ -657,6 +674,68 @@ export default function LocaisPage() {
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
+          )}
+          
+          {!loading && convenios.length > 0 && totalPages > 1 && (
+            <div className="mt-4 pt-4 border-t">
+              {/* Mobile: Layout em coluna */}
+              <div className="flex flex-col gap-3 sm:hidden">
+                <div className="text-xs text-center text-muted-foreground">
+                  {((page - 1) * 50) + 1}-{Math.min(page * 50, total)} de {total}
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="flex-1 max-w-[100px]"
+                  >
+                    ← Ant
+                  </Button>
+                  <div className="text-sm font-medium px-3 py-1 bg-muted rounded-md whitespace-nowrap">
+                    {page}/{totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="flex-1 max-w-[100px]"
+                  >
+                    Prox →
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Desktop: Layout em linha */}
+              <div className="hidden sm:flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {((page - 1) * 50) + 1} a {Math.min(page * 50, total)} de {total} convênios
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm px-3 py-1 bg-muted rounded-md">
+                    Página {page} de {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
