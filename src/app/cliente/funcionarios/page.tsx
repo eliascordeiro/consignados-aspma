@@ -166,10 +166,10 @@ export default function FuncionariosPage() {
 
   const loadEmpresas = async () => {
     try {
-      const response = await fetch("/api/consignatarias")
+      const response = await fetch("/api/consignatarias?limit=1000")
       if (response.ok) {
-        const data = await response.json()
-        setEmpresas(data)
+        const result = await response.json()
+        setEmpresas(result.data || result)
       }
     } catch (error) {
       console.error("Erro ao carregar empresas:", error)
