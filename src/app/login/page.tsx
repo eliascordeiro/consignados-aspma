@@ -35,7 +35,8 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Credenciais inválidas")
       } else {
-        router.push("/dashboard")
+        // Buscar sessão atualizada para verificar role
+        window.location.href = "/dashboard"
       }
     } catch (error) {
       setError("Erro ao fazer login")
