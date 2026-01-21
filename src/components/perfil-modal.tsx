@@ -26,10 +26,6 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: session?.user?.name || "",
-    email: session?.user?.email || "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,54 +40,12 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
         return
       }
 
-      if (!formData.email.trim()) {
-        toast.error("Email é obrigatório")
-        setLoading(false)
-        return
-      }
-
-      // Se está alterando senha, validar campos
-      if (formData.newPassword || formData.confirmPassword || formData.currentPassword) {
-        if (!formData.currentPassword) {
-          toast.error("Informe a senha atual para alterar a senha")
-          setLoading(false)
-          return
-        }
-
-        if (!formData.newPassword) {
-          toast.error("Informe a nova senha")
-          setLoading(false)
-          return
-        }
-
-        if (formData.newPassword.length < 6) {
-          toast.error("A nova senha deve ter no mínimo 6 caracteres")
-          setLoading(false)
-          return
-        }
-
-        if (formData.newPassword !== formData.confirmPassword) {
-          toast.error("As senhas não coincidem")
-          setLoading(false)
-          return
-        }
-      }
-
-      // Montar payload
-      const payload: any = {
-        name: formData.name,
-        email: formData.email,
-      }
-
-      if (formData.currentPassword && formData.newPassword) {
-        payload.currentPassword = formData.currentPassword
-        payload.newPassword = formData.newPassword
-      }
-
       const response = await fetch("/api/perfil", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: formData.name,
+        }),
       })
 
       const result = await response.json()
@@ -108,19 +62,10 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
         user: {
           ...session?.user,
           name: formData.name,
-          email: formData.email,
         },
       })
 
       toast.success("Perfil atualizado com sucesso!")
-      
-      // Limpar campos de senha
-      setFormData({
-        ...formData,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
 
       onOpenChange(false)
     } catch (error) {
@@ -137,7 +82,7 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
         <DialogHeader>
           <DialogTitle>Editar Perfil</DialogTitle>
           <DialogDescription>
-            Atualize seus dados pessoais e senha
+            Atualize seus dados pessoais. Para alterar sua senha, use a opção "Esqueci minha senha" na tela de login.
           </DialogDescription>
         </DialogHeader>
 
@@ -159,50 +104,13 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="seu@email.com"
-                required
+                value={session?.user?.email || ""}
+                disabled
+                className="bg-muted cursor-not-allowed"
               />
-            </div>
-
-            <div className="border-t pt-4 mt-4">
-              <h4 className="text-sm font-medium mb-3">Alterar Senha (opcional)</h4>
-              
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Senha Atual</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={formData.currentPassword}
-                    onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                    placeholder="Digite sua senha atual"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nova Senha</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={formData.newPassword}
-                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                    placeholder="Digite a nova senha"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    placeholder="Confirme a nova senha"
-                  />
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                O email não pode ser alterado. Entre em contato com o administrador se precisar modificá-lo.
+              </p>
             </div>
           </div>
 

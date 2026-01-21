@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
-import bcrypt from "bcryptjs"
 
 export async function PUT(request: NextRequest) {
   try {
@@ -15,78 +14,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, currentPassword, newPassword } = body
+    const { name } = body
 
     // Validações básicas
-    if (!name?.trim() || !email?.trim()) {
+    if (!name?.trim()) {
       return NextResponse.json(
-        { error: "Nome e email são obrigatórios" },
+        { error: "Nome é obrigatório" },
         { status: 400 }
       )
-    }
-
-    // Verificar se o email já está em uso por outro usuário
-    const existingUser = await prisma.users.findFirst({
-      where: {
-        email: email.trim(),
-        NOT: {
-          id: session.user.id
-        }
-      }
-    })
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "Este email já está em uso" },
-        { status: 400 }
-      )
-    }
-
-    // Buscar usuário atual
-    const user = await prisma.users.findUnique({
-      where: { id: session.user.id }
-    })
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Usuário não encontrado" },
-        { status: 404 }
-      )
-    }
-
-    // Preparar dados para atualização
-    const updateData: any = {
-      name: name.trim(),
-      email: email.trim(),
-    }
-
-    // Se está alterando a senha, validar senha atual
-    if (currentPassword && newPassword) {
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
-      
-      if (!isPasswordValid) {
-        return NextResponse.json(
-          { error: "Senha atual incorreta" },
-          { status: 400 }
-        )
-      }
-
-      if (newPassword.length < 6) {
-        return NextResponse.json(
-          { error: "A nova senha deve ter no mínimo 6 caracteres" },
-          { status: 400 }
-        )
-      }
-
-      // Hash da nova senha
-      const hashedPassword = await bcrypt.hash(newPassword, 10)
-      updateData.password = hashedPassword
     }
 
     // Atualizar usuário
     const updatedUser = await prisma.users.update({
       where: { id: session.user.id },
-      data: updateData,
+      data: {
+        name: name.trim(),
+      },
       select: {
         id: true,
         name: true,
