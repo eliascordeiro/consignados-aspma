@@ -90,7 +90,7 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
         <DialogHeader>
           <DialogTitle>Editar Perfil</DialogTitle>
           <DialogDescription>
-            Atualize seus dados pessoais. Para alterar sua senha, use a opção "Esqueci minha senha" na tela de login.
+            Atualize seus dados pessoais. Para alterar sua senha, use a opção "Criar ou Redefinir Senha" na tela de login.
           </DialogDescription>
         </DialogHeader>
 
