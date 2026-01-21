@@ -187,25 +187,10 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole, i
               </div>
             )}
 
-            {isClientPortal && (
-              <div className="grid gap-2">
-                <Label htmlFor="password">
-                  Senha {user ? "(deixe em branco para manter)" : "*"}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required={!user}
-                />
-              </div>
-            )}
-
-            {!isClientPortal && formData.role === "MANAGER" && !user && (
+            {(isClientPortal || (!isClientPortal && formData.role === "MANAGER")) && !user && (
               <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 p-3 border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  ℹ️ O cliente receberá um email e deverá usar "Esqueceu sua senha" para criar a senha inicial.
+                  ℹ️ O usuário deverá usar "Criar ou Redefinir Senha" na tela de login para definir sua senha inicial.
                 </p>
               </div>
             )}

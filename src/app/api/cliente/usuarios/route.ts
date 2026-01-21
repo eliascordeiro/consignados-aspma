@@ -94,9 +94,10 @@ export async function POST(request: NextRequest) {
       ? validatedData.permissions.filter(p => managerPermissions.includes(p))
       : []
 
-    // Hash da senha
+    // Criar usuário SEM senha - deverá usar "Criar ou Redefinir Senha" no login
+    // Usamos um hash impossível para forçar o reset de senha
     const hashedPassword = await bcrypt.hash(
-      validatedData.password || "123456",
+      `temp_${Date.now()}_${Math.random()}`,
       10
     )
 
