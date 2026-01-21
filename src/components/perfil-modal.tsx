@@ -71,11 +71,14 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
       })
 
       toast.success("Perfil atualizado com sucesso!")
+      
+      // Fechar modal
+      onOpenChange(false)
 
-      // Forçar reload da página para garantir que o nome seja atualizado em todos os lugares
+      // Forçar reload da página para atualizar nome e iniciais do avatar
       setTimeout(() => {
         window.location.reload()
-      }, 500)
+      }, 1000)
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error)
       toast.error("Erro ao atualizar perfil")
