@@ -42,6 +42,7 @@ const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = 
   consignatarias: { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
   funcionarios: { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
   convenios: { name: "Convênios", href: "/cliente/locais", icon: Store },
+  usuarios: { name: "Usuários", href: "/cliente/usuarios", icon: UserCog },
 }
 
 export default function ClienteLayout({

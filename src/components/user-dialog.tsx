@@ -40,9 +40,10 @@ interface UserDialogProps {
   user?: User | null
   onSuccess: () => void
   defaultRole?: string
+  isClientPortal?: boolean
 }
 
-export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }: UserDialogProps) {
+export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole, isClientPortal = false }: UserDialogProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -86,30 +87,34 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
     setLoading(true)
 
     try {
-      const url = user
-        ? `/api/usuarios/${user.id}`
-        : "/api/usuarios"
-      
+      // Definir URL baseado no portal
+      const baseUrl = isClientPortal ? "/api/cliente/usuarios" : "/api/usuarios"
+      const url = user ? `${baseUrl}/${user.id}` : baseUrl
       const method = user ? "PUT" : "POST"
       
-      // Preparar dados - só incluir permissions se for MANAGER
+      // Preparar dados
       const submitData: any = {
         name: formData.name,
         email: formData.email,
-        role: formData.role,
         cpf: formData.cpf,
         phone: formData.phone,
         active: formData.active,
       }
 
+      // Portal cliente: sempre USER com permissões
+      if (isClientPortal) {
+        submitData.permissions = formData.permissions
+      } else {
+        // Portal admin: incluir role e permissions se MANAGER
+        submitData.role = formData.role
+        if (formData.role === "MANAGER") {
+          submitData.permissions = formData.permissions
+        }
+      }
+
       // Adicionar senha se fornecida
       if (formData.password) {
         submitData.password = formData.password
-      }
-
-      // Adicionar permissions apenas para MANAGER
-      if (formData.role === "MANAGER") {
-        submitData.permissions = formData.permissions
       }
       
       const response = await fetch(url, {
@@ -167,7 +172,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
               />
             </div>
 
-            {formData.role !== "MANAGER" && (
+            {!isClientPortal && formData.role !== "MANAGER" && (
               <div className="grid gap-2">
                 <Label htmlFor="password">
                   Senha {user ? "(deixe em branco para manter)" : "*"}
@@ -182,7 +187,22 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
               </div>
             )}
 
-            {formData.role === "MANAGER" && !user && (
+            {isClientPortal && (
+              <div className="grid gap-2">
+                <Label htmlFor="password">
+                  Senha {user ? "(deixe em branco para manter)" : "*"}
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required={!user}
+                />
+              </div>
+            )}
+
+            {!isClientPortal && formData.role === "MANAGER" && !user && (
               <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 p-3 border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
                   ℹ️ O cliente receberá um email e deverá usar "Esqueceu sua senha" para criar a senha inicial.
@@ -190,9 +210,10 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
               </div>
             )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="role">Função *</Label>
-              <Select
+            {!isClientPortal && (
+              <div className="grid gap-2">
+                <Label htmlFor="role">Função *</Label>
+                <Select
                 value={formData.role}
                 onValueChange={(value) => setFormData({ ...formData, role: value })}
               >
@@ -207,6 +228,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
                 </SelectContent>
               </Select>
             </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -228,7 +250,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess, defaultRole }:
               </div>
             </div>
 
-            {formData.role === "MANAGER" && (
+            {(formData.role === "MANAGER" || isClientPortal) && (
               <div className="grid gap-4 p-4 border rounded-lg bg-muted/50">
                 <div className="flex items-center justify-between">
                   <div>
