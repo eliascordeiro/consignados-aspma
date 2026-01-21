@@ -29,10 +29,12 @@ import {
   LogOut,
   Menu,
   X,
-  CreditCard
+  CreditCard,
+  UserCog
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserModules } from "@/config/permissions"
+import { PerfilModal } from "@/components/perfil-modal"
 
 // Dashboard é sempre visível, outros módulos baseados em permissões
 const dashboardNav = { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard }
@@ -49,6 +51,7 @@ export default function ClienteLayout({
 }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [perfilModalOpen, setPerfilModalOpen] = useState(false)
   const { data: session } = useSession()
 
   // Filtrar navegação baseado nas permissões do usuário
@@ -172,6 +175,10 @@ export default function ClienteLayout({
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setPerfilModalOpen(true)}>
+                    <UserCog className="mr-2 h-4 w-4" />
+                    Editar Perfil
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
@@ -210,6 +217,9 @@ export default function ClienteLayout({
           {children}
         </main>
       </div>
+
+      {/* Modal de Perfil */}
+      <PerfilModal open={perfilModalOpen} onOpenChange={setPerfilModalOpen} />
     </div>
   )
 }
