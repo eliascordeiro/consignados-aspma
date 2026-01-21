@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,8 +25,17 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
   const { data: session, update } = useSession()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: session?.user?.name || "",
+    name: "",
   })
+
+  // Atualizar formData quando a sessão ou modal abrir
+  useEffect(() => {
+    if (open && session?.user?.name) {
+      setFormData({
+        name: session.user.name,
+      })
+    }
+  }, [open, session?.user?.name])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
