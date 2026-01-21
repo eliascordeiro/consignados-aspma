@@ -65,18 +65,17 @@ export function PerfilModal({ open, onOpenChange }: PerfilModalProps) {
         return
       }
 
-      // Atualizar sessão com novos dados
+      // Atualizar sessão com o novo nome
       await update({
-        ...session,
-        user: {
-          ...session?.user,
-          name: formData.name,
-        },
+        name: formData.name,
       })
 
       toast.success("Perfil atualizado com sucesso!")
 
-      onOpenChange(false)
+      // Forçar reload da página para garantir que o nome seja atualizado em todos os lugares
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error)
       toast.error("Erro ao atualizar perfil")
