@@ -17,7 +17,7 @@ const userSchema = z.object({
 // PUT - Atualizar usuário subordinado
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -26,10 +26,12 @@ export async function PUT(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Verificar se o usuário pertence ao MANAGER
     const existingUser = await prisma.users.findFirst({
       where: {
-        id: params.id,
+        id,
         createdById: session.user.id,
         role: "USER",
       },
@@ -49,7 +51,7 @@ export async function PUT(
     const emailExists = await prisma.users.findFirst({
       where: {
         email: validatedData.email,
-        NOT: { id: params.id },
+        NOT: { id },
       },
     })
 
@@ -84,7 +86,7 @@ export async function PUT(
     }
 
     const user = await prisma.users.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       select: {
         id: true,
@@ -118,7 +120,7 @@ export async function PUT(
 // DELETE - Excluir usuário subordinado
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -127,10 +129,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Verificar se o usuário pertence ao MANAGER
     const existingUser = await prisma.users.findFirst({
       where: {
-        id: params.id,
+        id,
         createdById: session.user.id,
         role: "USER",
       },
@@ -144,7 +148,7 @@ export async function DELETE(
     }
 
     await prisma.users.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ message: "Usuário excluído com sucesso" })
