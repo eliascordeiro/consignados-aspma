@@ -193,20 +193,29 @@ export default function ClienteLayout({
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm px-4 md:px-6">
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden"
+            className="lg:hidden shrink-0"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="flex-1 flex items-center">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {session?.user?.name || "Cliente"}
-            </h2>
+          <div className="flex-1 flex items-center min-w-0">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h2 className="text-sm md:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+                    {session?.user?.name || "Cliente"}
+                  </h2>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start">
+                  <p>{session?.user?.name || "Cliente"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           
           <ThemeSwitcher />
