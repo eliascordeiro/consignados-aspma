@@ -18,6 +18,7 @@ export type AuditModule =
   | "usuarios" 
   | "convenios"
   | "consignados"
+  | "vendas"
   | "auth"
   | "sistema"
 
