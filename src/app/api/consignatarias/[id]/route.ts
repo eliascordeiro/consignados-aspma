@@ -61,15 +61,18 @@ export async function PUT(
       }
     }
 
-    // Verificar se CNPJ já existe em outra empresa
+    // Verificar se CNPJ já existe em outra empresa (apenas se mudou)
     if (validatedData.cnpj && validatedData.cnpj !== existing.cnpj) {
       const existingCNPJ = await prisma.empresa.findFirst({
-        where: { cnpj: validatedData.cnpj },
+        where: { 
+          cnpj: validatedData.cnpj,
+          NOT: { id: id }
+        },
       })
 
-      if (existingCNPJ && existingCNPJ.id !== id) {
+      if (existingCNPJ) {
         return NextResponse.json(
-          { error: "CNPJ já cadastrado" },
+          { error: "CNPJ já cadastrado em outra consignatária" },
           { status: 400 }
         )
       }
