@@ -35,8 +35,19 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Credenciais inválidas")
       } else {
-        // Buscar sessão atualizada para verificar role
-        window.location.href = "/dashboard"
+        // Buscar sessão para verificar role e redirecionar corretamente
+        const response = await fetch("/api/auth/session")
+        const session = await response.json()
+        
+        console.log("📍 Redirecionando após login:", session)
+        
+        if (session?.user?.role === "ADMIN") {
+          window.location.href = "/dashboard"
+        } else if (session?.user?.role === "MANAGER" || session?.user?.role === "USER") {
+          window.location.href = "/cliente/dashboard"
+        } else {
+          window.location.href = "/dashboard"
+        }
       }
     } catch (error) {
       setError("Erro ao fazer login")
