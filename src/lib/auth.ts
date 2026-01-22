@@ -48,9 +48,17 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           user.password
         )
 
+        console.log("🔐 Tentativa de login:")
+        console.log("   Email:", credentials.email)
+        console.log("   Senha válida:", isPasswordValid)
+        console.log("   Hash no banco:", user.password?.substring(0, 20) + "...")
+
         if (!isPasswordValid) {
+          console.log("   ❌ Senha inválida!")
           return null
         }
+
+        console.log("   ✅ Login bem-sucedido!")
 
         return {
           id: user.id,

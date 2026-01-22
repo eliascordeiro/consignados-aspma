@@ -6,6 +6,9 @@ export async function POST(request: NextRequest) {
   try {
     const { token, password } = await request.json()
 
+    console.log("🔐 Reset de senha solicitado")
+    console.log("   Token recebido:", token?.substring(0, 10) + "...")
+
     if (!token || !password) {
       return NextResponse.json(
         { error: "Token e senha são obrigatórios" },
@@ -30,7 +33,10 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log("   Usuário encontrado:", user ? `${user.name} (${user.email})` : "NENHUM")
+
     if (!user) {
+      console.log("   ❌ Token inválido ou expirado")
       return NextResponse.json(
         { error: "Token inválido ou expirado" },
         { status: 400 }
@@ -39,6 +45,8 @@ export async function POST(request: NextRequest) {
 
     // Hash da nova senha
     const hashedPassword = await bcrypt.hash(password, 10)
+
+    console.log("   Atualizando senha do usuário...")
 
     // Atualizar senha e limpar token
     await prisma.users.update({
@@ -49,6 +57,8 @@ export async function POST(request: NextRequest) {
         resetTokenExpiry: null,
       },
     })
+
+    console.log("   ✅ Senha atualizada com sucesso!")
 
     return NextResponse.json({
       message: "Senha redefinida com sucesso!",
