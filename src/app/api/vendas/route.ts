@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 
 // GET /api/vendas - Lista todas as vendas
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
@@ -82,7 +81,7 @@ export async function GET(request: NextRequest) {
 // POST /api/vendas - Cria uma nova venda com parcelas
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });

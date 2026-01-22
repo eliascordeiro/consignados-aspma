@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { createAuditLog } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 
@@ -16,7 +15,7 @@ export async function GET(
 ) {
   try {
     const params = await segmentData.params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
@@ -79,7 +78,7 @@ export async function PUT(
 ) {
   try {
     const params = await segmentData.params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
@@ -239,7 +238,7 @@ export async function DELETE(
 ) {
   try {
     const params = await segmentData.params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
