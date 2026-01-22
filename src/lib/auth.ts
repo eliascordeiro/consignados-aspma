@@ -36,6 +36,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             role: true,
             active: true,
             permissions: true,
+            createdById: true,
           }
         })
 
@@ -66,6 +67,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           name: user.name,
           role: user.role,
           permissions: user.permissions || [],
+          createdById: user.createdById,
         }
       }
     })
@@ -82,6 +84,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         token.name = user.name
         token.email = user.email
         token.permissions = (user as any).permissions || []
+        token.createdById = (user as any).createdById
       }
       
       // Suporte para atualização de sessão via update()
@@ -98,6 +101,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as string
         session.user.id = token.id as string
         session.user.name = token.name as string
+        session.user.createdById = token.createdById as string | null
         session.user.email = token.email as string
         ;(session.user as any).permissions = token.permissions || []
         

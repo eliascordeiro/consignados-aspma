@@ -35,9 +35,13 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // MANAGER e ADMIN podem ver todas as empresas
-    const where: any = session.user.role === "MANAGER" || session.user.role === "ADMIN"
-      ? {}
-      : { userId: session.user.id }
+    // Usuários subordinados veem as empresas do MANAGER que os criou
+    // Outros roles veem apenas as suas próprias empresas
+    let where: any = {}
+    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
+      const targetUserId = (session.user as any).createdById || session.user.id
+      where.userId = targetUserId
+    }
 
     // Detectar se a busca é por status
     const searchLower = search.toLowerCase().trim()
@@ -119,7 +123,7 @@ export async function POST(request: NextRequest) {
     const empresa = await prisma.empresa.create({
       data: {
         ...validatedData,
-        userId: session.user.id,
+        userId: (session.user as any).createdById || session.user.id,
       },
     })
 

@@ -21,9 +21,12 @@ export async function GET(request: NextRequest) {
       AND: []
     }
 
-    // MANAGER/ADMIN pode ver todos os funcionários, outros roles apenas os seus
+    // MANAGER/ADMIN pode ver todos os funcionários
+    // Usuários subordinados veem os dados do MANAGER que os criou
+    // Outros roles veem apenas os seus próprios dados
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      where.AND.push({ userId: session.user.id })
+      const targetUserId = (session.user as any).createdById || session.user.id
+      where.AND.push({ userId: targetUserId })
     }
 
     // Detectar se a busca é por status
@@ -44,12 +47,14 @@ export async function GET(request: NextRequest) {
       
       // Se for apenas números, tentar busca exata de matrícula primeiro
       if (isOnlyNumbers) {
+        const targetUserId = session.user.role !== "MANAGER" && session.user.role !== "ADMIN"
+          ? ((session.user as any).createdById || session.user.id)
+          : undefined
+        
         const exactMatch = await prisma.socio.findFirst({
           where: {
             matricula: search,
-            ...(session.user.role !== "MANAGER" && session.user.role !== "ADMIN" 
-              ? { userId: session.user.id } 
-              : {}),
+            ...(targetUserId ? { userId: targetUserId } : {}),
             ...(empresaId ? { empresaId: parseInt(empresaId) } : {})
           }
         })
@@ -146,9 +151,14 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json()
 
+    // Determina o userId correto: para subordinados, usa o MANAGER que os criou
+    const targetUserId = session.user.role === "MANAGER" || session.user.role === "ADMIN" 
+      ? null 
+      : ((session.user as any).createdById || session.user.id)
+
     const funcionario = await prisma.socio.create({
       data: {
-        userId: session.user.role === "MANAGER" || session.user.role === "ADMIN" ? null : session.user.id,
+        userId: targetUserId,
         empresaId: parseInt(data.empresaId),
         nome: data.nome,
         cpf: data.cpf?.replace(/\D/g, "") || null,
