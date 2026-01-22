@@ -73,6 +73,10 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
+        console.log("📝 Criando JWT token para:", user.email)
+        console.log("   Role:", user.role)
+        console.log("   Permissions:", (user as any).permissions?.length || 0)
+        
         token.role = user.role
         token.id = user.id
         token.name = user.name
@@ -88,12 +92,17 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
       return token
     },
     async session({ session, token }) {
+      console.log("🔄 Criando sessão para:", token.email)
+      
       if (session.user) {
         session.user.role = token.role as string
         session.user.id = token.id as string
         session.user.name = token.name as string
         session.user.email = token.email as string
         ;(session.user as any).permissions = token.permissions || []
+        
+        console.log("   Role na sessão:", session.user.role)
+        console.log("   Permissions na sessão:", (session.user as any).permissions?.length || 0)
       }
       return session
     }
