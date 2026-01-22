@@ -89,7 +89,7 @@ export default function VendasPage() {
       venda.numeroVenda.toString().includes(termo) ||
       venda.socio.nome.toLowerCase().includes(termo) ||
       venda.socio.matricula?.toLowerCase().includes(termo) ||
-      venda.convenio.razao_soc.toLowerCase().includes(termo)
+      venda.convenio?.razao_soc?.toLowerCase().includes(termo)
     );
   });
 
@@ -212,8 +212,8 @@ export default function VendasPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {venda.convenio.razao_soc}
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {venda.convenio?.razao_soc || 'Sem convênio'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
