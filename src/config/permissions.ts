@@ -10,7 +10,8 @@ import {
   Trash2,
   Download,
   UserCog,
-  FileText
+  FileText,
+  ShoppingCart
 } from "lucide-react"
 
 export interface Permission {
@@ -64,6 +65,18 @@ export const PERMISSION_MODULES: PermissionModule[] = [
       { id: "convenios.edit", name: "Editar", description: "Modificar convênios existentes", icon: Edit },
       { id: "convenios.delete", name: "Excluir", description: "Remover convênios", icon: Trash2 },
       { id: "convenios.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
+    ]
+  },
+  {
+    id: "vendas",
+    name: "Vendas",
+    icon: ShoppingCart,
+    permissions: [
+      { id: "vendas.view", name: "Consultar", description: "Visualizar lista e detalhes de vendas", icon: Eye },
+      { id: "vendas.create", name: "Incluir", description: "Lançar novas vendas", icon: Plus },
+      { id: "vendas.edit", name: "Editar", description: "Modificar vendas e parcelas", icon: Edit },
+      { id: "vendas.delete", name: "Excluir", description: "Cancelar vendas", icon: Trash2 },
+      { id: "vendas.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
     ]
   },
   {

@@ -105,6 +105,7 @@ model convenio {
   ativo      Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  vendas     Venda[]
 }
 
 model Empresa {
@@ -173,12 +174,65 @@ model Socio {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   empresa         Empresa?  @relation(fields: [empresaId], references: [id])
+  vendas          Venda[]
 
   @@index([nome])
   @@index([matricula])
   @@index([ativo])
   @@index([empresaId])
   @@map("socios")
+}
+
+model Venda {
+  id              String    @id @default(cuid())
+  userId          String
+  socioId         String
+  convenioId      Int
+  numeroVenda     Int
+  dataEmissao     DateTime  @default(now())
+  operador        String?
+  observacoes     String?
+  quantidadeParcelas Int
+  valorParcela    Decimal   @db.Decimal(10, 2)
+  valorTotal      Decimal   @db.Decimal(10, 2)
+  ativo           Boolean   @default(true)
+  cancelado       Boolean   @default(false)
+  motivoCancelamento String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  socio           Socio     @relation(fields: [socioId], references: [id])
+  convenio        convenio  @relation(fields: [convenioId], references: [id])
+  parcelas        Parcela[]
+
+  @@unique([socioId, numeroVenda])
+  @@index([userId])
+  @@index([socioId])
+  @@index([convenioId])
+  @@index([dataEmissao])
+  @@index([ativo])
+  @@map("vendas")
+}
+
+model Parcela {
+  id              String    @id @default(cuid())
+  vendaId         String
+  numeroParcela   Int
+  dataVencimento  DateTime
+  valor           Decimal   @db.Decimal(10, 2)
+  baixa           String?   @db.Char(1)
+  dataBaixa       DateTime?
+  valorPago       Decimal?  @db.Decimal(10, 2)
+  tipo            String?   @db.Char(1)
+  observacoes     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  venda           Venda     @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+
+  @@unique([vendaId, numeroParcela])
+  @@index([vendaId])
+  @@index([dataVencimento])
+  @@index([baixa])
+  @@map("parcelas")
 }
 
 model AuditLog {

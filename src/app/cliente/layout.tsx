@@ -31,7 +31,8 @@ import {
   X,
   CreditCard,
   UserCog,
-  FileText
+  FileText,
+  ShoppingCart
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserModules } from "@/config/permissions"
@@ -43,6 +44,7 @@ const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = 
   consignatarias: { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
   funcionarios: { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
   convenios: { name: "Convênios", href: "/cliente/locais", icon: Store },
+  vendas: { name: "Vendas", href: "/cliente/vendas", icon: ShoppingCart },
   usuarios: { name: "Usuários", href: "/cliente/usuarios", icon: UserCog },
   logs: { name: "Logs de Auditoria", href: "/cliente/logs", icon: FileText },
 }
