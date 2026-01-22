@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { sendWelcomeEmail } from "@/lib/email"
 
 const userSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -125,6 +126,19 @@ export async function POST(request: NextRequest) {
         role: true,
       },
     })
+
+    // Enviar email de boas-vindas
+    try {
+      await sendWelcomeEmail(
+        user.email,
+        user.name,
+        session.user.name || "Administrador"
+      )
+      console.log(`✅ Email de boas-vindas enviado para ${user.email}`)
+    } catch (emailError) {
+      console.error("❌ Erro ao enviar email:", emailError)
+      // Não falhar a criação se o email falhar
+    }
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {
