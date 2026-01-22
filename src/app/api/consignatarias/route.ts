@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -125,6 +126,25 @@ export async function POST(request: NextRequest) {
         ...validatedData,
         userId: (session.user as any).createdById || session.user.id,
       },
+    })
+
+    // Registrar log de auditoria
+    const { ipAddress, userAgent } = getRequestInfo(request)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: session.user.name,
+      userRole: session.user.role,
+      action: "CREATE",
+      module: "consignatarias",
+      entityId: empresa.id.toString(),
+      entityName: empresa.nome,
+      description: `Consignatária "${empresa.nome}" criada`,
+      metadata: {
+        cnpj: empresa.cnpj,
+        tipo: empresa.tipo,
+      },
+      ipAddress,
+      userAgent,
     })
 
     return NextResponse.json(empresa, { status: 201 })

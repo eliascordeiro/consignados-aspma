@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -77,6 +78,24 @@ export async function PUT(
       data: validatedData,
     })
 
+    // Registrar log de auditoria
+    const { ipAddress, userAgent } = getRequestInfo(request)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: session.user.name,
+      userRole: session.user.role,
+      action: "UPDATE",
+      module: "consignatarias",
+      entityId: id.toString(),
+      entityName: empresa.nome,
+      description: `Consignatária "${empresa.nome}" atualizada`,
+      metadata: {
+        changes: Object.keys(validatedData),
+      },
+      ipAddress,
+      userAgent,
+    })
+
     return NextResponse.json(empresa)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -145,6 +164,25 @@ export async function DELETE(
 
     await prisma.empresa.delete({
       where: { id }
+    })
+
+    // Registrar log de auditoria
+    const { ipAddress, userAgent } = getRequestInfo(request)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: session.user.name,
+      userRole: session.user.role,
+      action: "DELETE",
+      module: "consignatarias",
+      entityId: id.toString(),
+      entityName: existing.nome,
+      description: `Consignatária "${existing.nome}" excluída`,
+      metadata: {
+        cnpj: existing.cnpj,
+        tipo: existing.tipo,
+      },
+      ipAddress,
+      userAgent,
     })
 
     return NextResponse.json({ success: true })

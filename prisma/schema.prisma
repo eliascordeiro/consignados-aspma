@@ -61,6 +61,7 @@ model users {
   updatedAt         DateTime      @updatedAt
   createdById       String?
   consignados       consignados[]
+  auditLogs         AuditLog[]
   users             users?        @relation("usersTousers", fields: [createdById], references: [id])
   other_users       users[]       @relation("usersTousers")
 }
@@ -178,6 +179,29 @@ model Socio {
   @@index([ativo])
   @@index([empresaId])
   @@map("socios")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  userName    String
+  userRole    String
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc
+  module      String   // funcionarios, consignatarias, usuarios, etc
+  entityId    String?  // ID da entidade afetada
+  entityName  String?  // Nome da entidade afetada
+  description String   // Descrição detalhada da ação
+  metadata    Json?    // Dados adicionais (valores anteriores, novos valores, etc)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  user        users    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 enum StatusConsignado {

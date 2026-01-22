@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import "./auth-config"
+import { createAuditLog } from "@/lib/audit-log"
 
 export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -60,6 +61,19 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         }
 
         console.log("   ✅ Login bem-sucedido!")
+
+        // Registrar log de login (não bloquear autenticação se falhar)
+        createAuditLog({
+          userId: user.id,
+          userName: user.name,
+          userRole: user.role,
+          action: "LOGIN",
+          module: "auth",
+          description: `Login realizado com sucesso`,
+          metadata: {
+            email: user.email,
+          },
+        }).catch(err => console.error("Erro ao criar log de login:", err))
 
         return {
           id: user.id,

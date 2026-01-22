@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 
 export async function GET(
   request: NextRequest,
@@ -137,6 +138,24 @@ export async function PUT(
       data: updateData,
     })
 
+    // Registrar log de auditoria
+    const { ipAddress, userAgent } = getRequestInfo(request)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: session.user.name,
+      userRole: session.user.role,
+      action: "UPDATE",
+      module: "funcionarios",
+      entityId: id,
+      entityName: funcionario.nome,
+      description: `Funcionário "${funcionario.nome}" atualizado`,
+      metadata: {
+        changes: Object.keys(updateData).filter(k => k !== 'empresa'),
+      },
+      ipAddress,
+      userAgent,
+    })
+
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error("Erro ao atualizar funcionário:", error)
@@ -165,8 +184,36 @@ export async function DELETE(
       where.userId = session.user.id
     }
 
+    // Buscar funcionario antes de deletar para pegar o nome
+    const funcionario = await prisma.socio.findFirst({ where })
+    if (!funcionario) {
+      return NextResponse.json(
+        { error: "Funcionário não encontrado" },
+        { status: 404 }
+      )
+    }
+
     await prisma.socio.delete({
       where,
+    })
+
+    // Registrar log de auditoria
+    const { ipAddress, userAgent } = getRequestInfo(request)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: session.user.name,
+      userRole: session.user.role,
+      action: "DELETE",
+      module: "funcionarios",
+      entityId: id,
+      entityName: funcionario.nome,
+      description: `Funcionário "${funcionario.nome}" excluído`,
+      metadata: {
+        cpf: funcionario.cpf,
+        matricula: funcionario.matricula,
+      },
+      ipAddress,
+      userAgent,
     })
 
     return NextResponse.json({ success: true })

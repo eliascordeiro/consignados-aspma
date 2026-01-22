@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 
 export async function GET(request: NextRequest) {
   try {
@@ -205,6 +206,26 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    })
+
+    // Registrar log de auditoria
+    const { ipAddress, userAgent } = getRequestInfo(request)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: session.user.name,
+      userRole: session.user.role,
+      action: "CREATE",
+      module: "funcionarios",
+      entityId: funcionario.id.toString(),
+      entityName: funcionario.nome,
+      description: `Funcionário "${funcionario.nome}" criado`,
+      metadata: {
+        empresaId: funcionario.empresaId,
+        cpf: funcionario.cpf,
+        matricula: funcionario.matricula,
+      },
+      ipAddress,
+      userAgent,
     })
 
     return NextResponse.json(funcionario, { status: 201 })

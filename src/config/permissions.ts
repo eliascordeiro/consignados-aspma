@@ -9,7 +9,8 @@ import {
   Edit,
   Trash2,
   Download,
-  UserCog
+  UserCog,
+  FileText
 } from "lucide-react"
 
 export interface Permission {
@@ -74,6 +75,15 @@ export const PERMISSION_MODULES: PermissionModule[] = [
       { id: "usuarios.create", name: "Incluir", description: "Criar novos usuários", icon: Plus },
       { id: "usuarios.edit", name: "Editar", description: "Modificar usuários existentes", icon: Edit },
       { id: "usuarios.delete", name: "Excluir", description: "Remover usuários", icon: Trash2 },
+    ]
+  },
+  {
+    id: "logs",
+    name: "Logs de Auditoria",
+    icon: FileText,
+    permissions: [
+      { id: "logs.view", name: "Consultar", description: "Visualizar histórico de auditoria", icon: Eye },
+      { id: "logs.export", name: "Exportar", description: "Exportar logs para arquivo", icon: Download },
     ]
   },
 ]
