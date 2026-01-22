@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       const user = await prisma.users.findUnique({
         where: { id: session.user.id },
         select: {
-          createdBy: {
+          users: {
             select: {
               name: true,
             }
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       })
 
       return NextResponse.json({
-        managerName: user?.createdBy?.name || null,
+        managerName: user?.users?.name || null,
       })
     }
 
