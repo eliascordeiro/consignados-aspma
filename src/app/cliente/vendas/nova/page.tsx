@@ -302,12 +302,12 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Limite por Parcela</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Limite por Parcela</label>
             <input
               type="text"
               value={`R$ ${formData.limite.toFixed(2)}`}
               readOnly
-              className="w-full px-3 py-2 border rounded bg-gray-100 font-bold text-blue-600"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400"
             />
           </div>
         </div>
@@ -326,19 +326,19 @@ export default function NovaVendaPage() {
                 }
               }}
               placeholder="Digite para pesquisar convênio"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
             {showConvenioList && convenios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
                 {convenios.map((convenio) => (
                   <div
                     key={convenio.id}
                     onClick={() => selecionarConvenio(convenio)}
-                    className="p-3 hover:bg-blue-50 cursor-pointer border-b"
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
                   >
-                    <div className="font-semibold">{convenio.razao_soc}</div>
-                    <div className="text-sm text-gray-600">Código: {convenio.codigo}</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Código: {convenio.codigo}</div>
                   </div>
                 ))}
               </div>
@@ -346,12 +346,12 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Razão Social</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Razão Social</label>
             <input
               type="text"
               value={formData.convenioNome}
               readOnly
-              className="w-full px-3 py-2 border rounded bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
             />
           </div>
         </div>
@@ -359,33 +359,33 @@ export default function NovaVendaPage() {
         {/* Operador e Data */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-2">Operador</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Operador</label>
             <input
               type="text"
               value={formData.operador}
               onChange={(e) => setFormData({ ...formData, operador: e.target.value })}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Data de Emissão *</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Data de Emissão *</label>
             <input
               type="date"
               value={formData.dataEmissao}
               onChange={(e) => setFormData({ ...formData, dataEmissao: e.target.value })}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Observações</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Observações</label>
             <input
               type="text"
               value={formData.observacoes}
               onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -393,20 +393,20 @@ export default function NovaVendaPage() {
         {/* Parcelas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-2">Nº de Parcelas *</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Nº de Parcelas *</label>
             <input
               type="number"
               min="1"
               max="99"
               value={formData.quantidadeParcelas}
               onChange={(e) => setFormData({ ...formData, quantidadeParcelas: parseInt(e.target.value) || 1 })}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Valor da Parcela *</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Valor da Parcela *</label>
             <input
               type="number"
               step="0.01"
@@ -414,7 +414,7 @@ export default function NovaVendaPage() {
               value={formData.valorParcela}
               onChange={(e) => setFormData({ ...formData, valorParcela: e.target.value })}
               onBlur={gerarParcelas}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -433,57 +433,57 @@ export default function NovaVendaPage() {
         {/* Tabela de Parcelas */}
         {parcelas.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-lg font-bold mb-3">Parcelas Geradas</h3>
+            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Parcelas Geradas</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border">
-                <thead className="bg-gray-100">
+              <table className="min-w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600">
+                <thead className="bg-gray-100 dark:bg-gray-700">
                   <tr>
-                    <th className="px-4 py-2 border text-left">#</th>
-                    <th className="px-4 py-2 border text-left">Vencimento</th>
-                    <th className="px-4 py-2 border text-right">Valor</th>
-                    <th className="px-4 py-2 border text-center">Baixa</th>
+                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">#</th>
+                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">Vencimento</th>
+                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">Valor</th>
+                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white">Baixa</th>
                   </tr>
                 </thead>
                 <tbody>
                   {parcelas.map((parcela, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border">{parcela.numeroParcela}</td>
-                      <td className="px-4 py-2 border">
+                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">{parcela.numeroParcela}</td>
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600">
                         <input
                           type="text"
                           value={new Date(parcela.dataVencimento).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}
                           readOnly
-                          className="w-full px-2 py-1 border rounded bg-gray-50"
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
                         />
                       </td>
-                      <td className="px-4 py-2 border text-right">
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right">
                         <input
                           type="number"
                           step="0.01"
                           value={parcela.valor}
                           onChange={(e) => atualizarParcela(index, 'valor', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1 border rounded text-right"
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </td>
-                      <td className="px-4 py-2 border text-center">
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center">
                         <input
                           type="text"
                           maxLength={1}
                           value={parcela.baixa || ''}
                           onChange={(e) => atualizarParcela(index, 'baixa', e.target.value.toUpperCase() || null)}
-                          className="w-12 px-2 py-1 border rounded text-center uppercase"
+                          className="w-12 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center uppercase bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-gray-100 font-bold">
+                <tfoot className="bg-gray-100 dark:bg-gray-700 font-bold">
                   <tr>
-                    <td colSpan={2} className="px-4 py-2 border text-right">TOTAL:</td>
-                    <td className="px-4 py-2 border text-right">
+                    <td colSpan={2} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">TOTAL:</td>
+                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">
                       R$ {parcelas.reduce((sum, p) => sum + p.valor, 0).toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 border"></td>
+                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600"></td>
                   </tr>
                 </tfoot>
               </table>
