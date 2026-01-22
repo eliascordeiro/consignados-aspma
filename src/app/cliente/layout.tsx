@@ -30,7 +30,8 @@ import {
   Menu,
   X,
   CreditCard,
-  UserCog
+  UserCog,
+  FileText
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserModules } from "@/config/permissions"
@@ -43,6 +44,7 @@ const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = 
   funcionarios: { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
   convenios: { name: "Convênios", href: "/cliente/locais", icon: Store },
   usuarios: { name: "Usuários", href: "/cliente/usuarios", icon: UserCog },
+  logs: { name: "Logs de Auditoria", href: "/cliente/logs", icon: FileText },
 }
 
 export default function ClienteLayout({
