@@ -100,7 +100,7 @@ export default function VendasPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestão de Vendas</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendas</h1>
         <Link
           href="/cliente/vendas/nova"
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -142,11 +142,11 @@ export default function VendasPage() {
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Carregando vendas...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando vendas...</p>
         </div>
       ) : vendasFiltradas.length === 0 ? (
-        <div className="bg-white p-12 rounded-lg shadow-md text-center">
-          <p className="text-gray-500 text-lg">
+        <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-md text-center">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">
             {searchTerm
               ? 'Nenhuma venda encontrada com os filtros aplicados.'
               : 'Nenhuma venda cadastrada.'}
@@ -159,12 +159,12 @@ export default function VendasPage() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Venda
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -190,11 +190,11 @@ export default function VendasPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {vendasFiltradas.map((venda) => (
-                  <tr key={venda.id} className="hover:bg-gray-50">
+                  <tr key={venda.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
                         #{venda.numeroVenda}
                       </div>
                       {venda.operador && (

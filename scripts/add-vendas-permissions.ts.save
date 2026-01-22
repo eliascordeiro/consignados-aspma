@@ -1,0 +1,85 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function addVendasPermissions() {
+  console.log('🔄 Adicionando permissões de vendas aos usuários...\n');
+o lib/permissions.ts com helper hasPermission" && git push try {
+ git status | head -20
+ bash -c "cd /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app && git add -A && git commit -m 'fix: corrige imports APIs vendas' && git push origin main 2>&1 | tail -20"
+ git add . && git commit -m "fix: corrige imports das APIs vendas/parcelas NextAuth v5" && git push 2>&1
+ grep -r "authOptions\|getServerSession" /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/src/app/api/vendas/ /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/src/app/api/parcelas/ 2>/dev/null || echo "Nenhuma ocorrência encontrada"
+ cd app && git status
+ pwd && ls -la src/lib/permissions.ts 2>&1 | head -5
+ cat > /tmp/deploy.sh << 'SCRIPT'
+#!/bin/bash
+cd /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app
+git add -A
+git commit -m "fix: corrige imports das APIs de vendas para NextAuth v5 e Prisma"
+git push origin main
+echo "Deploy concluído!"
+SCRIPT
+chmod +x /tmp/deploy.sh
+/tmp/deploy.sh
+ git add -A
+ git commit -m "fix: corrige imports APIs vendas para NextAuth v5"
+ git push origin main
+    // Busca todos os usuários ADMIN e MANAGER
+    const usuarios = await prisma.users.findMany({
+      where: {
+        role: {
+          in: ['ADMIN', 'MANAGER'],
+        },
+      },
+    });
+
+    console.log(`📋 Encontrados ${usuarios.length} usuário(s) (ADMIN/MANAGER)\n`);
+
+    const novasPermissoes = [
+      'vendas.view',
+      'vendas.create',
+      'vendas.edit',
+      'vendas.delete',
+      'vendas.export',
+    ];
+
+    for (const usuario of usuarios) {
+      const permissoesAtuais = usuario.permissions || [];
+      const permissoesSet = new Set(permissoesAtuais);
+
+      let adicionadas = 0;
+      for (const perm of novasPermissoes) {
+        if (!permissoesSet.has(perm)) {
+          permissoesSet.add(perm);
+          adicionadas++;
+        }
+      }
+
+      if (adicionadas > 0) {
+        await prisma.users.update({
+          where: { id: usuario.id },
+          data: {
+            permissions: Array.from(permissoesSet),
+          },
+        });
+
+        console.log(`✅ ${usuario.name} (${usuario.email})`);
+        console.log(`   Role: ${usuario.role}`);
+        console.log(`   Adicionadas: ${adicionadas} permissões`);
+        console.log(`   Total: ${permissoesSet.size} permissões\n`);
+      } else {
+        console.log(`⏭️  ${usuario.name} já possui todas as permissões de vendas\n`);
+      }
+    }
+
+    console.log('✨ Concluído!');
+  } catch (error) {
+    console.error('❌ Erro:', error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
+ git commit -m "fix: corrige imports NextAuth v5 e adiciona permissions helper" && git push origin main
+  }
+}
+
+addVendasPermissions();

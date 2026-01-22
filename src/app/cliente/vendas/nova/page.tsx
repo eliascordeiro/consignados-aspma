@@ -246,7 +246,7 @@ export default function NovaVendaPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Lançamento de Vendas</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lançamento de Vendas</h1>
         <Link
           href="/cliente/vendas"
           className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
@@ -255,11 +255,11 @@ export default function NovaVendaPage() {
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-6">
         {/* Sócio/Associado */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
-            <label className="block text-sm font-bold mb-2">Matrícula/Associado *</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Matrícula/Associado *</label>
             <input
               type="text"
               value={searchSocio}
@@ -270,19 +270,19 @@ export default function NovaVendaPage() {
                 }
               }}
               placeholder="Digite o nome para pesquisar"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
             {showSocioList && socios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
                 {socios.map((socio) => (
                   <div
                     key={socio.id}
                     onClick={() => selecionarSocio(socio)}
-                    className="p-3 hover:bg-blue-50 cursor-pointer border-b"
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
                   >
-                    <div className="font-semibold">{socio.nome}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-semibold text-gray-900 dark:text-white">{socio.nome}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       Matrícula: {socio.matricula} | Limite: R$ {parseFloat(socio.limite?.toString() || '0').toFixed(2)}
                     </div>
                   </div>
@@ -292,12 +292,12 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2">Associado</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Associado</label>
             <input
               type="text"
               value={formData.socioNome}
               readOnly
-              className="w-full px-3 py-2 border rounded bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
             />
           </div>
 

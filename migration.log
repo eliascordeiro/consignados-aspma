@@ -1,0 +1,224 @@
+🚀 Iniciando migração de vendas e parcelas do MySQL para Railway...
+
+📡 Conectando ao MySQL remoto...
+✅ Conectado ao MySQL
+
+👤 Buscando usuário MANAGER no Railway...
+DATABASE_URL: postgres://postgres:DtTeiZzewsGAQlbosPGcsNrWAQqVCc...
+✅ Conexão Prisma OK: [ { test: 1 } ]
+✅ Manager encontrado: ASPMA - Associação dos Servidores Públicos de Araucária. (elias157508@gmail.com) - Role: MANAGER
+
+📋 Carregando mapeamento de sócios...
+✅ 4212 sócios carregados
+Exemplos de matrículas: 528, 530, 534, 535, 536
+
+📋 Carregando mapeamento de convênios...
+✅ 229 convênios carregados
+
+📊 Total de vendas no MySQL: 82159
+
+🗑️  Limpando tabelas de vendas no Railway...
+✅ Tabelas limpas
+
+📦 Iniciando migração de vendas...
+
+
+⚠️  Sócio não encontrado: matrícula="4876" (tipo: number)
+
+⚠️  Sócio não encontrado: matrícula="5136" (tipo: number)
+
+⚠️  Sócio não encontrado: matrícula="5136" (tipo: number)
+
+⚠️  Sócio não encontrado: matrícula="4947" (tipo: number)
+
+⚠️  Sócio não encontrado: matrícula="4947" (tipo: number)
+⏳ Progresso: 0.1% (79 migradas, 21 puladas)⏳ Progresso: 0.2% (162 migradas, 38 puladas)⏳ Progresso: 0.4% (247 migradas, 53 puladas)⏳ Progresso: 0.5% (334 migradas, 66 puladas)⏳ Progresso: 0.6% (421 migradas, 79 puladas)⏳ Progresso: 0.7% (514 migradas, 86 puladas)⏳ Progresso: 0.9% (608 migradas, 92 puladas)⏳ Progresso: 1.0% (696 migradas, 104 puladas)⏳ Progresso: 1.1% (786 migradas, 114 puladas)⏳ Progresso: 1.2% (838 migradas, 162 puladas)⏳ Progresso: 1.3% (880 migradas, 220 puladas)❌ Erro ao migrar venda 1191: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1193: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1196: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1198: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1200: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+⏳ Progresso: 1.5% (938 migradas, 262 puladas)❌ Erro ao migrar venda 1201: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1204: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1207: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1208: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1209: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1224: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1237: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1249: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1251: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1252: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1266: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1267: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1272: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1282: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+❌ Erro ao migrar venda 1294: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+⏳ Progresso: 1.6% (995 migradas, 305 puladas)❌ Erro ao migrar venda 1306: 
+Invalid `prisma.venda.create()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-from-mysql.ts:163:50
+
+  160 }
+  161 
+  162 // Cria venda no Railway
+→ 163 const vendaCriada = await prisma.venda.create(
+Unique constraint failed on the fields: (`socioId`,`numeroVenda`)
+⏳ Progresso: 1.7% (1085 migradas, 315 puladas)⏳ Progresso: 1.8% (1185 migradas, 315 puladas)⏳ Progresso: 1.9% (1284 migradas, 316 puladas)⏳ Progresso: 2.1% (1382 migradas, 318 puladas)⏳ Progresso: 2.2% (1481 migradas, 319 puladas)⏳ Progresso: 2.3% (1581 migradas, 319 puladas)⏳ Progresso: 2.4% (1681 migradas, 319 puladas)⏳ Progresso: 2.6% (1780 migradas, 320 puladas)⏳ Progresso: 2.7% (1877 migradas, 323 puladas)⏳ Progresso: 2.8% (1973 migradas, 327 puladas)⏳ Progresso: 2.9% (2071 migradas, 329 puladas)⏳ Progresso: 3.0% (2170 migradas, 330 puladas)⏳ Progresso: 3.2% (2270 migradas, 330 puladas)⏳ Progresso: 3.3% (2369 migradas, 331 puladas)⏳ Progresso: 3.4% (2466 migradas, 334 puladas)⏳ Progresso: 3.5% (2564 migradas, 336 puladas)⏳ Progresso: 3.7% (2663 migradas, 337 puladas)
