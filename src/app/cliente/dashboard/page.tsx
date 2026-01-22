@@ -6,7 +6,12 @@ import { Building2, Users, Store } from "lucide-react"
 export default async function ClienteDashboard() {
   const session = await auth()
   
-  if (!session?.user || session.user.role !== "MANAGER") {
+  if (!session?.user) {
+    redirect("/login")
+  }
+
+  // Permitir MANAGER e USER (usuários subordinados)
+  if (session.user.role !== "MANAGER" && session.user.role !== "USER") {
     redirect("/login")
   }
 
