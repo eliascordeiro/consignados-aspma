@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createAuditLog } from '@/lib/audit-log';
+import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 
 type RouteParams = Promise<{
@@ -175,6 +175,7 @@ export async function PUT(
     });
 
     // Registra no audit log
+    const { ipAddress: ipAddrUpdate, userAgent: userAgentUpdate } = getRequestInfo(request);
     await createAuditLog({
       userId: session.user.id,
       userName: session.user.name || '',
@@ -190,7 +191,8 @@ export async function PUT(
         numeroParcela: parcelaExistente.numeroParcela,
         changes,
       },
-      request,
+      ipAddress: ipAddrUpdate,
+      userAgent: userAgentUpdate,
     });
 
     return NextResponse.json(parcelaAtualizada);
@@ -279,6 +281,7 @@ export async function DELETE(
     });
 
     // Registra no audit log
+    const { ipAddress: ipAddrDelete, userAgent: userAgentDelete } = getRequestInfo(request);
     await createAuditLog({
       userId: session.user.id,
       userName: session.user.name || '',
@@ -294,7 +297,8 @@ export async function DELETE(
         numeroParcela: parcela.numeroParcela,
         valor: parseFloat(parcela.valor.toString()),
       },
-      request,
+      ipAddress: ipAddrDelete,
+      userAgent: userAgentDelete,
     });
 
     return NextResponse.json({ message: 'Parcela excluída com sucesso' });

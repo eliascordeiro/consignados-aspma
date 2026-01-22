@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createAuditLog } from '@/lib/audit-log';
+import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 
 // GET /api/vendas - Lista todas as vendas
@@ -217,6 +217,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Registra no audit log
+    const { ipAddress, userAgent } = getRequestInfo(request);
     await createAuditLog({
       userId: session.user.id,
       userName: session.user.name || '',
@@ -235,7 +236,8 @@ export async function POST(request: NextRequest) {
         quantidadeParcelas,
         valorTotal,
       },
-      request,
+      ipAddress,
+      userAgent,
     });
 
     // Busca a venda criada com todos os relacionamentos

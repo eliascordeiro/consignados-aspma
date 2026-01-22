@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createAuditLog } from '@/lib/audit-log';
+import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 
 type RouteParams = Promise<{
@@ -180,6 +180,7 @@ export async function PUT(
     });
 
     // Registra no audit log
+    const { ipAddress: ipAddrUpdate, userAgent: userAgentUpdate } = getRequestInfo(request);
     await createAuditLog({
       userId: session.user.id,
       userName: session.user.name || '',
@@ -193,7 +194,8 @@ export async function PUT(
         changes,
         parcelas: parcelas?.length || 0,
       },
-      request,
+      ipAddress: ipAddrUpdate,
+      userAgent: userAgentUpdate,
     });
 
     // Busca a venda atualizada com todos os relacionamentos
@@ -287,6 +289,7 @@ export async function DELETE(
     }
 
     // Registra no audit log
+    const { ipAddress: ipAddrDelete, userAgent: userAgentDelete } = getRequestInfo(request);
     await createAuditLog({
       userId: session.user.id,
       userName: session.user.name || '',
@@ -303,7 +306,8 @@ export async function DELETE(
         valorTotal: parseFloat(venda.valorTotal.toString()),
         hardDelete,
       },
-      request,
+      ipAddress: ipAddrDelete,
+      userAgent: userAgentDelete,
     });
 
     return NextResponse.json({ message: 'Venda excluída com sucesso' });
