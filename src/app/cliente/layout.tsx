@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -53,7 +53,22 @@ export default function ClienteLayout({
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [perfilModalOpen, setPerfilModalOpen] = useState(false)
+  const [managerName, setManagerName] = useState<string | null>(null)
   const { data: session } = useSession()
+
+  // Buscar nome do MANAGER se for usuário subordinado
+  useEffect(() => {
+    if (session?.user?.role === "USER") {
+      fetch("/api/cliente/manager-info")
+        .then(res => res.json())
+        .then(data => {
+          if (data.managerName) {
+            setManagerName(data.managerName)
+          }
+        })
+        .catch(err => console.error("Erro ao buscar MANAGER:", err))
+    }
+  }, [session])
 
   // Filtrar navegação baseado nas permissões do usuário
   const userPermissions = (session?.user as any)?.permissions || []
@@ -64,6 +79,11 @@ export default function ClienteLayout({
     dashboardNav,
     ...userModules.map(module => moduleRoutes[module.id]).filter(Boolean)
   ]
+
+  // Nome para exibir no header (MANAGER se for USER subordinado, senão próprio nome)
+  const headerName = session?.user?.role === "USER" && managerName 
+    ? managerName 
+    : session?.user?.name || "Cliente"
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 consignado:from-blue-50 consignado:to-slate-100">
@@ -209,11 +229,11 @@ export default function ClienteLayout({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <h2 className="text-sm md:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-                    {session?.user?.name || "Cliente"}
+                    {headerName}
                   </h2>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="start">
-                  <p>{session?.user?.name || "Cliente"}</p>
+                  <p>{headerName}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
