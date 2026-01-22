@@ -75,8 +75,10 @@ export async function PUT(
     }
 
     // Apenas verificar ownership se não for MANAGER/ADMIN
+    // Usuários subordinados podem editar convênios do MANAGER que os criou
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      if (existing.userId !== session.user.id) {
+      const targetUserId = (session.user as any).createdById || session.user.id
+      if (existing.userId !== targetUserId) {
         return NextResponse.json(
           { error: "Sem permissão para editar este convênio" },
           { status: 403 }
@@ -165,8 +167,10 @@ export async function DELETE(
     }
 
     // Apenas verificar ownership se não for MANAGER/ADMIN
+    // Usuários subordinados podem deletar convênios do MANAGER que os criou
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      if (existing.userId !== session.user.id) {
+      const targetUserId = (session.user as any).createdById || session.user.id
+      if (existing.userId !== targetUserId) {
         return NextResponse.json(
           { error: "Sem permissão para excluir este convênio" },
           { status: 403 }

@@ -16,9 +16,11 @@ export async function GET(
     const { id } = await params
 
     // MANAGER e ADMIN podem ver todos os funcionários
+    // Usuários subordinados podem ver funcionários do MANAGER que os criou
     const where: any = { id }
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      where.userId = session.user.id
+      const targetUserId = (session.user as any).createdById || session.user.id
+      where.userId = targetUserId
     }
 
     const funcionario = await prisma.socio.findFirst({
@@ -63,9 +65,11 @@ export async function PUT(
     const { id } = await params
 
     // MANAGER e ADMIN podem editar todos os funcionários
+    // Usuários subordinados podem editar funcionários do MANAGER que os criou
     const where: any = { id }
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      where.userId = session.user.id
+      const targetUserId = (session.user as any).createdById || session.user.id
+      where.userId = targetUserId
     }
 
     // Preparar dados removendo undefined e NaN
