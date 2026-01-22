@@ -89,6 +89,39 @@ export async function PUT(
       },
     })
 
+    // Se é um MANAGER e as permissões foram alteradas, atualizar subordinados
+    if (existingUser.role === "MANAGER" && validatedData.permissions) {
+      const newPermissions = validatedData.permissions
+      const oldPermissions = existingUser.permissions || []
+      
+      // Permissões que foram removidas do MANAGER
+      const removedPermissions = oldPermissions.filter(p => !newPermissions.includes(p))
+      
+      if (removedPermissions.length > 0) {
+        // Buscar todos os usuários subordinados
+        const subordinates = await prisma.users.findMany({
+          where: { createdById: id },
+          select: { id: true, permissions: true }
+        })
+
+        // Atualizar cada subordinado removendo as permissões que o MANAGER não tem mais
+        for (const subordinate of subordinates) {
+          const subordinatePermissions = subordinate.permissions || []
+          // Manter apenas permissões que o MANAGER ainda tem
+          const updatedPermissions = subordinatePermissions.filter(p => 
+            newPermissions.includes(p)
+          )
+
+          if (updatedPermissions.length !== subordinatePermissions.length) {
+            await prisma.users.update({
+              where: { id: subordinate.id },
+              data: { permissions: updatedPermissions }
+            })
+          }
+        }
+      }
+    }
+
     return NextResponse.json(user)
   } catch (error) {
     if (error instanceof z.ZodError) {
