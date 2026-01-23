@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 
-// GET /api/vendas - Lista todas as vendas
+// GET /api/vendas - Lista vendas com paginação
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
     const socioId = searchParams.get('socioId');
     const convenioId = searchParams.get('convenioId');
     const ativo = searchParams.get('ativo');
+    const search = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const cursor = searchParams.get('cursor'); // Para infinite scroll
 
     const whereClause: any = {
       userId: targetUserId,
@@ -36,39 +40,121 @@ export async function GET(request: NextRequest) {
       whereClause.convenioId = parseInt(convenioId);
     }
 
-    if (ativo !== null) {
+    if (ativo !== null && ativo !== '') {
       whereClause.ativo = ativo === 'true';
     }
 
-    const vendas = await prisma.venda.findMany({
-      where: whereClause,
-      include: {
-        socio: {
-          select: {
-            id: true,
-            nome: true,
-            matricula: true,
-          },
-        },
-        convenio: {
-          select: {
-            id: true,
-            razao_soc: true,
-          },
-        },
-        parcelas: {
-          orderBy: {
-            numeroParcela: 'asc',
-          },
-        },
-      },
-      orderBy: [
-        { dataEmissao: 'desc' },
-        { numeroVenda: 'desc' },
-      ],
-    });
+    // Busca por texto
+    if (search) {
+      whereClause.OR = [
+        { numeroVenda: { equals: parseInt(search) || 0 } },
+        { socio: { nome: { contains: search, mode: 'insensitive' } } },
+        { socio: { matricula: { contains: search, mode: 'insensitive' } } },
+        { convenio: { razao_soc: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
 
-    return NextResponse.json(vendas);
+    // Cursor-based pagination (melhor para infinite scroll)
+    if (cursor) {
+      const vendas = await prisma.venda.findMany({
+        where: whereClause,
+        take: limit + 1, // Pega um a mais para saber se tem próxima página
+        cursor: {
+          id: cursor,
+        },
+        skip: 1, // Pula o cursor
+        include: {
+          socio: {
+            select: {
+              id: true,
+              nome: true,
+              matricula: true,
+            },
+          },
+          convenio: {
+            select: {
+              id: true,
+              razao_soc: true,
+            },
+          },
+          parcelas: {
+            select: {
+              id: true,
+              numeroParcela: true,
+              baixa: true,
+            },
+            orderBy: {
+              numeroParcela: 'asc',
+            },
+          },
+        },
+        orderBy: [
+          { dataEmissao: 'desc' },
+          { numeroVenda: 'desc' },
+        ],
+      });
+
+      const hasMore = vendas.length > limit;
+      const data = hasMore ? vendas.slice(0, -1) : vendas;
+      const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+      return NextResponse.json({
+        data,
+        nextCursor,
+        hasMore,
+      });
+    }
+
+    // Offset-based pagination (tradicional)
+    const skip = (page - 1) * limit;
+
+    const [vendas, total] = await Promise.all([
+      prisma.venda.findMany({
+        where: whereClause,
+        take: limit,
+        skip,
+        include: {
+          socio: {
+            select: {
+              id: true,
+              nome: true,
+              matricula: true,
+            },
+          },
+          convenio: {
+            select: {
+              id: true,
+              razao_soc: true,
+            },
+          },
+          parcelas: {
+            select: {
+              id: true,
+              numeroParcela: true,
+              baixa: true,
+            },
+            orderBy: {
+              numeroParcela: 'asc',
+            },
+          },
+        },
+        orderBy: [
+          { dataEmissao: 'desc' },
+          { numeroVenda: 'desc' },
+        ],
+      }),
+      prisma.venda.count({ where: whereClause }),
+    ]);
+
+    return NextResponse.json({
+      data: vendas,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Erro ao buscar vendas:', error);
     return NextResponse.json(

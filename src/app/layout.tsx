@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SessionProvider } from "@/components/session-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ReactQueryProvider } from "@/components/providers/react-query-provider"
 import { Toaster } from "sonner"
 import "./globals.css";
 
@@ -29,8 +30,10 @@ export default function RootLayout({
           disableTransitionOnChange
           themes={["light", "dark", "consignado"]}
         >
-          <SessionProvider>{children}</SessionProvider>
-          <Toaster position="top-right" richColors />
+          <ReactQueryProvider>
+            <SessionProvider>{children}</SessionProvider>
+            <Toaster position="top-right" richColors />
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>

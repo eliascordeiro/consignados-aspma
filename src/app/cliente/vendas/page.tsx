@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface Venda {
@@ -24,22 +25,71 @@ interface Venda {
   convenio: {
     id: number;
     razao_soc: string;
-  };
-  parcelas: any[];
+  } | null;
+  parcelas: Array<{
+    id: string;
+    numeroParcela: number;
+    baixa: string | null;
+  }>;
+}
+
+interface VendasResponse {
+  data: Venda[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+async function fetchVendas({
+  pageParam = null,
+  filtroAtivo,
+  searchTerm,
+}: {
+  pageParam?: string | null;
+  filtroAtivo: string;
+  searchTerm: string;
+}): Promise<VendasResponse> {
+  const params = new URLSearchParams();
+  
+  if (pageParam) {
+    params.set('cursor', pageParam);
+  }
+  
+  if (filtroAtivo) {
+    params.set('ativo', filtroAtivo);
+  }
+  
+  if (searchTerm) {
+    params.set('search', searchTerm);
+  }
+  
+  params.set('limit', '50');
+
+  const response = await fetch(`/api/vendas?${params.toString()}`);
+  
+  if (!response.ok) {
+    throw new Error('Erro ao carregar vendas');
+  }
+  
+  return response.json();
 }
 
 export default function VendasPage() {
-  const [vendas, setVendas] = useState<Venda[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filtroAtivo, setFiltroAtivo] = useState('true');
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // Debounce da busca
   useEffect(() => {
-    fetchVendas();
-  }, [filtroAtivo]);
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
+  // Check mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -49,26 +99,30 @@ export default function VendasPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const fetchVendas = async () => {
-    try {
-      setLoading(true);
-      const url = filtroAtivo
-        ? `/api/vendas?ativo=${filtroAtivo}`
-        : '/api/vendas';
-      
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setVendas(data);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar vendas:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['vendas', filtroAtivo, searchTerm],
+    queryFn: ({ pageParam }) =>
+      fetchVendas({ pageParam, filtroAtivo, searchTerm }),
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
+    initialPageParam: null as string | null,
+  });
 
-  const excluirVenda = async (id: string, numeroVenda: number, socioNome: string) => {
+  const allVendas = data?.pages.flatMap((page) => page.data) ?? [];
+
+  const excluirVenda = async (
+    id: string,
+    numeroVenda: number,
+    socioNome: string
+  ) => {
     const confirma = confirm(
       `Deseja realmente cancelar a venda #${numeroVenda} de ${socioNome}?`
     );
@@ -82,7 +136,7 @@ export default function VendasPage() {
 
       if (response.ok) {
         alert('Venda cancelada com sucesso!');
-        fetchVendas();
+        refetch();
       } else {
         const error = await response.json();
         alert(`Erro ao cancelar venda: ${error.error}`);
@@ -93,33 +147,48 @@ export default function VendasPage() {
     }
   };
 
-  const vendasFiltradas = vendas.filter((venda) => {
-    if (!searchTerm) return true;
-    
-    const termo = searchTerm.toLowerCase();
-    return (
-      venda.numeroVenda.toString().includes(termo) ||
-      venda.socio.nome.toLowerCase().includes(termo) ||
-      venda.socio.matricula?.toLowerCase().includes(termo) ||
-      venda.convenio?.razao_soc?.toLowerCase().includes(termo)
-    );
-  });
-
-  const parcelasPagas = (parcelas: any[]) => {
+  const parcelasPagas = (
+    parcelas: Array<{ baixa: string | null }>
+  ) => {
     return parcelas.filter((p) => p.baixa).length;
   };
 
   const rowVirtualizer = useVirtualizer({
-    count: vendasFiltradas.length,
+    count: hasNextPage ? allVendas.length + 1 : allVendas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => isMobile ? 250 : 80,
+    estimateSize: () => (isMobile ? 250 : 80),
     overscan: 5,
   });
+
+  // Carrega mais quando chega perto do fim
+  useEffect(() => {
+    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= allVendas.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      fetchNextPage();
+    }
+  }, [
+    hasNextPage,
+    fetchNextPage,
+    allVendas.length,
+    isFetchingNextPage,
+    rowVirtualizer.getVirtualItems(),
+  ]);
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendas</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Vendas
+        </h1>
         <Link
           href="/cliente/vendas/nova"
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -132,22 +201,26 @@ export default function VendasPage() {
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Pesquisar</label>
+            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+              Pesquisar
+            </label>
             <input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Número, sócio, matrícula ou convênio..."
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Status</label>
+            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+              Status
+            </label>
             <select
               value={filtroAtivo}
               onChange={(e) => setFiltroAtivo(e.target.value)}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Todos</option>
               <option value="true">Ativos</option>
@@ -158,12 +231,26 @@ export default function VendasPage() {
       </div>
 
       {/* Lista de Vendas */}
-      {loading ? (
+      {isLoading ? (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando vendas...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Carregando vendas...
+          </p>
         </div>
-      ) : vendasFiltradas.length === 0 ? (
+      ) : isError ? (
+        <div className="bg-red-50 dark:bg-red-900/20 p-12 rounded-lg shadow-md text-center">
+          <p className="text-red-600 dark:text-red-400 text-lg">
+            Erro ao carregar vendas. Tente novamente.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Recarregar
+          </button>
+        </div>
+      ) : allVendas.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-md text-center">
           <p className="text-gray-500 dark:text-gray-400 text-lg">
             {searchTerm
@@ -179,7 +266,7 @@ export default function VendasPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-          <div 
+          <div
             ref={parentRef}
             className="overflow-auto"
             style={{ height: '600px' }}
@@ -210,8 +297,9 @@ export default function VendasPage() {
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const venda = vendasFiltradas[virtualRow.index];
-                  
+                  const isLoaderRow = virtualRow.index > allVendas.length - 1;
+                  const venda = allVendas[virtualRow.index];
+
                   return (
                     <div
                       key={virtualRow.key}
@@ -225,7 +313,13 @@ export default function VendasPage() {
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
-                      {isMobile ? (
+                      {isLoaderRow ? (
+                        hasNextPage ? (
+                          <div className="p-4 text-center text-gray-600 dark:text-gray-400">
+                            Carregando mais vendas...
+                          </div>
+                        ) : null
+                      ) : isMobile ? (
                         // Layout Mobile (Card)
                         <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                           <div className="space-y-2">
@@ -256,37 +350,44 @@ export default function VendasPage() {
                                 )}
                               </div>
                             </div>
-                            
+
                             <div className="text-sm text-gray-900 dark:text-white">
                               <strong>Sócio:</strong> {venda.socio.nome}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Mat: {venda.socio.matricula || 'N/A'}
                             </div>
-                            
+
                             <div className="text-sm text-gray-900 dark:text-white">
-                              <strong>Convênio:</strong> {venda.convenio?.razao_soc || 'Sem convênio'}
+                              <strong>Convênio:</strong>{' '}
+                              {venda.convenio?.razao_soc || 'Sem convênio'}
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Data Emissão</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Data Emissão
+                                </div>
                                 <div className="text-gray-900 dark:text-white">
                                   {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Parcelas</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Parcelas
+                                </div>
                                 <div className="text-gray-900 dark:text-white">
-                                  {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
+                                  {parcelasPagas(venda.parcelas)}/
+                                  {venda.quantidadeParcelas}
                                 </div>
                               </div>
                             </div>
-                            
+
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              Valor Total: R$ {parseFloat(venda.valorTotal.toString()).toFixed(2)}
+                              Valor Total: R${' '}
+                              {parseFloat(venda.valorTotal.toString()).toFixed(2)}
                             </div>
-                            
+
                             <div className="flex gap-2 pt-2">
                               <Link
                                 href={`/cliente/vendas/${venda.id}`}
@@ -304,7 +405,11 @@ export default function VendasPage() {
                                   </Link>
                                   <button
                                     onClick={() =>
-                                      excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
+                                      excluirVenda(
+                                        venda.id,
+                                        venda.numeroVenda,
+                                        venda.socio.nome
+                                      )
                                     }
                                     className="flex-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs text-center"
                                   >
@@ -328,7 +433,7 @@ export default function VendasPage() {
                               </div>
                             )}
                           </div>
-                          
+
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {venda.socio.nome}
@@ -337,28 +442,31 @@ export default function VendasPage() {
                               Mat: {venda.socio.matricula || 'N/A'}
                             </div>
                           </div>
-                          
+
                           <div className="text-sm text-gray-900 dark:text-white">
                             {venda.convenio?.razao_soc || 'Sem convênio'}
                           </div>
-                          
+
                           <div className="text-sm text-gray-900 dark:text-white">
                             {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
                           </div>
-                          
+
                           <div className="text-right">
                             <div className="text-sm text-gray-900 dark:text-white">
-                              {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
+                              {parcelasPagas(venda.parcelas)}/
+                              {venda.quantidadeParcelas}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              R$ {parseFloat(venda.valorParcela.toString()).toFixed(2)}/parc
+                              R${' '}
+                              {parseFloat(venda.valorParcela.toString()).toFixed(2)}
+                              /parc
                             </div>
                           </div>
-                          
+
                           <div className="text-sm font-medium text-gray-900 dark:text-white text-right">
                             R$ {parseFloat(venda.valorTotal.toString()).toFixed(2)}
                           </div>
-                          
+
                           <div className="text-center">
                             {venda.cancelado ? (
                               <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
@@ -374,7 +482,7 @@ export default function VendasPage() {
                               </span>
                             )}
                           </div>
-                          
+
                           <div className="flex justify-center gap-2">
                             <Link
                               href={`/cliente/vendas/${venda.id}`}
@@ -394,7 +502,11 @@ export default function VendasPage() {
                                 </Link>
                                 <button
                                   onClick={() =>
-                                    excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
+                                    excluirVenda(
+                                      venda.id,
+                                      venda.numeroVenda,
+                                      venda.socio.nome
+                                    )
                                   }
                                   className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
                                   title="Cancelar venda"
@@ -417,12 +529,18 @@ export default function VendasPage() {
           <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                Total de vendas: <strong>{vendasFiltradas.length}</strong>
+                Vendas carregadas: <strong>{allVendas.length}</strong>
+                {hasNextPage && ' (carregue mais com scroll)'}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                Valor total: <strong>
-                  R$ {vendasFiltradas
-                    .reduce((sum, v) => sum + parseFloat(v.valorTotal.toString()), 0)
+                Valor total:{' '}
+                <strong>
+                  R${' '}
+                  {allVendas
+                    .reduce(
+                      (sum, v) => sum + parseFloat(v.valorTotal.toString()),
+                      0
+                    )
                     .toFixed(2)}
                 </strong>
               </div>
