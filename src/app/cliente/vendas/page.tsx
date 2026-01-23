@@ -110,7 +110,7 @@ export default function VendasPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Pesquisar</label>
@@ -253,21 +253,30 @@ export default function VendasPage() {
                       <div className="flex justify-center gap-2">
                         <Link
                           href={`/cliente/vendas/${venda.id}`}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
                           title="Ver detalhes"
                         >
-                          👁️
+                          Ver
                         </Link>
                         {venda.ativo && !venda.cancelado && (
-                          <button
-                            onClick={() =>
-                              excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
-                            }
-                            className="text-red-600 hover:text-red-900"
-                            title="Cancelar venda"
-                          >
-                            ❌
-                          </button>
+                          <>
+                            <Link
+                              href={`/cliente/vendas/editar/${venda.id}`}
+                              className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs"
+                              title="Editar venda"
+                            >
+                              Editar
+                            </Link>
+                            <button
+                              onClick={() =>
+                                excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
+                              }
+                              className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                              title="Cancelar venda"
+                            >
+                              Cancelar
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
