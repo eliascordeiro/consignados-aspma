@@ -46,13 +46,23 @@ export async function GET(request: NextRequest) {
 
     // Busca por texto
     if (search) {
+      const searchNumber = parseInt(search);
       whereClause.OR = [
-        { numeroVenda: { equals: parseInt(search) || 0 } },
+        ...(isNaN(searchNumber) ? [] : [{ numeroVenda: searchNumber }]),
         { socio: { nome: { contains: search, mode: 'insensitive' } } },
         { socio: { matricula: { contains: search, mode: 'insensitive' } } },
         { convenio: { razao_soc: { contains: search, mode: 'insensitive' } } },
       ];
     }
+
+    console.log('[GET /api/vendas] Query params:', { 
+      cursor, 
+      page, 
+      limit, 
+      search, 
+      ativo, 
+      whereClause: JSON.stringify(whereClause) 
+    });
 
     // Cursor-based pagination (melhor para infinite scroll)
     if (cursor) {
@@ -97,6 +107,16 @@ export async function GET(request: NextRequest) {
       const hasMore = vendas.length > limit;
       const data = hasMore ? vendas.slice(0, -1) : vendas;
       const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+      console.log('[GET /api/vendas] Cursor pagination result:', {
+        total: vendas.length,
+        returned: data.length,
+        hasMore,
+        nextCursor,
+        firstVenda: data[0]?.numeroVenda,
+        lastVenda: data[data.length - 1]?.numeroVenda,
+        sampleParcelas: data[0]?.parcelas?.length
+      });
 
       return NextResponse.json({
         data,
@@ -145,6 +165,16 @@ export async function GET(request: NextRequest) {
       }),
       prisma.venda.count({ where: whereClause }),
     ]);
+
+    console.log('[GET /api/vendas] Offset pagination result:', {
+      page,
+      limit,
+      skip,
+      total,
+      returned: vendas.length,
+      totalPages: Math.ceil(total / limit),
+      sampleParcelas: vendas[0]?.parcelas?.length
+    });
 
     return NextResponse.json({
       data: vendas,
