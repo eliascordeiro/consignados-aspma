@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface Venda {
   id: string;
@@ -32,10 +33,21 @@ export default function VendasPage() {
   const [loading, setLoading] = useState(true);
   const [filtroAtivo, setFiltroAtivo] = useState('true');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchVendas();
   }, [filtroAtivo]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fetchVendas = async () => {
     try {
@@ -96,6 +108,13 @@ export default function VendasPage() {
   const parcelasPagas = (parcelas: any[]) => {
     return parcelas.filter((p) => p.baixa).length;
   };
+
+  const rowVirtualizer = useVirtualizer({
+    count: vendasFiltradas.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => isMobile ? 250 : 80,
+    overscan: 5,
+  });
 
   return (
     <div className="container mx-auto p-6">
@@ -160,139 +179,247 @@ export default function VendasPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Venda
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sócio/Matrícula
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Convênio
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data Emissão
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Parcelas
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Valor Total
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {vendasFiltradas.map((venda) => (
-                  <tr key={venda.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        #{venda.numeroVenda}
-                      </div>
-                      {venda.operador && (
-                        <div className="text-xs text-gray-500">
-                          Op: {venda.operador}
+          <div 
+            ref={parentRef}
+            className="overflow-auto"
+            style={{ height: '600px' }}
+          >
+            <div className="w-full">
+              {/* Header fixo - apenas desktop */}
+              {!isMobile && (
+                <div className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-10 border-b border-gray-200 dark:border-gray-600">
+                  <div className="grid grid-cols-[100px_2fr_1.5fr_120px_120px_120px_100px_200px] gap-4 px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <div>Venda</div>
+                    <div>Sócio/Matrícula</div>
+                    <div>Convênio</div>
+                    <div>Data Emissão</div>
+                    <div className="text-right">Parcelas</div>
+                    <div className="text-right">Valor Total</div>
+                    <div className="text-center">Status</div>
+                    <div className="text-center">Ações</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Virtual scrolling container */}
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: '100%',
+                  position: 'relative',
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const venda = vendasFiltradas[virtualRow.index];
+                  
+                  return (
+                    <div
+                      key={virtualRow.key}
+                      data-index={virtualRow.index}
+                      ref={rowVirtualizer.measureElement}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      {isMobile ? (
+                        // Layout Mobile (Card)
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  Venda #{venda.numeroVenda}
+                                </div>
+                                {venda.operador && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Op: {venda.operador}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                {venda.cancelado ? (
+                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Cancelado
+                                  </span>
+                                ) : venda.ativo ? (
+                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Ativo
+                                  </span>
+                                ) : (
+                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    Inativo
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              <strong>Sócio:</strong> {venda.socio.nome}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Mat: {venda.socio.matricula || 'N/A'}
+                            </div>
+                            
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              <strong>Convênio:</strong> {venda.convenio?.razao_soc || 'Sem convênio'}
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Data Emissão</div>
+                                <div className="text-gray-900 dark:text-white">
+                                  {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Parcelas</div>
+                                <div className="text-gray-900 dark:text-white">
+                                  {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              Valor Total: R$ {parseFloat(venda.valorTotal.toString()).toFixed(2)}
+                            </div>
+                            
+                            <div className="flex gap-2 pt-2">
+                              <Link
+                                href={`/cliente/vendas/${venda.id}`}
+                                className="flex-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs text-center"
+                              >
+                                Ver
+                              </Link>
+                              {venda.ativo && !venda.cancelado && (
+                                <>
+                                  <Link
+                                    href={`/cliente/vendas/editar/${venda.id}`}
+                                    className="flex-1 px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs text-center"
+                                  >
+                                    Editar
+                                  </Link>
+                                  <button
+                                    onClick={() =>
+                                      excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
+                                    }
+                                    className="flex-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs text-center"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Layout Desktop (Grid)
+                        <div className="grid grid-cols-[100px_2fr_1.5fr_120px_120px_120px_100px_200px] gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 items-center">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              #{venda.numeroVenda}
+                            </div>
+                            {venda.operador && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Op: {venda.operador}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {venda.socio.nome}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Mat: {venda.socio.matricula || 'N/A'}
+                            </div>
+                          </div>
+                          
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            {venda.convenio?.razao_soc || 'Sem convênio'}
+                          </div>
+                          
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              R$ {parseFloat(venda.valorParcela.toString()).toFixed(2)}/parc
+                            </div>
+                          </div>
+                          
+                          <div className="text-sm font-medium text-gray-900 dark:text-white text-right">
+                            R$ {parseFloat(venda.valorTotal.toString()).toFixed(2)}
+                          </div>
+                          
+                          <div className="text-center">
+                            {venda.cancelado ? (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                Cancelado
+                              </span>
+                            ) : venda.ativo ? (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Ativo
+                              </span>
+                            ) : (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                Inativo
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex justify-center gap-2">
+                            <Link
+                              href={`/cliente/vendas/${venda.id}`}
+                              className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                              title="Ver detalhes"
+                            >
+                              Ver
+                            </Link>
+                            {venda.ativo && !venda.cancelado && (
+                              <>
+                                <Link
+                                  href={`/cliente/vendas/editar/${venda.id}`}
+                                  className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs"
+                                  title="Editar venda"
+                                >
+                                  Editar
+                                </Link>
+                                <button
+                                  onClick={() =>
+                                    excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
+                                  }
+                                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                                  title="Cancelar venda"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {venda.socio.nome}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Mat: {venda.socio.matricula || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {venda.convenio?.razao_soc || 'Sem convênio'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="text-sm text-gray-900">
-                        {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        R$ {parseFloat(venda.valorParcela.toString()).toFixed(2)}/parc
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="text-sm font-medium text-gray-900">
-                        R$ {parseFloat(venda.valorTotal.toString()).toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {venda.cancelado ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          Cancelado
-                        </span>
-                      ) : venda.ativo ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Ativo
-                        </span>
-                      ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                          Inativo
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                      <div className="flex justify-center gap-2">
-                        <Link
-                          href={`/cliente/vendas/${venda.id}`}
-                          className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
-                          title="Ver detalhes"
-                        >
-                          Ver
-                        </Link>
-                        {venda.ativo && !venda.cancelado && (
-                          <>
-                            <Link
-                              href={`/cliente/vendas/editar/${venda.id}`}
-                              className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs"
-                              title="Editar venda"
-                            >
-                              Editar
-                            </Link>
-                            <button
-                              onClick={() =>
-                                excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)
-                              }
-                              className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-                              title="Cancelar venda"
-                            >
-                              Cancelar
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Resumo */}
-          <div className="bg-gray-50 px-6 py-4 border-t">
+          <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
             <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 Total de vendas: <strong>{vendasFiltradas.length}</strong>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 Valor total: <strong>
                   R$ {vendasFiltradas
                     .reduce((sum, v) => sum + parseFloat(v.valorTotal.toString()), 0)
