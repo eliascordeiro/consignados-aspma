@@ -360,7 +360,7 @@ export default function VendasPage() {
 
                             <div className="text-sm text-gray-900 dark:text-white">
                               <strong>Convênio:</strong>{' '}
-                              {venda.convenio?.razao_soc || 'Sem convênio'}
+                              {venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -436,7 +436,7 @@ export default function VendasPage() {
                           </div>
 
                           <div className="text-sm text-gray-900 dark:text-white">
-                            {venda.convenio?.razao_soc || 'Sem convênio'}
+                            {venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}
                           </div>
 
                           <div className="text-sm text-gray-900 dark:text-white">

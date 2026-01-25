@@ -65,7 +65,7 @@ export default function EditarVendaPage() {
         socioNome: venda.socio.nome,
         socioMatricula: venda.socio.matricula || '',
         convenioId: venda.convenioId?.toString() || '',
-        convenioNome: venda.convenio?.razao_soc || '',
+        convenioNome: venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio',
         numeroVenda: venda.numeroVenda,
         dataEmissao: venda.dataEmissao.split('T')[0],
         operador: venda.operador || '',
@@ -215,7 +215,7 @@ export default function EditarVendaPage() {
           <label className="block text-sm font-bold mb-2 dark:text-gray-300">Convênio</label>
           <input
             type="text"
-            value={formData.convenioNome || 'Sem convênio'}
+            value={formData.convenioNome}
             readOnly
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
           />
