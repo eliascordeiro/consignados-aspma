@@ -74,9 +74,12 @@ export async function GET(req: NextRequest) {
         ? { ativo: statusFilter }
         : search && {
             OR: [
+              { codigo: { contains: search, mode: "insensitive" as const } },
               { razao_soc: { contains: search, mode: "insensitive" as const } },
               { fantasia: { contains: search, mode: "insensitive" as const } },
+              { nome: { contains: search, mode: "insensitive" as const } },
               { cgc: { contains: search, mode: "insensitive" as const } },
+              { cnpj: { contains: search, mode: "insensitive" as const } },
               { cidade: { contains: search, mode: "insensitive" as const } },
             ],
           }

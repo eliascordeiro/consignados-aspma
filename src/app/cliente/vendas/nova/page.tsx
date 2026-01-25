@@ -16,8 +16,10 @@ interface Socio {
 
 interface Convenio {
   id: number;
+  codigo: string | null;
   razao_soc: string;
-  codigo: string;
+  fantasia: string | null;
+  nome: string;
 }
 
 interface Parcela {
@@ -69,10 +71,11 @@ export default function NovaVendaPage() {
 
   const fetchSocios = async () => {
     try {
-      const response = await fetch(`/api/socios?search=${searchSocio}&ativo=true`);
+      const response = await fetch(`/api/funcionarios?search=${searchSocio}`);
       if (response.ok) {
-        const data = await response.json();
-        setSocios(data);
+        const result = await response.json();
+        // API retorna { data: [], pagination: {} }
+        setSocios(result.data || result);
         setShowSocioList(true);
       }
     } catch (error) {
@@ -82,10 +85,11 @@ export default function NovaVendaPage() {
 
   const fetchConvenios = async () => {
     try {
-      const response = await fetch(`/api/convenio?search=${searchConvenio}&ativo=true`);
+      const response = await fetch(`/api/convenios?search=${searchConvenio}`);
       if (response.ok) {
-        const data = await response.json();
-        setConvenios(data);
+        const result = await response.json();
+        // API retorna { data: [], pagination: {} }
+        setConvenios(result.data || result);
         setShowConvenioList(true);
       }
     } catch (error) {
@@ -269,7 +273,7 @@ export default function NovaVendaPage() {
                   setFormData({ ...formData, socioId: '', socioNome: '', matricula: '', limite: 0 });
                 }
               }}
-              placeholder="Digite o nome para pesquisar"
+              placeholder="Digite matrícula, nome ou CPF"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -283,7 +287,11 @@ export default function NovaVendaPage() {
                   >
                     <div className="font-semibold text-gray-900 dark:text-white">{socio.nome}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Matrícula: {socio.matricula} | Limite: R$ {parseFloat(socio.limite?.toString() || '0').toFixed(2)}
+                      {socio.matricula && <span>Mat: {socio.matricula}</span>}
+                      {socio.cpf && socio.matricula && <span> | </span>}
+                      {socio.cpf && <span>CPF: {socio.cpf}</span>}
+                      {(socio.matricula || socio.cpf) && <span> | </span>}
+                      <span>Limite: R$ {parseFloat(socio.limite?.toString() || '0').toFixed(2)}</span>
                     </div>
                   </div>
                 ))}
@@ -325,7 +333,7 @@ export default function NovaVendaPage() {
                   setFormData({ ...formData, convenioId: '', convenioNome: '' });
                 }
               }}
-              placeholder="Digite para pesquisar convênio"
+              placeholder="Digite código, razão social ou nome fantasia"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -338,7 +346,10 @@ export default function NovaVendaPage() {
                     className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
                   >
                     <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Código: {convenio.codigo}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {convenio.fantasia && <span>Fantasia: {convenio.fantasia} | </span>}
+                      {convenio.codigo && <span>Código: {convenio.codigo}</span>}
+                    </div>
                   </div>
                 ))}
               </div>
