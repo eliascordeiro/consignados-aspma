@@ -390,32 +390,24 @@ export default function VendasPage() {
 
                             <div className="flex gap-2 pt-2">
                               <Link
-                                href={`/cliente/vendas/${venda.id}`}
+                                href={`/cliente/vendas/editar/${venda.id}`}
                                 className="flex-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs text-center"
                               >
-                                Ver
+                                {venda.ativo && !venda.cancelado ? 'Editar' : 'Ver'}
                               </Link>
                               {venda.ativo && !venda.cancelado && (
-                                <>
-                                  <Link
-                                    href={`/cliente/vendas/editar/${venda.id}`}
-                                    className="flex-1 px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs text-center"
-                                  >
-                                    Editar
-                                  </Link>
-                                  <button
-                                    onClick={() =>
-                                      excluirVenda(
-                                        venda.id,
-                                        venda.numeroVenda,
-                                        venda.socio.nome
-                                      )
-                                    }
-                                    className="flex-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs text-center"
-                                  >
-                                    Cancelar
-                                  </button>
-                                </>
+                                <button
+                                  onClick={() =>
+                                    excluirVenda(
+                                      venda.id,
+                                      venda.numeroVenda,
+                                      venda.socio.nome
+                                    )
+                                  }
+                                  className="flex-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs text-center"
+                                >
+                                  Cancelar
+                                </button>
                               )}
                             </div>
                           </div>
@@ -485,35 +477,26 @@ export default function VendasPage() {
 
                           <div className="flex justify-center gap-2">
                             <Link
-                              href={`/cliente/vendas/${venda.id}`}
+                              href={`/cliente/vendas/editar/${venda.id}`}
                               className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
-                              title="Ver detalhes"
+                              title={venda.ativo && !venda.cancelado ? "Editar venda" : "Ver detalhes"}
                             >
-                              Ver
+                              {venda.ativo && !venda.cancelado ? 'Editar' : 'Ver'}
                             </Link>
                             {venda.ativo && !venda.cancelado && (
-                              <>
-                                <Link
-                                  href={`/cliente/vendas/editar/${venda.id}`}
-                                  className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs"
-                                  title="Editar venda"
-                                >
-                                  Editar
-                                </Link>
-                                <button
-                                  onClick={() =>
-                                    excluirVenda(
-                                      venda.id,
-                                      venda.numeroVenda,
-                                      venda.socio.nome
-                                    )
-                                  }
-                                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-                                  title="Cancelar venda"
-                                >
-                                  Cancelar
-                                </button>
-                              </>
+                              <button
+                                onClick={() =>
+                                  excluirVenda(
+                                    venda.id,
+                                    venda.numeroVenda,
+                                    venda.socio.nome
+                                  )
+                                }
+                                className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                                title="Cancelar venda"
+                              >
+                                Cancelar
+              </button>
                             )}
                           </div>
                         </div>

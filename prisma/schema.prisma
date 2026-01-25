@@ -64,6 +64,10 @@ model users {
   auditLogs         AuditLog[]
   users             users?        @relation("usersTousers", fields: [createdById], references: [id])
   other_users       users[]       @relation("usersTousers")
+  vendasCreated     Venda[]       @relation("VendaCreatedBy")
+  vendasUpdated     Venda[]       @relation("VendaUpdatedBy")
+  parcelasCreated   Parcela[]     @relation("ParcelaCreatedBy")
+  parcelasUpdated   Parcela[]     @relation("ParcelaUpdatedBy")
 }
 
 model convenio {
@@ -198,10 +202,14 @@ model Venda {
   ativo           Boolean   @default(true)
   cancelado       Boolean   @default(false)
   motivoCancelamento String?
+  createdById     String?
+  updatedById     String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   socio           Socio     @relation(fields: [socioId], references: [id])
   convenio        convenio? @relation(fields: [convenioId], references: [id])
+  createdBy       users?    @relation("VendaCreatedBy", fields: [createdById], references: [id])
+  updatedBy       users?    @relation("VendaUpdatedBy", fields: [updatedById], references: [id])
   parcelas        Parcela[]
 
   @@unique([socioId, numeroVenda])
@@ -210,6 +218,8 @@ model Venda {
   @@index([convenioId])
   @@index([dataEmissao])
   @@index([ativo])
+  @@index([createdById])
+  @@index([updatedById])
   @@map("vendas")
 }
 
@@ -224,14 +234,20 @@ model Parcela {
   valorPago       Decimal?  @db.Decimal(10, 2)
   tipo            String?   @db.Char(1)
   observacoes     String?
+  createdById     String?
+  updatedById     String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   venda           Venda     @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  createdBy       users?    @relation("ParcelaCreatedBy", fields: [createdById], references: [id])
+  updatedBy       users?    @relation("ParcelaUpdatedBy", fields: [updatedById], references: [id])
 
   @@unique([vendaId, numeroParcela])
   @@index([vendaId])
   @@index([dataVencimento])
   @@index([baixa])
+  @@index([createdById])
+  @@index([updatedById])
   @@map("parcelas")
 }
 

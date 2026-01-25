@@ -87,6 +87,18 @@ export async function GET(request: NextRequest) {
               razao_soc: true,
             },
           },
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          updatedBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           parcelas: {
             select: {
               id: true,
@@ -303,6 +315,8 @@ export async function POST(request: NextRequest) {
           quantidadeParcelas,
           valorParcela,
           valorTotal,
+          createdById: session.user.id,
+          updatedById: session.user.id,
         },
       });
 
@@ -317,6 +331,8 @@ export async function POST(request: NextRequest) {
         valorPago: parcela.valorPago ? parseFloat(parcela.valorPago) : null,
         tipo: parcela.tipo || null,
         observacoes: parcela.observacoes || null,
+        createdById: session.user.id,
+        updatedById: session.user.id,
       }));
 
       await tx.parcela.createMany({

@@ -379,15 +379,6 @@ export default function NovaVendaPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Observações</label>
-            <input
-              type="text"
-              value={formData.observacoes}
-              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
         </div>
 
         {/* Parcelas */}

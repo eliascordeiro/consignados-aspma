@@ -34,6 +34,13 @@ export default function EditarVendaPage() {
     limite: 0,
   });
 
+  const [auditInfo, setAuditInfo] = useState({
+    createdBy: '',
+    createdAt: '',
+    updatedBy: '',
+    updatedAt: '',
+  });
+
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
 
   useEffect(() => {
@@ -66,6 +73,13 @@ export default function EditarVendaPage() {
         quantidadeParcelas: venda.quantidadeParcelas,
         valorParcela: venda.valorParcela.toString(),
         limite: venda.socio.limite || 0,
+      });
+
+      setAuditInfo({
+        createdBy: venda.createdBy?.name || 'Sistema',
+        createdAt: new Date(venda.createdAt).toLocaleString('pt-BR'),
+        updatedBy: venda.updatedBy?.name || venda.createdBy?.name || 'Sistema',
+        updatedAt: new Date(venda.updatedAt).toLocaleString('pt-BR'),
       });
 
       setParcelas(venda.parcelas.map((p: any) => ({
@@ -207,8 +221,8 @@ export default function EditarVendaPage() {
           />
         </div>
 
-        {/* Operador, Data e Observações */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Operador e Data */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold mb-2 dark:text-gray-300">Operador</label>
             <input
@@ -228,15 +242,22 @@ export default function EditarVendaPage() {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
             />
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Observações</label>
-            <input
-              type="text"
-              value={formData.observacoes}
-              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        {/* Informações de Auditoria */}
+        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <h3 className="text-sm font-bold mb-3 text-gray-900 dark:text-white">Informações de Auditoria</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Criado por:</span>{' '}
+              <span className="text-gray-900 dark:text-white font-medium">{auditInfo.createdBy}</span>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{auditInfo.createdAt}</div>
+            </div>
+            <div>
+              <span className="text-gray-600 dark:text-gray-400">Última alteração por:</span>{' '}
+              <span className="text-gray-900 dark:text-white font-medium">{auditInfo.updatedBy}</span>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{auditInfo.updatedAt}</div>
+            </div>
           </div>
         </div>
 

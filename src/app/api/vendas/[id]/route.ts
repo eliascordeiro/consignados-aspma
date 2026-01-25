@@ -49,6 +49,18 @@ export async function GET(
             codigo: true,
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         parcelas: {
           orderBy: {
             numeroParcela: 'asc',
@@ -120,6 +132,9 @@ export async function PUT(
       changes.observacoes = observacoes;
     }
 
+    // Sempre atualiza o updatedById
+    changes.updatedById = session.user.id;
+
     // Atualiza a venda e parcelas em uma transação
     const vendaAtualizada = await prisma.$transaction(async (tx) => {
       // Atualiza a venda
@@ -155,6 +170,7 @@ export async function PUT(
                   parcela.observacoes !== undefined
                     ? parcela.observacoes
                     : undefined,
+                updatedById: session.user.id,
               },
             });
           }
@@ -172,7 +188,7 @@ export async function PUT(
 
         await tx.venda.update({
           where: { id: params.id },
-          data: { valorTotal },
+          data: { valorTotal, updatedById: session.user.id },
         });
       }
 
