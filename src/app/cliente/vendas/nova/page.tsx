@@ -45,9 +45,8 @@ export default function NovaVendaPage() {
     matricula: '',
     convenioId: '',
     convenioNome: '',
+    convenioNumero: '',
     dataEmissao: new Date().toISOString().split('T')[0],
-    operador: '',
-    observacoes: '',
     quantidadeParcelas: 1,
     valorParcela: '',
     limite: 0,
@@ -114,6 +113,7 @@ export default function NovaVendaPage() {
       ...formData,
       convenioId: convenio.id.toString(),
       convenioNome: convenio.razao_soc,
+      convenioNumero: convenio.codigo || '',
     });
     setSearchConvenio(convenio.razao_soc);
     setShowConvenioList(false);
@@ -207,8 +207,6 @@ export default function NovaVendaPage() {
           socioId: formData.socioId,
           convenioId: parseInt(formData.convenioId),
           dataEmissao: formData.dataEmissao,
-          operador: formData.operador,
-          observacoes: formData.observacoes,
           parcelas: parcelas,
         }),
       });
@@ -262,8 +260,8 @@ export default function NovaVendaPage() {
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-6">
         {/* Sócio/Associado */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Matrícula/Associado *</label>
+          <div className="relative md:col-span-2">
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Nome do Associado *</label>
             <input
               type="text"
               value={searchSocio}
@@ -300,29 +298,30 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Associado</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Matrícula</label>
             <input
               type="text"
-              value={formData.socioNome}
+              value={formData.matricula}
               readOnly
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
             />
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Limite por Parcela</label>
-            <input
-              type="text"
-              value={`R$ ${formData.limite.toFixed(2)}`}
-              readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400"
-            />
-          </div>
+        {/* Limite por Parcela */}
+        <div>
+          <label className="block text-sm font-bold mb-2 dark:text-gray-300">Limite por Parcela</label>
+          <input
+            type="text"
+            value={`R$ ${formData.limite.toFixed(2)}`}
+            readOnly
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400"
+          />
         </div>
 
         {/* Convênio */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative md:col-span-2">
             <label className="block text-sm font-bold mb-2">Convênio *</label>
             <input
               type="text"
@@ -330,7 +329,7 @@ export default function NovaVendaPage() {
               onChange={(e) => {
                 setSearchConvenio(e.target.value);
                 if (!e.target.value) {
-                  setFormData({ ...formData, convenioId: '', convenioNome: '' });
+                  setFormData({ ...formData, convenioId: '', convenioNome: '', convenioNumero: '' });
                 }
               }}
               placeholder="Digite código, razão social ou nome fantasia"
@@ -357,39 +356,26 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Razão Social</label>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Código</label>
             <input
               type="text"
-              value={formData.convenioNome}
+              value={formData.convenioNumero}
               readOnly
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
             />
           </div>
         </div>
 
-        {/* Operador e Data */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Operador</label>
-            <input
-              type="text"
-              value={formData.operador}
-              onChange={(e) => setFormData({ ...formData, operador: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Data de Emissão *</label>
-            <input
-              type="date"
-              value={formData.dataEmissao}
-              onChange={(e) => setFormData({ ...formData, dataEmissao: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
+        {/* Data de Emissão */}
+        <div>
+          <label className="block text-sm font-bold mb-2 dark:text-gray-300">Data de Emissão *</label>
+          <input
+            type="date"
+            value={formData.dataEmissao}
+            onChange={(e) => setFormData({ ...formData, dataEmissao: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
         </div>
 
         {/* Parcelas */}
