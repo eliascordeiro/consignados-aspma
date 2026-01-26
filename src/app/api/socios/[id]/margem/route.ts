@@ -96,7 +96,7 @@ export async function GET(
       select: {
         id: true,
         matricula: true,
-        associado: true,
+        nome: true,
         tipo: true,
         margemConsig: true,
         cpf: true,
@@ -119,17 +119,17 @@ export async function GET(
     console.log('✅ [API] Sócio encontrado:', {
       id: socio.id,
       matricula: socio.matricula,
-      associado: socio.associado,
+      nome: socio.nome,
       tipo: socio.tipo,
       margemConsig: socio.margemConsig,
     });
 
     // Se não for consignatária (tipo != 1), retorna o valor do banco
-    if (socio.tipo !== 1) {
+    if (socio.tipo !== '1') {
       console.log('📦 [API] Tipo != 1, retornando margem do banco de dados');
       return NextResponse.json({
         matricula: socio.matricula,
-        associado: socio.associado,
+        nome: socio.nome,
         margem: socio.margemConsig || 0,
         tipo: 'banco_dados',
         fonte: 'local',
@@ -172,7 +172,7 @@ export async function GET(
       // Fallback para o valor do banco se ZETRA falhar
       return NextResponse.json({
         matricula: socio.matricula,
-        associado: socio.associado,
+        nome: socio.nome,
         margem: socio.margemConsig || 0,
         tipo: 'banco_dados',
         fonte: 'fallback',
@@ -184,7 +184,7 @@ export async function GET(
     // Retorna o valor consultado do ZETRA
     return NextResponse.json({
       matricula: socio.matricula,
-      associado: socio.associado,
+      nome: socio.nome,
       margem: margemZetra,
       tipo: 'zetra',
       fonte: 'tempo_real',
