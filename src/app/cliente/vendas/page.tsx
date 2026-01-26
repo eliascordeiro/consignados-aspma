@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface Venda {
@@ -35,24 +35,27 @@ interface Venda {
 
 interface VendasResponse {
   data: Venda[];
-  nextCursor: string | null;
-  hasMore: boolean;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 async function fetchVendas({
-  pageParam = null,
+  page = 1,
   filtroAtivo,
   searchTerm,
 }: {
-  pageParam?: string | null;
+  page?: number;
   filtroAtivo: string;
   searchTerm: string;
 }): Promise<VendasResponse> {
   const params = new URLSearchParams();
   
-  if (pageParam) {
-    params.set('cursor', pageParam);
-  }
+  params.set('page', page.toString());
+  params.set('limit', '50');
   
   if (filtroAtivo) {
     params.set('ativo', filtroAtivo);
@@ -61,8 +64,6 @@ async function fetchVendas({
   if (searchTerm) {
     params.set('search', searchTerm);
   }
-  
-  params.set('limit', '50');
 
   const response = await fetch(`/api/vendas?${params.toString()}`);
   
@@ -77,6 +78,7 @@ export default function VendasPage() {
   const [filtroAtivo, setFiltroAtivo] = useState('true');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -84,10 +86,16 @@ export default function VendasPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchTerm(searchInput);
+      setCurrentPage(1); // Reset page on search
     }, 500);
     
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtroAtivo]);
 
   // Check mobile
   useEffect(() => {
@@ -101,22 +109,17 @@ export default function VendasPage() {
 
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isLoading,
     isError,
     refetch,
-  } = useInfiniteQuery({
-    queryKey: ['vendas', filtroAtivo, searchTerm],
-    queryFn: ({ pageParam }) =>
-      fetchVendas({ pageParam, filtroAtivo, searchTerm }),
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.nextCursor : undefined,
-    initialPageParam: null as string | null,
+  } = useQuery({
+    queryKey: ['vendas', filtroAtivo, searchTerm, currentPage],
+    queryFn: () => fetchVendas({ page: currentPage, filtroAtivo, searchTerm }),
+    staleTime: 60000, // 1 minuto
   });
 
-  const allVendas = data?.pages.flatMap((page) => page.data) ?? [];
+  const vendas = data?.data ?? [];
+  const pagination = data?.pagination;
 
   const excluirVenda = async (
     id: string,
@@ -154,34 +157,18 @@ export default function VendasPage() {
   };
 
   const rowVirtualizer = useVirtualizer({
-    count: hasNextPage ? allVendas.length + 1 : allVendas.length,
+    count: vendas.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => (isMobile ? 250 : 80),
     overscan: 5,
   });
 
-  // Carrega mais quando chega perto do fim
-  useEffect(() => {
-    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
-
-    if (!lastItem) {
-      return;
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (parentRef.current) {
+      parentRef.current.scrollTop = 0;
     }
-
-    if (
-      lastItem.index >= allVendas.length - 1 &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
-      fetchNextPage();
-    }
-  }, [
-    hasNextPage,
-    fetchNextPage,
-    allVendas.length,
-    isFetchingNextPage,
-    rowVirtualizer.getVirtualItems(),
-  ]);
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -250,7 +237,7 @@ export default function VendasPage() {
             Recarregar
           </button>
         </div>
-      ) : allVendas.length === 0 ? (
+      ) : vendas.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-md text-center">
           <p className="text-gray-500 dark:text-gray-400 text-lg">
             {searchTerm
@@ -297,8 +284,7 @@ export default function VendasPage() {
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const isLoaderRow = virtualRow.index > allVendas.length - 1;
-                  const venda = allVendas[virtualRow.index];
+                  const venda = vendas[virtualRow.index];
 
                   return (
                     <div
@@ -313,13 +299,7 @@ export default function VendasPage() {
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
-                      {isLoaderRow ? (
-                        hasNextPage ? (
-                          <div className="p-4 text-center text-gray-600 dark:text-gray-400">
-                            Carregando mais vendas...
-                          </div>
-                        ) : null
-                      ) : isMobile ? (
+                      {isMobile ? (
                         // Layout Mobile (Card)
                         <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                           <div className="space-y-2">
@@ -505,18 +485,89 @@ export default function VendasPage() {
             </div>
           </div>
 
-          {/* Resumo */}
+          {/* Paginação */}
           <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                Vendas carregadas: <strong>{allVendas.length}</strong>
-                {hasNextPage && ' (carregue mais com scroll)'}
+                Mostrando <strong>{vendas.length}</strong> de <strong>{pagination?.total || 0}</strong> vendas
+                {pagination && ` (Página ${pagination.page} de ${pagination.totalPages})`}
               </div>
+              
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Primeira página"
+                  >
+                    ««
+                  </button>
+                  
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Página anterior"
+                  >
+                    «
+                  </button>
+                  
+                  {/* Números de página */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (pagination.totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= pagination.totalPages - 2) {
+                        pageNum = pagination.totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                            currentPage === pageNum
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === pagination.totalPages}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Próxima página"
+                  >
+                    »
+                  </button>
+                  
+                  <button
+                    onClick={() => handlePageChange(pagination.totalPages)}
+                    disabled={currentPage === pagination.totalPages}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Última página"
+                  >
+                    »»
+                  </button>
+                </div>
+              )}
+              
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Valor total:{' '}
                 <strong>
                   R${' '}
-                  {allVendas
+                  {vendas
                     .reduce(
                       (sum, v) => sum + parseFloat(v.valorTotal.toString()),
                       0
