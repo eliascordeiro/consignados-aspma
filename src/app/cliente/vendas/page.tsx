@@ -258,17 +258,17 @@ export default function VendasPage() {
             className="overflow-auto"
             style={{ height: '600px' }}
           >
-            <div className="min-w-[1200px]">
+            <div className="w-full">
               {/* Header fixo - apenas desktop */}
               {!isMobile && (
                 <div className="sticky top-0 bg-gray-100 dark:bg-gray-700 z-10 border-b-2 border-gray-300 dark:border-gray-600 shadow-sm">
-                  <div className="grid grid-cols-[80px_minmax(200px,2fr)_minmax(180px,1.5fr)_110px_100px_110px_90px_180px] gap-3 px-4 py-3 text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
+                  <div className="grid grid-cols-[70px_1.8fr_1.2fr_90px_80px_100px_80px_140px] gap-2 px-3 py-3 text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
                     <div className="text-left">Venda</div>
-                    <div className="text-left">Sócio/Matrícula</div>
+                    <div className="text-left">Sócio</div>
                     <div className="text-left">Convênio</div>
                     <div className="text-left">Emissão</div>
-                    <div className="text-center">Parcelas</div>
-                    <div className="text-right">Valor Total</div>
+                    <div className="text-center">Parc.</div>
+                    <div className="text-right">Total</div>
                     <div className="text-center">Status</div>
                     <div className="text-center">Ações</div>
                   </div>
@@ -394,68 +394,60 @@ export default function VendasPage() {
                         </div>
                       ) : (
                         // Layout Desktop (Grid)
-                        <div className="grid grid-cols-[80px_minmax(200px,2fr)_minmax(180px,1.5fr)_110px_100px_110px_90px_180px] gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700/50 items-center transition-colors duration-150">
+                        <div className="grid grid-cols-[70px_1.8fr_1.2fr_90px_80px_100px_80px_140px] gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700/50 items-center transition-colors duration-150">
                           <div className="text-left">
-                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <div className="text-xs font-semibold text-gray-900 dark:text-white">
                               #{venda.numeroVenda}
                             </div>
-                            {venda.operador && (
-                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate" title={venda.operador}>
-                                {venda.operador}
-                              </div>
-                            )}
                           </div>
 
-                          <div className="text-left">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={venda.socio.nome}>
+                          <div className="text-left overflow-hidden">
+                            <div className="text-xs font-medium text-gray-900 dark:text-white truncate" title={venda.socio.nome}>
                               {venda.socio.nome}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Mat: {venda.socio.matricula || 'N/A'}
+                            <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                              {venda.socio.matricula || 'S/Mat'}
                             </div>
                           </div>
 
-                          <div className="text-sm text-gray-900 dark:text-white truncate text-left" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
-                            {venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}
+                          <div className="text-xs text-gray-900 dark:text-white truncate text-left" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
+                            {venda.convenio?.razao_soc || venda.observacoes || 'S/Conv'}
                           </div>
 
-                          <div className="text-sm text-gray-900 dark:text-white text-left">
-                            {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
+                          <div className="text-xs text-gray-900 dark:text-white text-left">
+                            {format(new Date(venda.dataEmissao), 'dd/MM/yy')}
                           </div>
 
                           <div className="text-center">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-xs font-medium text-gray-900 dark:text-white">
                               {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              R$ {parseFloat(venda.valorParcela.toString()).toFixed(2)}
                             </div>
                           </div>
 
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white text-right">
-                            R$ {parseFloat(venda.valorTotal.toString()).toFixed(2)}
+                          <div className="text-xs font-semibold text-gray-900 dark:text-white text-right">
+                            {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
 
                           <div className="flex justify-center">
                             {venda.cancelado ? (
-                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
-                                Cancelado
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
+                                Cancel
                               </span>
                             ) : venda.ativo ? (
-                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
                                 Ativo
                               </span>
                             ) : (
-                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300 whitespace-nowrap">
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300 whitespace-nowrap">
                                 Inativo
                               </span>
                             )}
                           </div>
 
-                          <div className="flex justify-center gap-2">
+                          <div className="flex justify-center gap-1">
                             <Link
                               href={`/cliente/vendas/editar/${venda.id}`}
-                              className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs font-medium transition-colors duration-150 shadow-sm"
+                              className="px-2 py-1 bg-blue-600 text-white rounded text-[10px] font-medium hover:bg-blue-700 transition-colors shadow-sm"
                               title={venda.ativo && !venda.cancelado ? "Editar venda" : "Ver detalhes"}
                             >
                               {venda.ativo && !venda.cancelado ? 'Editar' : 'Ver'}
@@ -469,7 +461,7 @@ export default function VendasPage() {
                                     venda.socio.nome
                                   )
                                 }
-                                className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-xs font-medium transition-colors duration-150 shadow-sm"
+                                className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-medium hover:bg-red-700 transition-colors shadow-sm"
                                 title="Cancelar venda"
                               >
                                 Cancelar
