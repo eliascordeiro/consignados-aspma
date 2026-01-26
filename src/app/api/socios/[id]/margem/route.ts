@@ -99,7 +99,7 @@ export async function GET(
 
     console.log('🔍 [API] Buscando sócio no banco de dados...');
     // Busca o sócio no banco de dados
-    const socio = await prisma.socios.findUnique({
+    const socio = await prisma.socio.findUnique({
       where: { id: socioId },
       select: {
         id: true,
