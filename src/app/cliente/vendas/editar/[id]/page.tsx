@@ -25,6 +25,7 @@ export default function EditarVendaPage() {
     socioMatricula: '',
     convenioId: '',
     convenioNome: '',
+    convenioNumero: '',
     numeroVenda: 0,
     dataEmissao: '',
     operador: '',
@@ -66,6 +67,7 @@ export default function EditarVendaPage() {
         socioMatricula: venda.socio.matricula || '',
         convenioId: venda.convenioId?.toString() || '',
         convenioNome: venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio',
+        convenioNumero: venda.convenio?.codigo || '',
         numeroVenda: venda.numeroVenda,
         dataEmissao: venda.dataEmissao.split('T')[0],
         operador: venda.operador || '',
@@ -201,23 +203,55 @@ export default function EditarVendaPage() {
         </div>
 
         {/* Convênio */}
-        <div>
-          <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio *</label>
-          <input
-            type="text"
-            value={formData.convenioNome}
-            readOnly
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio *</label>
+            <input
+              type="text"
+              value={formData.convenioNome}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Código</label>
+            <input
+              type="text"
+              value={formData.convenioNumero}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+            />
+          </div>
         </div>
 
-        {/* Data de Emissão */}
+        {/* Data, Parcelas e Valor */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Data de Emissão *</label>
             <input
               type="date"
               value={formData.dataEmissao}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Nº de Parcelas *</label>
+            <input
+              type="number"
+              value={formData.quantidadeParcelas}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Valor da Parcela *</label>
+            <input
+              type="text"
+              value={`R$ ${parseFloat(formData.valorParcela || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               readOnly
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
             />
