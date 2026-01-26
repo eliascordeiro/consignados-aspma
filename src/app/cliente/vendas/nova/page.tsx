@@ -56,15 +56,19 @@ export default function NovaVendaPage() {
 
   // Busca sócios
   useEffect(() => {
-    if (searchSocio.length >= 2) {
+    if (searchSocio.length >= 2 && !formData.socioId) {
       fetchSocios();
+    } else if (searchSocio.length < 2) {
+      setShowSocioList(false);
     }
   }, [searchSocio]);
 
   // Busca convênios
   useEffect(() => {
-    if (searchConvenio.length >= 2) {
+    if (searchConvenio.length >= 2 && !formData.convenioId) {
       fetchConvenios();
+    } else if (searchConvenio.length < 2) {
+      setShowConvenioList(false);
     }
   }, [searchConvenio]);
 
@@ -106,6 +110,7 @@ export default function NovaVendaPage() {
     });
     setSearchSocio(socio.nome);
     setShowSocioList(false);
+    setSocios([]);
   };
 
   const selecionarConvenio = (convenio: Convenio) => {
@@ -117,6 +122,7 @@ export default function NovaVendaPage() {
     });
     setSearchConvenio(convenio.razao_soc);
     setShowConvenioList(false);
+    setConvenios([]);
   };
 
   const gerarParcelas = () => {
