@@ -26,6 +26,7 @@ interface Venda {
   convenio: {
     id: number;
     razao_soc: string;
+    fantasia: string | null;
   } | null;
   parcelas: Array<{
     id: string;
