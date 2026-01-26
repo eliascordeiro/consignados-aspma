@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               razao_soc: true,
-              nomefant: true,
+              fantasia: true,
             },
           },
           createdBy: {
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               razao_soc: true,
-              nomefant: true,
+              fantasia: true,
             },
           },
           parcelas: {
