@@ -100,11 +100,6 @@ export async function GET(
         tipo: true,
         margemConsig: true,
         cpf: true,
-        matriculas: {
-          select: {
-            matricula_atual: true,
-          },
-        },
       },
     });
 
@@ -139,13 +134,13 @@ export async function GET(
     console.log('🎯 [API] Tipo = 1 (Consignatária), consultando ZETRA...');
     
     // Para consignatária (tipo = 1), consulta ZETRA
-    const matriculaAtual = socio.matriculas?.matricula_atual || socio.matricula;
+    // TODO: Integrar com tabela matriculas quando estiver disponível
+    const matriculaAtual = socio.matricula;
     const cpf = socio.cpf || '';
 
     console.log('📋 [API] Dados para consulta ZETRA:', {
       matriculaAtual,
       cpf,
-      temMatriculaAtual: !!socio.matriculas?.matricula_atual,
     });
 
     if (!cpf) {
