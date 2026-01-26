@@ -77,13 +77,16 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   console.log('\n🚀 [API] /api/socios/[id]/margem - Requisição recebida');
-  console.log('📝 [API] Parâmetros:', params);
+  
+  // Await params (Next.js 16+ requirement)
+  const resolvedParams = await params;
+  console.log('📝 [API] Parâmetros:', resolvedParams);
   
   try {
-    const socioId = parseInt(params.id);
+    const socioId = parseInt(resolvedParams.id);
     console.log('🔢 [API] ID do sócio parseado:', socioId);
 
     if (isNaN(socioId)) {
