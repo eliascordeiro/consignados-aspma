@@ -135,7 +135,7 @@ export async function GET(
     
     // Para consignatária (tipo = 1), consulta ZETRA
     // TODO: Integrar com tabela matriculas quando estiver disponível
-    const matriculaAtual = socio.matricula;
+    const matriculaAtual = socio.matricula || '';
     const cpf = socio.cpf || '';
 
     console.log('📋 [API] Dados para consulta ZETRA:', {
@@ -143,10 +143,10 @@ export async function GET(
       cpf,
     });
 
-    if (!cpf) {
-      console.log('⚠️  [API] CPF não encontrado');
+    if (!cpf || !matriculaAtual) {
+      console.log('⚠️  [API] CPF ou matrícula não encontrado');
       return NextResponse.json(
-        { error: 'CPF não cadastrado para este sócio' },
+        { error: 'CPF e matrícula são obrigatórios para consulta ZETRA' },
         { status: 400 }
       );
     }
