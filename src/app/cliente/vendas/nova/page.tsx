@@ -307,7 +307,7 @@ export default function NovaVendaPage() {
           </div>
         </div>
 
-        {/* Convênio */
+        {/* Convênio */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative md:col-span-2">
             <label className="block text-sm font-bold mb-2">Convênio *</label>
