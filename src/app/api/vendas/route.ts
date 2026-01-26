@@ -389,6 +389,7 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             razao_soc: true,
+            fantasia: true,
           },
         },
         parcelas: {
