@@ -433,7 +433,6 @@ export default function NovaVendaPage() {
                     <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">#</th>
                     <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">Vencimento</th>
                     <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">Valor</th>
-                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white">Baixa</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -457,15 +456,6 @@ export default function NovaVendaPage() {
                           className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </td>
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center">
-                        <input
-                          type="text"
-                          maxLength={1}
-                          value={parcela.baixa || ''}
-                          onChange={(e) => atualizarParcela(index, 'baixa', e.target.value.toUpperCase() || null)}
-                          className="w-12 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center uppercase bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        />
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -475,7 +465,6 @@ export default function NovaVendaPage() {
                     <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">
                       R$ {parcelas.reduce((sum, p) => sum + p.valor, 0).toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600"></td>
                   </tr>
                 </tfoot>
               </table>

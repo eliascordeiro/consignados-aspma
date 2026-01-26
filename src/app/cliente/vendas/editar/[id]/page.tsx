@@ -311,11 +311,10 @@ export default function EditarVendaPage() {
                     </td>
                     <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center">
                       <input
-                        type="text"
-                        maxLength={1}
-                        value={parcela.baixa || ''}
-                        onChange={(e) => atualizarParcela(index, 'baixa', e.target.value.toUpperCase() || null)}
-                        className="w-12 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center uppercase bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        type="checkbox"
+                        checked={parcela.baixa === 'X'}
+                        onChange={(e) => atualizarParcela(index, 'baixa', e.target.checked ? 'X' : null)}
+                        className="w-5 h-5 cursor-pointer"
                       />
                     </td>
                   </tr>
