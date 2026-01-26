@@ -365,7 +365,7 @@ export default function VendasPage() {
 
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                               Valor Total: R${' '}
-                              {parseFloat(venda.valorTotal.toString()).toFixed(2)}
+                              {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
 
                             <div className="flex gap-2 pt-2">
@@ -425,7 +425,7 @@ export default function VendasPage() {
                           </div>
 
                           <div className="text-xs font-semibold text-gray-900 dark:text-white text-right">
-                            {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            R$ {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
 
                           <div className="flex justify-center">
@@ -564,7 +564,7 @@ export default function VendasPage() {
                       (sum, v) => sum + parseFloat(v.valorTotal.toString()),
                       0
                     )
-                    .toFixed(2)}
+                    .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </strong>
               </div>
             </div>
