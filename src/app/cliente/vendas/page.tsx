@@ -411,8 +411,13 @@ export default function VendasPage() {
                             </div>
                           </div>
 
-                          <div className="text-sm text-gray-900 dark:text-white truncate text-left" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
-                            {venda.convenio?.razao_soc || venda.observacoes || 'S/Conv'}
+                          <div className="text-left overflow-hidden">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
+                              {venda.convenio?.razao_soc || venda.observacoes || 'S/Conv'}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate" title={venda.convenio?.nomefant || ''}>
+                              {venda.convenio?.nomefant || ''}
+                            </div>
                           </div>
 
                           <div className="text-sm text-gray-900 dark:text-white text-left">
