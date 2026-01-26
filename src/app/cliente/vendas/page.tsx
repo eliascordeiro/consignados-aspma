@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Pencil, XCircle, Eye } from 'lucide-react';
 
 interface Venda {
   id: string;
@@ -396,61 +397,64 @@ export default function VendasPage() {
                         // Layout Desktop (Grid)
                         <div className="grid grid-cols-[70px_1.8fr_1.2fr_90px_80px_100px_80px_140px] gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700/50 items-center transition-colors duration-150">
                           <div className="text-left">
-                            <div className="text-xs font-semibold text-gray-900 dark:text-white">
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
                               #{venda.numeroVenda}
                             </div>
                           </div>
 
                           <div className="text-left overflow-hidden">
-                            <div className="text-xs font-medium text-gray-900 dark:text-white truncate" title={venda.socio.nome}>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={venda.socio.nome}>
                               {venda.socio.nome}
                             </div>
-                            <div className="text-[10px] text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               {venda.socio.matricula || 'S/Mat'}
                             </div>
                           </div>
 
-                          <div className="text-xs text-gray-900 dark:text-white truncate text-left" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
+                          <div className="text-sm text-gray-900 dark:text-white truncate text-left" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
                             {venda.convenio?.razao_soc || venda.observacoes || 'S/Conv'}
                           </div>
 
-                          <div className="text-xs text-gray-900 dark:text-white text-left">
+                          <div className="text-sm text-gray-900 dark:text-white text-left">
                             {format(new Date(venda.dataEmissao), 'dd/MM/yy')}
                           </div>
 
                           <div className="text-center">
-                            <div className="text-xs font-medium text-gray-900 dark:text-white">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              R$ {parseFloat(venda.valorParcela.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
 
-                          <div className="text-xs font-semibold text-gray-900 dark:text-white text-right">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-white text-right">
                             R$ {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
 
                           <div className="flex justify-center">
                             {venda.cancelado ? (
-                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
                                 Cancel
                               </span>
                             ) : venda.ativo ? (
-                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
                                 Ativo
                               </span>
                             ) : (
-                              <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300 whitespace-nowrap">
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300 whitespace-nowrap">
                                 Inativo
                               </span>
                             )}
                           </div>
 
-                          <div className="flex justify-center gap-1">
+                          <div className="flex justify-center gap-1.5">
                             <Link
                               href={`/cliente/vendas/editar/${venda.id}`}
-                              className="px-2 py-1 bg-blue-600 text-white rounded text-[10px] font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                              className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shadow-sm"
                               title={venda.ativo && !venda.cancelado ? "Editar venda" : "Ver detalhes"}
                             >
-                              {venda.ativo && !venda.cancelado ? 'Editar' : 'Ver'}
+                              {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
                             </Link>
                             {venda.ativo && !venda.cancelado && (
                               <button
@@ -461,10 +465,10 @@ export default function VendasPage() {
                                     venda.socio.nome
                                   )
                                 }
-                                className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-medium hover:bg-red-700 transition-colors shadow-sm"
+                                className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors shadow-sm"
                                 title="Cancelar venda"
                               >
-                                Cancelar
+                                <XCircle size={16} />
                               </button>
                             )}
                           </div>
