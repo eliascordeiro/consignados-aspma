@@ -86,16 +86,8 @@ export async function GET(
   console.log('📝 [API] Parâmetros:', resolvedParams);
   
   try {
-    const socioId = parseInt(resolvedParams.id);
-    console.log('🔢 [API] ID do sócio parseado:', socioId);
-
-    if (isNaN(socioId)) {
-      console.log('❌ [API] ID inválido');
-      return NextResponse.json(
-        { error: 'ID inválido' },
-        { status: 400 }
-      );
-    }
+    const socioId = resolvedParams.id; // ID é string no Prisma
+    console.log('🔢 [API] ID do sócio:', socioId);
 
     console.log('🔍 [API] Buscando sócio no banco de dados...');
     // Busca o sócio no banco de dados
