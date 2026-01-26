@@ -177,20 +177,10 @@ export default function EditarVendaPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-6">
-        {/* Dados do Sócio (readonly) */}
+        {/* Sócio/Associado */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Matrícula</label>
-            <input
-              type="text"
-              value={formData.socioMatricula}
-              readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Nome do Sócio</label>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Nome do Associado *</label>
             <input
               type="text"
               value={formData.socioNome}
@@ -200,7 +190,20 @@ export default function EditarVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Limite por Parcela</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Matrícula</label>
+            <input
+              type="text"
+              value={formData.socioMatricula}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Limite do Sócio */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Limite por Parcela</label>
             <input
               type="text"
               value={`R$ ${formData.limite.toFixed(2)}`}
@@ -210,9 +213,9 @@ export default function EditarVendaPage() {
           </div>
         </div>
 
-        {/* Convênio (readonly) */}
+        {/* Convênio */}
         <div>
-          <label className="block text-sm font-bold mb-2 dark:text-gray-300">Convênio</label>
+          <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio</label>
           <input
             type="text"
             value={formData.convenioNome}
@@ -221,20 +224,10 @@ export default function EditarVendaPage() {
           />
         </div>
 
-        {/* Operador e Data */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Data de Emissão */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Operador</label>
-            <input
-              type="text"
-              value={formData.operador}
-              onChange={(e) => setFormData({ ...formData, operador: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Data de Emissão</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Data de Emissão *</label>
             <input
               type="date"
               value={formData.dataEmissao}
