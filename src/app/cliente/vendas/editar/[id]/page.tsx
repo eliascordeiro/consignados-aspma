@@ -200,22 +200,9 @@ export default function EditarVendaPage() {
           </div>
         </div>
 
-        {/* Limite do Sócio */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Limite por Parcela</label>
-            <input
-              type="text"
-              value={`R$ ${formData.limite.toFixed(2)}`}
-              readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400"
-            />
-          </div>
-        </div>
-
         {/* Convênio */}
         <div>
-          <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio</label>
+          <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio *</label>
           <input
             type="text"
             value={formData.convenioNome}
