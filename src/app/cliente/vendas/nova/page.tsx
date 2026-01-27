@@ -100,7 +100,7 @@ export default function NovaVendaPage() {
     }
   };
 
-  const selecionarSocio = (socio: Socio) => {
+  const selecionarSocio = async (socio: Socio) => {
     setFormData({
       ...formData,
       socioId: socio.id,
@@ -111,6 +111,35 @@ export default function NovaVendaPage() {
     setSearchSocio(socio.nome);
     setShowSocioList(false);
     setSocios([]);
+
+    // Busca margem atualizada (pode ser do banco ou ZETRA)
+    console.log('🔍 [Nova Venda] Buscando margem para sócio ID:', socio.id);
+    try {
+      const margemResponse = await fetch(`/api/socios/${socio.id}/margem`);
+      if (margemResponse.ok) {
+        const margemData = await margemResponse.json();
+        console.log('✅ [Nova Venda] Margem recebida:', margemData);
+        
+        // Atualiza o limite com o valor da margem
+        setFormData(prev => ({
+          ...prev,
+          limite: margemData.margem || 0,
+        }));
+
+        // Mostra de onde veio a margem
+        if (margemData.fonte === 'tempo_real') {
+          console.log('🎯 [Nova Venda] Margem consultada em TEMPO REAL via ZETRA');
+          alert(`✅ Margem consultada em TEMPO REAL via ZETRA\nValor: R$ ${margemData.margem.toFixed(2)}`);
+        } else if (margemData.fonte === 'fallback') {
+          console.log('⚠️  [Nova Venda] ZETRA indisponível - usando banco de dados');
+          alert(`⚠️ ZETRA indisponível - usando valor do banco\nValor: R$ ${margemData.margem.toFixed(2)}`);
+        } else {
+          console.log('📦 [Nova Venda] Margem do banco de dados (não é consignatária)');
+        }
+      }
+    } catch (error) {
+      console.error('❌ [Nova Venda] Erro ao buscar margem:', error);
+    }
   };
 
   const selecionarConvenio = (convenio: Convenio) => {
