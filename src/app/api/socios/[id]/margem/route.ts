@@ -80,6 +80,20 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
       return null;
     }
 
+    // Verifica se houve erro na resposta
+    const sucesso = extractXmlValue('<ns13:sucesso>', '</ns13:sucesso>', xmlResponse);
+    if (sucesso === 'false') {
+      const codRetorno = extractXmlValue('<ns13:codRetorno>', '</ns13:codRetorno>', xmlResponse);
+      const mensagem = extractXmlValue('<ns13:mensagem>', '</ns13:mensagem>', xmlResponse);
+      console.log('❌ [ZETRA] Erro na consulta:', {
+        sucesso,
+        codRetorno,
+        mensagem,
+      });
+      console.log(`⚠️  [ZETRA] ZETRA retornou erro ${codRetorno}: ${mensagem}`);
+      return null;
+    }
+
     // Extrai a margem do XML (equivalente ao lcx do PRG)
     const margemStr = extractXmlValue(
       '<ns6:valorMargem xmlns:ns6="InfoMargem">',
