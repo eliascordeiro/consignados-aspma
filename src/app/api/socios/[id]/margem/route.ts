@@ -56,17 +56,27 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
     });
 
     console.log('📥 [ZETRA] Resposta recebida:', JSON.stringify(result, null, 2));
+    console.log('📊 [ZETRA] Tipo da resposta:', typeof result);
+    console.log('📊 [ZETRA] Keys da resposta:', Object.keys(result || {}));
 
     // Extrai o valor da margem da resposta
     // A estrutura exata pode variar, ajuste conforme necessário
     const valorMargem = result?.valorMargem || result?.return?.valorMargem;
 
+    console.log('💰 [ZETRA] Tentativa de extrair valorMargem:', {
+      'result?.valorMargem': result?.valorMargem,
+      'result?.return?.valorMargem': result?.return?.valorMargem,
+      'valorMargem final': valorMargem
+    });
+
     if (valorMargem) {
-      console.log('✅ [ZETRA] Margem extraída com sucesso:', valorMargem);
-      return parseFloat(valorMargem);
+      const margemParsed = parseFloat(valorMargem);
+      console.log('✅ [ZETRA] Margem extraída com sucesso:', valorMargem, '-> parseado:', margemParsed);
+      return margemParsed;
     }
 
     console.log('⚠️  [ZETRA] Nenhum valor de margem encontrado na resposta');
+    console.log('⚠️  [ZETRA] Estrutura completa do result:', JSON.stringify(result, null, 2));
     return null;
   } catch (error) {
     console.error('❌ [ZETRA] Erro ao consultar margem:', error);
