@@ -190,7 +190,7 @@ export async function GET(
     return NextResponse.json({
       matricula: socio.matricula,
       nome: socio.nome,
-      margem: parseFloat(margemZetra || '0'),
+      margem: margemZetra || 0,
       tipo: 'zetra',
       fonte: 'tempo_real',
     });
