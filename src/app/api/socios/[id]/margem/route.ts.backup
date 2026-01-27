@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import * as soap from 'soap';
 
 // Credenciais ZETRA (considere mover para variáveis de ambiente)
 const ZETRA_CONFIG = {
-  phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/consultaMargemZetra.php',
+  wsdl: 'https://www.econsig.com.br/central/services/HostaHostService?wsdl',
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',
@@ -20,21 +21,9 @@ interface MargemZetraParams {
   valorParcela: string;
 }
 
-// Função auxiliar para extrair XML entre tags (equivalente a lcx())
-function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
-  const startIndex = xml.indexOf(startTag);
-  if (startIndex === -1) return null;
-  
-  const valueStart = startIndex + startTag.length;
-  const endIndex = xml.indexOf(endTag, valueStart);
-  if (endIndex === -1) return null;
-  
-  return xml.substring(valueStart, endIndex).trim();
-}
-
-// Função auxiliar para chamar o PHP ZETRA
+// Função auxiliar para chamar o webservice ZETRA diretamente
 async function consultarMargemZetra(params: MargemZetraParams): Promise<number | null> {
-  console.log('🔵 [ZETRA] Iniciando consulta de margem via PHP...');
+  console.log('🔵 [ZETRA] Iniciando consulta de margem...');
   console.log('📋 [ZETRA] Parâmetros:', {
     matricula: params.matricula,
     cpf: params.cpf,
@@ -42,10 +31,21 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
   });
   
   try {
-    console.log('🌐 [ZETRA] URL:', ZETRA_CONFIG.phpUrl);
+    console.log('🌐 [ZETRA] Criando cliente SOAP:', ZETRA_CONFIG.wsdl);
     
-    // Monta a query string
-    const queryParams = new URLSearchParams({
+    // Cria o client SOAP
+    const client = await soap.createClientAsync(ZETRA_CONFIG.wsdl, {
+      disableCache: true,
+      wsdl_options: {
+        timeout: 20000,
+      },
+    });
+
+    console.log('✅ [ZETRA] Cliente SOAP criado com sucesso');
+    console.log('📤 [ZETRA] Enviando requisição consultarMargem...');
+
+    // Faz a chamada ao método consultarMargem
+    const [result] = await client.consultarMargemAsync({
       cliente: params.cliente,
       convenio: params.convenio,
       usuario: params.usuario,
@@ -55,52 +55,32 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
       valorParcela: params.valorParcela,
     });
 
-    const urlWithParams = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`;
-    console.log('📤 [ZETRA] Fazendo POST...');
+    console.log('📥 [ZETRA] Resposta recebida:', JSON.stringify(result, null, 2));
+    console.log('📊 [ZETRA] Tipo da resposta:', typeof result);
+    console.log('📊 [ZETRA] Keys da resposta:', Object.keys(result || {}));
 
-    // Faz a requisição POST
-    const response = await fetch(urlWithParams, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: queryParams.toString(),
+    // Extrai o valor da margem da resposta
+    // A estrutura exata pode variar, ajuste conforme necessário
+    const valorMargem = result?.valorMargem || result?.return?.valorMargem;
+
+    console.log('💰 [ZETRA] Tentativa de extrair valorMargem:', {
+      'result?.valorMargem': result?.valorMargem,
+      'result?.return?.valorMargem': result?.return?.valorMargem,
+      'valorMargem final': valorMargem
     });
 
-    if (!response.ok) {
-      console.log('❌ [ZETRA] Erro HTTP:', response.status, response.statusText);
-      return null;
+    if (valorMargem) {
+      const margemParsed = parseFloat(valorMargem);
+      console.log('✅ [ZETRA] Margem extraída com sucesso:', valorMargem, '-> parseado:', margemParsed);
+      return margemParsed;
     }
 
-    const xmlResponse = await response.text();
-    console.log('📥 [ZETRA] Resposta recebida (primeiros 500 chars):', xmlResponse.substring(0, 500));
-
-    if (!xmlResponse || xmlResponse.trim() === '') {
-      console.log('⚠️  [ZETRA] Resposta vazia');
-      return null;
-    }
-
-    // Extrai a margem do XML (equivalente ao lcx do PRG)
-    const margemStr = extractXmlValue(
-      '<ns6:valorMargem xmlns:ns6="InfoMargem">',
-      '</ns6:valorMargem>',
-      xmlResponse
-    );
-
-    console.log('🔍 [ZETRA] Margem extraída:', margemStr);
-
-    if (!margemStr) {
-      console.log('⚠️  [ZETRA] Tag valorMargem não encontrada no XML');
-      return null;
-    }
-
-    const margem = parseFloat(margemStr);
-    console.log('✅ [ZETRA] Margem convertida:', margem);
-
-    return isNaN(margem) ? null : margem;
-
+    console.log('⚠️  [ZETRA] Nenhum valor de margem encontrado na resposta');
+    console.log('⚠️  [ZETRA] Estrutura completa do result:', JSON.stringify(result, null, 2));
+    return null;
   } catch (error) {
-    console.error('❌ [ZETRA] Erro na consulta:', error);
+    console.error('❌ [ZETRA] Erro ao consultar margem:', error);
+    console.error('❌ [ZETRA] Stack trace:', error instanceof Error ? error.stack : 'N/A');
     return null;
   }
 }
@@ -163,7 +143,8 @@ export async function GET(
 
     console.log('🎯 [API] Tipo = 1 (Consignatária), consultando ZETRA...');
     
-    // Para consignatária (tipo = 1), consulta ZETRA via PHP
+    // Para consignatária (tipo = 1), consulta ZETRA
+    // TODO: Integrar com tabela matriculas quando estiver disponível
     const matriculaAtual = socio.matricula || '';
     const cpf = socio.cpf || '';
 
@@ -180,7 +161,7 @@ export async function GET(
       );
     }
 
-    // Faz a consulta ZETRA via PHP
+    // Faz a consulta ZETRA
     const margemZetra = await consultarMargemZetra({
       cliente: ZETRA_CONFIG.cliente,
       convenio: ZETRA_CONFIG.convenio,
@@ -188,7 +169,7 @@ export async function GET(
       senha: ZETRA_CONFIG.senha,
       matricula: matriculaAtual,
       cpf: cpf,
-      valorParcela: '0.1', // Valor padrão conforme AS200.PRG
+      valorParcela: '1.00',
     });
 
     if (margemZetra === null) {
