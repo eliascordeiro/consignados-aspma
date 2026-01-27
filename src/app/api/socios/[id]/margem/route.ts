@@ -135,7 +135,7 @@ export async function GET(
       return NextResponse.json({
         matricula: socio.matricula,
         nome: socio.nome,
-        margem: socio.margemConsig || 0,
+        margem: parseFloat(socio.margemConsig || '0'),
         tipo: 'banco_dados',
         fonte: 'local',
       });
@@ -178,7 +178,7 @@ export async function GET(
       return NextResponse.json({
         matricula: socio.matricula,
         nome: socio.nome,
-        margem: socio.margemConsig || 0,
+        margem: parseFloat(socio.margemConsig || '0'),
         tipo: 'banco_dados',
         fonte: 'fallback',
         aviso: 'ZETRA indisponível, usando valor do banco de dados',
@@ -190,7 +190,7 @@ export async function GET(
     return NextResponse.json({
       matricula: socio.matricula,
       nome: socio.nome,
-      margem: margemZetra,
+      margem: parseFloat(margemZetra || '0'),
       tipo: 'zetra',
       fonte: 'tempo_real',
     });

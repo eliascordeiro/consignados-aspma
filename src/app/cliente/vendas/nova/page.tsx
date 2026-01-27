@@ -120,19 +120,22 @@ export default function NovaVendaPage() {
         const margemData = await margemResponse.json();
         console.log('✅ [Nova Venda] Margem recebida:', margemData);
         
+        // Converte margem para número (pode vir como string do banco)
+        const margemValor = parseFloat(margemData.margem) || 0;
+        
         // Atualiza o limite com o valor da margem
         setFormData(prev => ({
           ...prev,
-          limite: margemData.margem || 0,
+          limite: margemValor,
         }));
 
         // Mostra de onde veio a margem
         if (margemData.fonte === 'tempo_real') {
           console.log('🎯 [Nova Venda] Margem consultada em TEMPO REAL via ZETRA');
-          alert(`✅ Margem consultada em TEMPO REAL via ZETRA\nValor: R$ ${margemData.margem.toFixed(2)}`);
+          alert(`✅ Margem consultada em TEMPO REAL via ZETRA\nValor: R$ ${margemValor.toFixed(2)}`);
         } else if (margemData.fonte === 'fallback') {
           console.log('⚠️  [Nova Venda] ZETRA indisponível - usando banco de dados');
-          alert(`⚠️ ZETRA indisponível - usando valor do banco\nValor: R$ ${margemData.margem.toFixed(2)}`);
+          alert(`⚠️ ZETRA indisponível - usando valor do banco\nValor: R$ ${margemValor.toFixed(2)}`);
         } else {
           console.log('📦 [Nova Venda] Margem do banco de dados (não é consignatária)');
         }
