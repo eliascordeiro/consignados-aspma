@@ -26,13 +26,13 @@ function criarSoapEnvelope(params: {
   <soapenv:Header/>
   <soapenv:Body>
     <hos:consultarMargem>
-      <hos:cliente>${params.cliente}</hos:cliente>
-      <hos:convenio>${params.convenio}</hos:convenio>
-      <hos:usuario>${params.usuario}</hos:usuario>
-      <hos:senha>${params.senha}</hos:senha>
-      <hos:matricula>${params.matricula}</hos:matricula>
-      <hos:cpf>${params.cpf}</hos:cpf>
-      <hos:valorParcela>${params.valorParcela}</hos:valorParcela>
+      <cliente>${params.cliente}</cliente>
+      <convenio>${params.convenio}</convenio>
+      <usuario>${params.usuario}</usuario>
+      <senha>${params.senha}</senha>
+      <matricula>${params.matricula}</matricula>
+      <cpf>${params.cpf}</cpf>
+      <valorParcela>${params.valorParcela}</valorParcela>
     </hos:consultarMargem>
   </soapenv:Body>
 </soapenv:Envelope>`;
