@@ -75,6 +75,12 @@ async function consultarMargemZetraDirect(params: {
 
     console.log('📤 [ZETRA DIRECT] Enviando SOAP Request...');
     console.log('🌐 [ZETRA DIRECT] Endpoint:', ZETRA_CONFIG.soapEndpoint);
+    console.log('📝 [ZETRA DIRECT] SOAP Envelope completo:');
+    console.log(soapEnvelope);
+    console.log('📋 [ZETRA DIRECT] Headers:', {
+      'Content-Type': 'text/xml; charset=utf-8',
+      'SOAPAction': 'consultarMargem',
+    });
     
     const response = await fetch(ZETRA_CONFIG.soapEndpoint, {
       method: 'POST',
@@ -85,16 +91,26 @@ async function consultarMargemZetraDirect(params: {
       body: soapEnvelope,
     });
 
+    console.log('📥 [ZETRA DIRECT] Status da resposta:', response.status, response.statusText);
+    console.log('📥 [ZETRA DIRECT] Headers da resposta:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorBody = await response.text();
       console.log('❌ [ZETRA DIRECT] Erro HTTP:', response.status, response.statusText);
+      console.log('📄 [ZETRA DIRECT] Corpo do erro (primeiros 2000 chars):');
+      console.log(errorBody.substring(0, 2000));
       return { 
         margem: null, 
-        erro: `Erro HTTP ${response.status}: ${response.statusText}` 
+        erro: `Erro HTTP ${response.status}: ${response.statusText}`,
+        xml: errorBody
       };
     }
 
     const xmlResponse = await response.text();
-    console.log('📥 [ZETRA DIRECT] Resposta recebida (primeiros 1000 chars):', xmlResponse.substring(0, 1000));
+    console.log('📥 [ZETRA DIRECT] Resposta recebida com sucesso');
+    console.log('📏 [ZETRA DIRECT] Tamanho da resposta:', xmlResponse.length, 'caracteres');
+    console.log('📄 [ZETRA DIRECT] XML completo (primeiros 2000 chars):');
+    console.log(xmlResponse.substring(0, 2000));
 
     if (!xmlResponse || xmlResponse.trim() === '') {
       console.log('⚠️  [ZETRA DIRECT] Resposta vazia');
@@ -103,6 +119,8 @@ async function consultarMargemZetraDirect(params: {
 
     // Verifica se houve erro
     const sucesso = extractXmlValue(xmlResponse, 'sucesso');
+    console.log('🔍 [ZETRA DIRECT] Sucesso extraído:', sucesso);
+    
     if (sucesso === 'false') {
       const codRetorno = extractXmlValue(xmlResponse, 'codRetorno');
       const mensagem = extractXmlValue(xmlResponse, 'mensagem');
@@ -116,9 +134,13 @@ async function consultarMargemZetraDirect(params: {
 
     // Extrai a margem
     const margemStr = extractXmlValue(xmlResponse, 'valorMargem');
+    console.log('🔍 [ZETRA DIRECT] Margem extraída (string):', margemStr);
     
     if (!margemStr) {
       console.log('⚠️  [ZETRA DIRECT] Margem não encontrada no XML');
+      console.log('📄 [ZETRA DIRECT] Buscando tags disponíveis...');
+      const tags = xmlResponse.match(/<[^/][^>]+>/g)?.slice(0, 20);
+      console.log('🏷️  [ZETRA DIRECT] Primeiras 20 tags:', tags);
       return { margem: null, erro: 'Margem não encontrada na resposta', xml: xmlResponse };
     }
 
@@ -134,6 +156,7 @@ async function consultarMargemZetraDirect(params: {
 
   } catch (error: any) {
     console.error('💥 [ZETRA DIRECT] Erro na requisição SOAP:', error);
+    console.error('💥 [ZETRA DIRECT] Stack trace:', error.stack);
     return { 
       margem: null, 
       erro: error.message || 'Erro desconhecido' 
