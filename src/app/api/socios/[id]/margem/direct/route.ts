@@ -144,15 +144,17 @@ async function consultarMargemZetraDirect(params: {
 // GET /api/socios/[id]/margem/direct - Consulta margem diretamente na API ZETRA
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  
   console.log('\n🔷 [API DIRECT] GET /api/socios/[id]/margem/direct');
-  console.log('📌 [API DIRECT] ID do sócio:', params.id);
+  console.log('📌 [API DIRECT] ID do sócio:', id);
 
   try {
     // Busca o sócio no banco
     const socio = await prisma.socio.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         nome: true,
