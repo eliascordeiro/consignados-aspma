@@ -3,8 +3,8 @@ import { prisma } from '@/lib/prisma';
 
 // Credenciais ZETRA
 const ZETRA_CONFIG = {
-  wsdlUrl: 'https://www.econsig.com.br/central/services/HostaHostService?wsdl',
-  soapEndpoint: 'https://www.econsig.com.br/central/services/HostaHostService',
+  wsdlUrl: 'https://api.econsig.com.br/central/services/HostaHostService?wsdl',
+  soapEndpoint: 'https://api.econsig.com.br/central/services/HostaHostService',
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',
@@ -26,13 +26,13 @@ function criarSoapEnvelope(params: {
   <soapenv:Header/>
   <soapenv:Body>
     <hos:consultarMargem>
-      <cliente>${params.cliente}</cliente>
-      <convenio>${params.convenio}</convenio>
-      <usuario>${params.usuario}</usuario>
-      <senha>${params.senha}</senha>
-      <matricula>${params.matricula}</matricula>
-      <cpf>${params.cpf}</cpf>
-      <valorParcela>${params.valorParcela}</valorParcela>
+      <hos:cliente>${params.cliente}</hos:cliente>
+      <hos:convenio>${params.convenio}</hos:convenio>
+      <hos:usuario>${params.usuario}</hos:usuario>
+      <hos:senha>${params.senha}</hos:senha>
+      <hos:matricula>${params.matricula}</hos:matricula>
+      <hos:cpf>${params.cpf}</hos:cpf>
+      <hos:valorParcela>${params.valorParcela}</hos:valorParcela>
     </hos:consultarMargem>
   </soapenv:Body>
 </soapenv:Envelope>`;
