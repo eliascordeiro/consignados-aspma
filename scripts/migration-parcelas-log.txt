@@ -1,0 +1,25 @@
+[2026-01-29T18:43:27.742Z] 🚀 Iniciando migração de PARCELAS com 50 workers...
+[2026-01-29T18:43:27.941Z] 📊 Carregando mapa de vendas do Railway...
+[2026-01-29T18:43:33.827Z]    ✅ 81.741 vendas mapeadas
+[2026-01-29T18:43:34.094Z]    ✅ Admin: cmkftmv2t0000ofs76r8om5z8
+[2026-01-29T18:43:34.417Z] 
+📊 ESTATÍSTICAS:
+[2026-01-29T18:43:34.418Z]    MySQL: 761.271 parcelas (IDs: 1 - 1600190)
+[2026-01-29T18:43:34.418Z]    Railway (antes): 3.868 parcelas
+[2026-01-29T18:43:34.418Z]    Workers: 50
+[2026-01-29T18:43:34.418Z] 
+🚀 Iniciando migração paralela...
+
+[2026-01-29T18:47:15.541Z] 🚀 Iniciando migração de PARCELAS com 50 workers...
+[2026-01-29T18:47:15.740Z] 📊 Carregando mapa de vendas do Railway...
+[2026-01-29T18:47:21.599Z]    ✅ 81.741 vendas mapeadas
+[2026-01-29T18:47:21.864Z]    ✅ Admin: cmkftmv2t0000ofs76r8om5z8
+[2026-01-29T18:47:22.171Z] 
+📊 ESTATÍSTICAS:
+[2026-01-29T18:47:22.172Z]    MySQL: 761.271 parcelas (IDs: 1 - 1600190)
+[2026-01-29T18:47:22.172Z]    Railway (antes): 27.979 parcelas
+[2026-01-29T18:47:22.172Z]    Workers: 50
+[2026-01-29T18:47:22.173Z] 
+🚀 Iniciando migração paralela...
+
+[2026-01-29T19:56:39.303Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parcelas-log.txt

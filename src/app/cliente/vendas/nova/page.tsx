@@ -112,13 +112,13 @@ export default function NovaVendaPage() {
     setShowSocioList(false);
     setSocios([]);
 
-    // Busca margem atualizada (pode ser do banco ou ZETRA)
-    console.log('🔍 [Nova Venda] Buscando margem para sócio ID:', socio.id);
+    // Busca margem atualizada via ZETRA DIRETO (sem PHP intermediário)
+    console.log('🔍 [Nova Venda] Buscando margem DIRETO na API ZETRA para sócio ID:', socio.id);
     try {
-      const margemResponse = await fetch(`/api/socios/${socio.id}/margem`);
+      const margemResponse = await fetch(`/api/socios/${socio.id}/margem/direct`);
       if (margemResponse.ok) {
         const margemData = await margemResponse.json();
-        console.log('✅ [Nova Venda] Margem recebida:', margemData);
+        console.log('✅ [Nova Venda] Margem recebida (DIRETO):', margemData);
         
         // Converte margem para número (pode vir como string do banco)
         const margemValor = parseFloat(margemData.margem) || 0;
@@ -130,18 +130,20 @@ export default function NovaVendaPage() {
         }));
 
         // Mostra de onde veio a margem
-        if (margemData.fonte === 'tempo_real') {
-          console.log('🎯 [Nova Venda] Margem consultada em TEMPO REAL via ZETRA');
-          alert(`✅ Margem consultada em TEMPO REAL via ZETRA\nValor: R$ ${margemValor.toFixed(2)}`);
-        } else if (margemData.fonte === 'fallback') {
+        if (margemData.fonte === 'zetra_direct') {
+          console.log('🎯 [Nova Venda] Margem consultada DIRETO na API ZETRA via SOAP');
+          alert(`✅ Margem consultada DIRETO na API ZETRA (sem PHP)\n\nValor: R$ ${margemValor.toFixed(2)}\n\nMétodo: SOAP Direto\nSócio: ${socio.nome}\nMatrícula: ${socio.matricula}`);
+        } else if (margemData.fonte === 'banco_fallback') {
           console.log('⚠️  [Nova Venda] ZETRA indisponível - usando banco de dados');
-          alert(`⚠️ ZETRA indisponível - usando valor do banco\nValor: R$ ${margemValor.toFixed(2)}`);
+          alert(`⚠️ ZETRA indisponível - usando valor do banco\n\nValor: R$ ${margemValor.toFixed(2)}\nErro: ${margemData.erro || 'Não especificado'}`);
         } else {
-          console.log('📦 [Nova Venda] Margem do banco de dados (não é consignatária)');
+          console.log('📦 [Nova Venda] Margem do banco de dados');
+          alert(`📦 Margem do banco de dados\n\nValor: R$ ${margemValor.toFixed(2)}`);
         }
       }
     } catch (error) {
       console.error('❌ [Nova Venda] Erro ao buscar margem:', error);
+      alert(`❌ Erro ao consultar margem\n\n${error instanceof Error ? error.message : 'Erro desconhecado'}`);
     }
   };
 

@@ -1,0 +1,15 @@
+Sim! Processamento paralelo com Promise.all() vai acelerar muito! Vou criar um script com workers paralelos:
+
+migrou parcelas
+migrate-parcelas-only-parallel.ts
+
+
+seguir este padrao nas demais migracoes...
+
+Valor total: R$ 1.058.477,12
+
+analise o ltimo processamento do script no terminal ao lado
+
+FAZ SINCRONIZAÇAO DOS DASDOS DO MYSQL PARA RAILWAY POSTGRESQL:
+
+npx tsx /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/sync-mysql-railway-v3.ts

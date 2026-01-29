@@ -1,0 +1,85 @@
+[2026-01-29T18:10:01.744Z] 🚀 Iniciando migração paralela...
+[2026-01-29T18:10:02.690Z] 📊 Carregando dados de referência...
+[2026-01-29T18:10:02.833Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-01-29T18:10:04.813Z]    ✅ 4.210 sócios
+[2026-01-29T18:10:04.844Z] 
+❌ ERRO FATAL: 
+Invalid `mainPrisma.convenio.findMany()` invocation in
+/media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migrate-vendas-parcelas-parallel.ts:378:47
+
+  375 log(`   ✅ ${formatNumber(socioByMatricula.size)} sócios`);
+  376 
+  377 // Convênios
+→ 378 const convenios = await mainPrisma.convenio.findMany({
+        select: {
+          id: true,
+          codconven: true,
+          ~~~~~~~~~
+      ?   userId?: true,
+      ?   codigo?: true,
+      ?   data?: true,
+      ?   razao_soc?: true,
+      ?   fantasia?: true,
+      ?   desconto?: true,
+      ?   cgc?: true,
+      ?   ie?: true,
+      ?   cpf?: true,
+      ?   rg?: true,
+      ?   endereco?: true,
+      ?   bairro?: true,
+      ?   cep?: true,
+      ?   cidade?: true,
+      ?   uf?: true,
+      ?   fone?: true,
+      ?   fax?: true,
+      ?   contato?: true,
+      ?   agencia?: true,
+      ?   conta?: true,
+      ?   banco?: true,
+      ?   usuario?: true,
+      ?   senha?: true,
+      ?   parcelas?: true,
+      ?   mensagem?: true,
+      ?   libera?: true,
+      ?   email?: true,
+      ?   chave?: true,
+      ?   convenio?: true,
+      ?   nome?: true,
+      ?   cnpj?: true,
+      ?   tipo?: true,
+      ?   estado?: true,
+      ?   telefone?: true,
+      ?   ativo?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   vendas?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `codconven` for select statement on model `convenio`. Available options are marked with ?.
+[2026-01-29T18:12:09.127Z] 🚀 Iniciando migração paralela...
+[2026-01-29T18:12:09.618Z] 📊 Carregando dados de referência...
+[2026-01-29T18:12:09.765Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-01-29T18:12:11.597Z]    ✅ 4.210 sócios
+[2026-01-29T18:12:11.907Z]    ✅ 229 convênios
+[2026-01-29T18:12:12.181Z]    ✅ Admin: cmkftmv2t0000ofs76r8om5z8
+[2026-01-29T18:12:12.181Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-01-29T18:12:12.225Z]    Total: 82.174 vendas (IDs: 1 - 89096)
+[2026-01-29T18:37:26.519Z] 
+   ✅ Vendas migradas: 81.741
+[2026-01-29T18:37:26.520Z]    ⚠️  Vendas sem sócio: 398
+[2026-01-29T18:37:26.520Z]    📦 Mapa de vendas: 81.741 entradas
+[2026-01-29T18:37:26.684Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-01-29T18:37:26.730Z]    Total: 761.271 parcelas (IDs: 1 - 1600190)
+[2026-01-29T18:39:59.306Z] 🚀 Iniciando migração paralela...
+[2026-01-29T18:39:59.651Z] 📊 Carregando dados de referência...
+[2026-01-29T18:40:00.269Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-01-29T18:40:02.825Z]    ✅ 4.210 sócios
+[2026-01-29T18:40:03.192Z]    ✅ 229 convênios
+[2026-01-29T18:40:03.595Z]    ✅ Admin: cmkftmv2t0000ofs76r8om5z8
+[2026-01-29T18:40:03.596Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-01-29T18:40:03.631Z]    Total: 82.174 vendas (IDs: 1 - 89096)

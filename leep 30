@@ -1,0 +1,11 @@
+                                 Table "public.matriculas"
+      Column      |            Type             | Collation | Nullable |      Default      
+------------------+-----------------------------+-----------+----------+-------------------
+ matricula_antiga | integer                     |           | not null | 
+ matricula_atual  | integer                     |           | not null | 
+ created_at       | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at       | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "matriculas_pkey" PRIMARY KEY, btree (matricula_antiga)
+    "idx_matricula_atual" btree (matricula_atual)
+
