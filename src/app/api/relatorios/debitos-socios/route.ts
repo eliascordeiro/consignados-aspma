@@ -464,8 +464,8 @@ function gerarCSV(
         : '';
       
       const row = [
-        index === 0 ? grupo.matricula : '',
-        index === 0 ? `"${grupo.nome}"` : '', // Aspas para nomes com vírgula
+        grupo.matricula, // Repetir em todas as linhas
+        `"${grupo.nome}"`, // Repetir em todas as linhas - Aspas para nomes com vírgula
         `"${parcela.convenio}"`, // Aspas para convênios com vírgula
         parcela.pc.toString(),
         parcela.de.toString(),

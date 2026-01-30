@@ -403,8 +403,8 @@ function gerarCSV(
         : valor.toFixed(2);
       
       const row = [
-        index === 0 ? grupo.matricula : '',
-        index === 0 ? `"${grupo.associado}"` : '',
+        grupo.matricula, // Repetir em todas as linhas
+        `"${grupo.associado}"`, // Repetir em todas as linhas
         `"${parcela.convenio_codigo || ''} - ${parcela.convenio_nome || ''}"`,
         parcela.num_parcela.toString(),
         parcela.qtd_parcelas.toString(),
