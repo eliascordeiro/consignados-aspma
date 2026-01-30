@@ -411,16 +411,6 @@ export default function ComparacaoRelatoriosPage() {
           </div>
         </div>
       )}
-              onClick={() => gerarRelatorio('mysql', 'excel')}
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              <span>📊</span>
-              Gerar Excel (MySQL)
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Instruções */}
       <div className="mt-6 bg-yellow-50 dark:bg-gray-800 border-l-4 border-yellow-400 p-4 rounded">
