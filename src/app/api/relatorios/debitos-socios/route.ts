@@ -389,5 +389,11 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+  // Converte Buffer para ArrayBuffer
+  const arrayBuffer = new ArrayBuffer(buffer.byteLength);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.byteLength; i++) {
+    view[i] = buffer[i];
+  }
+  return arrayBuffer;
 }
