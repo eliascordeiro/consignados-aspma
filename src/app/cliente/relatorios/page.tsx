@@ -28,10 +28,20 @@ export default function RelatoriosPage() {
       const response = await fetch('/api/convenios');
       if (response.ok) {
         const data = await response.json();
-        setConvenios(data);
+        // Garante que data é um array antes de setar
+        if (Array.isArray(data)) {
+          setConvenios(data);
+        } else {
+          console.error('API retornou dados inválidos:', data);
+          setConvenios([]);
+        }
+      } else {
+        console.error('Erro ao carregar convênios:', response.status);
+        setConvenios([]);
       }
     } catch (error) {
       console.error('Erro ao carregar convênios:', error);
+      setConvenios([]);
     }
   };
 
@@ -163,7 +173,7 @@ export default function RelatoriosPage() {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Todos os convênios</option>
-              {convenios.map((convenio) => (
+              {Array.isArray(convenios) && convenios.map((convenio) => (
                 <option key={convenio.id} value={convenio.id}>
                   {convenio.codigo} - {convenio.razao_soc}
                 </option>
