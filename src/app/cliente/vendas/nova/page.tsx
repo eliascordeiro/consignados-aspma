@@ -458,14 +458,7 @@ export default function NovaVendaPage() {
               value={formData.quantidadeParcelas}
               onChange={(e) => setFormData({ ...formData, quantidadeParcelas: parseInt(e.target.value) || 1 })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required(e) => {
-                gerarParcelas();
-                // Regra AS200.PRG: Consulta margem quando sai do campo
-                const valor = parseFloat(e.target.value);
-                if (socioSelecionado && valor > 0) {
-                  handleValorParcelaChange(e.target.value);
-                }
-              }
+              required
             />
           </div>
 
@@ -477,7 +470,18 @@ export default function NovaVendaPage() {
               min="0"
               value={formData.valorParcela}
               onChange={(e) => setFormData({ ...formData, valorParcela: e.target.value })}
-              onBlur={gerarParcelas}
+              onBlur={(e) => {
+                gerarParcelas();
+                // Regra AS200.PRG: Consulta margem quando sai do campo
+                const valor = parseFloat(e.target.value);
+                if (socioSelecionado && valor > 0) {
+                  handleValorParcelaChange(e.target.value);
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />

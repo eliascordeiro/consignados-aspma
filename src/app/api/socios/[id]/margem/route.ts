@@ -210,7 +210,7 @@ export async function GET(
       senha: ZETRA_CONFIG.senha,
       matricula: matriculaAtual,
       cpf: cpf,
-      valorParcela: '0.1', // Valor padrão conforme AS200.PRG
+      valorParcela: valorParcela, // Usa valor da query ou 0.1 padrão
     });
 
     if (margemZetra === null) {
@@ -218,6 +218,14 @@ export async function GET(
       // Fallback para o valor do banco se ZETRA falhar
       return NextResponse.json({
         matricula: socio.matricula,
+        nome: socio.nome,
+        margem: Number(socio.margemConsig || 0),
+        tipo: 'banco_dados',
+        fonte: 'fallback',
+        aviso: 'ZETRA indisponível, usando valor do banco de dados',
+      });
+    }
+
     // Se retornou objeto com erro (margem <= 0)
     if (typeof margemZetra === 'object' && 'mensagem' in margemZetra) {
       console.log('⚠️  [API] ZETRA retornou erro:', margemZetra);
@@ -231,13 +239,6 @@ export async function GET(
         codRetorno: margemZetra.codRetorno,
       });
     }
-
-        nome: socio.nome,
-        margem: Number(socio.margemConsig || 0),
-        tipo: 'banco_dados',
-        fonte: 'fallback',
-        aviso: 'ZETRA indisponível, usando valor do banco de dados',
-      });
     }
 
     console.log('✅ [API] Consulta ZETRA concluída com sucesso! Margem:', margemZetra);
