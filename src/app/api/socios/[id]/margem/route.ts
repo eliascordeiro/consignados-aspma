@@ -202,7 +202,7 @@ export async function GET(
       );
     }
 
-    // Faz a consultvalorParcela, // Usa valor da query ou 0.1 padrão
+    // Faz a consulta ZETRA via PHP
     const margemZetra = await consultarMargemZetra({
       cliente: ZETRA_CONFIG.cliente,
       convenio: ZETRA_CONFIG.convenio,
@@ -238,7 +238,6 @@ export async function GET(
         mensagem: margemZetra.mensagem,
         codRetorno: margemZetra.codRetorno,
       });
-    }
     }
 
     console.log('✅ [API] Consulta ZETRA concluída com sucesso! Margem:', margemZetra);
