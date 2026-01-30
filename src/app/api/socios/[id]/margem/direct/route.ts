@@ -23,16 +23,15 @@ function criarSoapEnvelope(params: {
 }): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-  <soapenv:Header/>
   <soapenv:Body>
     <consultarMargem xmlns="http://host.ws.econsig.com.br/">
-      <cliente xmlns="">${params.cliente}</cliente>
-      <convenio xmlns="">${params.convenio}</convenio>
-      <usuario xmlns="">${params.usuario}</usuario>
-      <senha xmlns="">${params.senha}</senha>
-      <matricula xmlns="">${params.matricula}</matricula>
-      <cpf xmlns="">${params.cpf}</cpf>
-      <valorParcela xmlns="">${params.valorParcela}</valorParcela>
+      <cliente>${params.cliente}</cliente>
+      <convenio>${params.convenio}</convenio>
+      <usuario>${params.usuario}</usuario>
+      <senha>${params.senha}</senha>
+      <matricula>${params.matricula}</matricula>
+      <cpf>${params.cpf}</cpf>
+      <valorParcela>${params.valorParcela}</valorParcela>
     </consultarMargem>
   </soapenv:Body>
 </soapenv:Envelope>`;
