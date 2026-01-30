@@ -180,15 +180,16 @@ export default function NovaVendaPage() {
     setConvenios([]);
   };
 
-  // Regra AS200.PRG: Quando usuário digita valor da parcela, reconsulta margem
-  const handleValorParcelaChange = async (novoValor: string) => {
-    setFormData({ ...formData, valorParcela: novoValor });
+  // Valida se valor da parcela excede margem disponível (sem reconsultar)
+  const validarValorParcela = (valor: string) => {
+    const valorNum = parseFloat(valor);
+    const margemAtual = margemDisponivel || 0;
     
-    // Se tem sócio selecionado e valor > 0, reconsulta
-    const valorNum = parseFloat(novoValor);
-    if (socioSelecionado && valorNum > 0) {
-      await consultarMargemZetra(socioSelecionado, valorNum);
+    if (valorNum > margemAtual) {
+      alert(`⚠️ ATENÇÃO! Valor da parcela (R$ ${valorNum.toFixed(2)}) é MAIOR que a margem disponível (R$ ${margemAtual.toFixed(2)})`);
+      return false;
     }
+    return true;
   };
 
   const gerarParcelas = () => {
@@ -471,12 +472,9 @@ export default function NovaVendaPage() {
               value={formData.valorParcela}
               onChange={(e) => setFormData({ ...formData, valorParcela: e.target.value })}
               onBlur={(e) => {
+                // Valida se valor não excede margem
+                validarValorParcela(e.target.value);
                 gerarParcelas();
-                // Regra AS200.PRG: Consulta margem quando sai do campo
-                const valor = parseFloat(e.target.value);
-                if (socioSelecionado && valor > 0) {
-                  handleValorParcelaChange(e.target.value);
-                }
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
