@@ -504,20 +504,49 @@ export default function NovaVendaPage() {
             <label className="block text-sm font-bold mb-2 dark:text-gray-300">Valor da Parcela *</label>
             <input
               type="text"
-              value={formData.valorParcela ? formatarMoeda(formData.valorParcela) : ''}
+              value={formData.valorParcela}
               onChange={(e) => {
-                const valorDigitado = e.target.value;
+                const valor = e.target.value;
                 // Permite apenas números, vírgula e ponto
-                const valorLimpo = valorDigitado.replace(/[^\d,]/g, '');
-                const valorNumerico = desformatarMoeda(valorLimpo);
-                setFormData({ ...formData, valorParcela: valorNumerico });
+                // Aceita: 123, 123,45, 1234,56, etc
+                const valorLimpo = valor.replace(/[^\d,\.]/g, '');
+                setFormData({ ...formData, valorParcela: valorLimpo });
               }}
               onBlur={(e) => {
-                // Valida se valor não excede margem - SE EXCEDER, BLOQUEIA
-                const valorNumerico = desformatarMoeda(e.target.value);
+                const valorDigitado = e.target.value;
+                if (!valorDigitado) return;
+                
+                // Converte para formato numérico (troca vírgula por ponto)
+                const valorNumerico = valorDigitado.replace(/\./g, '').replace(',', '.');
+                const valorNum = parseFloat(valorNumerico);
+                
+                if (isNaN(valorNum)) {
+                  setFormData({ ...formData, valorParcela: '' });
+                  return;
+                }
+                
+                // Formata para moeda brasileira ao sair do campo
+                const valorFormatado = valorNum.toLocaleString('pt-BR', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                });
+                setFormData({ ...formData, valorParcela: valorFormatado });
+                
+                // Valida se valor não excede margem
                 const valorValido = validarValorParcela(valorNumerico);
                 if (valorValido) {
                   gerarParcelas();
+                }
+              }}
+              onFocus={(e) => {
+                // Remove formatação ao focar para facilitar edição
+                const valorAtual = e.target.value;
+                if (valorAtual) {
+                  const valorNumerico = valorAtual.replace(/\./g, '').replace(',', '.');
+                  const valorNum = parseFloat(valorNumerico);
+                  if (!isNaN(valorNum)) {
+                    setFormData({ ...formData, valorParcela: valorNum.toString().replace('.', ',') });
+                  }
                 }
               }}
               placeholder="0,00"
