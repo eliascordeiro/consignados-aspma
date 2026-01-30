@@ -149,18 +149,21 @@ function calcularDataCorte(): { mes: number; ano: number } {
 
 // Função para calcular descontos do mês (parcelas não pagas)
 // Regra AS200.PRG: SELECT sum(valor) FROM parcelas WHERE month(vencimento) = lMes AND year(vencimento) = lAno AND baixa = '' AND matricula = X
-async function calcularDescontosDoMes(matricula: string, dataCorte: { mes: number; ano: number }): Promise<number> {
+async function calcularDescontosDoMes(socioId: string, matricula: string, dataCorte: { mes: number; ano: number }): Promise<number> {
   try {
     console.log(`📊 [CÁLCULO] Calculando descontos para matrícula ${matricula} em ${dataCorte.mes}/${dataCorte.ano}`);
     
+    // Prisma estrutura: Parcela -> Venda -> Socio
     const result = await prisma.parcela.aggregate({
       _sum: {
         valor: true,
       },
       where: {
-        matricula: matricula,
+        venda: {
+          socioId: socioId, // Relação através de Venda
+        },
         baixa: '', // Não pagas (regra AS200.PRG)
-        vencimento: {
+        dataVencimento: {
           gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1), // Primeiro dia do mês
           lt: new Date(dataCorte.ano, dataCorte.mes, 1), // Primeiro dia do próximo mês
         },
@@ -236,7 +239,7 @@ export async function GET(
       const dataCorte = calcularDataCorte();
       console.log(`📅 [API] Data de corte: ${dataCorte.mes}/${dataCorte.ano}`);
       
-      const descontos = await calcularDescontosDoMes(socio.matricula || '', dataCorte);
+      const descontos = await calcularDescontosDoMes(socio.id, socio.matricula || '', dataCorte);
       const limite = Number(socio.limite || 0);
       const margem = limite - descontos;
       
