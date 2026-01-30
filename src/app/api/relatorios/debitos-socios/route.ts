@@ -208,7 +208,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.text('De', 200, y);
     doc.text('Valor', 225, y, { align: 'right' });
     doc.text('Total', 260, y, { align: 'right' });
-    doc.text('St', 280, y);
+    doc.text('St', 265, y);
     y += 5;
     doc.line(10, y, 280, y);
     y += 5;
@@ -264,7 +264,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
       }
 
       // St
-      doc.text(parcela.st, 280, y);
+      doc.text(parcela.st, 265, y);
 
       y += 5;
     });
