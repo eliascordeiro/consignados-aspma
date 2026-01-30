@@ -14,23 +14,33 @@ export default function RelatoriosPage() {
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [filtros, setFiltros] = useState({
     convenioId: '',
+    convenioNome: '',
     mesAno: new Date().toISOString().slice(0, 7), // YYYY-MM
   });
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [searchConvenio, setSearchConvenio] = useState('');
+  const [showConvenioList, setShowConvenioList] = useState(false);
 
+  // Busca convênios ao digitar
   useEffect(() => {
-    carregarConvenios();
-  }, []);
+    if (searchConvenio.length >= 2 && !filtros.convenioId) {
+      carregarConvenios();
+    } else if (searchConvenio.length < 2) {
+      setShowConvenioList(false);
+    }
+  }, [searchConvenio]);
 
   const carregarConvenios = async () => {
     try {
-      const response = await fetch('/api/convenios');
+      const response = await fetch(`/api/convenios?search=${searchConvenio}`);
       if (response.ok) {
         const data = await response.json();
-        // Garante que data é um array antes de setar
-        if (Array.isArray(data)) {
-          setConvenios(data);
+        // API pode retornar { data: [], pagination: {} } ou array direto
+        const conveniosData = data.data || data;
+        if (Array.isArray(conveniosData)) {
+          setConvenios(conveniosData);
+          setShowConvenioList(true);
         } else {
           console.error('API retornou dados inválidos:', data);
           setConvenios([]);
@@ -43,6 +53,28 @@ export default function RelatoriosPage() {
       console.error('Erro ao carregar convênios:', error);
       setConvenios([]);
     }
+  };
+
+  const selecionarConvenio = (convenio: Convenio) => {
+    setFiltros({
+      ...filtros,
+      convenioId: convenio.id.toString(),
+      convenioNome: convenio.razao_soc,
+    });
+    setSearchConvenio(`${convenio.codigo} - ${convenio.razao_soc}`);
+    setShowConvenioList(false);
+    setConvenios([]);
+  };
+
+  const limparConvenio = () => {
+    setFiltros({
+      ...filtros,
+      convenioId: '',
+      convenioNome: '',
+    });
+    setSearchConvenio('');
+    setShowConvenioList(false);
+    setConvenios([]);
   };
 
   const gerarRelatorioPDF = async () => {
@@ -162,23 +194,49 @@ export default function RelatoriosPage() {
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md">
         <div className="space-y-4">
-          {/* Convênio (opcional) */}
-          <div>
+          {/* Convênio (opcional) - Com busca */}
+          <div className="relative">
             <label className="block text-sm font-bold mb-2 dark:text-gray-300">
               Convênio (opcional)
             </label>
-            <select
-              value={filtros.convenioId}
-              onChange={(e) => setFiltros({ ...filtros, convenioId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos os convênios</option>
-              {Array.isArray(convenios) && convenios.map((convenio) => (
-                <option key={convenio.id} value={convenio.id}>
-                  {convenio.codigo} - {convenio.razao_soc}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value={searchConvenio}
+              onChange={(e) => {
+                setSearchConvenio(e.target.value);
+                if (!e.target.value) {
+                  limparConvenio();
+                }
+              }}
+              placeholder="Digite código ou razão social (ou deixe vazio para todos)"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {filtros.convenioId && (
+              <button
+                type="button"
+                onClick={limparConvenio}
+                className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                title="Limpar seleção"
+              >
+                ✕
+              </button>
+            )}
+            {showConvenioList && convenios.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                {convenios.map((convenio) => (
+                  <div
+                    key={convenio.id}
+                    onClick={() => selecionarConvenio(convenio)}
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {convenio.codigo && <span>Código: {convenio.codigo}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Período (Mês-Ano) */}
