@@ -203,7 +203,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.setFont('courier', 'bold');
     doc.text('Matrícula', 10, y);
     doc.text('Associado', 35, y);
-    doc.text('Conveniado', 90, y);
+    doc.text('Conveniado', 105, y);
     doc.text('Pc', 175, y);
     doc.text('De', 185, y);
     doc.text('Valor', 210, y, { align: 'right' });
@@ -239,7 +239,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
       }
 
       // Conveniado
-      doc.text(parcela.convenio, 90, y);
+      doc.text(parcela.convenio, 105, y);
 
       // Pc (2 dígitos)
       doc.text(parcela.pc.toString().padStart(2, '0'), 175, y);
