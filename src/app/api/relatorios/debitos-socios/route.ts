@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise<Buffer> {
+async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise<Uint8Array> {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
@@ -288,10 +288,10 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
   });
   doc.text(totalGeralFormatado, 210, y, { align: 'right' });
 
-  return Buffer.from(doc.output('arraybuffer'));
+  return new Uint8Array(doc.output('arraybuffer'));
 }
 
-async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promise<Buffer> {
+async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promise<Uint8Array> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Débitos de Sócios');
 
@@ -389,5 +389,5 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(buffer);
+  return new Uint8Array(buffer);
 }
