@@ -177,7 +177,8 @@ export default function NovaVendaPage() {
     });
     setSearchConvenio(convenio.razao_soc);
     setShowConvenioList(false);
-    
+    setConvenios([]);
+  };
 
   // Regra AS200.PRG: Quando usuário digita valor da parcela, reconsulta margem
   const handleValorParcelaChange = async (novoValor: string) => {
@@ -188,7 +189,6 @@ export default function NovaVendaPage() {
     if (socioSelecionado && valorNum > 0) {
       await consultarMargemZetra(socioSelecionado, valorNum);
     }
-  };setConvenios([]);
   };
 
   const gerarParcelas = () => {
