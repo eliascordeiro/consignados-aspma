@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     // Gerar PDF ou Excel
     if (formato === 'pdf') {
       const pdfBuffer = await gerarPDF(gruposArray, mes, ano);
-      return new NextResponse(pdfBuffer.buffer, {
+      return new NextResponse(pdfBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.pdf"`,
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       const excelBuffer = await gerarExcel(gruposArray, mes, ano);
-      return new NextResponse(excelBuffer.buffer, {
+      return new NextResponse(excelBuffer, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.xlsx"`,
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise<Uint8Array> {
+async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise<ArrayBuffer> {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
@@ -288,10 +288,10 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
   });
   doc.text(totalGeralFormatado, 210, y, { align: 'right' });
 
-  return new Uint8Array(doc.output('arraybuffer'));
+  return doc.output('arraybuffer') as ArrayBuffer;
 }
 
-async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promise<Uint8Array> {
+async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Débitos de Sócios');
 
@@ -389,5 +389,5 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return new Uint8Array(buffer);
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 }
