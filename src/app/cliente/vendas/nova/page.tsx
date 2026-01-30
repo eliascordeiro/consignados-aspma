@@ -217,7 +217,16 @@ export default function NovaVendaPage() {
     }
 
     const quantidade = parseInt(formData.quantidadeParcelas.toString());
-    const valor = parseFloat(formData.valorParcela);
+    
+    // Converte valor formatado (1.200,33) para número (1200.33)
+    const valorLimpo = formData.valorParcela.toString().replace(/\./g, '').replace(',', '.');
+    const valor = parseFloat(valorLimpo);
+    
+    if (isNaN(valor)) {
+      alert('Valor da parcela inválido');
+      return;
+    }
+    
     const dataBase = new Date(formData.dataEmissao);
 
     // Se a data de emissão for depois do dia 9, começa no próximo mês
