@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 
 // Credenciais ZETRA
 const ZETRA_CONFIG = {
+  // Endpoint PHP intermediário (temporário até resolver SOAP direto)
+  phpEndpoint: 'http://200.98.112.240/aspma/php/zetra_desktop/consultaMargemZetra.php',
+  // Endpoints SOAP diretos (para futura implementação)
   wsdlUrl: 'https://api.econsig.com.br/central/services/HostaHostService?wsdl',
   soapEndpoint: 'https://api.econsig.com.br/central/services/HostaHostService',
   cliente: 'ASPMA',
@@ -50,6 +53,100 @@ function extractXmlValue(xml: string, tagName: string): string | null {
   if (matchNoNs) return matchNoNs[1].trim();
   
   return null;
+}
+
+// Função para consultar margem via PHP (que funciona)
+async function consultarMargemViaPHP(params: {
+  matricula: string;
+  cpf: string;
+  valorParcela: string;
+}): Promise<{ margem: number | null; erro?: string; xml?: string }> {
+  console.log('🚀 [ZETRA VIA PHP] Iniciando consulta via PHP...');
+  console.log('📋 [ZETRA VIA PHP] Parâmetros:', params);
+  
+  try {
+    const formData = new URLSearchParams();
+    formData.append('cliente', ZETRA_CONFIG.cliente);
+    formData.append('convenio', ZETRA_CONFIG.convenio);
+    formData.append('usuario', ZETRA_CONFIG.usuario);
+    formData.append('senha', ZETRA_CONFIG.senha);
+    formData.append('matricula', params.matricula);
+    formData.append('cpf', params.cpf);
+    formData.append('valorParcela', params.valorParcela);
+
+    console.log('📤 [ZETRA VIA PHP] Enviando para PHP...');
+    console.log('🌐 [ZETRA VIA PHP] Endpoint:', ZETRA_CONFIG.phpEndpoint);
+    
+    const response = await fetch(ZETRA_CONFIG.phpEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    });
+
+    console.log('📥 [ZETRA VIA PHP] Status da resposta:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.log('❌ [ZETRA VIA PHP] Erro HTTP:', response.status, response.statusText);
+      console.log('📄 [ZETRA VIA PHP] Corpo do erro:', errorBody.substring(0, 500));
+      return { 
+        margem: null, 
+        erro: `Erro HTTP ${response.status}: ${response.statusText}`,
+        xml: errorBody
+      };
+    }
+
+    const xmlResponse = await response.text();
+    console.log('📥 [ZETRA VIA PHP] Resposta recebida');
+    console.log('📄 [ZETRA VIA PHP] XML (primeiros 1000 chars):', xmlResponse.substring(0, 1000));
+
+    if (!xmlResponse || xmlResponse.trim() === '') {
+      console.log('⚠️  [ZETRA VIA PHP] Resposta vazia');
+      return { margem: null, erro: 'Resposta vazia da API' };
+    }
+
+    // Extrai a margem do XML
+    const margemStr = extractXmlValue(xmlResponse, 'valorMargem');
+    console.log('🔍 [ZETRA VIA PHP] Margem extraída:', margemStr);
+    
+    if (!margemStr) {
+      // Verifica se houve erro
+      const sucesso = extractXmlValue(xmlResponse, 'sucesso');
+      if (sucesso === 'false') {
+        const codRetorno = extractXmlValue(xmlResponse, 'codRetorno');
+        const mensagem = extractXmlValue(xmlResponse, 'mensagem');
+        console.log('❌ [ZETRA VIA PHP] Erro na consulta:', { codRetorno, mensagem });
+        return { 
+          margem: null, 
+          erro: `${codRetorno}: ${mensagem}`,
+          xml: xmlResponse 
+        };
+      }
+      
+      console.log('⚠️  [ZETRA VIA PHP] Margem não encontrada');
+      return { margem: null, erro: 'Margem não encontrada na resposta', xml: xmlResponse };
+    }
+
+    const margem = parseFloat(margemStr.replace(',', '.'));
+    
+    if (isNaN(margem)) {
+      console.log('⚠️  [ZETRA VIA PHP] Margem inválida:', margemStr);
+      return { margem: null, erro: `Margem inválida: ${margemStr}`, xml: xmlResponse };
+    }
+
+    console.log('✅ [ZETRA VIA PHP] Margem obtida com sucesso:', margem);
+    return { margem, xml: xmlResponse };
+
+  } catch (error: any) {
+    console.error('💥 [ZETRA VIA PHP] Erro na requisição:', error);
+    console.error('💥 [ZETRA VIA PHP] Stack trace:', error.stack);
+    return { 
+      margem: null, 
+      erro: error.message || 'Erro desconhecido' 
+    };
+  }
 }
 
 // Função para consultar margem diretamente na API ZETRA via SOAP
@@ -214,28 +311,28 @@ export async function GET(
     // Remove formatação do CPF
     const cpfLimpo = socio.cpf.replace(/\D/g, '');
 
-    // Consulta diretamente na API ZETRA
-    const resultado = await consultarMargemZetraDirect({
+    // Consulta via PHP (que sabemos que funciona)
+    const resultado = await consultarMargemViaPHP({
       matricula: socio.matricula,
       cpf: cpfLimpo,
-      valorParcela: '0.01', // Valor mínimo para consulta
+      valorParcela: '0.01',
     });
 
     if (resultado.margem !== null) {
-      console.log('✅ [API DIRECT] Margem consultada com sucesso via ZETRA');
+      console.log('✅ [API DIRECT] Margem consultada com sucesso via PHP');
       return NextResponse.json({
         margem: resultado.margem,
-        fonte: 'zetra_direct',
+        fonte: 'zetra_via_php',
         socio: {
           id: socio.id,
           nome: socio.nome,
           matricula: socio.matricula,
           cpf: socio.cpf,
         },
-        xml: resultado.xml?.substring(0, 500), // Primeiros 500 chars do XML
+        xml: resultado.xml?.substring(0, 500),
       });
     } else {
-      console.log('⚠️  [API DIRECT] Falha na consulta ZETRA, usando banco de dados');
+      console.log('⚠️  [API DIRECT] Falha na consulta via PHP, usando banco de dados');
       return NextResponse.json({
         margem: parseFloat(socio.margemConsig?.toString() || '0'),
         fonte: 'banco_fallback',
