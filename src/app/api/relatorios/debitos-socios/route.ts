@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
 
       const grupo = grupos.get(matricula)!;
       const convenioTexto = parcela.venda.convenio 
-        ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`.substring(0, 50)
+        ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`
         : 'Sem convênio';
       
       grupo.parcelas.push({
@@ -233,13 +233,13 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         doc.text(grupo.matricula.padEnd(8, ' '), 10, y);
       }
 
-      // Associado (35 chars) - só na primeira linha do grupo
+      // Associado - só na primeira linha do grupo
       if (index === 0) {
-        doc.text(grupo.nome.substring(0, 35).padEnd(35, ' '), 25, y);
+        doc.text(grupo.nome, 25, y);
       }
 
-      // Conveniado (50 chars)
-      doc.text(parcela.convenio.substring(0, 50).padEnd(50, ' '), 70, y);
+      // Conveniado
+      doc.text(parcela.convenio, 70, y);
 
       // Pc (2 dígitos)
       doc.text(parcela.pc.toString().padStart(2, '0'), 165, y);
