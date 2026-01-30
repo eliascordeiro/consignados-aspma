@@ -25,7 +25,7 @@ function criarSoapEnvelope(params: {
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hos="http://host.ws.econsig.com.br/">
   <soapenv:Header/>
   <soapenv:Body>
-    <hos:consultarMargem>
+    <consultarMargem xmlns="http://host.ws.econsig.com.br/">
       <cliente>${params.cliente}</cliente>
       <convenio>${params.convenio}</convenio>
       <usuario>${params.usuario}</usuario>
@@ -33,7 +33,7 @@ function criarSoapEnvelope(params: {
       <matricula>${params.matricula}</matricula>
       <cpf>${params.cpf}</cpf>
       <valorParcela>${params.valorParcela}</valorParcela>
-    </hos:consultarMargem>
+    </consultarMargem>
   </soapenv:Body>
 </soapenv:Envelope>`;
 }
@@ -219,7 +219,7 @@ export async function GET(
     const resultado = await consultarMargemZetraDirect({
       matricula: socio.matricula,
       cpf: cpfLimpo,
-      valorParcela: '100.00', // Valor padrão para teste
+      valorParcela: '0.01', // Valor mínimo para consulta
     });
 
     if (resultado.margem !== null) {
