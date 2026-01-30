@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
 
       const grupo = grupos.get(matricula)!;
       const convenioTexto = parcela.venda.convenio 
-        ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`.substring(0, 38)
+        ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`.substring(0, 28)
         : 'Sem convênio';
       
       grupo.parcelas.push({
@@ -203,9 +203,9 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.setFont('courier', 'bold');
     doc.text('Matrícula', 10, y);
     doc.text('Associado', 30, y);
-    doc.text('Conveniado', 90, y);
-    doc.text('Pc', 145, y);
-    doc.text('De', 155, y);
+    doc.text('Conveniado', 85, y);
+    doc.text('Pc', 135, y);
+    doc.text('De', 145, y);
     doc.text('Valor', 175, y, { align: 'right' });
     doc.text('Total', 210, y, { align: 'right' });
     doc.text('St', 230, y);
@@ -238,14 +238,14 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         doc.text(grupo.nome.substring(0, 40).padEnd(40, ' '), 30, y);
       }
 
-      // Conveniado (38 chars)
-      doc.text(parcela.convenio.substring(0, 38).padEnd(38, ' '), 90, y);
+      // Conveniado (28 chars)
+      doc.text(parcela.convenio.substring(0, 28).padEnd(28, ' '), 85, y);
 
       // Pc (2 dígitos)
-      doc.text(parcela.pc.toString().padStart(2, '0'), 145, y);
+      doc.text(parcela.pc.toString().padStart(2, '0'), 135, y);
 
       // De (2 dígitos)
-      doc.text(parcela.de.toString().padStart(2, '0'), 155, y);
+      doc.text(parcela.de.toString().padStart(2, '0'), 145, y);
 
       // Valor
       const valorFormatado = parcela.valor.toLocaleString('pt-BR', {
