@@ -267,17 +267,33 @@ export default function NovaVendaPage() {
       return;
     }
 
-    // REGRA CRÍTICA: Bloqueia venda se valor total > margem disponível
-    const valorTotal = parcelas.reduce((sum, p) => sum + p.valor, 0);
+    // REGRA CRÍTICA 1: Bloqueia se valor da PARCELA > margem disponível
+    const valorParcela = parseFloat(formData.valorParcela || '0');
     const margemAtual = margemDisponivel || 0;
+    
+    if (valorParcela > margemAtual) {
+      alert(
+        `❌ BLOQUEADO! Valor da parcela excede a margem.\n\n` +
+        `Valor da Parcela: R$ ${valorParcela.toFixed(2)}\n` +
+        `Margem Disponível: R$ ${margemAtual.toFixed(2)}\n\n` +
+        `Corrija o valor da parcela antes de continuar.`
+      );
+      return;
+    }
+
+    // REGRA CRÍTICA 2: Bloqueia se valor TOTAL > margem disponível
+    const valorTotal = parcelas.reduce((sum, p) => sum + p.valor, 0);
     
     if (valorTotal > margemAtual) {
       alert(
-        `❌ BLOQUEADO! Não é possível gravar esta venda.\n\n` +
+        `❌ BLOQUEADO! Valor total excede a margem.\n\n` +
         `Valor Total: R$ ${valorTotal.toFixed(2)}\n` +
         `Margem Disponível: R$ ${margemAtual.toFixed(2)}\n` +
         `Excedente: R$ ${(valorTotal - margemAtual).toFixed(2)}\n\n` +
         `Reduza o valor da parcela ou a quantidade de parcelas.`
+      );
+      return;
+    }
       );
       return; // BLOQUEIA completamente
     }
