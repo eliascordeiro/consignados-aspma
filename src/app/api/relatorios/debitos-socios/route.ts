@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { jsPDF } from 'jspdf';
 import ExcelJS from 'exceljs';
+import iconv from 'iconv-lite';
 
 const prisma = new PrismaClient();
 
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
 
     const gruposArray = Array.from(grupos.values());
 
-    // Gerar PDF ou Excel
+    // Gerar PDF, Excel ou CSV
     if (formato === 'pdf') {
       const pdfBuffer = await gerarPDF(gruposArray, mes, ano);
       return new NextResponse(pdfBuffer, {
@@ -159,7 +160,7 @@ export async function GET(request: NextRequest) {
           'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.pdf"`,
         },
       });
-    } else {
+    } else if (formato === 'excel') {
       const excelBuffer = await gerarExcel(gruposArray, mes, ano);
       return new NextResponse(excelBuffer, {
         headers: {
@@ -167,7 +168,35 @@ export async function GET(request: NextRequest) {
           'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.xlsx"`,
         },
       });
+    } else if (formato === 'csv') {
+      // Opções CSV enviadas como query params
+      const delimiter = searchParams.get('delimiter') || ';';
+      const encoding = searchParams.get('encoding') || 'utf-8';
+      const includeHeader = searchParams.get('includeHeader') !== 'false';
+      const decimalSeparator = searchParams.get('decimalSeparator') || ',';
+      
+      const csvContent = gerarCSV(gruposArray, mes, ano, {
+        delimiter,
+        includeHeader,
+        decimalSeparator,
+      });
+      
+      const buffer = Buffer.from(
+        encoding === 'iso-8859-1' 
+          ? iconv.encode(csvContent, 'iso-8859-1')
+          : csvContent, 
+        encoding === 'iso-8859-1' ? undefined : 'utf-8'
+      );
+      
+      return new NextResponse(buffer, {
+        headers: {
+          'Content-Type': 'text/csv; charset=' + encoding,
+          'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.csv"`,
+        },
+      });
     }
+    
+    return NextResponse.json({ error: 'Formato inválido. Use pdf, excel ou csv' }, { status: 400 });
   } catch (error) {
     console.error('Erro ao gerar relatório:', error);
     return NextResponse.json(
@@ -395,4 +424,80 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   // Converte Buffer para ArrayBuffer
   const uint8Array = new Uint8Array(buffer);
   return uint8Array.buffer.slice(uint8Array.byteOffset, uint8Array.byteOffset + uint8Array.byteLength);
+}
+
+function gerarCSV(
+  grupos: GrupoSocio[], 
+  mes: number, 
+  ano: number,
+  options: {
+    delimiter: string;
+    includeHeader: boolean;
+    decimalSeparator: string;
+  }
+): string {
+  const { delimiter, includeHeader, decimalSeparator } = options;
+  const lines: string[] = [];
+  
+  // Cabeçalho
+  if (includeHeader) {
+    lines.push([
+      'Matricula',
+      'Associado',
+      'Conveniado',
+      'Parcela',
+      'Total_Parcelas',
+      'Valor',
+      'Total_Socio',
+      'Status'
+    ].join(delimiter));
+  }
+  
+  // Dados
+  let totalGeral = 0;
+  
+  grupos.forEach((grupo) => {
+    grupo.parcelas.forEach((parcela, index) => {
+      const valorFormatado = decimalSeparator === ','
+        ? parcela.valor.toFixed(2).replace('.', ',')
+        : parcela.valor.toFixed(2);
+      
+      const totalFormatado = index === grupo.parcelas.length - 1
+        ? (decimalSeparator === ',' ? grupo.total.toFixed(2).replace('.', ',') : grupo.total.toFixed(2))
+        : '';
+      
+      const row = [
+        index === 0 ? grupo.matricula : '',
+        index === 0 ? `"${grupo.nome}"` : '', // Aspas para nomes com vírgula
+        `"${parcela.convenio}"`, // Aspas para convênios com vírgula
+        parcela.pc.toString(),
+        parcela.de.toString(),
+        valorFormatado,
+        totalFormatado,
+        parcela.st
+      ];
+      
+      lines.push(row.join(delimiter));
+    });
+    
+    totalGeral += grupo.total;
+  });
+  
+  // Total geral
+  const totalGeralFormatado = decimalSeparator === ','
+    ? totalGeral.toFixed(2).replace('.', ',')
+    : totalGeral.toFixed(2);
+  
+  lines.push([
+    '',
+    '',
+    '',
+    '',
+    '',
+    'TOTAL GERAL:',
+    totalGeralFormatado,
+    ''
+  ].join(delimiter));
+  
+  return lines.join('\n');
 }

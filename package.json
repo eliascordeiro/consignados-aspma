@@ -34,6 +34,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
+    "iconv-lite": "^0.7.2",
     "jspdf": "^4.0.0",
     "lucide-react": "^0.562.0",
     "mysql2": "^3.16.1",
