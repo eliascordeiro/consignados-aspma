@@ -294,9 +294,6 @@ export default function NovaVendaPage() {
       );
       return;
     }
-      );
-      return; // BLOQUEIA completamente
-    }
 
     setLoading(true);
 
