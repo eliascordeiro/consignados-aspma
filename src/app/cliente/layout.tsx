@@ -40,6 +40,7 @@ import { PerfilModal } from "@/components/perfil-modal"
 
 // Dashboard é sempre visível, outros módulos baseados em permissões
 const dashboardNav = { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard }
+const relatoriosNav = { name: "Relatórios", href: "/cliente/relatorios", icon: FileText }
 const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = {
   consignatarias: { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
   funcionarios: { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
@@ -78,9 +79,10 @@ export default function ClienteLayout({
   const userPermissions = (session?.user as any)?.permissions || []
   const userModules = getUserModules(userPermissions)
   
-  // Dashboard sempre visível + módulos com permissão
+  // Dashboard sempre visível + Relatórios + módulos com permissão
   const navigation = [
     dashboardNav,
+    relatoriosNav,
     ...userModules.map(module => moduleRoutes[module.id]).filter(Boolean)
   ]
 
