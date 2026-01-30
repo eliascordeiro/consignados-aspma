@@ -22,6 +22,14 @@ export default function ComparacaoRelatoriosPage() {
   const [progress, setProgress] = useState(0);
   const [searchConvenio, setSearchConvenio] = useState('');
   const [showConvenioList, setShowConvenioList] = useState(false);
+  const [showCSVModal, setShowCSVModal] = useState(false);
+  const [csvSource, setCsvSource] = useState<'postgres' | 'mysql'>('postgres');
+  const [csvOptions, setCsvOptions] = useState({
+    delimiter: ';',
+    encoding: 'utf-8',
+    includeHeader: true,
+    decimalSeparator: ',',
+  });
 
   // Busca convênios ao digitar
   useEffect(() => {
@@ -70,7 +78,7 @@ export default function ComparacaoRelatoriosPage() {
     setConvenios([]);
   };
 
-  const gerarRelatorio = async (fonte: 'postgres' | 'mysql', formato: 'pdf' | 'excel') => {
+  const gerarRelatorio = async (fonte: 'postgres' | 'mysql', formato: 'pdf' | 'excel' | 'csv') => {
     if (!filtros.mesAno) {
       alert('Selecione o período (Mês-Ano)');
       return;
@@ -90,6 +98,14 @@ export default function ComparacaoRelatoriosPage() {
         formato
       });
 
+      // Adicionar opções CSV se for CSV
+      if (formato === 'csv') {
+        queryParams.append('delimiter', csvOptions.delimiter);
+        queryParams.append('encoding', csvOptions.encoding);
+        queryParams.append('includeHeader', csvOptions.includeHeader.toString());
+        queryParams.append('decimalSeparator', csvOptions.decimalSeparator);
+      }
+
       setProgress(30);
 
       const response = await fetch(`${apiUrl}?${queryParams}`);
@@ -100,9 +116,9 @@ export default function ComparacaoRelatoriosPage() {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        const extensao = formato === 'pdf' ? 'pdf' : 'xlsx';
+        const extensao = formato === 'pdf' ? 'pdf' : (formato === 'excel' ? 'xlsx' : 'csv');
         const prefixo = fonte === 'postgres' ? 'postgres' : 'mysql';
+        a.href = url;
         a.download = `debitos-${prefixo}-${filtros.mesAno}.${extensao}`;
         document.body.appendChild(a);
         a.click();
@@ -125,6 +141,16 @@ export default function ComparacaoRelatoriosPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const abrirModalCSV = (fonte: 'postgres' | 'mysql') => {
+    setCsvSource(fonte);
+    setShowCSVModal(true);
+  };
+
+  const gerarCSV = () => {
+    setShowCSVModal(false);
+    gerarRelatorio(csvSource, 'csv');
   };
 
   return (
@@ -239,7 +265,7 @@ export default function ComparacaoRelatoriosPage() {
               className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <span>📄</span>
-              Gerar PDF (PostgreSQL)
+              PDF
             </button>
 
             <button
@@ -248,7 +274,16 @@ export default function ComparacaoRelatoriosPage() {
               className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <span>📊</span>
-              Gerar Excel (PostgreSQL)
+              Excel
+            </button>
+
+            <button
+              onClick={() => abrirModalCSV('postgres')}
+              disabled={loading}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              <span>📋</span>
+              CSV
             </button>
           </div>
         </div>
@@ -268,10 +303,114 @@ export default function ComparacaoRelatoriosPage() {
               className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <span>📄</span>
-              Gerar PDF (MySQL)
+              PDF
             </button>
 
             <button
+              onClick={() => gerarRelatorio('mysql', 'excel')}
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              <span>📊</span>
+              Excel
+            </button>
+
+            <button
+              onClick={() => abrirModalCSV('mysql')}
+              disabled={loading}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              <span>📋</span>
+              CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal de Configuração CSV */}
+      {showCSVModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              ⚙️ Configuração CSV - {csvSource === 'postgres' ? 'PostgreSQL' : 'MySQL'}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                  Delimitador de campos
+                </label>
+                <select
+                  value={csvOptions.delimiter}
+                  onChange={(e) => setCsvOptions({ ...csvOptions, delimiter: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value=";">Ponto e vírgula (;) - Excel Brasil</option>
+                  <option value=",">Vírgula (,) - Padrão internacional</option>
+                  <option value="	">Tabulação (Tab)</option>
+                  <option value="|">Barra vertical (|)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                  Separador decimal
+                </label>
+                <select
+                  value={csvOptions.decimalSeparator}
+                  onChange={(e) => setCsvOptions({ ...csvOptions, decimalSeparator: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value=",">Vírgula (,) - Brasil</option>
+                  <option value=".">Ponto (.) - Internacional</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                  Codificação
+                </label>
+                <select
+                  value={csvOptions.encoding}
+                  onChange={(e) => setCsvOptions({ ...csvOptions, encoding: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="utf-8">UTF-8 (Recomendado)</option>
+                  <option value="iso-8859-1">ISO-8859-1 (Legado)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="includeHeader"
+                  checked={csvOptions.includeHeader}
+                  onChange={(e) => setCsvOptions({ ...csvOptions, includeHeader: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 rounded"
+                />
+                <label htmlFor="includeHeader" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Incluir cabeçalho
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowCSVModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 font-bold"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={gerarCSV}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 font-bold"
+              >
+                📋 Gerar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
               onClick={() => gerarRelatorio('mysql', 'excel')}
               disabled={loading}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"

@@ -3,6 +3,7 @@ import mysql from 'mysql2/promise';
 import jsPDF from 'jspdf';
 import ExcelJS from 'exceljs';
 import { PrismaClient } from '@prisma/client';
+import iconv from 'iconv-lite';
 
 const prisma = new PrismaClient();
 
@@ -125,9 +126,34 @@ export async function GET(request: NextRequest) {
             'Content-Disposition': `attachment; filename="debitos-mysql-${mesAno}.xlsx"`,
           },
         });
+      } else if (formato === 'csv') {
+        const delimiter = searchParams.get('delimiter') || ';';
+        const encoding = searchParams.get('encoding') || 'utf-8';
+        const includeHeader = searchParams.get('includeHeader') !== 'false';
+        const decimalSeparator = searchParams.get('decimalSeparator') || ',';
+        
+        const csvContent = gerarCSV(Array.from(grupos.values()), mesAno, {
+          delimiter,
+          includeHeader,
+          decimalSeparator,
+        });
+        
+        const buffer = Buffer.from(
+          encoding === 'iso-8859-1' 
+            ? iconv.encode(csvContent, 'iso-8859-1')
+            : csvContent, 
+          encoding === 'iso-8859-1' ? undefined : 'utf-8'
+        );
+        
+        return new NextResponse(buffer, {
+          headers: {
+            'Content-Type': 'text/csv; charset=' + encoding,
+            'Content-Disposition': `attachment; filename="debitos-mysql-${mesAno}.csv"`,
+          },
+        });
       }
 
-      return NextResponse.json({ error: 'Formato inválido. Use pdf ou excel' }, { status: 400 });
+      return NextResponse.json({ error: 'Formato inválido. Use pdf, excel ou csv' }, { status: 400 });
 
     } finally {
       await connection.end();
@@ -344,4 +370,73 @@ async function gerarExcel(grupos: any[], mesAno: string): Promise<ArrayBuffer> {
 
   const buffer = await workbook.xlsx.writeBuffer();
   return buffer;
+}
+
+function gerarCSV(
+  grupos: any[], 
+  mesAno: string,
+  options: {
+    delimiter: string;
+    includeHeader: boolean;
+    decimalSeparator: string;
+  }
+): string {
+  const { delimiter, includeHeader, decimalSeparator } = options;
+  const lines: string[] = [];
+  
+  // Cabeçalho
+  if (includeHeader) {
+    lines.push([
+      'Matricula',
+      'Associado',
+      'Conveniado',
+      'Parcela',
+      'Total_Parcelas',
+      'Valor',
+      'Status'
+    ].join(delimiter));
+  }
+  
+  // Dados
+  grupos.forEach((grupo) => {
+    grupo.parcelas.forEach((parcela: any, index: number) => {
+      const valor = parseFloat(parcela.valor?.toString() || '0');
+      const valorFormatado = decimalSeparator === ','
+        ? valor.toFixed(2).replace('.', ',')
+        : valor.toFixed(2);
+      
+      const row = [
+        index === 0 ? grupo.matricula : '',
+        index === 0 ? `"${grupo.associado}"` : '',
+        `"${parcela.convenio_codigo || ''} - ${parcela.convenio_nome || ''}"`,
+        parcela.num_parcela.toString(),
+        parcela.qtd_parcelas.toString(),
+        valorFormatado,
+        parcela.status ? 'OK' : ''
+      ];
+      
+      lines.push(row.join(delimiter));
+    });
+  });
+  
+  // Total geral
+  const totalGeral = grupos.reduce((sum, grupo) => 
+    sum + grupo.parcelas.reduce((s: number, p: any) => s + parseFloat(p.valor?.toString() || '0'), 0), 0
+  );
+  
+  const totalGeralFormatado = decimalSeparator === ','
+    ? totalGeral.toFixed(2).replace('.', ',')
+    : totalGeral.toFixed(2);
+  
+  lines.push([
+    '',
+    '',
+    '',
+    '',
+    '',
+    'TOTAL GERAL: ' + totalGeralFormatado,
+    ''
+  ].join(delimiter));
+  
+  return lines.join('\n');
 }
