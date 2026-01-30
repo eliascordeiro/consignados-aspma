@@ -24,7 +24,7 @@ function criarSoapEnvelope(params: {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
   <soapenv:Body>
-    <consultarMargem xmlns="http://host.ws.econsig.com.br/">
+    <consultarMargem>
       <cliente>${params.cliente}</cliente>
       <convenio>${params.convenio}</convenio>
       <usuario>${params.usuario}</usuario>
