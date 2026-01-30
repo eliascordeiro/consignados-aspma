@@ -249,6 +249,14 @@ export async function POST(request: NextRequest) {
         userId: targetUserId,
         ativo: true,
       },
+      select: {
+        id: true,
+        nome: true,
+        matricula: true,
+        cpf: true,
+        tipo: true,
+        numCompras: true,
+      },
     });
 
     if (!socio) {
@@ -302,6 +310,54 @@ export async function POST(request: NextRequest) {
     });
 
     const novoNumeroVenda = numeroVenda || (ultimaVenda?.numeroVenda || 0) + 1;
+
+    // Regra AS200.PRG: Reserva margem no ZETRA ANTES de salvar no banco
+    if (socio.tipo === '1') { // Apenas para consignatária
+      console.log('🎯 [VENDA] Sócio tipo 1 (Consignatária) - Reservando margem no ZETRA...');
+      
+      const adeIdentificador = `M${socio.matricula}S${novoNumeroVenda}`;
+      
+      try {
+        const zetraResponse = await fetch(`${request.url.split('/api')[0]}/api/vendas/reservar-zetra`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            matricula: socio.matricula,
+            cpf: socio.cpf,
+            valorParcela: valorParcela,
+            valorLiberado: valorParcela,
+            prazo: quantidadeParcelas,
+            adeIdentificador: adeIdentificador,
+          }),
+        });
+
+        const zetraData = await zetraResponse.json();
+        console.log('📥 [VENDA] Resposta ZETRA:', zetraData);
+
+        if (!zetraData.sucesso) {
+          console.log('❌ [VENDA] ZETRA recusou a reserva:', zetraData.mensagem);
+          return NextResponse.json(
+            { 
+              error: 'ZETRA recusou a operação', 
+              mensagem: zetraData.mensagem,
+              detalhes: 'A margem não pôde ser reservada no ZETRA. Venda não foi criada.',
+            },
+            { status: 400 }
+          );
+        }
+
+        console.log('✅ [VENDA] Margem reservada no ZETRA! Prosseguindo com salvamento no banco...');
+      } catch (zetraError) {
+        console.error('❌ [VENDA] Erro ao reservar margem no ZETRA:', zetraError);
+        return NextResponse.json(
+          { 
+            error: 'Erro ao reservar margem no ZETRA',
+            detalhes: zetraError instanceof Error ? zetraError.message : 'Erro desconhecido',
+          },
+          { status: 500 }
+        );
+      }
+    }
 
     // Cria a venda com parcelas em uma transação
     const venda = await prisma.$transaction(async (tx) => {

@@ -53,6 +53,7 @@ export default function NovaVendaPage() {
   });
 
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
+  const [socioSelecionado, setSocioSelecionado] = useState<Socio | null>(null);
 
   // Busca sócios
   useEffect(() => {
@@ -100,6 +101,56 @@ export default function NovaVendaPage() {
     }
   };
 
+  // Função para consultar margem ZETRA (como AS200.PRG consulta_margem)
+  const consultarMargemZetra = async (socio: Socio, valorParcela?: number) => {
+    // Regra AS200.PRG: Se valorParcela > 0 usa ele, senão usa 0.1
+    const valorParaConsulta = (valorParcela && valorParcela > 0) ? valorParcela : 0.1;
+    
+    console.log('🔍 [Nova Venda] Consultando margem ZETRA...', {
+      socioId: socio.id,
+      valorParcela: valorParaConsulta
+    });
+
+    try {
+      const url = `/api/socios/${socio.id}/margem?valorParcela=${valorParaConsulta}`;
+      const margemResponse = await fetch(url);
+      
+      if (margemResponse.ok) {
+        const margemData = await margemResponse.json();
+        console.log('✅ [Nova Venda] Margem recebida:', margemData);
+        
+        const margemValor = parseFloat(margemData.margem) || 0;
+        
+        // Regra AS200.PRG: Se margem <= 0, mostra erro do ZETRA
+        if (margemValor <= 0 && margemData.mensagem) {
+          alert(`⚠️ Consulta ZETRA\n\n${margemData.mensagem}\n\nSócio: ${socio.nome}\nMatrícula: ${socio.matricula}`);
+          return 0;
+        }
+        
+        // Atualiza limite (margem bruta do ZETRA)
+        setFormData(prev => ({
+          ...prev,
+          limite: margemValor,
+        }));
+
+        // Exibe informação conforme fonte
+        if (margemData.fonte === 'tempo_real') {
+          alert(`✅ Margem ZETRA atualizada\n\nValor: R$ ${margemValor.toFixed(2)}\n\nSócio: ${socio.nome}\nMatrícula: ${socio.matricula}\nValor consultado: R$ ${valorParaConsulta.toFixed(2)}`);
+        } else if (margemData.fonte === 'fallback') {
+          alert(`⚠️ ${margemData.aviso}\n\nValor: R$ ${margemValor.toFixed(2)}`);
+        } else {
+          alert(`📦 Margem do banco de dados\n\nValor: R$ ${margemValor.toFixed(2)}`);
+        }
+        
+        return margemValor;
+      }
+    } catch (error) {
+      console.error('❌ [Nova Venda] Erro ao buscar margem:', error);
+      alert(`❌ Erro ao consultar margem\n\n${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      return 0;
+    }
+  };
+
   const selecionarSocio = async (socio: Socio) => {
     setFormData({
       ...formData,
@@ -111,40 +162,10 @@ export default function NovaVendaPage() {
     setSearchSocio(socio.nome);
     setShowSocioList(false);
     setSocios([]);
+    setSocioSelecionado(socio); // Guarda referência para reconsultar
 
-    // Busca margem atualizada via ZETRA (via PHP em 200.98.112.240)
-    console.log('🔍 [Nova Venda] Buscando margem na API ZETRA para sócio ID:', socio.id);
-    try {
-      const margemResponse = await fetch(`/api/socios/${socio.id}/margem`);
-      if (margemResponse.ok) {
-        const margemData = await margemResponse.json();
-        console.log('✅ [Nova Venda] Margem recebida (DIRETO):', margemData);
-        
-        // Converte margem para número (pode vir como string do banco)
-        const margemValor = parseFloat(margemData.margem) || 0;
-        
-        // Atualiza o limite com o valor da margem
-        setFormData(prev => ({
-          ...prev,
-          limite: margemValor,
-        }));
-
-        // Mostra de onde veio a margem
-        if (margemData.fonte === 'zetra_direct') {
-          console.log('🎯 [Nova Venda] Margem consultada DIRETO na API ZETRA via SOAP');
-          alert(`✅ Margem consultada DIRETO na API ZETRA (sem PHP)\n\nValor: R$ ${margemValor.toFixed(2)}\n\nMétodo: SOAP Direto\nSócio: ${socio.nome}\nMatrícula: ${socio.matricula}`);
-        } else if (margemData.fonte === 'banco_fallback') {
-          console.log('⚠️  [Nova Venda] ZETRA indisponível - usando banco de dados');
-          alert(`⚠️ ZETRA indisponível - usando valor do banco\n\nValor: R$ ${margemValor.toFixed(2)}\nErro: ${margemData.erro || 'Não especificado'}`);
-        } else {
-          console.log('📦 [Nova Venda] Margem do banco de dados');
-          alert(`📦 Margem do banco de dados\n\nValor: R$ ${margemValor.toFixed(2)}`);
-        }
-      }
-    } catch (error) {
-      console.error('❌ [Nova Venda] Erro ao buscar margem:', error);
-      alert(`❌ Erro ao consultar margem\n\n${error instanceof Error ? error.message : 'Erro desconhecado'}`);
-    }
+    // Consulta margem inicial (sem valor de parcela ainda)
+    await consultarMargemZetra(socio);
   };
 
   const selecionarConvenio = (convenio: Convenio) => {
@@ -156,7 +177,18 @@ export default function NovaVendaPage() {
     });
     setSearchConvenio(convenio.razao_soc);
     setShowConvenioList(false);
-    setConvenios([]);
+    
+
+  // Regra AS200.PRG: Quando usuário digita valor da parcela, reconsulta margem
+  const handleValorParcelaChange = async (novoValor: string) => {
+    setFormData({ ...formData, valorParcela: novoValor });
+    
+    // Se tem sócio selecionado e valor > 0, reconsulta
+    const valorNum = parseFloat(novoValor);
+    if (socioSelecionado && valorNum > 0) {
+      await consultarMargemZetra(socioSelecionado, valorNum);
+    }
+  };setConvenios([]);
   };
 
   const gerarParcelas = () => {
@@ -426,7 +458,14 @@ export default function NovaVendaPage() {
               value={formData.quantidadeParcelas}
               onChange={(e) => setFormData({ ...formData, quantidadeParcelas: parseInt(e.target.value) || 1 })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              required(e) => {
+                gerarParcelas();
+                // Regra AS200.PRG: Consulta margem quando sai do campo
+                const valor = parseFloat(e.target.value);
+                if (socioSelecionado && valor > 0) {
+                  handleValorParcelaChange(e.target.value);
+                }
+              }
             />
           </div>
 

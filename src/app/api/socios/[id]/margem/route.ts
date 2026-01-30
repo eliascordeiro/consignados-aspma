@@ -33,7 +33,7 @@ function extractXmlValue(startTag: string, endTag: string, xml: string): string 
 }
 
 // Função auxiliar para chamar o PHP ZETRA
-async function consultarMargemZetra(params: MargemZetraParams): Promise<number | null> {
+async function consultarMargemZetra(params: MargemZetraParams): Promise<number | null | { margem: number; mensagem?: string; codRetorno?: string }> {
   console.log('🔵 [ZETRA] Iniciando consulta de margem via PHP...');
   console.log('📋 [ZETRA] Parâmetros:', {
     matricula: params.matricula,
@@ -82,16 +82,18 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
 
     // Verifica se houve erro na resposta
     const sucesso = extractXmlValue('<ns13:sucesso>', '</ns13:sucesso>', xmlResponse);
+    const codRetorno = extractXmlValue('<ns13:codRetorno>', '</ns13:codRetorno>', xmlResponse);
+    const mensagem = extractXmlValue('<ns13:mensagem>', '</ns13:mensagem>', xmlResponse);
+    
     if (sucesso === 'false') {
-      const codRetorno = extractXmlValue('<ns13:codRetorno>', '</ns13:codRetorno>', xmlResponse);
-      const mensagem = extractXmlValue('<ns13:mensagem>', '</ns13:mensagem>', xmlResponse);
       console.log('❌ [ZETRA] Erro na consulta:', {
         sucesso,
         codRetorno,
         mensagem,
       });
       console.log(`⚠️  [ZETRA] ZETRA retornou erro ${codRetorno}: ${mensagem}`);
-      return null;
+      // Retorna objeto com mensagem de erro (não null) - regra AS200.PRG
+      return { margem: 0, mensagem, codRetorno };
     }
 
     // Extrai a margem do XML (equivalente ao lcx do PRG)
@@ -126,6 +128,12 @@ export async function GET(
   console.log('\n🚀 [API] /api/socios/[id]/margem - Requisição recebida');
   
   // Await params (Next.js 16+ requirement)
+  
+  // Extrai valorParcela da query string (regra AS200.PRG)
+  const { searchParams } = new URL(request.url);
+  const valorParcelaParam = searchParams.get('valorParcela');
+  const valorParcela = valorParcelaParam ? valorParcelaParam : '0.1';
+  console.log('💰 [API] Valor da parcela para consulta:', valorParcela);
   const resolvedParams = await params;
   console.log('📝 [API] Parâmetros:', resolvedParams);
   
@@ -194,7 +202,7 @@ export async function GET(
       );
     }
 
-    // Faz a consulta ZETRA via PHP
+    // Faz a consultvalorParcela, // Usa valor da query ou 0.1 padrão
     const margemZetra = await consultarMargemZetra({
       cliente: ZETRA_CONFIG.cliente,
       convenio: ZETRA_CONFIG.convenio,
@@ -210,6 +218,20 @@ export async function GET(
       // Fallback para o valor do banco se ZETRA falhar
       return NextResponse.json({
         matricula: socio.matricula,
+    // Se retornou objeto com erro (margem <= 0)
+    if (typeof margemZetra === 'object' && 'mensagem' in margemZetra) {
+      console.log('⚠️  [API] ZETRA retornou erro:', margemZetra);
+      return NextResponse.json({
+        matricula: socio.matricula,
+        nome: socio.nome,
+        margem: 0,
+        tipo: 'zetra_erro',
+        fonte: 'tempo_real',
+        mensagem: margemZetra.mensagem,
+        codRetorno: margemZetra.codRetorno,
+      });
+    }
+
         nome: socio.nome,
         margem: Number(socio.margemConsig || 0),
         tipo: 'banco_dados',
