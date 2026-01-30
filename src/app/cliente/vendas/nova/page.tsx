@@ -112,10 +112,10 @@ export default function NovaVendaPage() {
     setShowSocioList(false);
     setSocios([]);
 
-    // Busca margem atualizada via ZETRA DIRETO (sem PHP intermediário)
-    console.log('🔍 [Nova Venda] Buscando margem DIRETO na API ZETRA para sócio ID:', socio.id);
+    // Busca margem atualizada via ZETRA (via PHP em 200.98.112.240)
+    console.log('🔍 [Nova Venda] Buscando margem na API ZETRA para sócio ID:', socio.id);
     try {
-      const margemResponse = await fetch(`/api/socios/${socio.id}/margem/direct`);
+      const margemResponse = await fetch(`/api/socios/${socio.id}/margem`);
       if (margemResponse.ok) {
         const margemData = await margemResponse.json();
         console.log('✅ [Nova Venda] Margem recebida (DIRETO):', margemData);
