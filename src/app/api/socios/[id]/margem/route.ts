@@ -153,16 +153,44 @@ async function calcularDescontosDoMes(socioId: string, matricula: string, dataCo
   try {
     console.log(`📊 [CÁLCULO] Calculando descontos para matrícula ${matricula} em ${dataCorte.mes}/${dataCorte.ano}`);
     
+    // Primeiro, vamos contar quantas parcelas existem no total para debug
+    const totalParcelas = await prisma.parcela.count({
+      where: {
+        venda: {
+          socioId: socioId,
+        },
+      },
+    });
+    console.log(`📋 [CÁLCULO] Total de parcelas do sócio: ${totalParcelas}`);
+    
+    // Contar parcelas do mês de corte (pagas e não pagas)
+    const parcelasDoMes = await prisma.parcela.count({
+      where: {
+        venda: {
+          socioId: socioId,
+        },
+        dataVencimento: {
+          gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1),
+          lt: new Date(dataCorte.ano, dataCorte.mes, 1),
+        },
+      },
+    });
+    console.log(`📋 [CÁLCULO] Total de parcelas do mês ${dataCorte.mes}/${dataCorte.ano}: ${parcelasDoMes}`);
+    
     // Prisma estrutura: Parcela -> Venda -> Socio
+    // Busca parcelas não pagas (baixa vazio ou null)
     const result = await prisma.parcela.aggregate({
       _sum: {
         valor: true,
       },
       where: {
         venda: {
-          socioId: socioId, // Relação através de Venda
+          socioId: socioId,
         },
-        baixa: '', // Não pagas (regra AS200.PRG)
+        OR: [
+          { baixa: '' },
+          { baixa: null },
+        ],
         dataVencimento: {
           gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1), // Primeiro dia do mês
           lt: new Date(dataCorte.ano, dataCorte.mes, 1), // Primeiro dia do próximo mês
@@ -171,7 +199,7 @@ async function calcularDescontosDoMes(socioId: string, matricula: string, dataCo
     });
 
     const totalDescontos = Number(result._sum.valor || 0);
-    console.log(`✅ [CÁLCULO] Total de descontos no mês: R$ ${totalDescontos.toFixed(2)}`);
+    console.log(`✅ [CÁLCULO] Total de descontos do mês (não pagas): R$ ${totalDescontos.toFixed(2)}`);
     
     return totalDescontos;
   } catch (error) {
