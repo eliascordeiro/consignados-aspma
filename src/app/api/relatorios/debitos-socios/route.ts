@@ -6,22 +6,22 @@ import ExcelJS from 'exceljs';
 const prisma = new PrismaClient();
 
 interface ParcelaRelatorio {
-  id: number;
+  id: string;
   numeroParcela: number;
-  totalParcelas: number;
   valor: number;
   dataVencimento: Date;
   baixa: string | null;
   venda: {
-    numeroVenda: string;
+    numeroVenda: number;
+    quantidadeParcelas: number;
     socio: {
-      matricula: string;
+      matricula: string | null;
       nome: string;
     };
     convenio: {
-      codigo: string;
+      codigo: string | null;
       razao_soc: string;
-    };
+    } | null;
   };
 }
 
@@ -83,7 +83,9 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         venda: {
-          include: {
+          select: {
+            numeroVenda: true,
+            quantidadeParcelas: true,
             socio: {
               select: {
                 matricula: true,
@@ -104,7 +106,7 @@ export async function GET(request: NextRequest) {
         { venda: { numeroVenda: 'asc' } },
         { numeroParcela: 'asc' },
       ],
-    }) as ParcelaRelatorio[];
+    });
 
     if (parcelas.length === 0) {
       return NextResponse.json(
@@ -117,7 +119,7 @@ export async function GET(request: NextRequest) {
     const grupos: Map<string, GrupoSocio> = new Map();
 
     parcelas.forEach((parcela) => {
-      const matricula = parcela.venda.socio.matricula;
+      const matricula = parcela.venda.socio.matricula || '';
       
       if (!grupos.has(matricula)) {
         grupos.set(matricula, {
@@ -129,14 +131,18 @@ export async function GET(request: NextRequest) {
       }
 
       const grupo = grupos.get(matricula)!;
+      const convenioTexto = parcela.venda.convenio 
+        ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`.substring(0, 38)
+        : 'Sem convênio';
+      
       grupo.parcelas.push({
-        convenio: `${parcela.venda.convenio.codigo} - ${parcela.venda.convenio.razao_soc}`.substring(0, 38),
+        convenio: convenioTexto,
         pc: parcela.numeroParcela,
-        de: parcela.totalParcelas,
-        valor: parcela.valor,
+        de: parcela.venda.quantidadeParcelas,
+        valor: Number(parcela.valor),
         st: parcela.baixa ? 'OK' : '',
       });
-      grupo.total += parcela.valor;
+      grupo.total += Number(parcela.valor);
     });
 
     const gruposArray = Array.from(grupos.values());
