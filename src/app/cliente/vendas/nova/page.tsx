@@ -69,7 +69,8 @@ export default function NovaVendaPage() {
 
   // Busca sócios
   useEffect(() => {
-    if (searchSocio.length >= 2) {
+    // Não busca se já tem sócio selecionado (evita reabrir lista após seleção)
+    if (searchSocio.length >= 2 && !formData.socioId) {
       fetchSocios();
     } else if (searchSocio.length < 2) {
       setShowSocioList(false);
