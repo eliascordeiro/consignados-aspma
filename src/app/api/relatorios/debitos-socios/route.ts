@@ -181,12 +181,9 @@ export async function GET(request: NextRequest) {
         decimalSeparator,
       });
       
-      const buffer = Buffer.from(
-        encoding === 'iso-8859-1' 
-          ? iconv.encode(csvContent, 'iso-8859-1')
-          : csvContent, 
-        encoding === 'iso-8859-1' ? undefined : 'utf-8'
-      );
+      const buffer = encoding === 'iso-8859-1'
+        ? iconv.encode(csvContent, 'iso-8859-1')
+        : Buffer.from(csvContent, 'utf-8');
       
       return new NextResponse(buffer, {
         headers: {
