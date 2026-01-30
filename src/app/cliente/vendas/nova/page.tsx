@@ -183,7 +183,7 @@ export default function NovaVendaPage() {
   // Valida se valor da parcela excede margem disponível (sem reconsultar)
   const validarValorParcela = (valor: string) => {
     const valorNum = parseFloat(valor);
-    const margemAtual = margemDisponivel || 0;
+    const margemAtual = formData.limite || 0;
     
     if (valorNum > margemAtual) {
       alert(
@@ -269,7 +269,7 @@ export default function NovaVendaPage() {
 
     // REGRA CRÍTICA 1: Bloqueia se valor da PARCELA > margem disponível
     const valorParcela = parseFloat(formData.valorParcela || '0');
-    const margemAtual = margemDisponivel || 0;
+    const margemAtual = formData.limite || 0;
     
     if (valorParcela > margemAtual) {
       alert(
