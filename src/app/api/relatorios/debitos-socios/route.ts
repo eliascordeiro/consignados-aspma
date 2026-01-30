@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const mesAno = searchParams.get('mesAno'); // formato: YYYY-MM
     const convenioId = searchParams.get('convenioId');
+    const socioMatricula = searchParams.get('socioMatricula');
     const formato = searchParams.get('formato') || 'pdf'; // 'pdf' ou 'excel'
 
     if (!mesAno) {
@@ -74,13 +75,21 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Adiciona filtro de convênio se especificado (filtro aninhado correto)
-    if (convenioId) {
-      where.venda = {
-        convenio: {
+    // Adiciona filtro de convênio e/ou sócio se especificado
+    if (convenioId || socioMatricula) {
+      where.venda = {};
+      
+      if (convenioId) {
+        where.venda.convenio = {
           id: parseInt(convenioId),
-        },
-      };
+        };
+      }
+      
+      if (socioMatricula) {
+        where.venda.socio = {
+          matricula: socioMatricula,
+        };
+      }
     }
 
     const parcelas = await prisma.parcela.findMany({

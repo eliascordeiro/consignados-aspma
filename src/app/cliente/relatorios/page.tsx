@@ -10,18 +10,29 @@ interface Convenio {
   razao_soc: string;
 }
 
+interface Socio {
+  id: number;
+  matricula: string;
+  nome: string;
+}
+
 export default function RelatoriosPage() {
   const router = useRouter();
   const [convenios, setConvenios] = useState<Convenio[]>([]);
+  const [socios, setSocios] = useState<Socio[]>([]);
   const [filtros, setFiltros] = useState({
     convenioId: '',
     convenioNome: '',
+    socioMatricula: '',
+    socioNome: '',
     mesAno: new Date().toISOString().slice(0, 7), // YYYY-MM
   });
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [searchConvenio, setSearchConvenio] = useState('');
   const [showConvenioList, setShowConvenioList] = useState(false);
+  const [searchSocio, setSearchSocio] = useState('');
+  const [showSocioList, setShowSocioList] = useState(false);
   const [showCSVModal, setShowCSVModal] = useState(false);
   const [csvOptions, setCsvOptions] = useState({
     delimiter: ';',
@@ -38,6 +49,15 @@ export default function RelatoriosPage() {
       setShowConvenioList(false);
     }
   }, [searchConvenio]);
+
+  // Busca sócios ao digitar
+  useEffect(() => {
+    if (searchSocio.length >= 2 && !filtros.socioMatricula) {
+      carregarSocios();
+    } else if (searchSocio.length < 2) {
+      setShowSocioList(false);
+    }
+  }, [searchSocio]);
 
   const carregarConvenios = async () => {
     try {
@@ -85,6 +105,51 @@ export default function RelatoriosPage() {
     setConvenios([]);
   };
 
+  const carregarSocios = async () => {
+    try {
+      const response = await fetch(`/api/socios?search=${searchSocio}`);
+      if (response.ok) {
+        const data = await response.json();
+        const sociosData = data.data || data;
+        if (Array.isArray(sociosData)) {
+          setSocios(sociosData);
+          setShowSocioList(true);
+        } else {
+          console.error('API retornou dados inválidos:', data);
+          setSocios([]);
+        }
+      } else {
+        console.error('Erro ao carregar sócios:', response.status);
+        setSocios([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar sócios:', error);
+      setSocios([]);
+    }
+  };
+
+  const selecionarSocio = (socio: Socio) => {
+    setFiltros({
+      ...filtros,
+      socioMatricula: socio.matricula,
+      socioNome: socio.nome,
+    });
+    setSearchSocio(`${socio.matricula} - ${socio.nome}`);
+    setShowSocioList(false);
+    setSocios([]);
+  };
+
+  const limparSocio = () => {
+    setFiltros({
+      ...filtros,
+      socioMatricula: '',
+      socioNome: '',
+    });
+    setSearchSocio('');
+    setShowSocioList(false);
+    setSocios([]);
+  };
+
   const gerarRelatorioPDF = async () => {
     if (!filtros.mesAno) {
       alert('Selecione o período (Mês-Ano)');
@@ -98,6 +163,7 @@ export default function RelatoriosPage() {
       const queryParams = new URLSearchParams({
         mesAno: filtros.mesAno,
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
+        ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         formato: 'pdf'
       });
 
@@ -150,6 +216,7 @@ export default function RelatoriosPage() {
       const queryParams = new URLSearchParams({
         mesAno: filtros.mesAno,
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
+        ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         formato: 'excel'
       });
 
@@ -203,6 +270,7 @@ export default function RelatoriosPage() {
       const queryParams = new URLSearchParams({
         mesAno: filtros.mesAno,
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
+        ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         formato: 'csv',
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
@@ -270,6 +338,51 @@ export default function RelatoriosPage() {
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md">
         <div className="space-y-4">
+          {/* Sócio (opcional) - Com busca */}
+          <div className="relative">
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+              Sócio - Matrícula/Nome (opcional)
+            </label>
+            <input
+              type="text"
+              value={searchSocio}
+              onChange={(e) => {
+                setSearchSocio(e.target.value);
+                if (!e.target.value) {
+                  limparSocio();
+                }
+              }}
+              placeholder="Digite matrícula ou nome (ou deixe vazio para todos)"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {filtros.socioMatricula && (
+              <button
+                type="button"
+                onClick={limparSocio}
+                className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                title="Limpar seleção"
+              >
+                ✕
+              </button>
+            )}
+            {showSocioList && socios.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                {socios.map((socio) => (
+                  <div
+                    key={socio.id}
+                    onClick={() => selecionarSocio(socio)}
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white">{socio.nome}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      {socio.matricula && <span>Matrícula: {socio.matricula}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Convênio (opcional) - Com busca */}
           <div className="relative">
             <label className="block text-sm font-bold mb-2 dark:text-gray-300">
