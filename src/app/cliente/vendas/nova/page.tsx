@@ -55,6 +55,18 @@ export default function NovaVendaPage() {
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
   const [socioSelecionado, setSocioSelecionado] = useState<Socio | null>(null);
 
+  // Formata valor para moeda brasileira (999.999.999,99)
+  const formatarMoeda = (valor: number | string): string => {
+    const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+    if (isNaN(num)) return '';
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // Remove formatação de moeda e retorna número
+  const desformatarMoeda = (valorFormatado: string): string => {
+    return valorFormatado.replace(/\./g, '').replace(',', '.');
+  };
+
   // Busca sócios
   useEffect(() => {
     if (searchSocio.length >= 2 && !formData.socioId) {
@@ -491,18 +503,24 @@ export default function NovaVendaPage() {
           <div>
             <label className="block text-sm font-bold mb-2 dark:text-gray-300">Valor da Parcela *</label>
             <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.valorParcela}
-              onChange={(e) => setFormData({ ...formData, valorParcela: e.target.value })}
+              type="text"
+              value={formData.valorParcela ? formatarMoeda(formData.valorParcela) : ''}
+              onChange={(e) => {
+                const valorDigitado = e.target.value;
+                // Permite apenas números, vírgula e ponto
+                const valorLimpo = valorDigitado.replace(/[^\d,]/g, '');
+                const valorNumerico = desformatarMoeda(valorLimpo);
+                setFormData({ ...formData, valorParcela: valorNumerico });
+              }}
               onBlur={(e) => {
                 // Valida se valor não excede margem - SE EXCEDER, BLOQUEIA
-                const valorValido = validarValorParcela(e.target.value);
+                const valorNumerico = desformatarMoeda(e.target.value);
+                const valorValido = validarValorParcela(valorNumerico);
                 if (valorValido) {
                   gerarParcelas();
                 }
               }}
+              placeholder="0,00"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -542,16 +560,15 @@ export default function NovaVendaPage() {
                           type="text"
                           value={new Date(parcela.dataVencimento).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}
                           readOnly
-                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed"
                         />
                       </td>
                       <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right">
                         <input
-                          type="number"
-                          step="0.01"
-                          value={parcela.valor}
-                          onChange={(e) => atualizarParcela(index, 'valor', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          type="text"
+                          value={formatarMoeda(parcela.valor)}
+                          readOnly
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed"
                         />
                       </td>
                     </tr>
@@ -561,7 +578,7 @@ export default function NovaVendaPage() {
                   <tr>
                     <td colSpan={2} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">TOTAL:</td>
                     <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">
-                      R$ {parcelas.reduce((sum, p) => sum + p.valor, 0).toFixed(2)}
+                      R$ {formatarMoeda(parcelas.reduce((sum, p) => sum + p.valor, 0))}
                     </td>
                   </tr>
                 </tfoot>
