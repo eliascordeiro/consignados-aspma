@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import jsPDF from 'jspdf';
 import ExcelJS from 'exceljs';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const MYSQL_CONFIG = {
   host: '200.98.112.240',
@@ -43,34 +46,41 @@ export async function GET(request: NextRequest) {
     const connection = await mysql.createConnection(MYSQL_CONFIG);
 
     try {
-      // Construir query SQL para MySQL
+      // Se filtrar por convênio, buscar código no PostgreSQL primeiro
+      let codigoConvenio: string | null = null;
+      if (convenioId) {
+        const convenio = await prisma.convenio.findUnique({
+          where: { id: parseInt(convenioId) },
+          select: { codigo: true },
+        });
+        codigoConvenio = convenio?.codigo || null;
+      }
+
+      // MySQL tem estrutura desnormalizada - dados já estão na tabela parcelas
       let query = `
         SELECT 
-          v.matricula,
-          s.associado,
-          c.codigo as convenio_codigo,
-          c.razao_soc as convenio_nome,
-          p.num_parcela,
-          v.qtd_parcelas,
+          p.matricula,
+          p.associado,
+          p.codconven as convenio_codigo,
+          p.conveniado as convenio_nome,
+          CAST(p.nrseq AS UNSIGNED) as num_parcela,
+          p.parcelas as qtd_parcelas,
           p.valor,
           p.baixa as status
         FROM parcelas p
-        INNER JOIN vendas v ON p.num_venda = v.num_venda
-        INNER JOIN socios s ON v.matricula = s.matricula
-        INNER JOIN convenios c ON v.id_convenio = c.id
         WHERE YEAR(p.vencimento) = ? 
           AND MONTH(p.vencimento) = ?
       `;
 
       const params: any[] = [ano, mes];
 
-      // Filtro opcional por convênio
-      if (convenioId) {
-        query += ` AND c.id = ?`;
-        params.push(parseInt(convenioId));
+      // Filtro opcional por código do convênio
+      if (codigoConvenio) {
+        query += ` AND p.codconven = ?`;
+        params.push(codigoConvenio);
       }
 
-      query += ` ORDER BY v.matricula, v.num_venda, p.num_parcela`;
+      query += ` ORDER BY p.matricula, p.sequencia, p.nrseq`;
 
       const [rows] = await connection.execute(query, params);
       const parcelas = rows as ParcelaMySQL[];
