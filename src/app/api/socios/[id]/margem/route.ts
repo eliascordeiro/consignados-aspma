@@ -125,6 +125,58 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
   }
 }
 
+// Função para calcular data de corte (Regra AS200.PRG)
+// Se dia > 09: próximo mês, senão: mês atual
+function calcularDataCorte(): { mes: number; ano: number } {
+  const hoje = new Date();
+  const dia = hoje.getDate();
+  let mes = hoje.getMonth() + 1; // getMonth() retorna 0-11
+  let ano = hoje.getFullYear();
+
+  if (dia > 9) {
+    // Próximo mês
+    if (mes === 12) {
+      mes = 1;
+      ano = ano + 1;
+    } else {
+      mes = mes + 1;
+    }
+  }
+  // Senão, usa mês/ano atual
+
+  return { mes, ano };
+}
+
+// Função para calcular descontos do mês (parcelas não pagas)
+// Regra AS200.PRG: SELECT sum(valor) FROM parcelas WHERE month(vencimento) = lMes AND year(vencimento) = lAno AND baixa = '' AND matricula = X
+async function calcularDescontosDoMes(matricula: string, dataCorte: { mes: number; ano: number }): Promise<number> {
+  try {
+    console.log(`📊 [CÁLCULO] Calculando descontos para matrícula ${matricula} em ${dataCorte.mes}/${dataCorte.ano}`);
+    
+    const result = await prisma.parcela.aggregate({
+      _sum: {
+        valor: true,
+      },
+      where: {
+        matricula: matricula,
+        baixa: '', // Não pagas (regra AS200.PRG)
+        vencimento: {
+          gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1), // Primeiro dia do mês
+          lt: new Date(dataCorte.ano, dataCorte.mes, 1), // Primeiro dia do próximo mês
+        },
+      },
+    });
+
+    const totalDescontos = Number(result._sum.valor || 0);
+    console.log(`✅ [CÁLCULO] Total de descontos no mês: R$ ${totalDescontos.toFixed(2)}`);
+    
+    return totalDescontos;
+  } catch (error) {
+    console.error('❌ [CÁLCULO] Erro ao calcular descontos:', error);
+    return 0;
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -156,6 +208,7 @@ export async function GET(
         tipo: true,
         margemConsig: true,
         cpf: true,
+        limite: true, // NOVO: campo limite para tipos 3 e 4
       },
     });
 
@@ -173,11 +226,37 @@ export async function GET(
       nome: socio.nome,
       tipo: socio.tipo,
       margemConsig: socio.margemConsig,
+      limite: socio.limite,
     });
 
-    // Se não for consignatária (tipo != 1), retorna o valor do banco
+    // REGRA AS200.PRG: TIPO 3 ou 4 = Cálculo local (limite - descontos)
+    if (socio.tipo === '3' || socio.tipo === '4') {
+      console.log('🧮 [API] Tipo 3 ou 4, calculando margem local (limite - descontos)');
+      
+      const dataCorte = calcularDataCorte();
+      console.log(`📅 [API] Data de corte: ${dataCorte.mes}/${dataCorte.ano}`);
+      
+      const descontos = await calcularDescontosDoMes(socio.matricula || '', dataCorte);
+      const limite = Number(socio.limite || 0);
+      const margem = limite - descontos;
+      
+      console.log(`💰 [API] Cálculo: ${limite} (limite) - ${descontos} (descontos) = ${margem} (margem)`);
+      
+      return NextResponse.json({
+        matricula: socio.matricula,
+        nome: socio.nome,
+        margem: margem,
+        limite: limite,
+        descontos: descontos,
+        mesReferencia: `${dataCorte.mes}/${dataCorte.ano}`,
+        tipo: 'calculo_local',
+        fonte: 'local',
+      });
+    }
+
+    // REGRA AS200.PRG: Outros tipos (exceto 3 e 4) também usam ZETRA, não tipo != 1
     if (socio.tipo !== '1') {
-      console.log('📦 [API] Tipo != 1, retornando margem do banco de dados');
+      console.log('📦 [API] Tipo != 1, 3 ou 4, retornando margem do banco de dados');
       return NextResponse.json({
         matricula: socio.matricula,
         nome: socio.nome,
