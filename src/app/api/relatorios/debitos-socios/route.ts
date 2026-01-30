@@ -202,13 +202,13 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.setFontSize(8);
     doc.setFont('courier', 'bold');
     doc.text('Matrícula', 10, y);
-    doc.text('Associado', 25, y);
-    doc.text('Conveniado', 70, y);
-    doc.text('Pc', 165, y);
-    doc.text('De', 175, y);
-    doc.text('Valor', 200, y, { align: 'right' });
-    doc.text('Total', 235, y, { align: 'right' });
-    doc.text('St', 255, y);
+    doc.text('Associado', 35, y);
+    doc.text('Conveniado', 90, y);
+    doc.text('Pc', 175, y);
+    doc.text('De', 185, y);
+    doc.text('Valor', 210, y, { align: 'right' });
+    doc.text('Total', 245, y, { align: 'right' });
+    doc.text('St', 265, y);
     y += 5;
     doc.line(10, y, 280, y);
     y += 5;
@@ -235,24 +235,24 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
 
       // Associado - só na primeira linha do grupo
       if (index === 0) {
-        doc.text(grupo.nome, 25, y);
+        doc.text(grupo.nome, 35, y);
       }
 
       // Conveniado
-      doc.text(parcela.convenio, 70, y);
+      doc.text(parcela.convenio, 90, y);
 
       // Pc (2 dígitos)
-      doc.text(parcela.pc.toString().padStart(2, '0'), 165, y);
+      doc.text(parcela.pc.toString().padStart(2, '0'), 175, y);
 
       // De (2 dígitos)
-      doc.text(parcela.de.toString().padStart(2, '0'), 175, y);
+      doc.text(parcela.de.toString().padStart(2, '0'), 185, y);
 
       // Valor
       const valorFormatado = parcela.valor.toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      doc.text(valorFormatado, 200, y, { align: 'right' });
+      doc.text(valorFormatado, 210, y, { align: 'right' });
 
       // Total - só na última linha do grupo
       if (index === grupo.parcelas.length - 1) {
@@ -260,11 +260,11 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        doc.text(totalFormatado, 235, y, { align: 'right' });
+        doc.text(totalFormatado, 245, y, { align: 'right' });
       }
 
       // St
-      doc.text(parcela.st, 255, y);
+      doc.text(parcela.st, 265, y);
 
       y += 5;
     });
@@ -281,12 +281,12 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
 
   y += 5;
   doc.setFont('courier', 'bold');
-  doc.text('TOTAL GERAL:', 170, y);
+  doc.text('TOTAL GERAL:', 180, y);
   const totalGeralFormatado = totalGeral.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  doc.text(totalGeralFormatado, 235, y, { align: 'right' });
+  doc.text(totalGeralFormatado, 245, y, { align: 'right' });
 
   return doc.output('arraybuffer') as ArrayBuffer;
 }
