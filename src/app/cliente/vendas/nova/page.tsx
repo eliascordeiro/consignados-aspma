@@ -69,10 +69,11 @@ export default function NovaVendaPage() {
 
   // Busca sócios
   useEffect(() => {
-    if (searchSocio.length >= 2 && !formData.socioId) {
+    if (searchSocio.length >= 2) {
       fetchSocios();
     } else if (searchSocio.length < 2) {
       setShowSocioList(false);
+      setSocios([]);
     }
   }, [searchSocio]);
 
@@ -145,13 +146,12 @@ export default function NovaVendaPage() {
           limite: margemValor,
         }));
 
-        // Exibe informação conforme fonte
-        if (margemData.fonte === 'tempo_real') {
-          alert(`✅ Margem ZETRA atualizada\n\nValor: R$ ${margemValor.toFixed(2)}\n\nSócio: ${socio.nome}\nMatrícula: ${socio.matricula}\nValor consultado: R$ ${valorParaConsulta.toFixed(2)}`);
-        } else if (margemData.fonte === 'fallback') {
-          alert(`⚠️ ${margemData.aviso}\n\nValor: R$ ${margemValor.toFixed(2)}`);
-        } else {
-          alert(`📦 Margem do banco de dados\n\nValor: R$ ${margemValor.toFixed(2)}`);
+        // Log da margem sem alerta
+        console.log(`✅ [Nova Venda] Margem obtida: R$ ${margemValor.toFixed(2)} - Fonte: ${margemData.fonte}`);
+        
+        // Alerta apenas se houver erro/aviso crítico
+        if (margemData.fonte === 'fallback') {
+          console.warn(`⚠️ ${margemData.aviso}`);
         }
         
         return margemValor;
