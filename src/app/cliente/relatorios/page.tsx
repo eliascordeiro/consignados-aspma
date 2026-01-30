@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Convenio {
   id: number;
@@ -190,6 +191,17 @@ export default function RelatoriosPage() {
         <p className="text-gray-600 dark:text-gray-400 mt-2">
           Gere relatórios de parcelas por período
         </p>
+      </div>
+
+      {/* Link para Comparação */}
+      <div className="mb-6">
+        <Link 
+          href="/cliente/relatorios/comparacao"
+          className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
+        >
+          <span>🔄</span>
+          Comparar PostgreSQL vs MySQL
+        </Link>
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md">
