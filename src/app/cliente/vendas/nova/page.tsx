@@ -186,7 +186,14 @@ export default function NovaVendaPage() {
     const margemAtual = margemDisponivel || 0;
     
     if (valorNum > margemAtual) {
-      alert(`⚠️ ATENÇÃO! Valor da parcela (R$ ${valorNum.toFixed(2)}) é MAIOR que a margem disponível (R$ ${margemAtual.toFixed(2)})`);
+      alert(
+        `❌ VALOR BLOQUEADO!\n\n` +
+        `Valor da Parcela: R$ ${valorNum.toFixed(2)}\n` +
+        `Margem Disponível: R$ ${margemAtual.toFixed(2)}\n\n` +
+        `Digite um valor menor ou igual à margem disponível.`
+      );
+      // Limpa o valor da parcela
+      setFormData({ ...formData, valorParcela: '' });
       return false;
     }
     return true;
@@ -260,14 +267,19 @@ export default function NovaVendaPage() {
       return;
     }
 
-    // Verifica se o valor total não ultrapassa o limite
+    // REGRA CRÍTICA: Bloqueia venda se valor total > margem disponível
     const valorTotal = parcelas.reduce((sum, p) => sum + p.valor, 0);
-    if (formData.limite > 0 && formData.valorParcela && parseFloat(formData.valorParcela) > formData.limite) {
-      const confirma = confirm(
-        `Atenção: O valor da parcela (R$ ${parseFloat(formData.valorParcela).toFixed(2)}) ` +
-        `ultrapassa o limite disponível (R$ ${formData.limite.toFixed(2)}). Deseja continuar?`
+    const margemAtual = margemDisponivel || 0;
+    
+    if (valorTotal > margemAtual) {
+      alert(
+        `❌ BLOQUEADO! Não é possível gravar esta venda.\n\n` +
+        `Valor Total: R$ ${valorTotal.toFixed(2)}\n` +
+        `Margem Disponível: R$ ${margemAtual.toFixed(2)}\n` +
+        `Excedente: R$ ${(valorTotal - margemAtual).toFixed(2)}\n\n` +
+        `Reduza o valor da parcela ou a quantidade de parcelas.`
       );
-      if (!confirma) return;
+      return; // BLOQUEIA completamente
     }
 
     setLoading(true);
@@ -472,9 +484,11 @@ export default function NovaVendaPage() {
               value={formData.valorParcela}
               onChange={(e) => setFormData({ ...formData, valorParcela: e.target.value })}
               onBlur={(e) => {
-                // Valida se valor não excede margem
-                validarValorParcela(e.target.value);
-                gerarParcelas();
+                // Valida se valor não excede margem - SE EXCEDER, BLOQUEIA
+                const valorValido = validarValorParcela(e.target.value);
+                if (valorValido) {
+                  gerarParcelas();
+                }
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
