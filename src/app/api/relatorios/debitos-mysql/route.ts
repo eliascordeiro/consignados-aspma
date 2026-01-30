@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
           ? iconv.encode(csvContent, 'iso-8859-1')
           : Buffer.from(csvContent, 'utf-8');
         
-        return new NextResponse(buffer, {
+        return new NextResponse(buffer as unknown as BodyInit, {
           headers: {
             'Content-Type': 'text/csv; charset=' + encoding,
             'Content-Disposition': `attachment; filename="debitos-mysql-${mesAno}.csv"`,
