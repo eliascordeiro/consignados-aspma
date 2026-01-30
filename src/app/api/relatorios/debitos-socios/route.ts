@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     // Gerar PDF ou Excel
     if (formato === 'pdf') {
       const pdfBuffer = await gerarPDF(gruposArray, mes, ano);
-      return new NextResponse(pdfBuffer, {
+      return new NextResponse(pdfBuffer.buffer, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.pdf"`,
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       const excelBuffer = await gerarExcel(gruposArray, mes, ano);
-      return new NextResponse(excelBuffer, {
+      return new NextResponse(excelBuffer.buffer, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="debitos-socios-${mesAno}.xlsx"`,
