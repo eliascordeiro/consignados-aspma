@@ -73,9 +73,12 @@ export async function GET(request: NextRequest) {
       },
     };
 
+    // Adiciona filtro de convênio se especificado (filtro aninhado correto)
     if (convenioId) {
       where.venda = {
-        convenioId: parseInt(convenioId),
+        convenio: {
+          id: parseInt(convenioId),
+        },
       };
     }
 
