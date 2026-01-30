@@ -93,7 +93,11 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
       });
       console.log(`⚠️  [ZETRA] ZETRA retornou erro ${codRetorno}: ${mensagem}`);
       // Retorna objeto com mensagem de erro (não null) - regra AS200.PRG
-      return { margem: 0, mensagem, codRetorno };
+      return { 
+        margem: 0, 
+        mensagem: mensagem || undefined, 
+        codRetorno: codRetorno || undefined 
+      };
     }
 
     // Extrai a margem do XML (equivalente ao lcx do PRG)
