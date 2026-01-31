@@ -77,20 +77,24 @@ export async function GET(request: NextRequest) {
 
     // Adiciona filtro de convênio e/ou sócio se especificado
     if (convenioId || socioMatricula) {
-      where.venda = {};
+      const vendaFilter: any = {};
       
       if (convenioId) {
-        where.venda.convenio = {
+        vendaFilter.convenio = {
           id: parseInt(convenioId),
         };
       }
       
       if (socioMatricula) {
-        where.venda.socio = {
+        vendaFilter.socio = {
           matricula: socioMatricula,
         };
       }
+      
+      where.venda = vendaFilter;
     }
+
+    console.log('Filtros aplicados:', JSON.stringify(where, null, 2));
 
     const parcelas = await prisma.parcela.findMany({
       where,
