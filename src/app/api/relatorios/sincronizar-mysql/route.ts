@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     console.log('Tentando conectar ao MySQL:', {
       host: process.env.MYSQL_HOST || '200.98.112.240',
       user: process.env.MYSQL_USER || 'root',
-      database: process.env.MYSQL_DATABASE || 'consignados',
+      database: process.env.MYSQL_DATABASE || 'aspma',
       port: Number(process.env.MYSQL_PORT) || 3306,
     });
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       host: process.env.MYSQL_HOST || '200.98.112.240',
       user: process.env.MYSQL_USER || 'root',
       password: process.env.MYSQL_PASSWORD || 'Aspma@2024',
-      database: process.env.MYSQL_DATABASE || 'consignados',
+      database: process.env.MYSQL_DATABASE || 'aspma',
       port: Number(process.env.MYSQL_PORT) || 3306,
       connectTimeout: 10000,
     });
