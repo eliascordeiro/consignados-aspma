@@ -189,7 +189,6 @@ export async function POST(request: NextRequest) {
           });
           console.log(`Sócio atualizado com empresa: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
         }
-        }
 
         // Buscar convênio pelo código
         let convenio = await prisma.convenio.findFirst({
