@@ -598,10 +598,20 @@ export default function ComparacaoRelatoriosPage() {
               {/* Mensagem de erro geral */}
               {syncResult.error && (
                 <div className="bg-red-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <h3 className="font-bold text-lg mb-2 text-red-900 dark:text-red-300">Erro</h3>
-                  <p className="text-sm text-red-700 dark:text-red-400">{syncResult.error}</p>
+                  <h3 className="font-bold text-lg mb-2 text-red-900 dark:text-red-300">❌ Erro</h3>
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">{syncResult.error}</p>
                   {syncResult.details && (
-                    <p className="text-xs text-red-600 dark:text-red-500 mt-2">{syncResult.details}</p>
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-2 font-mono bg-red-100 dark:bg-gray-800 p-2 rounded">
+                      {syncResult.details}
+                    </p>
+                  )}
+                  {syncResult.help && (
+                    <div className="mt-3 bg-yellow-50 dark:bg-gray-800 border-l-4 border-yellow-400 p-3 rounded">
+                      <p className="text-xs font-bold text-yellow-900 dark:text-yellow-300 mb-1">💡 Solução:</p>
+                      <p className="text-xs text-yellow-800 dark:text-yellow-400 whitespace-pre-wrap">
+                        {syncResult.help}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}

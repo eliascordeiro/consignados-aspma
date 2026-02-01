@@ -50,12 +50,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Conectar ao MySQL
+    console.log('Tentando conectar ao MySQL:', {
+      host: process.env.MYSQL_HOST || '200.98.112.240',
+      user: process.env.MYSQL_USER || 'root',
+      database: process.env.MYSQL_DATABASE || 'consignados',
+      port: Number(process.env.MYSQL_PORT) || 3306,
+    });
+
     connection = await mysql.createConnection({
       host: process.env.MYSQL_HOST || '200.98.112.240',
       user: process.env.MYSQL_USER || 'root',
       password: process.env.MYSQL_PASSWORD || 'Aspma@2024',
       database: process.env.MYSQL_DATABASE || 'consignados',
       port: Number(process.env.MYSQL_PORT) || 3306,
+      connectTimeout: 10000,
     });
 
     // Buscar parcelas do MySQL para o período
@@ -253,10 +261,27 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro na sincronização:', error);
+    
+    // Detectar erro de acesso negado ao MySQL
+    const isAccessDenied = error instanceof Error && 
+      (error.message.includes('Access denied') || error.message.includes('ER_ACCESS_DENIED_ERROR'));
+    
+    let errorMessage = 'Erro ao sincronizar dados';
+    let helpText = '';
+    
+    if (isAccessDenied) {
+      errorMessage = 'Acesso negado ao MySQL remoto';
+      helpText = 'O servidor MySQL (200.98.112.240) não permite conexões do Railway. ' +
+                 'Solução: Execute no MySQL: GRANT ALL PRIVILEGES ON consignados.* TO \'root\'@\'%\' IDENTIFIED BY \'Aspma@2024\'; FLUSH PRIVILEGES; ' +
+                 'Ou configure um usuário específico nas variáveis de ambiente do Railway. ' +
+                 'Veja MYSQL_SYNC_CONFIG.md para mais detalhes.';
+    }
+    
     return NextResponse.json(
       {
-        error: 'Erro ao sincronizar dados',
+        error: errorMessage,
         details: error instanceof Error ? error.message : 'Erro desconhecido',
+        help: helpText || undefined,
         resultado: result,
       },
       { status: 500 }
