@@ -30,6 +30,8 @@ export default function ComparacaoRelatoriosPage() {
     includeHeader: true,
     decimalSeparator: ',',
   });
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncResult, setSyncResult] = useState<any>(null);
 
   // Busca convênios ao digitar
   useEffect(() => {
@@ -76,6 +78,66 @@ export default function ComparacaoRelatoriosPage() {
     setSearchConvenio('');
     setShowConvenioList(false);
     setConvenios([]);
+  };
+
+  const sincronizarDados = async () => {
+    if (!filtros.mesAno) {
+      alert('Selecione o período (Mês-Ano)');
+      return;
+    }
+
+    const confirmacao = confirm(
+      `Deseja sincronizar os dados do MySQL para o PostgreSQL?\n\n` +
+      `Período: ${filtros.mesAno}\n` +
+      `${filtros.convenioId ? `Convênio: ${filtros.convenioNome}\n` : 'Todos os convênios\n'}` +
+      `\nIsso irá criar/atualizar vendas e parcelas no PostgreSQL baseado nos dados do MySQL.`
+    );
+
+    if (!confirmacao) return;
+
+    setLoading(true);
+    setProgress(10);
+    setSyncResult(null);
+
+    try {
+      setProgress(30);
+
+      const response = await fetch('/api/relatorios/sincronizar-mysql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mesAno: filtros.mesAno,
+          ...(filtros.convenioId && { convenioId: filtros.convenioId }),
+        }),
+      });
+
+      setProgress(80);
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSyncResult(data);
+        setShowSyncModal(true);
+        setProgress(100);
+
+        setTimeout(() => {
+          setProgress(0);
+        }, 2000);
+      } else {
+        alert(`Erro na sincronização: ${data.error || 'Erro desconhecido'}`);
+        if (data.resultado) {
+          setSyncResult(data);
+          setShowSyncModal(true);
+        }
+        setProgress(0);
+      }
+    } catch (error) {
+      console.error('Erro na sincronização:', error);
+      alert('Erro ao sincronizar dados. Verifique o console.');
+      setProgress(0);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const gerarRelatorio = async (fonte: 'postgres' | 'mysql', formato: 'pdf' | 'excel' | 'csv') => {
@@ -250,6 +312,28 @@ export default function ComparacaoRelatoriosPage() {
           )}
         </div>
 
+        {/* Botão de Sincronização */}
+        <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-lg shadow-lg border-2 border-purple-400 dark:border-purple-600">
+          <h2 className="text-xl font-bold mb-2 text-purple-900 dark:text-purple-300 flex items-center gap-2">
+            <span>🔄</span>
+            Sincronização
+          </h2>
+          <p className="text-sm text-purple-700 dark:text-purple-400 mb-4">
+            Atualizar PostgreSQL com dados do MySQL
+          </p>
+          <button
+            onClick={sincronizarDados}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-3"
+          >
+            <span className="text-2xl">⚡</span>
+            <div className="text-left">
+              <div className="text-lg">Sincronizar MySQL → PostgreSQL</div>
+              <div className="text-xs opacity-90">Migrar dados faltantes do período</div>
+            </div>
+          </button>
+        </div>
+
         {/* PostgreSQL (Migrado) */}
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-lg shadow-md border-2 border-blue-300 dark:border-blue-600">
           <h2 className="text-2xl font-bold mb-2 text-blue-900 dark:text-blue-300 flex items-center gap-2">
@@ -421,8 +505,123 @@ export default function ComparacaoRelatoriosPage() {
           <li>Gere o relatório do PostgreSQL (dados migrados)</li>
           <li>Gere o relatório do MySQL (dados originais)</li>
           <li>Compare os dois arquivos para verificar se os dados estão batendo</li>
+          <li><strong>Use o botão "Sincronizar" para atualizar PostgreSQL com dados do MySQL</strong></li>
         </ol>
       </div>
+
+      {/* Modal de Resultado da Sincronização */}
+      {showSyncModal && syncResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              {syncResult.success ? '✅' : '⚠️'}
+              Resultado da Sincronização
+            </h2>
+
+            <div className="space-y-4">
+              {/* Resumo */}
+              <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg">
+                <h3 className="font-bold text-lg mb-2 text-blue-900 dark:text-blue-300">Resumo</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Período:</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{syncResult.periodo}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Duração:</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{syncResult.duracao}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Estatísticas */}
+              {syncResult.resultado && (
+                <div className="bg-green-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <h3 className="font-bold text-lg mb-2 text-green-900 dark:text-green-300">Dados Processados</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Vendas migradas:</span>
+                      <span className="font-bold text-green-700 dark:text-green-400">
+                        {syncResult.resultado.vendasMigradas}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Parcelas migradas:</span>
+                      <span className="font-bold text-green-700 dark:text-green-400">
+                        {syncResult.resultado.parcelasMigradas}
+                      </span>
+                    </div>
+                    
+                    {syncResult.resultado.detalhes && (
+                      <>
+                        <hr className="my-2 border-gray-300 dark:border-gray-600" />
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">Vendas novas:</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {syncResult.resultado.detalhes.vendasNovas}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">Parcelas novas:</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {syncResult.resultado.detalhes.parcelasNovas}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400">Parcelas atualizadas:</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {syncResult.resultado.detalhes.parcelasAtualizadas}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Erros */}
+              {syncResult.resultado?.erros && syncResult.resultado.erros.length > 0 && (
+                <div className="bg-red-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <h3 className="font-bold text-lg mb-2 text-red-900 dark:text-red-300">
+                    Erros ({syncResult.resultado.erros.length})
+                  </h3>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {syncResult.resultado.erros.map((erro: string, index: number) => (
+                      <p key={index} className="text-sm text-red-700 dark:text-red-400">
+                        • {erro}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mensagem de erro geral */}
+              {syncResult.error && (
+                <div className="bg-red-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <h3 className="font-bold text-lg mb-2 text-red-900 dark:text-red-300">Erro</h3>
+                  <p className="text-sm text-red-700 dark:text-red-400">{syncResult.error}</p>
+                  {syncResult.details && (
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-2">{syncResult.details}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Botão de fechar */}
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  onClick={() => {
+                    setShowSyncModal(false);
+                    setSyncResult(null);
+                  }}
+                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded transition-colors"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
