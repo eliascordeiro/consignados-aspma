@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import mysql from 'mysql2/promise';
-import { auth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -32,18 +31,6 @@ export async function POST(request: NextRequest) {
   let connection: mysql.Connection | null = null;
 
   try {
-    // Verificar autenticação
-    const session = await auth();
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Usuário não autenticado' },
-        { status: 401 }
-      );
-    }
-
-    const userId = session.user.id;
-
     const body = await request.json();
     const { mesAno, convenioId } = body;
 
@@ -160,7 +147,6 @@ export async function POST(request: NextRequest) {
     if (!empresaAspma) {
       empresaAspma = await prisma.empresa.create({
         data: {
-          userId: userId,
           nome: 'ASPMA - Associação dos Servidores Públicos de Araucária',
           cnpj: '',
           ativo: true,
@@ -191,16 +177,17 @@ export async function POST(request: NextRequest) {
               endereco: '',
               cidade: '',
               cep: '',
-              empresaId: empresaAspma.id,
+              empresaId: empresaAspma.id, // Vincular à empresa ASPMA
             },
           });
-          console.log(`Sócio criado: ${socio.matricula} - Empresa: ${empresaAspma.id}`);
+          console.log(`Sócio criado: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
         } else if (!socio.empresaId) {
+          // Se sócio já existe mas não tem empresa, vincular à ASPMA
           socio = await prisma.socio.update({
             where: { id: socio.id },
             data: { empresaId: empresaAspma.id },
           });
-          console.log(`Sócio atualizado: ${socio.matricula} - Empresa: ${empresaAspma.id}`);
+          console.log(`Sócio atualizado com empresa: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
         }
 
         // Buscar convênio pelo código
@@ -232,7 +219,7 @@ export async function POST(request: NextRequest) {
           // Criar venda
           venda = await prisma.venda.create({
             data: {
-              userId: userId,
+              userId: socio.userId || 'sync-mysql',
               socioId: socio.id,
               convenioId: convenio.id,
               numeroVenda: vendaData.numero_venda,
