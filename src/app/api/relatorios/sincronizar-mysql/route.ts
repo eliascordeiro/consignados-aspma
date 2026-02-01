@@ -82,9 +82,10 @@ export async function POST(request: NextRequest) {
     // Buscar parcelas do MySQL para o período
     let mysqlQuery = `
       SELECT 
-        p.matricula, p.associado,
-        p.codconven as convenio_codigo,
-        p.conveniado as convenio_nome,
+        TRIM(p.matricula) as matricula,
+        TRIM(p.associado) as associado,
+        TRIM(p.codconven) as convenio_codigo,
+        TRIM(p.conveniado) as convenio_nome,
         CAST(p.nrseq AS UNSIGNED) as num_parcela,
         p.parcelas as qtd_parcelas,
         p.valor, p.baixa as status,
@@ -103,8 +104,8 @@ export async function POST(request: NextRequest) {
       });
 
       if (convenio?.codigo) {
-        mysqlQuery += ` AND p.codconven = ?`;
-        params.push(convenio.codigo);
+        mysqlQuery += ` AND TRIM(p.codconven) = ?`;
+        params.push(convenio.codigo.trim());
       }
     }
 
@@ -118,26 +119,25 @@ export async function POST(request: NextRequest) {
     const vendasMap = new Map<string, any>();
 
     parcelasArray.forEach((parcela) => {
-      // Gerar chave única: matricula-convenio-primeira_parcela
+      // Gerar chave única: matricula-convenio
       const key = `${parcela.matricula}-${parcela.convenio_codigo}`;
       
       if (!vendasMap.has(key)) {
-        // Gerar número de venda baseado em hash simples
-        const numeroVenda = parseInt(
-          (parcela.matricula || '0').split('').reduce((acc: number, char: string) => 
-            acc + char.charCodeAt(0), 0
-          ).toString() + 
-          (parcela.convenio_codigo || '0').split('').reduce((acc: number, char: string) => 
-            acc + char.charCodeAt(0), 0
-          ).toString()
+        // Gerar número de venda único baseado em hash melhorado
+        const matriculaHash = (parcela.matricula || '0').split('').reduce(
+          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 2147483647, 0
         );
+        const convenioHash = (parcela.convenio_codigo || '0').split('').reduce(
+          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 2147483647, 0
+        );
+        const numeroVenda = (matriculaHash * 1000000) + convenioHash;
         
         vendasMap.set(key, {
-          matricula: parcela.matricula,
-          associado: parcela.associado,
+          matricula: (parcela.matricula || '').trim(),
+          associado: (parcela.associado || '').trim(),
           numero_venda: numeroVenda,
-          convenio_codigo: parcela.convenio_codigo,
-          convenio_nome: parcela.convenio_nome,
+          convenio_codigo: (parcela.convenio_codigo || '').trim(),
+          convenio_nome: (parcela.convenio_nome || '').trim(),
           qtd_parcelas: parcela.qtd_parcelas,
           parcelas: [],
         });
