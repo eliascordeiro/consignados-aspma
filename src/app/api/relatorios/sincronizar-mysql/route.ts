@@ -75,8 +75,7 @@ export async function POST(request: NextRequest) {
         CAST(p.nrseq AS UNSIGNED) as num_parcela,
         p.parcelas as qtd_parcelas,
         p.valor, p.baixa as status,
-        p.vencimento,
-        p.nrparcela as numero_venda
+        p.vencimento
       FROM parcelas p
       WHERE YEAR(p.vencimento) = ? AND MONTH(p.vencimento) = ?
     `;
@@ -101,16 +100,29 @@ export async function POST(request: NextRequest) {
 
     console.log(`Encontradas ${parcelasArray.length} parcelas no MySQL`);
 
-    // Agrupar por sócio e número de venda
+    // Agrupar por sócio, convênio e conjunto de parcelas
+    // Usamos matrícula + código convênio + número da parcela 1 como identificador único
     const vendasMap = new Map<string, any>();
 
     parcelasArray.forEach((parcela) => {
-      const key = `${parcela.matricula}-${parcela.numero_venda}`;
+      // Gerar chave única: matricula-convenio-primeira_parcela
+      const key = `${parcela.matricula}-${parcela.convenio_codigo}`;
+      
       if (!vendasMap.has(key)) {
+        // Gerar número de venda baseado em hash simples
+        const numeroVenda = parseInt(
+          (parcela.matricula || '0').split('').reduce((acc: number, char: string) => 
+            acc + char.charCodeAt(0), 0
+          ).toString() + 
+          (parcela.convenio_codigo || '0').split('').reduce((acc: number, char: string) => 
+            acc + char.charCodeAt(0), 0
+          ).toString()
+        );
+        
         vendasMap.set(key, {
           matricula: parcela.matricula,
           associado: parcela.associado,
-          numero_venda: parcela.numero_venda,
+          numero_venda: numeroVenda,
           convenio_codigo: parcela.convenio_codigo,
           convenio_nome: parcela.convenio_nome,
           qtd_parcelas: parcela.qtd_parcelas,
