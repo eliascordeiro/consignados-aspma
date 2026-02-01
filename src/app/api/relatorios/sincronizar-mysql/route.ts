@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: userId,
           nome: 'ASPMA - Associação dos Servidores Públicos de Araucária',
-          cnpj: '',
+          cnpj: null,
           ativo: true,
         },
       });
