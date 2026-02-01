@@ -124,13 +124,15 @@ export async function POST(request: NextRequest) {
       
       if (!vendasMap.has(key)) {
         // Gerar número de venda único baseado em hash melhorado
+        // Usando módulos menores para garantir que caiba em INT4 (max: 2,147,483,647)
         const matriculaHash = (parcela.matricula || '0').split('').reduce(
-          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 2147483647, 0
+          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 20000, 0
         );
         const convenioHash = (parcela.convenio_codigo || '0').split('').reduce(
-          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 2147483647, 0
+          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 100000, 0
         );
-        const numeroVenda = (matriculaHash * 1000000) + convenioHash;
+        // Resultado máximo: (19999 * 100000) + 99999 = 2,000,099,999 (dentro de INT4)
+        const numeroVenda = (matriculaHash * 100000) + convenioHash;
         
         vendasMap.set(key, {
           matricula: (parcela.matricula || '').trim(),
