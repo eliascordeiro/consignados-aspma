@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     for (const [key, vendaData] of vendasMap) {
       try {
         // Buscar ou criar sócio
-        let socio = await prisma.socio.findUnique({
+        let socio = await prisma.socio.findFirst({
           where: { matricula: vendaData.matricula },
         });
 
@@ -133,9 +133,7 @@ export async function POST(request: NextRequest) {
               email: '',
               endereco: '',
               cidade: '',
-              estado: '',
               cep: '',
-              ativo: true,
             },
           });
           console.log(`Sócio criado: ${socio.matricula}`);
@@ -152,7 +150,6 @@ export async function POST(request: NextRequest) {
             data: {
               codigo: vendaData.convenio_codigo,
               razao_soc: vendaData.convenio_nome || 'Convênio não informado',
-              ativo: true,
             },
           });
           console.log(`Convênio criado: ${convenio.codigo}`);
@@ -171,16 +168,20 @@ export async function POST(request: NextRequest) {
           // Criar venda
           venda = await prisma.venda.create({
             data: {
+              userId: socio.userId || 'sync-mysql',
               socioId: socio.id,
               convenioId: convenio.id,
               numeroVenda: vendaData.numero_venda,
-              dataVenda: new Date(),
+              dataEmissao: new Date(),
+              valorParcela: vendaData.parcelas.reduce(
+                (sum: number, p: any) => sum + parseFloat(p.valor || '0'),
+                0
+              ) / vendaData.parcelas.length,
               valorTotal: vendaData.parcelas.reduce(
                 (sum: number, p: any) => sum + parseFloat(p.valor || '0'),
                 0
               ),
               quantidadeParcelas: parseInt(vendaData.qtd_parcelas) || vendaData.parcelas.length,
-              status: 'ativa',
             },
           });
           result.vendasMigradas++;
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
           const numeroParcela = parseInt(parcelaData.num_parcela) || 1;
           const valor = parseFloat(parcelaData.valor || '0');
           const dataVencimento = new Date(parcelaData.vencimento);
-          const baixa = parcelaData.status === 1 || parcelaData.status === '1';
+          const baixa = (parcelaData.status === 1 || parcelaData.status === '1') ? 'S' : null;
 
           // Verificar se parcela já existe
           let parcela = await prisma.parcela.findFirst({
@@ -212,7 +213,7 @@ export async function POST(request: NextRequest) {
                 valor,
                 dataVencimento,
                 baixa,
-                dataPagamento: baixa ? dataVencimento : null,
+                dataBaixa: baixa ? dataVencimento : null,
               },
             });
             result.parcelasMigradas++;
@@ -225,7 +226,7 @@ export async function POST(request: NextRequest) {
                 data: {
                   baixa,
                   valor,
-                  dataPagamento: baixa ? (parcela.dataPagamento || dataVencimento) : null,
+                  dataBaixa: baixa ? (parcela.dataBaixa || dataVencimento) : null,
                 },
               });
               result.detalhes.parcelasAtualizadas++;
