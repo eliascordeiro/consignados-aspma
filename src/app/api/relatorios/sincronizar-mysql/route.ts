@@ -134,6 +134,29 @@ export async function POST(request: NextRequest) {
 
     console.log(`Identificadas ${vendasMap.size} vendas únicas`);
 
+    // Buscar ou criar empresa ASPMA (todos os dados do MySQL pertencem a ela)
+    let empresaAspma = await prisma.empresa.findFirst({
+      where: {
+        OR: [
+          { nome: { contains: 'ASPMA', mode: 'insensitive' } },
+          { nome: { contains: 'Associação dos Servidores Públicos', mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    if (!empresaAspma) {
+      empresaAspma = await prisma.empresa.create({
+        data: {
+          nome: 'ASPMA - Associação dos Servidores Públicos de Araucária',
+          cnpj: '',
+          ativo: true,
+        },
+      });
+      console.log(`Empresa ASPMA criada: ID ${empresaAspma.id}`);
+    } else {
+      console.log(`Empresa ASPMA encontrada: ID ${empresaAspma.id}`);
+    }
+
     // Processar cada venda
     for (const [key, vendaData] of vendasMap) {
       try {
@@ -154,9 +177,18 @@ export async function POST(request: NextRequest) {
               endereco: '',
               cidade: '',
               cep: '',
+              empresaId: empresaAspma.id, // Vincular à empresa ASPMA
             },
           });
-          console.log(`Sócio criado: ${socio.matricula}`);
+          console.log(`Sócio criado: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
+        } else if (!socio.empresaId) {
+          // Se sócio já existe mas não tem empresa, vincular à ASPMA
+          socio = await prisma.socio.update({
+            where: { id: socio.id },
+            data: { empresaId: empresaAspma.id },
+          });
+          console.log(`Sócio atualizado com empresa: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
+        }
         }
 
         // Buscar convênio pelo código
