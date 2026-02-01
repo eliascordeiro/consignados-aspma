@@ -177,17 +177,16 @@ export async function POST(request: NextRequest) {
               endereco: '',
               cidade: '',
               cep: '',
-              empresaId: empresaAspma.id, // Vincular à empresa ASPMA
+              empresaId: empresaAspma.id,
             },
           });
-          console.log(`Sócio criado: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
+          console.log(`Sócio criado: ${socio.matricula} - Empresa: ${empresaAspma.id}`);
         } else if (!socio.empresaId) {
-          // Se sócio já existe mas não tem empresa, vincular à ASPMA
           socio = await prisma.socio.update({
             where: { id: socio.id },
             data: { empresaId: empresaAspma.id },
           });
-          console.log(`Sócio atualizado com empresa: ${socio.matricula} (Empresa: ${empresaAspma.id})`);
+          console.log(`Sócio atualizado: ${socio.matricula} - Empresa: ${empresaAspma.id}`);
         }
 
         // Buscar convênio pelo código
