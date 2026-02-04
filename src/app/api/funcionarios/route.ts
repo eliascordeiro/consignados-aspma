@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // Usuários subordinados veem os dados do MANAGER que os criou
     // Outros roles veem apenas os seus próprios dados
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = (session.user as any).createdById || session.user.id
+      const targetUserId = session.user.id
       where.AND.push({ userId: targetUserId })
     }
 
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       // Se for apenas números, tentar busca exata de matrícula primeiro
       if (isOnlyNumbers) {
         const targetUserId = session.user.role !== "MANAGER" && session.user.role !== "ADMIN"
-          ? ((session.user as any).createdById || session.user.id)
+          ? (session.user.id)
           : undefined
         
         const exactMatch = await prisma.socio.findFirst({
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     // Determina o userId correto: para subordinados, usa o MANAGER que os criou
     const targetUserId = session.user.role === "MANAGER" || session.user.role === "ADMIN" 
       ? null 
-      : ((session.user as any).createdById || session.user.id)
+      : (session.user.id)
 
     const funcionario = await prisma.socio.create({
       data: {

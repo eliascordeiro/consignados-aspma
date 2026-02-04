@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Outros roles veem apenas as suas próprias empresas
     let where: any = {}
     if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = (session.user as any).createdById || session.user.id
+      const targetUserId = session.user.id
       where.userId = targetUserId
     }
 
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     const empresa = await prisma.empresa.create({
       data: {
         ...validatedData,
-        userId: (session.user as any).createdById || session.user.id,
+        userId: session.user.id,
       },
     })
 

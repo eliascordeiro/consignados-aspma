@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = (session.user as any).createdById || session.user.id;
+    // Usar sempre o ID do próprio usuário (não o createdById)
+    const targetUserId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const socioId = searchParams.get('socioId');
@@ -221,7 +222,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = (session.user as any).createdById || session.user.id;
+    const targetUserId = session.user.id;
     const body = await request.json();
 
     const {

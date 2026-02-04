@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = (session.user as any).createdById || session.user.id;
+    const targetUserId = session.user.id;
 
     const parcela = await prisma.parcela.findFirst({
       where: {
@@ -86,7 +86,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = (session.user as any).createdById || session.user.id;
+    const targetUserId = session.user.id;
 
     // Verifica se a parcela existe e pertence ao usuário
     const parcelaExistente = await prisma.parcela.findFirst({
@@ -222,7 +222,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = (session.user as any).createdById || session.user.id;
+    const targetUserId = session.user.id;
 
     // Verifica se a parcela existe e pertence ao usuário
     const parcela = await prisma.parcela.findFirst({
