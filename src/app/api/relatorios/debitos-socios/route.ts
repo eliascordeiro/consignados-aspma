@@ -805,7 +805,10 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
     grupo.total += Number(parcela.valor);
   });
 
-  return Array.from(grupos.values());
+  // Ordenar por razão social (ordem alfabética)
+  return Array.from(grupos.values()).sort((a, b) => 
+    a.convenioNome.localeCompare(b.convenioNome, 'pt-BR', { sensitivity: 'base' })
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════
