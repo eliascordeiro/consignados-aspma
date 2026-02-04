@@ -779,10 +779,10 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     
     // Colunas da tabela
     const col1 = margin + 3;              // Sócio
-    const col2 = pageWidth - 75;          // Parcela
-    const col3 = pageWidth - 60;          // De
-    const col4 = pageWidth - 40;          // Valor
-    const col5 = pageWidth - 13;          // Status
+    const col2 = pageWidth - 100;         // Parcela
+    const col3 = pageWidth - 85;          // De
+    const col4 = pageWidth - 55;          // Valor
+    const col5 = pageWidth - 15;          // Status
     
     doc.text('SÓCIO', col1, y + 1.5);
     doc.text('PARC.', col2, y + 1.5);
@@ -830,14 +830,14 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
       }
       
       // Sócio
-      const socioText = parcela.socio.length > 70 ? parcela.socio.substring(0, 67) + '...' : parcela.socio;
+      const socioText = parcela.socio.length > 100 ? parcela.socio.substring(0, 97) + '...' : parcela.socio;
       doc.text(socioText, col1, y + 1);
       
       // Parcela (formato: 01)
-      doc.text(parcela.pc.toString().padStart(2, '0'), col2 + 5, y + 1);
+      doc.text(parcela.pc.toString().padStart(2, '0'), col2, y + 1);
       
       // De (formato: 12)
-      doc.text(parcela.de.toString().padStart(2, '0'), col3 + 3, y + 1);
+      doc.text(parcela.de.toString().padStart(2, '0'), col3, y + 1);
       
       // Valor
       const valorFormatado = parcela.valor.toLocaleString('pt-BR', {
