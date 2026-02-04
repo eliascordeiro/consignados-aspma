@@ -158,9 +158,10 @@ export async function GET(request: NextRequest) {
     // Agrupar por sócio ou convênio
     if (agrupaPor === 'convenio') {
       const gruposConvenio = agruparPorConvenio(parcelas);
+      const isRelatorioGeral = !convenioId; // Relatório geral quando não há filtro de convênio
       
       if (formato === 'pdf') {
-        const pdfBuffer = await gerarPDFConvenio(gruposConvenio, mes, ano);
+        const pdfBuffer = await gerarPDFConvenio(gruposConvenio, mes, ano, isRelatorioGeral);
         return new NextResponse(pdfBuffer, {
           headers: {
             'Content-Type': 'application/pdf',
@@ -168,7 +169,7 @@ export async function GET(request: NextRequest) {
           },
         });
       } else if (formato === 'excel') {
-        const excelBuffer = await gerarExcelConvenio(gruposConvenio, mes, ano);
+        const excelBuffer = await gerarExcelConvenio(gruposConvenio, mes, ano, isRelatorioGeral);
         return new NextResponse(excelBuffer, {
           headers: {
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -185,7 +186,7 @@ export async function GET(request: NextRequest) {
           delimiter,
           includeHeader,
           decimalSeparator,
-        });
+        }, isRelatorioGeral);
         
         const buffer = encoding === 'iso-8859-1'
           ? iconv.encode(csvContent, 'iso-8859-1')
@@ -811,7 +812,7 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
 // GERADORES DE RELATÓRIO POR CONVÊNIO
 // ═══════════════════════════════════════════════════════════════════
 
-async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: number): Promise<ArrayBuffer> {
+async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: number, isRelatorioGeral: boolean = false): Promise<ArrayBuffer> {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
@@ -887,6 +888,108 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
   addHeader(true);
   let totalGeral = 0;
   let isFirstGroup = true;
+
+  // ═══════════════════════════════════════════════════════════
+  // MODO RESUMIDO (RELATÓRIO GERAL - SEM SÓCIOS)
+  // ═══════════════════════════════════════════════════════════
+  if (isRelatorioGeral) {
+    // Cabeçalho da tabela resumida
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
+    
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    
+    const colConv = margin + 3;
+    const colCNPJ = margin + 90;
+    const colBanco = margin + 130;
+    const colAg = margin + 180;
+    const colConta = margin + 210;
+    const colTotal = pageWidth - margin - 5;
+    
+    doc.text('CONVÊNIO', colConv, y + 1.5);
+    doc.text('CNPJ', colCNPJ, y + 1.5);
+    doc.text('BANCO', colBanco, y + 1.5);
+    doc.text('AG', colAg, y + 1.5);
+    doc.text('CONTA', colConta, y + 1.5);
+    doc.text('TOTAL', colTotal, y + 1.5, { align: 'right' });
+    
+    y += 7;
+    
+    doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    
+    let isAlternate = false;
+    
+    grupos.forEach((grupo) => {
+      // Verificar quebra de página
+      if (y > pageHeight - 30) {
+        addFooter();
+        doc.addPage();
+        addHeader();
+        
+        // Repetir cabeçalho da tabela
+        doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
+        doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('CONVÊNIO', colConv, y + 1.5);
+        doc.text('CNPJ', colCNPJ, y + 1.5);
+        doc.text('BANCO', colBanco, y + 1.5);
+        doc.text('AG', colAg, y + 1.5);
+        doc.text('CONTA', colConta, y + 1.5);
+        doc.text('TOTAL', colTotal, y + 1.5, { align: 'right' });
+        y += 7;
+        
+        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        isAlternate = false;
+      }
+      
+      // Fundo alternado
+      if (isAlternate) {
+        doc.setFillColor(colors.tableAlt[0], colors.tableAlt[1], colors.tableAlt[2]);
+        doc.rect(margin, y - 3, pageWidth - 2 * margin, 6, 'F');
+      }
+      
+      // Convênio
+      const convText = grupo.convenioNome.length > 50 ? grupo.convenioNome.substring(0, 47) + '...' : grupo.convenioNome;
+      doc.text(convText, colConv, y + 1);
+      
+      // CNPJ
+      doc.text(grupo.cnpj || '-', colCNPJ, y + 1);
+      
+      // Banco
+      doc.text(grupo.banco || '-', colBanco, y + 1);
+      
+      // Agência
+      doc.text(grupo.agencia || '-', colAg, y + 1);
+      
+      // Conta
+      doc.text(grupo.conta || '-', colConta, y + 1);
+      
+      // Total
+      const totalFormatado = grupo.total.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      doc.setFont('helvetica', 'bold');
+      doc.text(`R$ ${totalFormatado}`, colTotal, y + 1, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      
+      totalGeral += grupo.total;
+      y += 6;
+      isAlternate = !isAlternate;
+    });
+    
+  } else {
+    // ═══════════════════════════════════════════════════════════
+    // MODO DETALHADO (CONVÊNIO ESPECÍFICO - COM SÓCIOS)
+    // ═══════════════════════════════════════════════════════════
 
   grupos.forEach((grupo, grupoIndex) => {
     // Verifica espaço necessário para o grupo (mínimo 50mm)
@@ -1067,6 +1170,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     y += 10;
     totalGeral += grupo.total;
   });
+  } // Fim do modo detalhado
 
   // ═══════════════════════════════════════════════════════════
   // TOTAL GERAL
@@ -1111,7 +1215,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
   return doc.output('arraybuffer') as ArrayBuffer;
 }
 
-async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: number): Promise<ArrayBuffer> {
+async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: number, isRelatorioGeral: boolean = false): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Débitos por Convênio');
 
@@ -1250,7 +1354,8 @@ function gerarCSVConvenio(
     delimiter: string;
     includeHeader: boolean;
     decimalSeparator: string;
-  }
+  },
+  isRelatorioGeral: boolean = false
 ): string {
   const { delimiter, includeHeader, decimalSeparator } = options;
   const lines: string[] = [];
