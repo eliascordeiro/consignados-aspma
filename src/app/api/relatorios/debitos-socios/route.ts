@@ -300,32 +300,50 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
 
   // Cabeçalho principal da página
   const addHeader = (isFirstPage = false) => {
-    y = 15;
-    
-    // Faixa superior colorida
-    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    
-    // Título principal
-    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text('RELATÓRIO DE DÉBITOS', pageWidth / 2, 12, { align: 'center' });
-    
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Agrupamento por Sócio', pageWidth / 2, 18, { align: 'center' });
-    
-    // Box de período
-    y = 30;
-    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-    doc.roundedRect(pageWidth / 2 - 35, y - 5, 70, 10, 2, 2, 'F');
-    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text(`PERÍODO: ${mesNomes[mes - 1].toUpperCase()}/${ano}`, pageWidth / 2, y, { align: 'center' });
-    
-    y += 12;
+    if (isFirstPage) {
+      // Cabeçalho completo apenas na primeira página
+      y = 15;
+      
+      // Faixa superior colorida
+      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      
+      // Título principal
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text('RELATÓRIO DE DÉBITOS', pageWidth / 2, 12, { align: 'center' });
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Agrupamento por Sócio', pageWidth / 2, 18, { align: 'center' });
+      
+      // Box de período
+      y = 30;
+      doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      doc.roundedRect(pageWidth / 2 - 35, y - 5, 70, 10, 2, 2, 'F');
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(`PERÍODO: ${mesNomes[mes - 1].toUpperCase()}/${ano}`, pageWidth / 2, y, { align: 'center' });
+      
+      y += 12;
+    } else {
+      // Cabeçalho reduzido para demais páginas
+      y = 8;
+      
+      // Faixa superior compacta
+      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.rect(0, 0, pageWidth, 12, 'F');
+      
+      // Título compacto
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`Débitos - ${mesNomes[mes - 1]}/${ano} - Agrupamento por Sócio`, pageWidth / 2, 7, { align: 'center' });
+      
+      y += 7;
+    }
   };
 
   addHeader(true);
@@ -338,7 +356,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     if (y > pageHeight - espacoNecessario) {
       addFooter();
       doc.addPage();
-      addHeader();
+      addHeader(false); // Cabeçalho reduzido nas páginas seguintes
       isFirstGroup = true;
     }
 
@@ -416,7 +434,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
       if (y > pageHeight - 30) {
         addFooter();
         doc.addPage();
-        addHeader();
+        addHeader(false); // Cabeçalho reduzido nas páginas seguintes
         
         // Repetir info do sócio e cabeçalho da tabela na nova página
         doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
