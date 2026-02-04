@@ -640,126 +640,290 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  let y = 20;
-  const pageHeight = doc.internal.pageSize.height;
-
-  const addHeader = () => {
-    y = 20;
-    doc.setFontSize(14);
-    doc.setFont('courier', 'bold');
-    doc.text('DÉBITOS POR CONVÊNIO', 148, y, { align: 'center' });
-    y += 7;
-    doc.setFontSize(10);
-    doc.text(`Período: ${mesNomes[mes - 1]}/${ano}`, 148, y, { align: 'center' });
-    y += 10;
+  // Cores (RGB)
+  const colors = {
+    primary: [41, 128, 185],      // Azul profissional
+    secondary: [52, 73, 94],      // Cinza escuro
+    accent: [231, 76, 60],        // Vermelho destaque
+    success: [39, 174, 96],       // Verde
+    lightGray: [236, 240, 241],   // Cinza claro
+    darkGray: [127, 140, 141],    // Cinza médio
+    white: [255, 255, 255],       // Branco
+    tableHeader: [52, 152, 219],  // Azul tabela
+    tableAlt: [245, 247, 250],    // Linha alternada
   };
 
-  addHeader();
+  let y = 15;
+  const pageHeight = doc.internal.pageSize.height;
+  const pageWidth = doc.internal.pageSize.width;
+  const margin = 10;
+  let pageNumber = 1;
 
+  // Função auxiliar para adicionar rodapé
+  const addFooter = () => {
+    doc.setFontSize(8);
+    doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+    doc.setFont('helvetica', 'normal');
+    const footerText = `Página ${pageNumber} • Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`;
+    doc.text(footerText, pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.setDrawColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+    doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+    pageNumber++;
+  };
+
+  // Cabeçalho principal da página
+  const addHeader = (isFirstPage = false) => {
+    y = 15;
+    
+    // Faixa superior colorida
+    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    doc.rect(0, 0, pageWidth, 25, 'F');
+    
+    // Título principal
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('RELATÓRIO DE DÉBITOS', pageWidth / 2, 12, { align: 'center' });
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Agrupamento por Convênio', pageWidth / 2, 18, { align: 'center' });
+    
+    // Box de período
+    y = 30;
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.roundedRect(pageWidth / 2 - 35, y - 5, 70, 10, 2, 2, 'F');
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(`PERÍODO: ${mesNomes[mes - 1].toUpperCase()}/${ano}`, pageWidth / 2, y, { align: 'center' });
+    
+    y += 12;
+  };
+
+  addHeader(true);
   let totalGeral = 0;
+  let isFirstGroup = true;
 
   grupos.forEach((grupo, grupoIndex) => {
-    // Verifica quebra de página para cabeçalho do grupo
-    if (y > pageHeight - 40) {
+    // Verifica espaço necessário para o grupo (mínimo 50mm)
+    const espacoNecessario = 50;
+    if (y > pageHeight - espacoNecessario) {
+      addFooter();
       doc.addPage();
       addHeader();
+      isFirstGroup = true;
     }
 
-    // Cabeçalho do convênio
-    doc.setFontSize(10);
-    doc.setFont('courier', 'bold');
-    doc.text(`Convênio: ${grupo.convenioNome}`, 10, y);
-    y += 5;
+    // Separador entre grupos (exceto o primeiro)
+    if (!isFirstGroup) {
+      y += 3;
+      doc.setDrawColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 5;
+    }
+    isFirstGroup = false;
+
+    // ═══════════════════════════════════════════════════════════
+    // CARD DO CONVÊNIO
+    // ═══════════════════════════════════════════════════════════
     
+    // Box de fundo do convênio
+    const boxHeight = grupo.cnpj || grupo.banco ? 22 : 15;
+    doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, boxHeight, 2, 2, 'F');
+    
+    // Nome do convênio
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('CONVÊNIO:', margin + 3, y + 6);
+    doc.text(grupo.convenioNome.toUpperCase(), margin + 28, y + 6);
+    
+    // CNPJ
     if (grupo.cnpj) {
-      doc.setFont('courier', 'normal');
-      doc.text(`CNPJ: ${grupo.cnpj}`, 10, y);
-      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text('CNPJ:', margin + 3, y + 12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(grupo.cnpj, margin + 15, y + 12);
     }
     
+    // Dados bancários
     if (grupo.banco || grupo.agencia || grupo.conta) {
-      doc.setFont('courier', 'normal');
-      const dadosBancarios = [
-        grupo.banco ? `Banco: ${grupo.banco}` : '',
-        grupo.agencia ? `Ag: ${grupo.agencia}` : '',
-        grupo.conta ? `Conta: ${grupo.conta}` : ''
-      ].filter(d => d).join(' | ');
-      doc.text(dadosBancarios, 10, y);
-      y += 5;
+      const dadosBancarios = [];
+      if (grupo.banco) dadosBancarios.push(`Banco: ${grupo.banco}`);
+      if (grupo.agencia) dadosBancarios.push(`Ag: ${grupo.agencia}`);
+      if (grupo.conta) dadosBancarios.push(`Conta: ${grupo.conta}`);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const yBanco = grupo.cnpj ? y + 18 : y + 12;
+      doc.text(dadosBancarios.join('  •  '), margin + 3, yBanco);
     }
     
-    y += 2;
+    y += boxHeight + 5;
 
+    // ═══════════════════════════════════════════════════════════
+    // TABELA DE PARCELAS
+    // ═══════════════════════════════════════════════════════════
+    
     // Cabeçalho da tabela
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
+    
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
-    doc.setFont('courier', 'bold');
-    doc.text('Sócio', 10, y);
-    doc.text('Pc', 190, y);
-    doc.text('De', 200, y);
-    doc.text('Valor', 225, y, { align: 'right' });
-    doc.text('Total', 260, y, { align: 'right' });
-    doc.text('St', 275, y);
-    y += 3;
-    doc.line(10, y, 280, y);
-    y += 5;
-
-    doc.setFont('courier', 'normal');
-
+    
+    // Colunas da tabela
+    const col1 = margin + 3;              // Sócio
+    const col2 = pageWidth - 75;          // Parcela
+    const col3 = pageWidth - 60;          // De
+    const col4 = pageWidth - 40;          // Valor
+    const col5 = pageWidth - 13;          // Status
+    
+    doc.text('SÓCIO', col1, y + 1.5);
+    doc.text('PARC.', col2, y + 1.5);
+    doc.text('DE', col3, y + 1.5);
+    doc.text('VALOR', col4, y + 1.5, { align: 'right' });
+    doc.text('ST', col5, y + 1.5);
+    
+    y += 7;
+    
+    // Linhas de dados
+    doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    
+    let isAlternate = false;
+    
     grupo.parcelas.forEach((parcela, index) => {
-      if (y > pageHeight - 20) {
+      // Verificar quebra de página
+      if (y > pageHeight - 30) {
+        addFooter();
         doc.addPage();
         addHeader();
+        
+        // Repetir cabeçalho da tabela na nova página
+        doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
+        doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SÓCIO', col1, y + 1.5);
+        doc.text('PARC.', col2, y + 1.5);
+        doc.text('DE', col3, y + 1.5);
+        doc.text('VALOR', col4, y + 1.5, { align: 'right' });
+        doc.text('ST', col5, y + 1.5);
+        y += 7;
+        
+        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.setFont('helvetica', 'normal');
+        isAlternate = false;
       }
-
+      
+      // Fundo alternado para melhor leitura
+      if (isAlternate) {
+        doc.setFillColor(colors.tableAlt[0], colors.tableAlt[1], colors.tableAlt[2]);
+        doc.rect(margin, y - 3, pageWidth - 2 * margin, 6, 'F');
+      }
+      
       // Sócio
-      doc.text(parcela.socio, 10, y);
-
-      // Pc (2 dígitos)
-      doc.text(parcela.pc.toString().padStart(2, '0'), 190, y);
-
-      // De (2 dígitos)
-      doc.text(parcela.de.toString().padStart(2, '0'), 200, y);
-
+      const socioText = parcela.socio.length > 70 ? parcela.socio.substring(0, 67) + '...' : parcela.socio;
+      doc.text(socioText, col1, y + 1);
+      
+      // Parcela (formato: 01)
+      doc.text(parcela.pc.toString().padStart(2, '0'), col2 + 5, y + 1);
+      
+      // De (formato: 12)
+      doc.text(parcela.de.toString().padStart(2, '0'), col3 + 3, y + 1);
+      
       // Valor
       const valorFormatado = parcela.valor.toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      doc.text(valorFormatado, 225, y, { align: 'right' });
-
-      // Total - só na última linha do grupo
-      if (index === grupo.parcelas.length - 1) {
-        const totalFormatado = grupo.total.toLocaleString('pt-BR', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        doc.text(totalFormatado, 260, y, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
+      doc.text(`R$ ${valorFormatado}`, col4, y + 1, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      
+      // Status
+      if (parcela.st === 'OK') {
+        doc.setTextColor(colors.success[0], colors.success[1], colors.success[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('✓', col5, y + 1);
+        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.setFont('helvetica', 'normal');
       }
-
-      // St
-      doc.text(parcela.st, 275, y);
-
-      y += 5;
+      
+      y += 6;
+      isAlternate = !isAlternate;
     });
-
+    
+    // ═══════════════════════════════════════════════════════════
+    // TOTAL DO CONVÊNIO
+    // ═══════════════════════════════════════════════════════════
+    
+    y += 2;
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.rect(pageWidth - margin - 90, y - 3, 90, 8, 'F');
+    
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('TOTAL DO CONVÊNIO:', pageWidth - margin - 87, y + 2);
+    
+    const totalFormatado = grupo.total.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    doc.setFontSize(10);
+    doc.text(`R$ ${totalFormatado}`, pageWidth - margin - 3, y + 2, { align: 'right' });
+    
+    y += 10;
     totalGeral += grupo.total;
-    y += 5; // Espaço entre grupos
   });
 
-  // Total Geral
-  if (y > pageHeight - 20) {
+  // ═══════════════════════════════════════════════════════════
+  // TOTAL GERAL
+  // ═══════════════════════════════════════════════════════════
+  
+  if (y > pageHeight - 35) {
+    addFooter();
     doc.addPage();
     addHeader();
   }
-
+  
   y += 5;
-  doc.setFont('courier', 'bold');
-  doc.text('TOTAL GERAL:', 195, y);
+  
+  // Box de total geral destacado
+  doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+  doc.roundedRect(pageWidth / 2 - 60, y - 4, 120, 12, 2, 2, 'F');
+  
+  doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('TOTAL GERAL:', pageWidth / 2 - 52, y + 3);
+  
   const totalGeralFormatado = totalGeral.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  doc.text(totalGeralFormatado, 260, y, { align: 'right' });
+  doc.setFontSize(13);
+  doc.text(`R$ ${totalGeralFormatado}`, pageWidth / 2 + 52, y + 3, { align: 'right' });
+  
+  // Informações adicionais
+  y += 18;
+  doc.setFontSize(7);
+  doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+  doc.setFont('helvetica', 'italic');
+  const totalConvenios = grupos.length;
+  const totalParcelas = grupos.reduce((sum, g) => sum + g.parcelas.length, 0);
+  doc.text(`Total de Convênios: ${totalConvenios} • Total de Parcelas: ${totalParcelas}`, pageWidth / 2, y, { align: 'center' });
+  
+  // Adicionar rodapé na última página
+  addFooter();
 
   return doc.output('arraybuffer') as ArrayBuffer;
 }
