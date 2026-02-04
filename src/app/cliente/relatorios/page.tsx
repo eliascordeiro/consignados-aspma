@@ -26,6 +26,7 @@ export default function RelatoriosPage() {
     socioMatricula: '',
     socioNome: '',
     mesAno: new Date().toISOString().slice(0, 7), // YYYY-MM
+    agrupaPor: 'socio', // 'socio' ou 'convenio'
   });
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -164,6 +165,7 @@ export default function RelatoriosPage() {
         mesAno: filtros.mesAno,
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
+        agrupaPor: filtros.agrupaPor,
         formato: 'pdf'
       });
 
@@ -217,6 +219,7 @@ export default function RelatoriosPage() {
         mesAno: filtros.mesAno,
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
+        agrupaPor: filtros.agrupaPor,
         formato: 'excel'
       });
 
@@ -271,6 +274,7 @@ export default function RelatoriosPage() {
         mesAno: filtros.mesAno,
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
+        agrupaPor: filtros.agrupaPor,
         formato: 'csv',
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
@@ -338,6 +342,21 @@ export default function RelatoriosPage() {
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md">
         <div className="space-y-4">
+          {/* Agrupa por */}
+          <div>
+            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+              Agrupa por *
+            </label>
+            <select
+              value={filtros.agrupaPor}
+              onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="socio">Sócio</option>
+              <option value="convenio">Convênio</option>
+            </select>
+          </div>
+
           {/* Sócio (opcional) - Com busca */}
           <div className="relative">
             <label className="block text-sm font-bold mb-2 dark:text-gray-300">
