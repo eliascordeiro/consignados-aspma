@@ -18,7 +18,7 @@ async function migrateSocios() {
 
     // 1. Buscar usuário A.S.P.M.A
     console.log('👤 Buscando usuário A.S.P.M.A...')
-    const aspmaUser = await prisma.user.findUnique({
+    const aspmaUser = await prisma.users.findUnique({
       where: { email: 'elias157508@gmail.com' }
     })
 
@@ -40,11 +40,12 @@ async function migrateSocios() {
       // Fundo de Previdência = consignataria 1
       // Prefeitura = consignataria 2
       // NENHUMA = consignataria 0
-      if (empresa.nome.includes('FUNDO DE PREVIDENCIA')) {
+      const nomeNormalizado = empresa.nome.trim().toUpperCase()
+      if (nomeNormalizado.includes('FUNDO DE PREVIDENCIA') || nomeNormalizado.includes('FUNDO')) {
         consignatariaMap[1] = empresa.id
-      } else if (empresa.nome.includes('PREFEITURA')) {
+      } else if (nomeNormalizado.includes('PREFEITURA')) {
         consignatariaMap[2] = empresa.id
-      } else if (empresa.nome === 'NENHUMA') {
+      } else if (nomeNormalizado === 'NENHUMA') {
         consignatariaMap[0] = empresa.id
       }
     })
@@ -102,41 +103,41 @@ async function migrateSocios() {
           data: {
             userId: aspmaUser.id,
             empresaId: empresaId,
-            nome: socio.associado || 'SEM NOME',
-            cpf: socio.cpf?.replace(/[^\d]/g, '') || null,
-            rg: socio.rg,
-            matricula: socio.matricula,
-            funcao: socio.funcao,
-            lotacao: socio.lotacao,
-            endereco: socio.endereco,
-            bairro: socio.bairro,
-            cep: socio.cep,
-            cidade: socio.cidade,
-            telefone: socio.fone,
-            celular: socio.celular,
-            email: socio.email,
-            contato: socio.contato,
+            nome: socio.associado?.trim() || 'SEM NOME',
+            cpf: socio.cpf?.trim().replace(/[^\d]/g, '') || null,
+            rg: socio.rg?.trim() || null,
+            matricula: socio.matricula?.trim() || null,
+            funcao: socio.funcao?.trim() || null,
+            lotacao: socio.lotacao?.trim() || null,
+            endereco: socio.endereco?.trim() || null,
+            bairro: socio.bairro?.trim() || null,
+            cep: socio.cep?.trim() || null,
+            cidade: socio.cidade?.trim() || null,
+            telefone: socio.fone?.trim() || null,
+            celular: socio.celular?.trim() || null,
+            email: socio.email?.trim() || null,
+            contato: socio.contato?.trim() || null,
             dataCadastro: socio.data,
             dataNascimento: socio.nascimento,
             limite: socio.limite,
             margemConsig: socio.mensal,
             gratificacao: socio.gratif,
-            autorizado: socio.autorizado,
-            sexo: socio.sexo,
-            estadoCivil: socio.est_civil,
+            autorizado: socio.autorizado?.trim() || null,
+            sexo: socio.sexo?.trim() || null,
+            estadoCivil: socio.est_civil?.trim() || null,
             numCompras: socio.ncompras ? Math.floor(socio.ncompras) : null,
-            tipo: socio.tipo,
-            agencia: socio.agencia,
-            conta: socio.conta,
-            banco: socio.banco,
+            tipo: socio.tipo?.trim() || null,
+            agencia: socio.agencia?.trim() || null,
+            conta: socio.conta?.trim() || null,
+            banco: socio.banco?.trim() || null,
             devolucao: socio.devolucao,
-            bloqueio: socio.bloqueio,
-            motivoBloqueio: socio.motivo,
+            bloqueio: socio.bloqueio?.trim() || null,
+            motivoBloqueio: socio.motivo?.trim() || null,
             codTipo: socio.codtipo,
-            senha: socio.senha?.toString(),
+            senha: socio.senha?.toString().trim() || null,
             dataExclusao: socio.data_exclusao,
-            motivoExclusao: socio.motivo_exclusao,
-            ativo: !socio.bloqueio || socio.bloqueio === ''
+            motivoExclusao: socio.motivo_exclusao?.trim() || null,
+            ativo: !socio.bloqueio || socio.bloqueio.trim() === ''
           }
         })
 

@@ -312,28 +312,6 @@ export default function ComparacaoRelatoriosPage() {
           )}
         </div>
 
-        {/* Botão de Sincronização */}
-        <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-lg shadow-lg border-2 border-purple-400 dark:border-purple-600">
-          <h2 className="text-xl font-bold mb-2 text-purple-900 dark:text-purple-300 flex items-center gap-2">
-            <span>🔄</span>
-            Sincronização
-          </h2>
-          <p className="text-sm text-purple-700 dark:text-purple-400 mb-4">
-            Atualizar PostgreSQL com dados do MySQL
-          </p>
-          <button
-            onClick={sincronizarDados}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-3"
-          >
-            <span className="text-2xl">⚡</span>
-            <div className="text-left">
-              <div className="text-lg">Sincronizar MySQL → PostgreSQL</div>
-              <div className="text-xs opacity-90">Migrar dados faltantes do período</div>
-            </div>
-          </button>
-        </div>
-
         {/* PostgreSQL (Migrado) */}
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-lg shadow-md border-2 border-blue-300 dark:border-blue-600">
           <h2 className="text-2xl font-bold mb-2 text-blue-900 dark:text-blue-300 flex items-center gap-2">

@@ -393,11 +393,11 @@ async function migrate() {
   });
   log(`   ✅ ${formatNumber(convenioByCodigo.size)} convênios`);
 
-  // Admin
-  const admin = await mainPrisma.users.findFirst({ where: { email: 'admin@consigexpress.com' } });
-  if (!admin) throw new Error('Admin não encontrado!');
+  // Admin (A.S.P.M.A - mesmo usuário dos sócios)
+  const admin = await mainPrisma.users.findFirst({ where: { email: 'elias157508@gmail.com' } });
+  if (!admin) throw new Error('Usuário A.S.P.M.A não encontrado!');
   adminUserId = admin.id;
-  log(`   ✅ Admin: ${adminUserId}`);
+  log(`   ✅ Usuário A.S.P.M.A: ${adminUserId}`);
 
   // Mapa de vendas
   vendaIdMap = new Map();
