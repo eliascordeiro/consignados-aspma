@@ -59,6 +59,7 @@ interface Funcionario {
   bairro?: string
   cep?: string
   cidade?: string
+  uf?: string
   telefone?: string
   celular?: string
   email?: string
@@ -119,6 +120,7 @@ export default function FuncionariosPage() {
     bairro: "",
     cep: "",
     cidade: "",
+    uf: "",
     telefone: "",
     celular: "",
     email: "",
@@ -243,6 +245,7 @@ export default function FuncionariosPage() {
         bairro: funcionarioCompleto.bairro || "",
         cep: funcionarioCompleto.cep || "",
         cidade: funcionarioCompleto.cidade || "",
+        uf: funcionarioCompleto.uf || "",
         telefone: funcionarioCompleto.telefone || "",
         celular: funcionarioCompleto.celular || "",
         email: funcionarioCompleto.email || "",
@@ -292,6 +295,7 @@ export default function FuncionariosPage() {
       bairro: "",
       cep: "",
       cidade: "",
+      uf: "",
       telefone: "",
       celular: "",
       email: "",
@@ -528,15 +532,18 @@ export default function FuncionariosPage() {
               <TabsContent value="pessoais" className="space-y-4 py-4 mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-2">
-                    <Label htmlFor="empresaId">Consignatária *</Label>
+                    <Label htmlFor="empresaId">Consignatária</Label>
                     <Select 
-                      value={formData.empresaId} 
-                      onValueChange={(value) => setFormData({ ...formData, empresaId: value })}
+                      value={formData.empresaId || "0"} 
+                      onValueChange={(value) => setFormData({ ...formData, empresaId: value === "0" ? "" : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a consignatária" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="0">
+                          <span className="text-muted-foreground">Sem empresa</span>
+                        </SelectItem>
                         {empresas.map((empresa) => (
                           <SelectItem key={empresa.id} value={empresa.id.toString()}>
                             {empresa.nome}
@@ -688,6 +695,15 @@ export default function FuncionariosPage() {
                       id="cidade"
                       value={formData.cidade}
                       onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="uf">UF</Label>
+                    <Input
+                      id="uf"
+                      value={formData.uf}
+                      onChange={(e) => setFormData({ ...formData, uf: e.target.value })}
+                      maxLength={2}
                     />
                   </div>
                 </div>
@@ -1064,8 +1080,8 @@ function VirtualizedFuncionariosTable({
                     <div className="space-y-2">
                       <div className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded">
                         <span className="text-muted-foreground">Consignatária:</span>{' '}
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {funcionario.empresa?.nome || 'Não informada'}
+                        <span className={`font-medium ${funcionario.empresa?.nome ? 'text-gray-900 dark:text-gray-100' : 'text-muted-foreground italic'}`}>
+                          {funcionario.empresa?.nome || 'Sem empresa'}
                         </span>
                       </div>
                       

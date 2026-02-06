@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
     const funcionario = await prisma.socio.create({
       data: {
         userId: targetUserId,
-        empresaId: parseInt(data.empresaId),
+        empresaId: data.empresaId && data.empresaId !== "0" ? parseInt(data.empresaId) : null,
         nome: data.nome,
         cpf: data.cpf?.replace(/\D/g, "") || null,
         rg: data.rg || null,
@@ -171,6 +171,7 @@ export async function POST(request: NextRequest) {
         bairro: data.bairro || null,
         cep: data.cep || null,
         cidade: data.cidade || null,
+        uf: data.uf || null,
         telefone: data.telefone || null,
         celular: data.celular || null,
         email: data.email || null,
