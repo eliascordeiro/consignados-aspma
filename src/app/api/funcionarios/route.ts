@@ -119,6 +119,7 @@ export async function GET(request: NextRequest) {
         limite: true,
         margemConsig: true,
         ativo: true,
+        dataExclusao: true,
       },
       orderBy: { nome: "asc" },
       skip,
