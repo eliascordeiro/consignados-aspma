@@ -61,24 +61,24 @@ async function migrarSociosCompleto() {
       console.log(`   ✅ Vendas e parcelas removidas`)
     }
     
-    // 3. Buscar ou criar usuário admin para empresas
-    console.log('\n📊 PASSO 3: Verificando usuário admin...')
+    // 3. Buscar usuário padrão (primeiro ADMIN ou MANAGER do Railway)
+    console.log('\n📊 PASSO 3: Verificando usuário padrão...')
     
-    let adminUser = await railwayPrisma.users.findFirst({
-      where: { 
+    const defaultUser = await railwayPrisma.users.findFirst({
+      where: {
         OR: [
-          { email: 'admin@system.com' },
-          { role: 'ADMIN' }
+          { role: 'ADMIN' },
+          { role: 'MANAGER' }
         ]
-      }
+      },
+      orderBy: { createdAt: 'asc' }
     })
     
-    if (!adminUser) {
-      console.log('   ⚠️  Nenhum usuário admin encontrado')
-      console.log('   ℹ️  Empresas e sócios serão criados sem userId')
-    } else {
-      console.log(`   ✅ Usuário admin encontrado: ${adminUser.email}`)
+    if (!defaultUser) {
+      throw new Error('❌ Nenhum usuário ADMIN ou MANAGER encontrado no Railway!')
     }
+    
+    console.log(`   ✅ Usuário padrão: ${defaultUser.name} (${defaultUser.role}) - ID: ${defaultUser.id}`)
     
     // 4. Buscar empresas PREFEITURA e FUNDO no Railway
     console.log('\n📊 PASSO 4: Buscando empresas no Railway...')
@@ -151,7 +151,8 @@ async function migrarSociosCompleto() {
         
         return {
           ...socio,
-          empresaId
+          empresaId,
+          userId: defaultUser.id
         }
       })
       
