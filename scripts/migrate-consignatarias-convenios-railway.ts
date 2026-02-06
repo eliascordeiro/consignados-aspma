@@ -35,19 +35,14 @@ async function migrateConsignatariasConvenios() {
     // ═══════════════════════════════════════════════════════════════
     // PASSO 2: Limpar tabelas (respeitando foreign keys)
     // ═══════════════════════════════════════════════════════════════
-    console.log('🗑️  [2/7] Limpando tabelas no Railway...')
+    console.log('🗑️  [2/6] Limpando tabelas no Railway...')
     
-    // Primeiro: limpar sócios (dependem de empresas)
-    console.log('   🗑️  Limpando "socios"...')
-    const sociosDeleted = await railwayPrisma.socio.deleteMany({})
-    console.log(`   ✅ ${sociosDeleted.count} sócios removidos`)
-    
-    // Segundo: limpar empresas
+    // Primeiro: limpar empresas
     console.log('   🗑️  Limpando "empresas"...')
     const empresasDeleted = await railwayPrisma.empresa.deleteMany({})
     console.log(`   ✅ ${empresasDeleted.count} empresas removidas`)
     
-    // Terceiro: limpar convênios
+    // Segundo: limpar convênios
     console.log('   🗑️  Limpando "convenio"...')
     const conveniosDeleted = await railwayPrisma.convenio.deleteMany({})
     console.log(`   ✅ ${conveniosDeleted.count} convênios removidos\n`)
@@ -57,9 +52,9 @@ async function migrateConsignatariasConvenios() {
     // ═══════════════════════════════════════════════════════════════
 
     // ═══════════════════════════════════════════════════════════════
-    // PASSO 4: Conectar no MySQL remoto
+    // PASSO 3: Conectar no MySQL remoto
     // ═══════════════════════════════════════════════════════════════
-    console.log('📡 [4/7] Conectando no MySQL remoto...')
+    console.log('📡 [3/6] Conectando no MySQL remoto...')
     mysqlConnection = await mysql.createConnection(mysqlConfig)
     console.log('   ✅ Conectado no MySQL!\n')
 
@@ -81,9 +76,9 @@ async function migrateConsignatariasConvenios() {
     console.log(`👤 Usando userId: ${defaultUser.id} (${defaultUser.name} - ${defaultUser.role})\n`)
 
     // ═══════════════════════════════════════════════════════════════
-    // PASSO 5: Copiar consignatarias (MySQL) → empresas (Railway)
+    // PASSO 4: Copiar consignatarias (MySQL) → empresas (Railway)
     // ═══════════════════════════════════════════════════════════════
-    console.log('📦 [5/7] Copiando "consignatarias" → "empresas"...')
+    console.log('📦 [4/6] Copiando "consignatarias" → "empresas"...')
     
     const [consignatarias] = await mysqlConnection.query<any[]>(
       'SELECT * FROM consignatarias ORDER BY id'
@@ -129,9 +124,9 @@ async function migrateConsignatariasConvenios() {
     console.log(`   🎉 ${empresasCriadas} empresas criadas!\n`)
 
     // ═══════════════════════════════════════════════════════════════
-    // PASSO 6: Copiar convenio (MySQL) → convenio (Railway)
+    // PASSO 5: Copiar convenio (MySQL) → convenio (Railway)
     // ═══════════════════════════════════════════════════════════════
-    console.log('📦 [6/7] Copiando "convenio" (MySQL) → "convenio" (Railway)...')
+    console.log('📦 [5/6] Copiando "convenio" (MySQL) → "convenio" (Railway)...')
     
     const [convenios] = await mysqlConnection.query<any[]>(
       'SELECT * FROM convenio ORDER BY id'
@@ -187,87 +182,6 @@ async function migrateConsignatariasConvenios() {
     console.log(`   🎉 ${conveniosCriados} convênios criados!\n`)
 
     // ═══════════════════════════════════════════════════════════════
-    // PASSO 7: Copiar socios (MySQL) → socios (Railway)
-    // ═══════════════════════════════════════════════════════════════
-    console.log('📦 [7/7] Copiando "socios" (MySQL) → "socios" (Railway)...')
-    
-    const [socios] = await mysqlConnection.query<any[]>(
-      'SELECT * FROM socios ORDER BY id'
-    )
-    
-    console.log(`   📊 ${socios.length} sócios encontrados no MySQL\n`)
-    
-    let sociosComEmpresa = 0
-    let sociosSemEmpresa = 0
-    
-    // Mapear sócios usando o campo 'tipo'
-    const sociosMapeados = socios.map((socio) => {
-      let empresaId: number | null = null
-      
-      // Regra: tipo="1" → PREFEITURA, tipo="3" → FUNDO, outros → null
-      if (socio.tipo === '1' && consignatariaIdMap.has(2)) {
-        // tipo="1" → PREFEITURA MUNICIPAL (id=2 no MySQL)
-        empresaId = consignatariaIdMap.get(2)!
-        sociosComEmpresa++
-      } else if (socio.tipo === '3' && consignatariaIdMap.has(1)) {
-        // tipo="3" → FUNDO DE PREVIDENCIA (id=1 no MySQL)
-        empresaId = consignatariaIdMap.get(1)!
-        sociosComEmpresa++
-      } else {
-        sociosSemEmpresa++
-        empresaId = null
-      }
-      
-      return {
-        userId: defaultUser.id,
-        nome: socio.nome ? socio.nome.trim() : 'Sem nome',
-        cpf: socio.cpf ? socio.cpf.trim() : null,
-        rg: socio.rg ? socio.rg.trim() : null,
-        matricula: socio.matricula ? socio.matricula.trim() : null,
-        empresaId: empresaId,
-        funcao: socio.funcao ? socio.funcao.trim() : null,
-        lotacao: socio.lotacao ? socio.lotacao.trim() : null,
-        endereco: socio.endereco ? socio.endereco.trim() : null,
-        bairro: socio.bairro ? socio.bairro.trim() : null,
-        cep: socio.cep ? socio.cep.trim() : null,
-        cidade: socio.cidade ? socio.cidade.trim() : null,
-        uf: socio.uf ? socio.uf.trim() : null,
-        telefone: socio.telefone ? socio.telefone.trim() : null,
-        celular: socio.celular ? socio.celular.trim() : null,
-        email: socio.email ? socio.email.trim() : null,
-        dataNascimento: socio.data_nascimento ? new Date(socio.data_nascimento) : null,
-        dataAdmissao: socio.data_admissao ? new Date(socio.data_admissao) : null,
-        ativo: socio.ativo !== undefined ? Boolean(socio.ativo) : true,
-      }
-    })
-    
-    console.log(`   📊 Estatísticas antes da criação:`)
-    console.log(`      - Com empresa: ${sociosComEmpresa}`)
-    console.log(`      - Sem empresa: ${sociosSemEmpresa}\n`)
-    
-    // Inserir em lotes usando createMany
-    const batchSize = 500
-    let totalCriados = 0
-    
-    for (let i = 0; i < sociosMapeados.length; i += batchSize) {
-      const batch = sociosMapeados.slice(i, i + batchSize)
-      
-      try {
-        const result = await railwayPrisma.socio.createMany({
-          data: batch,
-          skipDuplicates: true
-        })
-        
-        totalCriados += result.count
-        console.log(`   ✅ [${totalCriados}/${socios.length}] Sócios criados...`)
-      } catch (error: any) {
-        console.log(`   ⚠️  Erro no lote ${i}-${i + batchSize}:`, error.message)
-      }
-    }
-    
-    console.log(`   🎉 ${totalCriados} sócios criados!\n`)
-
-    // ═══════════════════════════════════════════════════════════════
     // RESUMO FINAL
     // ═══════════════════════════════════════════════════════════════
     console.log('═══════════════════════════════════════════════════════════')
@@ -275,9 +189,6 @@ async function migrateConsignatariasConvenios() {
     console.log('═══════════════════════════════════════════════════════════')
     console.log(`✅ Empresas criadas:     ${empresasCriadas}/${consignatarias.length}`)
     console.log(`✅ Convênios criados:    ${conveniosCriados}/${convenios.length}`)
-    console.log(`✅ Sócios criados:       ${totalCriados}/${socios.length}`)
-    console.log(`   - Com empresa:         ${sociosComEmpresa}`)
-    console.log(`   - Sem empresa:         ${sociosSemEmpresa}`)
     console.log(`👤 UserID utilizado:     ${defaultUser.id}`)
     console.log(`👤 Usuário:              ${defaultUser.name} (${defaultUser.role})`)
     console.log('═══════════════════════════════════════════════════════════')

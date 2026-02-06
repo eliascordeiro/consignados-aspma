@@ -80,47 +80,27 @@ async function migrarSociosCompleto() {
       console.log(`   ✅ Usuário admin encontrado: ${adminUser.email}`)
     }
     
-    // 4. Verificar se empresa "Nenhuma" existe no Railway
-    console.log('\n📊 PASSO 4: Verificando empresa padrão...')
+    // 4. Buscar empresas PREFEITURA e FUNDO no Railway
+    console.log('\n📊 PASSO 4: Buscando empresas no Railway...')
     
-    let empresaNenhuma = await railwayPrisma.empresa.findFirst({
-      where: { nome: 'Nenhuma' }
+    const empresaPrefeitura = await railwayPrisma.empresa.findFirst({
+      where: { nome: { contains: 'PREFEITURA MUNICIPAL', mode: 'insensitive' } }
     })
     
-    if (!empresaNenhuma) {
-      console.log('   ⚠️  Empresa "Nenhuma" não existe, criando...')
-      
-      // Usar SQL direto especificando o userId do admin
-      if (adminUser) {
-        await railwayPrisma.$executeRaw`
-          INSERT INTO empresas ("userId", nome, ativo, "createdAt", "updatedAt")
-          VALUES (${adminUser.id}, 'Nenhuma', true, NOW(), NOW())
-        `
-      } else {
-        // Se não tem admin, criar um admin temporário
-        console.log('   ⚠️  Criando usuário admin temporário...')
-        const tempAdmin = await railwayPrisma.users.create({
-          data: {
-            email: 'system@consigexpress.com',
-            name: 'System',
-            password: '$2a$10$temporaryPasswordHashHere',
-            role: 'ADMIN',
-            active: true
-          }
-        })
-        await railwayPrisma.$executeRaw`
-          INSERT INTO empresas ("userId", nome, ativo, "createdAt", "updatedAt")
-          VALUES (${tempAdmin.id}, 'Nenhuma', true, NOW(), NOW())
-        `
-      }
-      
-      empresaNenhuma = await railwayPrisma.empresa.findFirst({
-        where: { nome: 'Nenhuma' }
-      })
-      
-      console.log(`   ✅ Empresa "Nenhuma" criada com ID: ${empresaNenhuma?.id}`)
+    const empresaFundo = await railwayPrisma.empresa.findFirst({
+      where: { nome: { contains: 'FUNDO DE PREVIDENCIA', mode: 'insensitive' } }
+    })
+    
+    if (empresaPrefeitura) {
+      console.log(`   ✅ PREFEITURA encontrada com ID: ${empresaPrefeitura.id}`)
     } else {
-      console.log(`   ✅ Empresa "Nenhuma" já existe com ID: ${empresaNenhuma.id}`)
+      console.log(`   ⚠️  PREFEITURA não encontrada`)
+    }
+    
+    if (empresaFundo) {
+      console.log(`   ✅ FUNDO encontrado com ID: ${empresaFundo.id}`)
+    } else {
+      console.log(`   ⚠️  FUNDO não encontrado`)
     }
     
     // 5. Buscar sócios do Local
@@ -134,25 +114,49 @@ async function migrarSociosCompleto() {
     
     // Verificar quantos têm empresaId NULL
     const semEmpresa = sociosLocal.filter(s => !s.empresaId).length
-    console.log(`   ⚠️  ${semEmpresa} sócios sem empresa (serão atribuídos à empresa "Nenhuma")`)
+    if (semEmpresa > 0) {
+      console.log(`   ⚠️  ${semEmpresa} sócios sem empresa`)
+      console.log(`   ℹ️  Aplicando regra de mapeamento: tipo='1' → PREFEITURA, tipo='3' → FUNDO`)
+    }
     
-    // 6. Migrar em lotes
+    // 6. Migrar em lotes com mapeamento de empresaId
     console.log('\n📊 PASSO 6: Migrando sócios para Railway...')
     
     const batchSize = 100
     let migrated = 0
+    let sociosComEmpresaMapeada = 0
+    let sociosSemEmpresaFinal = 0
     
     for (let i = 0; i < sociosLocal.length; i += batchSize) {
       const batch = sociosLocal.slice(i, i + batchSize)
       
-      // Ajustar empresaId NULL para a empresa "Nenhuma"
-      const batchAjustado = batch.map(socio => ({
-        ...socio,
-        empresaId: socio.empresaId || empresaNenhuma!.id
-      }))
+      // Aplicar mapeamento de empresaId baseado no campo tipo
+      const batchMapeado = batch.map(socio => {
+        let empresaId = socio.empresaId
+        
+        // Se não tem empresaId, aplicar regra de mapeamento por tipo
+        if (!empresaId && socio.tipo) {
+          if (socio.tipo === '1' && empresaPrefeitura) {
+            empresaId = empresaPrefeitura.id
+            sociosComEmpresaMapeada++
+          } else if (socio.tipo === '3' && empresaFundo) {
+            empresaId = empresaFundo.id
+            sociosComEmpresaMapeada++
+          } else {
+            sociosSemEmpresaFinal++
+          }
+        } else if (!empresaId) {
+          sociosSemEmpresaFinal++
+        }
+        
+        return {
+          ...socio,
+          empresaId
+        }
+      })
       
       await railwayPrisma.socio.createMany({
-        data: batchAjustado,
+        data: batchMapeado,
         skipDuplicates: true
       })
       
@@ -164,6 +168,8 @@ async function migrarSociosCompleto() {
     }
     
     console.log(`   ✅ ${migrated} sócios migrados com sucesso!`)
+    console.log(`   📊 Mapeamento aplicado: ${sociosComEmpresaMapeada} sócios receberam empresaId`)
+    console.log(`   ⚠️  ${sociosSemEmpresaFinal} sócios permaneceram sem empresa`)
     
     // 7. Verificação final
     console.log('\n📊 PASSO 7: Verificação final...')
@@ -206,6 +212,8 @@ async function migrarSociosCompleto() {
     console.log(`\n   📊 Estatísticas:`)
     console.log(`      - Sócios deletados do Railway: ${deletedSocios.count}`)
     console.log(`      - Sócios migrados do Local: ${migrated}`)
+    console.log(`      - Sócios mapeados por tipo: ${sociosComEmpresaMapeada}`)
+    console.log(`      - Sócios sem empresa: ${sociosSemEmpresaFinal}`)
     console.log(`      - Total no Railway agora: ${railwayCountAfter}`)
     console.log(`      - Sócios com matrícula atualizada: ${comMatriculaAtual[0]?.total || 0}`)
     

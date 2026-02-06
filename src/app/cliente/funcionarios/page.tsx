@@ -542,7 +542,7 @@ export default function FuncionariosPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">
-                          <span className="text-muted-foreground">Sem empresa</span>
+                          <span className="text-muted-foreground">Nenhuma</span>
                         </SelectItem>
                         {empresas.map((empresa) => (
                           <SelectItem key={empresa.id} value={empresa.id.toString()}>
@@ -1081,13 +1081,13 @@ function VirtualizedFuncionariosTable({
                       <div className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded">
                         <span className="text-muted-foreground">Consignatária:</span>{' '}
                         <span className={`font-medium ${funcionario.empresa?.nome ? 'text-gray-900 dark:text-gray-100' : 'text-muted-foreground italic'}`}>
-                          {funcionario.empresa?.nome || 'Sem empresa'}
+                          {funcionario.empresa?.nome || 'Nenhuma'}
                         </span>
                       </div>
                       
                       <div className="flex items-center">
                         <span className="text-xs text-muted-foreground mr-2">Status:</span>
-                        {funcionario.ativo ? (
+                        {!funcionario.dataExclusao ? (
                           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                             ✓ Ativo
                           </span>
@@ -1119,7 +1119,7 @@ function VirtualizedFuncionariosTable({
                     </div>
                     
                     <div>
-                      {funcionario.ativo ? (
+                      {!funcionario.dataExclusao ? (
                         <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
                           Ativo
                         </span>
