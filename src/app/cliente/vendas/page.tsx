@@ -293,9 +293,6 @@ export default function VendasPage() {
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    if (parentRef.current) {
-      parentRef.current.scrollTop = 0;
-    }
   };
 
   return (
