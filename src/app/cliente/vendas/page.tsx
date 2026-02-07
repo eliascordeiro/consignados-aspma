@@ -32,7 +32,7 @@ function FiltroEmpresa({ value, onChange }: { value: string; onChange: (value: s
       <option value="">Todas</option>
       {empresas?.map((emp: any) => (
         <option key={emp.id} value={emp.id}>
-          {emp.razao_soc}
+          {emp.nome}
         </option>
       ))}
     </select>

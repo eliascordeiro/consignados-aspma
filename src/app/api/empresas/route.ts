@@ -18,8 +18,7 @@ export async function GET(req: NextRequest) {
     const where = search
       ? {
           OR: [
-            { razao_soc: { contains: search, mode: "insensitive" as const } },
-            { fantasia: { contains: search, mode: "insensitive" as const } },
+            { nome: { contains: search, mode: "insensitive" as const } },
             { cnpj: { contains: search, mode: "insensitive" as const } },
           ],
         }
@@ -30,11 +29,10 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: limit,
-        orderBy: { razao_soc: "asc" },
+        orderBy: { nome: "asc" },
         select: {
           id: true,
-          razao_soc: true,
-          fantasia: true,
+          nome: true,
           cnpj: true,
           tipo: true,
           ativo: true,
