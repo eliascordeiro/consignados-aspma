@@ -531,7 +531,6 @@ export default function VendasPage() {
                                   Parcelas
                                 </div>
                                 <div className="text-gray-900 dark:text-white">
-                                  {parcelasPagas(venda.parcelas)}/
                                   {venda.quantidadeParcelas}
                                 </div>
                               </div>
@@ -599,7 +598,7 @@ export default function VendasPage() {
 
                           <div className="text-center">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {parcelasPagas(venda.parcelas)}/{venda.quantidadeParcelas}
+                              {venda.quantidadeParcelas}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               R$ {parseFloat(venda.valorParcela.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
