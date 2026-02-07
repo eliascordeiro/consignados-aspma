@@ -310,7 +310,7 @@ export default function LocaisPage() {
               <span className="md:hidden">Novo</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-5xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-slate-900 consignado:bg-blue-50 consignado:dark:bg-slate-900 flex flex-col p-4 sm:p-6">
+          <DialogContent className="w-full max-w-5xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-gray-800 consignado:bg-blue-50 consignado:dark:bg-gray-800 flex flex-col p-4 sm:p-6">
             <DialogHeader className="shrink-0">
               <DialogTitle className="text-xl sm:text-2xl">
                 {editingConvenio ? "Editar Convênio" : "Novo Convênio"}
@@ -816,7 +816,7 @@ function VirtualizedTable({
                   className="border-b hover:bg-muted/50"
                 >
                   {/* Layout Mobile - Cards */}
-                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-950">
+                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-800">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
@@ -864,7 +864,7 @@ function VirtualizedTable({
                       </div>
                       
                       {convenio.banco && (
-                        <div className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                        <div className="text-xs bg-gray-50 dark:bg-gray-700 p-2 rounded">
                           <span className="text-muted-foreground">Banco:</span>{' '}
                           <span className="font-medium text-gray-900 dark:text-gray-100">{convenio.banco}</span>
                           {convenio.agencia && (

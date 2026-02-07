@@ -180,7 +180,7 @@ export default function UsuariosPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                  <TableRow className="bg-gray-50 dark:bg-gray-800">
                     <TableHead className="font-semibold">Nome</TableHead>
                     <TableHead className="font-semibold">Email</TableHead>
                     <TableHead className="font-semibold hidden md:table-cell">CPF</TableHead>

@@ -336,7 +336,7 @@ export default function ConsignatariasPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-slate-900 consignado:bg-blue-50 consignado:dark:bg-slate-900 flex flex-col">
+        <DialogContent className="max-w-2xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-gray-800 consignado:bg-blue-50 consignado:dark:bg-gray-800 flex flex-col">
           <DialogHeader className="shrink-0">
             <DialogTitle>
               {selectedEmpresa ? "Editar Consignatária" : "Nova Consignatária"}
@@ -572,7 +572,7 @@ function VirtualizedEmpresasTable({
                   className="border-b hover:bg-muted/50"
                 >
                   {/* Layout Mobile - Cards */}
-                  <div className="md:hidden p-3 space-y-2.5 bg-white dark:bg-gray-950">
+                  <div className="md:hidden p-3 space-y-2.5 bg-white dark:bg-gray-800">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-snug break-words">
@@ -607,7 +607,7 @@ function VirtualizedEmpresasTable({
                     
                     <div className="space-y-1.5 text-xs">
                       {(empresa.contato || empresa.telefone) && (
-                        <div className="bg-gray-50 dark:bg-gray-900 p-2 rounded-md">
+                        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
                           <div className="text-muted-foreground mb-0.5">Contato:</div>
                           {empresa.contato && (
                             <div className="font-medium text-gray-900 dark:text-gray-100 break-words">
@@ -627,8 +627,8 @@ function VirtualizedEmpresasTable({
                           <span className="text-muted-foreground">Tipo:</span>
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
                             empresa.tipo === "PUBLICO" 
-                              ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" 
-                              : "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                              ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300" 
+                              : "bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
                           }`}>
                             {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
                           </span>
@@ -637,11 +637,11 @@ function VirtualizedEmpresasTable({
                         <div className="flex items-center gap-1.5">
                           <span className="text-muted-foreground">Status:</span>
                           {empresa.ativo ? (
-                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300">
                               ✓ Ativo
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                               Inativo
                             </span>
                           )}
@@ -674,8 +674,8 @@ function VirtualizedEmpresasTable({
                     <div>
                       <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                         empresa.tipo === "PUBLICO" 
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" 
-                          : "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300" 
+                          : "bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
                       }`}>
                         {empresa.tipo === "PUBLICO" ? "Público" : "Privado"}
                       </span>

@@ -510,7 +510,7 @@ export default function FuncionariosPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-slate-900 flex flex-col">
+        <DialogContent className="max-w-4xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-gray-800 flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {selectedFuncionario ? "Editar Funcionário" : "Novo Funcionário"}
@@ -1039,7 +1039,7 @@ function VirtualizedFuncionariosTable({
                   className="border-b hover:bg-muted/50"
                 >
                   {/* Layout Mobile - Cards */}
-                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-950">
+                  <div className="md:hidden p-4 space-y-3 bg-white dark:bg-gray-800">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-tight">
