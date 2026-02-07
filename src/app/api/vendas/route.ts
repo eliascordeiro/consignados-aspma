@@ -179,6 +179,35 @@ export async function GET(request: NextRequest) {
     // Offset-based pagination (tradicional)
     const skip = (page - 1) * limit;
 
+    // Construir filtro específico para agregação de parcelas
+    const parcelaWhereClause: any = { venda: {} };
+    
+    // Se há filtro de mês de vencimento, aplicar diretamente nas parcelas
+    if (mesVencimento) {
+      const [ano, mes] = mesVencimento.split('-').map(Number);
+      const dataInicio = new Date(ano, mes - 1, 1);
+      const dataFim = new Date(ano, mes, 0, 23, 59, 59);
+      
+      parcelaWhereClause.dataVencimento = {
+        gte: dataInicio,
+        lte: dataFim
+      };
+    }
+    
+    // Aplicar filtros da venda
+    if (socioId) {
+      parcelaWhereClause.venda.socioId = socioId;
+    }
+    if (convenioId) {
+      parcelaWhereClause.venda.convenioId = parseInt(convenioId);
+    }
+    if (empresaId) {
+      parcelaWhereClause.venda.socio = { empresaId: parseInt(empresaId) };
+    }
+    if (ativo !== null && ativo !== '') {
+      parcelaWhereClause.venda.ativo = ativo === 'true';
+    }
+
     const [vendas, total, valorTotalGeral, totalParcelas] = await Promise.all([
       prisma.venda.findMany({
         where: whereClause,
@@ -223,9 +252,7 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.parcela.aggregate({
-        where: {
-          venda: whereClause,
-        },
+        where: parcelaWhereClause,
         _sum: {
           valor: true,
         },
