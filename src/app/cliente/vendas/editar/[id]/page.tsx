@@ -43,6 +43,8 @@ export default function EditarVendaPage() {
   });
 
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     if (vendaId) {
@@ -289,36 +291,39 @@ export default function EditarVendaPage() {
                 </tr>
               </thead>
               <tbody>
-                {parcelas.map((parcela, index) => (
-                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">{parcela.numeroParcela}</td>
-                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600">
-                      <input
-                        type="date"
-                        value={parcela.dataVencimento}
-                        onChange={(e) => atualizarParcela(index, 'dataVencimento', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      />
-                    </td>
-                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={parcela.valor}
-                        onChange={(e) => atualizarParcela(index, 'valor', parseFloat(e.target.value))}
-                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      />
-                    </td>
-                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center">
-                      <input
-                        type="checkbox"
-                        checked={parcela.baixa === 'X'}
-                        onChange={(e) => atualizarParcela(index, 'baixa', e.target.checked ? 'X' : null)}
-                        className="w-5 h-5 cursor-pointer"
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {parcelas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((parcela, index) => {
+                  const originalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+                  return (
+                    <tr key={originalIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">{parcela.numeroParcela}</td>
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600">
+                        <input
+                          type="date"
+                          value={parcela.dataVencimento}
+                          onChange={(e) => atualizarParcela(originalIndex, 'dataVencimento', e.target.value)}
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        />
+                      </td>
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={parcela.valor}
+                          onChange={(e) => atualizarParcela(originalIndex, 'valor', parseFloat(e.target.value))}
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        />
+                      </td>
+                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center">
+                        <input
+                          type="checkbox"
+                          checked={parcela.baixa === 'X'}
+                          onChange={(e) => atualizarParcela(originalIndex, 'baixa', e.target.checked ? 'X' : null)}
+                          className="w-5 h-5 cursor-pointer"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot className="bg-gray-100 dark:bg-gray-700 font-bold">
                 <tr>
@@ -331,6 +336,41 @@ export default function EditarVendaPage() {
               </tfoot>
             </table>
           </div>
+
+          {/* Paginação */}
+          {parcelas.length > ITEMS_PER_PAGE && (
+            <div className="flex justify-center items-center gap-2 mt-4">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              
+              {Array.from({ length: Math.ceil(parcelas.length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === page
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(parcelas.length / ITEMS_PER_PAGE), prev + 1))}
+                disabled={currentPage === Math.ceil(parcelas.length / ITEMS_PER_PAGE)}
+                className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Próxima
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Botões */}
