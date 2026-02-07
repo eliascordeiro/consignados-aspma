@@ -741,10 +741,10 @@ export default function VendasPage() {
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Valor total:{' '}
                 <strong>
-                  {(pagination?.valorTotalGeral || 0).toLocaleString('pt-BR', { 
+                  {new Intl.NumberFormat('pt-BR', { 
                     style: 'currency',
                     currency: 'BRL'
-                  })}
+                  }).format(Number(pagination?.valorTotalGeral || 0))}
                 </strong>
                 {pagination && pagination.total > 0 && (
                   <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
