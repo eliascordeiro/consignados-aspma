@@ -137,6 +137,7 @@ interface VendasResponse {
     limit: number;
     total: number;
     totalPages: number;
+    valorTotalGeral: number;
   };
 }
 
@@ -741,13 +742,16 @@ export default function VendasPage() {
                 Valor total:{' '}
                 <strong>
                   R${' '}
-                  {vendas
-                    .reduce(
-                      (sum, v) => sum + parseFloat(v.valorTotal.toString()),
-                      0
-                    )
-                    .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {(pagination?.valorTotalGeral || 0).toLocaleString('pt-BR', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  })}
                 </strong>
+                {pagination && pagination.total > 0 && (
+                  <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
+                    ({pagination.total} venda{pagination.total !== 1 ? 's' : ''})
+                  </span>
+                )}
               </div>
             </div>
           </div>

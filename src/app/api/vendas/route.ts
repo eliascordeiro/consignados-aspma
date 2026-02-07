@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
     // Offset-based pagination (tradicional)
     const skip = (page - 1) * limit;
 
-    const [vendas, total] = await Promise.all([
+    const [vendas, total, valorTotalGeral] = await Promise.all([
       prisma.venda.findMany({
         where: whereClause,
         take: limit,
@@ -216,6 +216,12 @@ export async function GET(request: NextRequest) {
         ],
       }),
       prisma.venda.count({ where: whereClause }),
+      prisma.venda.aggregate({
+        where: whereClause,
+        _sum: {
+          valorTotal: true,
+        },
+      }),
     ]);
 
     console.log('[GET /api/vendas] Offset pagination result:', {
@@ -225,6 +231,7 @@ export async function GET(request: NextRequest) {
       total,
       returned: vendas.length,
       totalPages: Math.ceil(total / limit),
+      valorTotalGeral: valorTotalGeral._sum.valorTotal,
       sampleParcelas: vendas[0]?.parcelas?.length
     });
 
@@ -235,6 +242,7 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+        valorTotalGeral: valorTotalGeral._sum.valorTotal || 0,
       },
     });
   } catch (error) {
