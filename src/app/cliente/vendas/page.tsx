@@ -737,37 +737,20 @@ export default function VendasPage() {
                 </div>
               )}
               
-              <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">Valor total vendas:</span>{' '}
+              {pagination && pagination.totalParcelas > 0 && (
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  <span className="text-gray-500 dark:text-gray-400">Valor total:</span>{' '}
                   <strong>
                     {new Intl.NumberFormat('pt-BR', { 
                       style: 'currency',
                       currency: 'BRL'
-                    }).format(Number(pagination?.valorTotalGeral || 0))}
+                    }).format(Number(pagination.valorTotalParcelas || 0))}
                   </strong>
-                  {pagination && pagination.total > 0 && (
-                    <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
-                      ({pagination.total} venda{pagination.total !== 1 ? 's' : ''})
-                    </span>
-                  )}
+                  <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
+                    ({pagination.totalParcelas} parcela{pagination.totalParcelas !== 1 ? 's' : ''})
+                  </span>
                 </div>
-                
-                {pagination && pagination.totalParcelas > 0 && (
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Valor total parcelas:</span>{' '}
-                    <strong>
-                      {new Intl.NumberFormat('pt-BR', { 
-                        style: 'currency',
-                        currency: 'BRL'
-                      }).format(Number(pagination.valorTotalParcelas || 0))}
-                    </strong>
-                    <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
-                      ({pagination.totalParcelas} parcela{pagination.totalParcelas !== 1 ? 's' : ''})
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
