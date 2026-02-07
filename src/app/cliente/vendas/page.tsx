@@ -741,10 +741,9 @@ export default function VendasPage() {
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Valor total:{' '}
                 <strong>
-                  R${' '}
                   {(pagination?.valorTotalGeral || 0).toLocaleString('pt-BR', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
+                    style: 'currency',
+                    currency: 'BRL'
                   })}
                 </strong>
                 {pagination && pagination.total > 0 && (
