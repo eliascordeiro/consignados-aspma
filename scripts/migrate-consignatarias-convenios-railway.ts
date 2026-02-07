@@ -37,12 +37,17 @@ async function migrateConsignatariasConvenios() {
     // ═══════════════════════════════════════════════════════════════
     console.log('🗑️  [2/6] Limpando tabelas no Railway...')
     
-    // Primeiro: limpar empresas
+    // Primeiro: limpar sócios (dependem de empresas)
+    console.log('   🗑️  Limpando "socios"...')
+    const sociosDeleted = await railwayPrisma.socio.deleteMany({})
+    console.log(`   ✅ ${sociosDeleted.count} sócios removidos`)
+    
+    // Segundo: limpar empresas
     console.log('   🗑️  Limpando "empresas"...')
     const empresasDeleted = await railwayPrisma.empresa.deleteMany({})
     console.log(`   ✅ ${empresasDeleted.count} empresas removidas`)
     
-    // Segundo: limpar convênios
+    // Terceiro: limpar convênios
     console.log('   🗑️  Limpando "convenio"...')
     const conveniosDeleted = await railwayPrisma.convenio.deleteMany({})
     console.log(`   ✅ ${conveniosDeleted.count} convênios removidos\n`)

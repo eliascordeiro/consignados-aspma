@@ -7,6 +7,101 @@ import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Pencil, XCircle, Eye } from 'lucide-react';
 
+// ===================================================================
+// COMPONENTES DE FILTRO
+// ===================================================================
+
+function FiltroEmpresa({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { data: empresas } = useQuery({
+    queryKey: ['empresas-filtro'],
+    queryFn: async () => {
+      const res = await fetch('/api/empresas?limit=1000');
+      if (!res.ok) throw new Error('Erro ao carregar empresas');
+      const json = await res.json();
+      return json.data || [];
+    },
+    staleTime: 300000, // 5 minutos
+  });
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="">Todas</option>
+      {empresas?.map((emp: any) => (
+        <option key={emp.id} value={emp.id}>
+          {emp.razao_soc}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function FiltroSocio({ value, onChange, empresaId }: { value: string; onChange: (value: string) => void; empresaId: string }) {
+  const { data: socios } = useQuery({
+    queryKey: ['socios-filtro', empresaId],
+    queryFn: async () => {
+      const params = new URLSearchParams({ limit: '10000', ativo: 'true' });
+      if (empresaId) params.set('empresaId', empresaId);
+      const res = await fetch(`/api/funcionarios?${params}`);
+      if (!res.ok) throw new Error('Erro ao carregar sócios');
+      const json = await res.json();
+      return json.data || [];
+    },
+    staleTime: 300000, // 5 minutos
+    enabled: true,
+  });
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="">Todos</option>
+      {socios?.map((socio: any) => (
+        <option key={socio.id} value={socio.id}>
+          {socio.matricula} - {socio.nome}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function FiltroConvenio({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const { data: convenios } = useQuery({
+    queryKey: ['convenios-filtro'],
+    queryFn: async () => {
+      const res = await fetch('/api/convenios?limit=1000');
+      if (!res.ok) throw new Error('Erro ao carregar convênios');
+      const json = await res.json();
+      return json.data || [];
+    },
+    staleTime: 300000, // 5 minutos
+  });
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="">Todos</option>
+      {convenios?.map((conv: any) => (
+        <option key={conv.id} value={conv.id}>
+          {conv.razao_soc}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// ===================================================================
+// INTERFACES
+// ===================================================================
+
 interface Venda {
   id: string;
   numeroVenda: number;
@@ -49,10 +144,18 @@ async function fetchVendas({
   page = 1,
   filtroAtivo,
   searchTerm,
+  empresaId,
+  socioId,
+  convenioId,
+  mesVencimento,
 }: {
   page?: number;
   filtroAtivo: string;
   searchTerm: string;
+  empresaId: string;
+  socioId: string;
+  convenioId: string;
+  mesVencimento: string;
 }): Promise<VendasResponse> {
   const params = new URLSearchParams();
   
@@ -65,6 +168,22 @@ async function fetchVendas({
   
   if (searchTerm) {
     params.set('search', searchTerm);
+  }
+
+  if (empresaId) {
+    params.set('empresaId', empresaId);
+  }
+
+  if (socioId) {
+    params.set('socioId', socioId);
+  }
+
+  if (convenioId) {
+    params.set('convenioId', convenioId);
+  }
+
+  if (mesVencimento) {
+    params.set('mesVencimento', mesVencimento);
   }
 
   const response = await fetch(`/api/vendas?${params.toString()}`);
@@ -80,6 +199,10 @@ export default function VendasPage() {
   const [filtroAtivo, setFiltroAtivo] = useState('true');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [empresaId, setEmpresaId] = useState('');
+  const [socioId, setSocioId] = useState('');
+  const [convenioId, setConvenioId] = useState('');
+  const [mesVencimento, setMesVencimento] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -97,7 +220,7 @@ export default function VendasPage() {
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filtroAtivo]);
+  }, [filtroAtivo, empresaId, socioId, convenioId, mesVencimento]);
 
   // Check mobile
   useEffect(() => {
@@ -115,8 +238,8 @@ export default function VendasPage() {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ['vendas', filtroAtivo, searchTerm, currentPage],
-    queryFn: () => fetchVendas({ page: currentPage, filtroAtivo, searchTerm }),
+    queryKey: ['vendas', filtroAtivo, searchTerm, currentPage, empresaId, socioId, convenioId, mesVencimento],
+    queryFn: () => fetchVendas({ page: currentPage, filtroAtivo, searchTerm, empresaId, socioId, convenioId, mesVencimento }),
     staleTime: 60000, // 1 minuto
   });
 
@@ -188,7 +311,7 @@ export default function VendasPage() {
 
       {/* Filtros */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 dark:text-gray-300">
               Pesquisar
@@ -216,6 +339,55 @@ export default function VendasPage() {
               <option value="false">Cancelados</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+              Mês de Vencimento
+            </label>
+            <input
+              type="month"
+              value={mesVencimento}
+              onChange={(e) => setMesVencimento(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+              Consignatária
+            </label>
+            <FiltroEmpresa value={empresaId} onChange={setEmpresaId} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+              Sócio
+            </label>
+            <FiltroSocio value={socioId} onChange={setSocioId} empresaId={empresaId} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+              Convênio
+            </label>
+            <FiltroConvenio value={convenioId} onChange={setConvenioId} />
+          </div>
+
+          {(empresaId || socioId || convenioId || mesVencimento) && (
+            <div className="md:col-span-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setEmpresaId('');
+                  setSocioId('');
+                  setConvenioId('');
+                  setMesVencimento('');
+                }}
+                className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
+              >
+                Limpar Filtros
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

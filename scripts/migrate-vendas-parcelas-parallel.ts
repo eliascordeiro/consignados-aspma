@@ -393,11 +393,19 @@ async function migrate() {
   });
   log(`   ✅ ${formatNumber(convenioByCodigo.size)} convênios`);
 
-  // Admin (A.S.P.M.A - mesmo usuário dos sócios)
-  const admin = await mainPrisma.users.findFirst({ where: { email: 'elias157508@gmail.com' } });
-  if (!admin) throw new Error('Usuário A.S.P.M.A não encontrado!');
-  adminUserId = admin.id;
-  log(`   ✅ Usuário A.S.P.M.A: ${adminUserId}`);
+  // Buscar userId padrão (primeiro ADMIN ou MANAGER)
+  const defaultUser = await mainPrisma.users.findFirst({
+    where: {
+      OR: [
+        { role: 'ADMIN' },
+        { role: 'MANAGER' }
+      ]
+    },
+    orderBy: { createdAt: 'asc' }
+  });
+  if (!defaultUser) throw new Error('❌ Nenhum usuário ADMIN ou MANAGER encontrado!');
+  adminUserId = defaultUser.id;
+  log(`   ✅ Admin: ${defaultUser.id} (${defaultUser.name} - ${defaultUser.role})`);
 
   // Mapa de vendas
   vendaIdMap = new Map();

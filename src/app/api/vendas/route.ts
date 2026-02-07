@@ -17,21 +17,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    // Usar sempre o ID do próprio usuário (não o createdById)
-    const targetUserId = session.user.id;
-
     const { searchParams } = new URL(request.url);
     const socioId = searchParams.get('socioId');
     const convenioId = searchParams.get('convenioId');
+    const empresaId = searchParams.get('empresaId');
+    const mesVencimento = searchParams.get('mesVencimento'); // formato: YYYY-MM
     const ativo = searchParams.get('ativo');
     const search = searchParams.get('search') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const cursor = searchParams.get('cursor'); // Para infinite scroll
 
-    const whereClause: any = {
-      userId: targetUserId,
-    };
+    const whereClause: any = {};
 
     if (socioId) {
       whereClause.socioId = socioId;
@@ -39,6 +36,29 @@ export async function GET(request: NextRequest) {
 
     if (convenioId) {
       whereClause.convenioId = parseInt(convenioId);
+    }
+
+    // Filtro por consignatária (empresa do sócio)
+    // Será combinado com busca se necessário
+    const socioFilter: any = {};
+    if (empresaId) {
+      socioFilter.empresaId = parseInt(empresaId);
+    }
+
+    // Filtro por mês/ano de vencimento das parcelas
+    if (mesVencimento) {
+      const [ano, mes] = mesVencimento.split('-').map(Number);
+      const dataInicio = new Date(ano, mes - 1, 1);
+      const dataFim = new Date(ano, mes, 0, 23, 59, 59);
+      
+      whereClause.parcelas = {
+        some: {
+          dataVencimento: {
+            gte: dataInicio,
+            lte: dataFim
+          }
+        }
+      };
     }
 
     if (ativo !== null && ativo !== '') {
@@ -50,10 +70,23 @@ export async function GET(request: NextRequest) {
       const searchNumber = parseInt(search);
       whereClause.OR = [
         ...(isNaN(searchNumber) ? [] : [{ numeroVenda: searchNumber }]),
-        { socio: { nome: { contains: search, mode: 'insensitive' } } },
-        { socio: { matricula: { contains: search, mode: 'insensitive' } } },
+        { 
+          socio: { 
+            nome: { contains: search, mode: 'insensitive' },
+            ...socioFilter // Combina filtro de empresa com busca
+          } 
+        },
+        { 
+          socio: { 
+            matricula: { contains: search, mode: 'insensitive' },
+            ...socioFilter
+          } 
+        },
         { convenio: { razao_soc: { contains: search, mode: 'insensitive' } } },
       ];
+    } else if (Object.keys(socioFilter).length > 0) {
+      // Se não tem busca mas tem filtro de empresa
+      whereClause.socio = socioFilter;
     }
 
     console.log('[GET /api/vendas] Query params:', { 
@@ -61,7 +94,11 @@ export async function GET(request: NextRequest) {
       page, 
       limit, 
       search, 
-      ativo, 
+      ativo,
+      socioId,
+      convenioId,
+      empresaId,
+      mesVencimento,
       whereClause: JSON.stringify(whereClause) 
     });
 

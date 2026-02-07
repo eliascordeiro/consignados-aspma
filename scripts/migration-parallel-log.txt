@@ -270,3 +270,348 @@ Unknown field `codconven` for select statement on model `convenio`. Available op
 [2026-02-04T20:37:32.700Z] 📊 VERIFICAÇÃO FINAL
 [2026-02-04T20:37:34.307Z]    Railway: 81.750 vendas | 758.777 parcelas
 [2026-02-04T20:37:34.317Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T00:16:35.042Z] 🚀 Iniciando migração paralela...
+[2026-02-06T00:16:35.964Z] 📊 Carregando dados de referência...
+[2026-02-06T00:16:36.104Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T00:16:37.976Z]    ✅ 4.215 sócios
+[2026-02-06T00:16:38.240Z]    ✅ 230 convênios
+[2026-02-06T00:16:38.503Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T00:16:38.504Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T00:16:38.547Z]    Total: 82.186 vendas (IDs: 1 - 89109)
+[2026-02-06T01:27:05.696Z] 🚀 Iniciando migração paralela...
+[2026-02-06T01:27:05.890Z] 📊 Carregando dados de referência...
+[2026-02-06T01:27:06.033Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T01:27:07.859Z]    ✅ 4.211 sócios
+[2026-02-06T01:27:08.117Z]    ✅ 230 convênios
+[2026-02-06T01:27:08.373Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T01:27:08.374Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T01:27:08.422Z]    Total: 82.186 vendas (IDs: 1 - 89109)
+[2026-02-06T01:37:13.137Z] 
+   ✅ Vendas migradas: 81.753
+[2026-02-06T01:37:13.138Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T01:37:13.138Z]    📦 Mapa de vendas: 81.753 entradas
+[2026-02-06T01:37:13.302Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T01:37:13.345Z]    Total: 761.305 parcelas (IDs: 1 - 1600225)
+[2026-02-06T02:45:01.960Z] 
+   ✅ Parcelas migradas: 758.789
+[2026-02-06T02:45:01.961Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-06T02:45:01.961Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T02:45:01.962Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T02:45:03.602Z]    Railway: 81.753 vendas | 758.789 parcelas
+[2026-02-06T02:45:03.611Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T12:49:03.715Z] 🚀 Iniciando migração paralela...
+[2026-02-06T12:49:04.202Z] 📊 Carregando dados de referência...
+[2026-02-06T12:49:04.358Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T12:49:06.057Z]    ✅ 4.211 sócios
+[2026-02-06T12:49:06.347Z]    ✅ 230 convênios
+[2026-02-06T12:49:06.618Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T12:49:06.618Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T12:49:06.671Z]    Total: 82.186 vendas (IDs: 1 - 89109)
+[2026-02-06T12:59:05.509Z] 
+   ✅ Vendas migradas: 81.753
+[2026-02-06T12:59:05.510Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T12:59:05.510Z]    📦 Mapa de vendas: 81.753 entradas
+[2026-02-06T12:59:05.646Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T12:59:05.691Z]    Total: 761.306 parcelas (IDs: 1 - 1600226)
+[2026-02-06T13:43:29.535Z] Worker 8 erro: Can't add new command when connection is in closed state
+[2026-02-06T14:06:50.692Z] 
+   ✅ Parcelas migradas: 754.810
+[2026-02-06T14:06:50.693Z]    ⚠️  Parcelas sem venda: 2.334
+[2026-02-06T14:06:50.693Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T14:06:50.693Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T14:06:52.237Z]    Railway: 81.753 vendas | 754.810 parcelas
+[2026-02-06T14:06:52.246Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T14:35:18.733Z] 🚀 Iniciando migração paralela...
+[2026-02-06T14:35:19.554Z] 📊 Carregando dados de referência...
+[2026-02-06T14:35:19.752Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T14:35:21.554Z]    ✅ 4.211 sócios
+[2026-02-06T14:35:21.825Z]    ✅ 230 convênios
+[2026-02-06T14:35:22.264Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T14:35:22.265Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T14:35:22.315Z]    Total: 82.187 vendas (IDs: 1 - 89110)
+[2026-02-06T14:45:38.660Z] 
+   ✅ Vendas migradas: 81.754
+[2026-02-06T14:45:38.661Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T14:45:38.662Z]    📦 Mapa de vendas: 81.754 entradas
+[2026-02-06T14:45:38.869Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T14:45:38.916Z]    Total: 761.306 parcelas (IDs: 1 - 1600226)
+[2026-02-06T15:24:51.854Z] Worker 2 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:24:52.368Z] Worker 3 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:24:52.526Z] Worker 49 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:24:55.335Z] Worker 43 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:24:55.753Z] Worker 5 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:24:58.771Z] Worker 44 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:24:59.324Z] Worker 8 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:27:53.557Z] Worker 4 erro: Can't add new command when connection is in closed state
+[2026-02-06T15:53:57.488Z] 
+   ✅ Parcelas migradas: 707.316
+[2026-02-06T15:53:57.489Z]    ⚠️  Parcelas sem venda: 2.149
+[2026-02-06T15:53:57.489Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T15:53:57.489Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T15:53:59.024Z]    Railway: 81.754 vendas | 707.316 parcelas
+[2026-02-06T15:53:59.032Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T16:28:23.966Z] 🚀 Iniciando migração paralela...
+[2026-02-06T16:28:24.760Z] 📊 Carregando dados de referência...
+[2026-02-06T16:28:26.252Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T16:28:28.081Z]    ✅ 4.211 sócios
+[2026-02-06T16:28:28.357Z]    ✅ 230 convênios
+[2026-02-06T16:28:28.620Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T16:28:28.621Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T16:28:28.677Z]    Total: 82.187 vendas (IDs: 1 - 89110)
+[2026-02-06T16:38:41.459Z] 
+   ✅ Vendas migradas: 0
+[2026-02-06T16:38:41.459Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T16:38:41.459Z]    📦 Mapa de vendas: 0 entradas
+[2026-02-06T16:38:41.460Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T16:38:41.511Z]    Total: 761.306 parcelas (IDs: 1 - 1600226)
+[2026-02-06T16:39:24.276Z] 
+   ✅ Parcelas migradas: 0
+[2026-02-06T16:39:24.277Z]    ⚠️  Parcelas sem venda: 761.306
+[2026-02-06T16:39:24.278Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T16:39:24.278Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T16:39:25.871Z]    Railway: 81.754 vendas | 707.316 parcelas
+[2026-02-06T16:39:25.879Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T17:06:30.411Z] 🚀 Iniciando migração paralela...
+[2026-02-06T17:06:30.615Z] 📊 Carregando dados de referência...
+[2026-02-06T17:06:30.800Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T17:06:32.460Z]    ✅ 4.211 sócios
+[2026-02-06T17:06:32.724Z]    ✅ 230 convênios
+[2026-02-06T17:06:32.993Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T17:06:32.994Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T17:06:33.044Z]    Total: 82.187 vendas (IDs: 1 - 89110)
+[2026-02-06T17:16:56.498Z] 
+   ✅ Vendas migradas: 81.754
+[2026-02-06T17:16:56.499Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T17:16:56.499Z]    📦 Mapa de vendas: 81.754 entradas
+[2026-02-06T17:16:56.650Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T17:16:56.691Z]    Total: 761.306 parcelas (IDs: 1 - 1600226)
+[2026-02-06T17:37:13.860Z] Worker 43 erro no batch (id 1392826): Can't add new command when connection is in closed state
+[2026-02-06T17:37:14.862Z] Worker 43 erro no batch (id 1393026): Can't add new command when connection is in closed state
+[2026-02-06T17:37:15.300Z] Worker 10 erro no batch (id 333645): Can't add new command when connection is in closed state
+[2026-02-06T17:37:15.864Z] Worker 43 erro no batch (id 1393226): Can't add new command when connection is in closed state
+[2026-02-06T17:37:16.301Z] Worker 10 erro no batch (id 333845): Can't add new command when connection is in closed state
+[2026-02-06T17:37:16.833Z] Worker 27 erro no batch (id 886808): Can't add new command when connection is in closed state
+[2026-02-06T17:37:16.866Z] Worker 43 erro no batch (id 1393426): Can't add new command when connection is in closed state
+[2026-02-06T17:37:17.302Z] Worker 10 erro no batch (id 334045): Can't add new command when connection is in closed state
+[2026-02-06T17:37:17.834Z] Worker 27 erro no batch (id 887008): Can't add new command when connection is in closed state
+[2026-02-06T17:37:17.882Z] Worker 43 erro no batch (id 1393626): Can't add new command when connection is in closed state
+[2026-02-06T17:37:18.303Z] Worker 10 erro no batch (id 334245): Can't add new command when connection is in closed state
+[2026-02-06T17:37:18.835Z] Worker 27 erro no batch (id 887208): Can't add new command when connection is in closed state
+[2026-02-06T17:37:18.883Z] Worker 43 parou após 5 erros consecutivos
+[2026-02-06T17:37:19.306Z] Worker 10 erro no batch (id 334445): Can't add new command when connection is in closed state
+[2026-02-06T17:37:19.394Z] Worker 18 erro no batch (id 606274): Can't add new command when connection is in closed state
+[2026-02-06T17:37:19.836Z] Worker 27 erro no batch (id 887408): Can't add new command when connection is in closed state
+[2026-02-06T17:37:20.306Z] Worker 10 parou após 5 erros consecutivos
+[2026-02-06T17:37:20.395Z] Worker 18 erro no batch (id 606474): Can't add new command when connection is in closed state
+[2026-02-06T17:37:20.836Z] Worker 27 erro no batch (id 887608): Can't add new command when connection is in closed state
+[2026-02-06T17:37:21.399Z] Worker 18 erro no batch (id 606674): Can't add new command when connection is in closed state
+[2026-02-06T17:37:21.837Z] Worker 27 parou após 5 erros consecutivos
+[2026-02-06T17:37:22.399Z] Worker 18 erro no batch (id 606874): Can't add new command when connection is in closed state
+[2026-02-06T17:37:23.399Z] Worker 18 erro no batch (id 607074): Can't add new command when connection is in closed state
+[2026-02-06T17:37:24.400Z] Worker 18 parou após 5 erros consecutivos
+[2026-02-06T18:26:39.302Z] 
+   ✅ Parcelas migradas: 737.352
+[2026-02-06T18:26:39.303Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-06T18:26:39.303Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T18:26:39.303Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T18:26:40.871Z]    Railway: 81.754 vendas | 737.352 parcelas
+[2026-02-06T18:26:40.882Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T19:45:59.239Z] 🚀 Iniciando migração paralela...
+[2026-02-06T19:46:00.846Z] 📊 Carregando dados de referência...
+[2026-02-06T19:46:01.002Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T19:46:02.787Z]    ✅ 4.211 sócios
+[2026-02-06T19:46:03.058Z]    ✅ 230 convênios
+[2026-02-06T19:46:03.318Z]    ✅ Usuário A.S.P.M.A: cmkeaodeq00007zofci9t08yw
+[2026-02-06T19:46:03.318Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T19:46:03.367Z]    Total: 82.190 vendas
+[2026-02-06T19:46:27.727Z] Worker 0 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:32.584Z] Worker 15 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:32.674Z] Worker 11 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:32.929Z] Worker 6 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:32.943Z] Worker 14 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:32.945Z] Worker 5 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:32.992Z] Worker 8 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.112Z] Worker 12 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.269Z] Worker 16 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.296Z] Worker 9 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.421Z] Worker 1 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.615Z] Worker 4 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.737Z] Worker 7 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.739Z] Worker 2 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.779Z] Worker 13 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.893Z] Worker 3 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.912Z] Worker 18 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:33.928Z] Worker 19 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:34.148Z] Worker 10 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:34.828Z] Worker 17 erro fatal: currentOffset is not defined
+[2026-02-06T19:46:34.836Z] 
+   ✅ Vendas migradas: 3.956
+[2026-02-06T19:46:34.836Z]    ⚠️  Vendas sem sócio: 43
+[2026-02-06T19:46:34.837Z]    📦 Mapa de vendas: 3.956 entradas
+[2026-02-06T19:46:34.848Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T19:46:34.894Z]    Total: 761.309 parcelas
+[2026-02-06T19:55:45.176Z] 🚀 Iniciando migração paralela...
+[2026-02-06T19:55:45.470Z] 📊 Carregando dados de referência...
+[2026-02-06T19:55:45.860Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T19:55:47.581Z]    ✅ 4.211 sócios
+[2026-02-06T19:55:47.846Z]    ✅ 230 convênios
+[2026-02-06T19:55:48.118Z]    ✅ Admin: cmkftmv2t0000ofs76r8om5z8
+[2026-02-06T19:55:48.119Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T19:55:48.465Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-06T20:06:16.054Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-06T20:06:16.054Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T20:06:16.055Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-06T20:06:16.217Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T20:06:19.559Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-06T21:02:25.705Z] Worker 1 erro: Can't add new command when connection is in closed state
+[2026-02-06T21:02:30.307Z] Worker 48 erro: Can't add new command when connection is in closed state
+[2026-02-06T21:14:19.436Z] 
+   ✅ Parcelas migradas: 754.550
+[2026-02-06T21:14:19.437Z]    ⚠️  Parcelas sem venda: 2.320
+[2026-02-06T21:14:19.437Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T21:14:19.437Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T21:14:21.130Z]    Railway: 81.757 vendas | 754.550 parcelas
+[2026-02-06T21:14:21.138Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-06T22:22:09.488Z] 🚀 Iniciando migração paralela...
+[2026-02-06T22:22:09.690Z] 📊 Carregando dados de referência...
+[2026-02-06T22:22:09.850Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-06T22:22:11.959Z]    ✅ 4.211 sócios
+[2026-02-06T22:22:12.232Z]    ✅ 230 convênios
+[2026-02-06T22:22:12.490Z]    ✅ Admin: cmkftmv2t0000ofs76r8om5z8
+[2026-02-06T22:22:12.490Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-06T22:22:12.540Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-06T22:32:21.159Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-06T22:32:21.160Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-06T22:32:21.160Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-06T22:32:21.312Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-06T22:32:21.356Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-06T23:41:28.793Z] 
+   ✅ Parcelas migradas: 758.802
+[2026-02-06T23:41:28.794Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-06T23:41:28.794Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-06T23:41:28.794Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-06T23:41:30.389Z]    Railway: 81.757 vendas | 758.802 parcelas
+[2026-02-06T23:41:30.397Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-07T12:22:55.293Z] 🚀 Iniciando migração paralela...
+[2026-02-07T12:22:55.509Z] 📊 Carregando dados de referência...
+[2026-02-07T12:22:55.672Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-07T12:22:57.516Z]    ✅ 4.211 sócios
+[2026-02-07T12:22:57.777Z]    ✅ 230 convênios
+[2026-02-07T12:22:58.044Z]    ✅ Admin: cmkeaodeq00007zofci9t08yw (ASPMA  Associação dos Servidores Públicos de Araucária. - MANAGER)
+[2026-02-07T12:22:58.044Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-07T12:22:58.095Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-07T12:33:12.942Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-07T12:33:12.942Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-07T12:33:12.942Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-07T12:33:13.095Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-07T12:33:13.144Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-07T13:42:46.222Z] 
+   ✅ Parcelas migradas: 758.641
+[2026-02-07T13:42:46.223Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-07T13:42:46.223Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-07T13:42:46.223Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-07T13:42:47.924Z]    Railway: 81.757 vendas | 758.641 parcelas
+[2026-02-07T13:42:47.934Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-07T14:18:13.802Z] 🚀 Iniciando migração paralela...
+[2026-02-07T14:18:14.237Z] 📊 Carregando dados de referência...
+[2026-02-07T14:18:15.044Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-07T14:18:16.792Z]    ✅ 4.211 sócios
+[2026-02-07T14:18:17.049Z]    ✅ 230 convênios
+[2026-02-07T14:18:17.310Z]    ✅ Admin: cmkeaodeq00007zofci9t08yw (ASPMA  Associação dos Servidores Públicos de Araucária. - MANAGER)
+[2026-02-07T14:18:17.311Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-07T14:18:17.355Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-07T14:28:19.541Z] 
+   ✅ Vendas migradas: 81.756
+[2026-02-07T14:28:19.543Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-07T14:28:19.543Z]    📦 Mapa de vendas: 81.756 entradas
+[2026-02-07T14:28:19.714Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-07T14:28:19.753Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-07T15:09:17.388Z] Worker 47 erro: Can't add new command when connection is in closed state
+[2026-02-07T15:35:43.485Z] 
+   ✅ Parcelas migradas: 750.382
+[2026-02-07T15:35:43.485Z]    ⚠️  Parcelas sem venda: 2.334
+[2026-02-07T15:35:43.485Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-07T15:35:43.485Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-07T15:35:45.092Z]    Railway: 81.756 vendas | 750.383 parcelas
+[2026-02-07T15:35:45.101Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-07T17:10:25.896Z] 🚀 Iniciando migração paralela...
+[2026-02-07T17:10:26.427Z] 📊 Carregando dados de referência...
+[2026-02-07T17:10:26.586Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-07T17:10:28.334Z]    ✅ 4.211 sócios
+[2026-02-07T17:10:28.598Z]    ✅ 230 convênios
+[2026-02-07T17:10:28.865Z]    ✅ Admin: cmkeaodeq00007zofci9t08yw (ASPMA  Associação dos Servidores Públicos de Araucária. - MANAGER)
+[2026-02-07T17:10:28.866Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-07T17:10:28.918Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-07T17:20:37.010Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-07T17:20:37.011Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-07T17:20:37.011Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-07T17:20:37.173Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-07T17:20:37.223Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-07T18:27:42.826Z] 
+   ✅ Parcelas migradas: 758.777
+[2026-02-07T18:27:42.827Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-07T18:27:42.828Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-07T18:27:42.828Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-07T18:27:44.583Z]    Railway: 81.757 vendas | 758.777 parcelas
+[2026-02-07T18:27:44.591Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-07T19:05:20.755Z] 🚀 Iniciando migração paralela...
+[2026-02-07T19:05:21.486Z] 📊 Carregando dados de referência...
+[2026-02-07T19:05:21.669Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-07T19:05:23.305Z]    ✅ 4.211 sócios
+[2026-02-07T19:05:23.564Z]    ✅ 230 convênios
+[2026-02-07T19:05:23.830Z]    ✅ Admin: cmkeaodeq00007zofci9t08yw (ASPMA  Associação dos Servidores Públicos de Araucária. - MANAGER)
+[2026-02-07T19:05:23.831Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-07T19:05:23.878Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-07T19:15:32.696Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-07T19:15:32.697Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-07T19:15:32.697Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-07T19:15:32.853Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-07T19:15:32.891Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-07T20:23:26.378Z] 
+   ✅ Parcelas migradas: 758.838
+[2026-02-07T20:23:26.379Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-07T20:23:26.380Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-07T20:23:26.380Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-07T20:23:27.927Z]    Railway: 81.757 vendas | 758.838 parcelas
+[2026-02-07T20:23:27.936Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
