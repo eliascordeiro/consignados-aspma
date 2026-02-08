@@ -615,3 +615,27 @@ Unknown field `codconven` for select statement on model `convenio`. Available op
 [2026-02-07T20:23:26.380Z] 📊 VERIFICAÇÃO FINAL
 [2026-02-07T20:23:27.927Z]    Railway: 81.757 vendas | 758.838 parcelas
 [2026-02-07T20:23:27.936Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-07T23:40:14.743Z] 🚀 Iniciando migração paralela...
+[2026-02-07T23:40:14.943Z] 📊 Carregando dados de referência...
+[2026-02-07T23:40:15.097Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-07T23:40:16.708Z]    ✅ 4.211 sócios
+[2026-02-07T23:40:16.965Z]    ✅ 230 convênios
+[2026-02-07T23:40:17.226Z]    ✅ Admin: cmkeaodeq00007zofci9t08yw (ASPMA  Associação dos Servidores Públicos de Araucária. - MANAGER)
+[2026-02-07T23:40:17.226Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-07T23:40:17.271Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-07T23:50:34.636Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-07T23:50:34.638Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-07T23:50:34.638Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-07T23:50:34.869Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-07T23:50:34.919Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-08T02:40:23.279Z] 
+   ✅ Parcelas migradas: 758.591
+[2026-02-08T02:40:23.284Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-08T02:40:23.287Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-08T02:40:23.288Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-08T02:40:25.315Z]    Railway: 81.757 vendas | 758.592 parcelas
+[2026-02-08T02:40:25.324Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt

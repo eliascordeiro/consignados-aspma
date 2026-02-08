@@ -126,8 +126,14 @@ export async function GET(request: NextRequest) {
       take: limit,
     })
 
+    // Ajustar status baseado em dataExclusao
+    const funcionariosAjustados = funcionarios.map(func => ({
+      ...func,
+      ativo: func.dataExclusao ? false : true
+    }))
+
     return NextResponse.json({
-      data: funcionarios,
+      data: funcionariosAjustados,
       pagination: {
         page,
         limit,
