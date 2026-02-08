@@ -79,11 +79,15 @@ export default function ClienteLayout({
   const userPermissions = (session?.user as any)?.permissions || []
   const userModules = getUserModules(userPermissions)
   
-  // Dashboard sempre visível + Relatórios + módulos com permissão
+  // Montar navegação com ordem específica: Dashboard → módulos até vendas → Relatórios → resto
+  const moduleNavItems = userModules.map(module => moduleRoutes[module.id]).filter(Boolean)
+  const vendasIndex = moduleNavItems.findIndex(item => item.href === "/cliente/vendas")
+  
   const navigation = [
     dashboardNav,
+    ...moduleNavItems.slice(0, vendasIndex + 1), // até vendas (inclusive)
     relatoriosNav,
-    ...userModules.map(module => moduleRoutes[module.id]).filter(Boolean)
+    ...moduleNavItems.slice(vendasIndex + 1) // resto após vendas
   ]
 
   // Nome para exibir no header (MANAGER se for USER subordinado, senão próprio nome)
