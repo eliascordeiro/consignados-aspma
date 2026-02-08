@@ -147,10 +147,14 @@ export async function GET(request: NextRequest) {
     })
 
     // Ajustar status baseado em dataExclusao ou bloqueio
-    const funcionariosAjustados = funcionarios.map(func => ({
-      ...func,
-      ativo: !func.dataExclusao && func.bloqueio !== "Bloqueado"
-    }))
+    const funcionariosAjustados = funcionarios.map(func => {
+      // Considera inativo se tem data de exclusão OU se bloqueio é explicitamente "Bloqueado"
+      const isInativo = !!func.dataExclusao || func.bloqueio === "Bloqueado"
+      return {
+        ...func,
+        ativo: !isInativo
+      }
+    })
 
     return NextResponse.json({
       data: funcionariosAjustados,
