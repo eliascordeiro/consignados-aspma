@@ -397,15 +397,15 @@ export default function FuncionariosPage() {
     <div className="space-y-4 md:space-y-6">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Funcionários</h1>
+          <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Sócios</h1>
           <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
-            Gerencie os funcionários das consignatárias
+            Gerencie os sócios das consignatárias
           </p>
         </div>
         {canCreate && (
           <Button onClick={handleNew} size="sm" className="flex-shrink-0">
             <Plus className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Novo Funcionário</span>
+            <span className="hidden md:inline">Novo Sócio</span>
             <span className="md:hidden">Novo</span>
           </Button>
         )}
@@ -413,7 +413,7 @@ export default function FuncionariosPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Funcionários Cadastrados</CardTitle>
+          <CardTitle>Sócios Cadastrados</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
@@ -480,7 +480,7 @@ export default function FuncionariosPage() {
               {/* Desktop: Layout em linha */}
               <div className="hidden sm:flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  Mostrando {((page - 1) * 50) + 1} a {Math.min(page * 50, total)} de {total} funcionários
+                  Mostrando {((page - 1) * 50) + 1} a {Math.min(page * 50, total)} de {total} sócios
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -1087,7 +1087,7 @@ function VirtualizedFuncionariosTable({
                       
                       <div className="flex items-center">
                         <span className="text-xs text-muted-foreground mr-2">Status:</span>
-                        {!funcionario.dataExclusao ? (
+                        {funcionario.bloqueio !== "X" ? (
                           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                             ✓ Ativo
                           </span>
@@ -1119,7 +1119,7 @@ function VirtualizedFuncionariosTable({
                     </div>
                     
                     <div>
-                      {!funcionario.dataExclusao ? (
+                      {funcionario.bloqueio !== "X" ? (
                         <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
                           Ativo
                         </span>
