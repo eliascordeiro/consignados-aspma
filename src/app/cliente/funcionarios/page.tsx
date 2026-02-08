@@ -922,7 +922,7 @@ export default function FuncionariosPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {classes.map((classe) => (
-                          <SelectItem key={classe.id} value={classe.classe}>
+                          <SelectItem key={classe.id} value={classe.id.toString()}>
                             {classe.classe}
                           </SelectItem>
                         ))}
