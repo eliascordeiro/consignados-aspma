@@ -639,3 +639,30 @@ Unknown field `codconven` for select statement on model `convenio`. Available op
 [2026-02-08T02:40:23.288Z] 📊 VERIFICAÇÃO FINAL
 [2026-02-08T02:40:25.315Z]    Railway: 81.757 vendas | 758.592 parcelas
 [2026-02-08T02:40:25.324Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt
+[2026-02-08T13:30:54.604Z] 🚀 Iniciando migração paralela...
+[2026-02-08T13:30:54.815Z] 📊 Carregando dados de referência...
+[2026-02-08T13:30:54.955Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-02-08T13:30:56.623Z]    ✅ 4.211 sócios
+[2026-02-08T13:30:56.885Z]    ✅ 230 convênios
+[2026-02-08T13:30:57.147Z]    ✅ Admin: cmkeaodeq00007zofci9t08yw (ASPMA  Associação dos Servidores Públicos de Araucária. - MANAGER)
+[2026-02-08T13:30:57.175Z] 
+📊 FASE 1: Migrando VENDAS em paralelo...
+[2026-02-08T13:30:57.223Z]    Total: 82.190 vendas (IDs: 1 - 89113)
+[2026-02-08T13:41:04.519Z] 
+   ✅ Vendas migradas: 81.757
+[2026-02-08T13:41:04.519Z]    ⚠️  Vendas sem sócio: 398
+[2026-02-08T13:41:04.520Z]    📦 Mapa de vendas: 81.757 entradas
+[2026-02-08T13:41:04.687Z] 
+📊 FASE 2: Migrando PARCELAS em paralelo...
+[2026-02-08T13:41:04.731Z]    Total: 761.309 parcelas (IDs: 1 - 1600229)
+[2026-02-08T13:55:59.179Z] Worker 46 erro: Can't add new command when connection is in closed state
+[2026-02-08T13:58:22.477Z] Worker 14 erro: Can't add new command when connection is in closed state
+[2026-02-08T14:03:22.889Z] Worker 20 erro: Can't add new command when connection is in closed state
+[2026-02-08T14:48:27.789Z] 
+   ✅ Parcelas migradas: 732.425
+[2026-02-08T14:48:27.789Z]    ⚠️  Parcelas sem venda: 2.333
+[2026-02-08T14:48:27.789Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-02-08T14:48:27.789Z] 📊 VERIFICAÇÃO FINAL
+[2026-02-08T14:48:29.346Z]    Railway: 81.757 vendas | 732.425 parcelas
+[2026-02-08T14:48:29.356Z] 📄 Log: /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/migration-parallel-log.txt

@@ -43,11 +43,11 @@ const dashboardNav = { name: "Dashboard", href: "/cliente/dashboard", icon: Layo
 const relatoriosNav = { name: "Relatórios", href: "/cliente/relatorios", icon: FileText }
 const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = {
   consignatarias: { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
-  funcionarios: { name: "Funcionários", href: "/cliente/funcionarios", icon: Users },
-  convenios: { name: "Convênios", href: "/cliente/locais", icon: Store },
+  funcionarios: { name: "Sócios", href: "/cliente/funcionarios", icon: Users },
+  convenios: { name: "Conveniados", href: "/cliente/locais", icon: Store },
   vendas: { name: "Vendas", href: "/cliente/vendas", icon: ShoppingCart },
-  usuarios: { name: "Usuários", href: "/cliente/usuarios", icon: UserCog },
-  logs: { name: "Logs de Auditoria", href: "/cliente/logs", icon: FileText },
+  usuarios: { name: "Usuários e Permissões", href: "/cliente/usuarios", icon: UserCog },
+  logs: { name: "Log de Auditoria", href: "/cliente/logs", icon: FileText },
 }
 
 export default function ClienteLayout({
