@@ -91,11 +91,26 @@ export async function GET(request: NextRequest) {
     // Filtro por status se detectado na busca (baseado em dataExclusao)
     if (statusFilter !== null) {
       if (statusFilter === true) {
-        // Ativo: dataExclusao deve ser null
-        where.AND.push({ dataExclusao: null })
+        // Ativo: dataExclusao null, bloqueio não é "Bloqueado", motivoBloqueio vazio, motivoExclusao vazio
+        where.AND.push({
+          dataExclusao: null,
+          OR: [
+            { bloqueio: null },
+            { bloqueio: { not: "Bloqueado" } }
+          ],
+          motivoBloqueio: null,
+          motivoExclusao: null
+        })
       } else {
-        // Inativo: dataExclusao deve estar preenchida
-        where.AND.push({ dataExclusao: { not: null } })
+        // Inativo: dataExclusao preenchida OU bloqueio = "Bloqueado" OU motivoBloqueio preenchido OU motivoExclusao preenchido
+        where.AND.push({
+          OR: [
+            { dataExclusao: { not: null } },
+            { bloqueio: "Bloqueado" },
+            { motivoBloqueio: { not: null } },
+            { motivoExclusao: { not: null } }
+          ]
+        })
       }
     }
 
@@ -126,16 +141,19 @@ export async function GET(request: NextRequest) {
         margemConsig: true,
         ativo: true,
         dataExclusao: true,
+        bloqueio: true,
+        motivoBloqueio: true,
+        motivoExclusao: true,
       },
       orderBy: { nome: "asc" },
       skip,
       take: limit,
     })
 
-    // Ajustar status baseado em dataExclusao
+    // Ajustar status baseado em dataExclusao, bloqueio, motivoBloqueio ou motivoExclusao
     const funcionariosAjustados = funcionarios.map(func => ({
       ...func,
-      ativo: func.dataExclusao ? false : true
+      ativo: !func.dataExclusao && func.bloqueio !== "Bloqueado" && !func.motivoBloqueio && !func.motivoExclusao
     }))
 
     return NextResponse.json({
