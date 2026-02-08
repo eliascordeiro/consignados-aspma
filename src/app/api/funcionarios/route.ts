@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       statusFilter = false
     }
 
-    // Filtro de busca por nome, CPF, matrícula ou status
+    // Filtro de busca por nome, CPF, matrícula (apenas se NÃO for busca por status)
     let useExactMatch = false
     if (search && statusFilter === null) {
       const cpfNumbers = search.replace(/\D/g, "")
