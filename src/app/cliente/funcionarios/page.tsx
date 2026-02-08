@@ -79,7 +79,7 @@ interface Funcionario {
   conta?: string
   banco?: string
   devolucao?: boolean
-  bloqueio?: boolean
+  bloqueio?: string | null
   motivoBloqueio?: string
   codTipo?: string
   senha?: string
