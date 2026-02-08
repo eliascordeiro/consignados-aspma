@@ -88,9 +88,15 @@ export async function GET(request: NextRequest) {
       where.AND.push({ empresaId: parseInt(empresaId) })
     }
 
-    // Filtro por status se detectado na busca
+    // Filtro por status se detectado na busca (baseado em dataExclusao)
     if (statusFilter !== null) {
-      where.AND.push({ ativo: statusFilter })
+      if (statusFilter === true) {
+        // Ativo: dataExclusao deve ser null
+        where.AND.push({ dataExclusao: null })
+      } else {
+        // Inativo: dataExclusao deve estar preenchida
+        where.AND.push({ dataExclusao: { not: null } })
+      }
     }
 
     // Se não há filtros, remover a estrutura AND vazia
