@@ -20,7 +20,7 @@ export default async function ClienteDashboard() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Portal do Cliente</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          Gerencie suas consignatárias, funcionários e convênios de desconto
+          Gerencie suas consignatárias, sócios e conveniados
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export default async function ClienteDashboard() {
 
         <Card className="border-2 hover:shadow-lg transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Funcionários</CardTitle>
+            <CardTitle className="text-sm font-medium">Sócios</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
           </CardHeader>
           <CardContent>
@@ -49,7 +49,7 @@ export default async function ClienteDashboard() {
 
         <Card className="border-2 hover:shadow-lg transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Convênios</CardTitle>
+            <CardTitle className="text-sm font-medium">Conveniados</CardTitle>
             <Store className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 transition-colors" />
           </CardHeader>
           <CardContent>
@@ -75,11 +75,11 @@ export default async function ClienteDashboard() {
               </li>
               <li className="flex items-start gap-2">
                 <Users className="h-4 w-4 text-blue-600 mt-0.5" />
-                <span><strong>Cadastrar Funcionários:</strong> Vincule funcionários às consignatárias</span>
+                <span><strong>Cadastrar Sócios:</strong> Vincule sócios às consignatárias</span>
               </li>
               <li className="flex items-start gap-2">
                 <Store className="h-4 w-4 text-purple-600 mt-0.5" />
-                <span><strong>Autorizar Convênios:</strong> Defina onde os funcionários podem usar suas margens</span>
+                <span><strong>Autorizar Conveniados:</strong> Defina onde os sócios podem usar suas margens</span>
               </li>
             </ul>
           </CardContent>
@@ -105,8 +105,8 @@ export default async function ClienteDashboard() {
                 <span className="text-sm font-bold text-blue-600">2</span>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium">Importe funcionários</p>
-                <p className="text-xs text-muted-foreground">Vincule funcionários às empresas</p>
+                <p className="text-sm font-medium">Importe sócios</p>
+                <p className="text-xs text-muted-foreground">Vincule sócios às empresas</p>
               </div>
             </div>
 

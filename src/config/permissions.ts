@@ -25,6 +25,8 @@ export interface Permission {
 export interface PermissionModule {
   id: string
   name: string
+  displayName: string // Nome exibido no sidebar (fonte única de verdade)
+  href: string // Rota no portal MANAGER
   icon: LucideIcon
   permissions: Permission[]
 }
@@ -34,6 +36,8 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   {
     id: "consignatarias",
     name: "Consignatárias",
+    displayName: "Consignatárias",
+    href: "/cliente/consignatarias",
     icon: Building2,
     permissions: [
       { id: "consignatarias.view", name: "Consultar", description: "Visualizar lista e detalhes", icon: Eye },
@@ -45,31 +49,37 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   },
   {
     id: "funcionarios",
-    name: "Funcionários",
+    name: "Sócios",
+    displayName: "Sócios",
+    href: "/cliente/funcionarios",
     icon: Users,
     permissions: [
       { id: "funcionarios.view", name: "Consultar", description: "Visualizar lista e detalhes", icon: Eye },
-      { id: "funcionarios.create", name: "Incluir", description: "Criar novos funcionários", icon: Plus },
-      { id: "funcionarios.edit", name: "Editar", description: "Modificar funcionários existentes", icon: Edit },
-      { id: "funcionarios.delete", name: "Excluir", description: "Remover funcionários", icon: Trash2 },
+      { id: "funcionarios.create", name: "Incluir", description: "Criar novos sócios", icon: Plus },
+      { id: "funcionarios.edit", name: "Editar", description: "Modificar sócios existentes", icon: Edit },
+      { id: "funcionarios.delete", name: "Excluir", description: "Remover sócios", icon: Trash2 },
       { id: "funcionarios.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
     ]
   },
   {
     id: "convenios",
-    name: "Convênios",
+    name: "Conveniados",
+    displayName: "Conveniados",
+    href: "/cliente/locais",
     icon: Store,
     permissions: [
       { id: "convenios.view", name: "Consultar", description: "Visualizar lista e detalhes", icon: Eye },
-      { id: "convenios.create", name: "Incluir", description: "Criar novos convênios", icon: Plus },
-      { id: "convenios.edit", name: "Editar", description: "Modificar convênios existentes", icon: Edit },
-      { id: "convenios.delete", name: "Excluir", description: "Remover convênios", icon: Trash2 },
+      { id: "convenios.create", name: "Incluir", description: "Criar novos conveniados", icon: Plus },
+      { id: "convenios.edit", name: "Editar", description: "Modificar conveniados existentes", icon: Edit },
+      { id: "convenios.delete", name: "Excluir", description: "Remover conveniados", icon: Trash2 },
       { id: "convenios.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
     ]
   },
   {
     id: "vendas",
     name: "Vendas",
+    displayName: "Vendas",
+    href: "/cliente/vendas",
     icon: ShoppingCart,
     permissions: [
       { id: "vendas.view", name: "Consultar", description: "Visualizar lista e detalhes de vendas", icon: Eye },
@@ -81,7 +91,9 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   },
   {
     id: "usuarios",
-    name: "Usuários",
+    name: "Usuários e Permissões",
+    displayName: "Usuários e Permissões",
+    href: "/cliente/usuarios",
     icon: UserCog,
     permissions: [
       { id: "usuarios.view", name: "Consultar", description: "Visualizar lista e detalhes", icon: Eye },
@@ -92,7 +104,9 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   },
   {
     id: "logs",
-    name: "Logs de Auditoria",
+    name: "Log de Auditoria",
+    displayName: "Log de Auditoria",
+    href: "/cliente/logs",
     icon: FileText,
     permissions: [
       { id: "logs.view", name: "Consultar", description: "Visualizar histórico de auditoria", icon: Eye },

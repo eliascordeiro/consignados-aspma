@@ -35,20 +35,17 @@ import {
   ShoppingCart
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
-import { getUserModules } from "@/config/permissions"
+import { getUserModules, PERMISSION_MODULES } from "@/config/permissions"
 import { PerfilModal } from "@/components/perfil-modal"
 
-// Dashboard é sempre visível, outros módulos baseados em permissões
+// Dashboard e Relatórios são sempre visíveis
 const dashboardNav = { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard }
 const relatoriosNav = { name: "Relatórios", href: "/cliente/relatorios", icon: FileText }
-const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = {
-  consignatarias: { name: "Consignatárias", href: "/cliente/consignatarias", icon: Building2 },
-  funcionarios: { name: "Sócios", href: "/cliente/funcionarios", icon: Users },
-  convenios: { name: "Conveniados", href: "/cliente/locais", icon: Store },
-  vendas: { name: "Vendas", href: "/cliente/vendas", icon: ShoppingCart },
-  usuarios: { name: "Usuários e Permissões", href: "/cliente/usuarios", icon: UserCog },
-  logs: { name: "Log de Auditoria", href: "/cliente/logs", icon: FileText },
-}
+
+// Rotas dos módulos geradas AUTOMATICAMENTE a partir de permissions.ts (fonte única de verdade)
+const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = Object.fromEntries(
+  PERMISSION_MODULES.map(m => [m.id, { name: m.displayName, href: m.href, icon: m.icon }])
+)
 
 export default function ClienteLayout({
   children,
