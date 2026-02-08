@@ -88,24 +88,20 @@ export async function GET(request: NextRequest) {
       where.AND.push({ empresaId: parseInt(empresaId) })
     }
 
-    // Filtro por status se detectado na busca (baseado em dataExclusao)
+    // Filtro por status se detectado na busca (baseado apenas em bloqueio)
     if (statusFilter !== null) {
       if (statusFilter === true) {
-        // Ativo: dataExclusao null E bloqueio não é "Bloqueado"
+        // Ativo: bloqueio não é "Bloqueado"
         where.AND.push({
-          dataExclusao: null,
           OR: [
             { bloqueio: null },
             { bloqueio: { not: "Bloqueado" } }
           ]
         })
       } else {
-        // Inativo: dataExclusao preenchida OU bloqueio = "Bloqueado"
+        // Inativo: bloqueio = "Bloqueado"
         where.AND.push({
-          OR: [
-            { dataExclusao: { not: null } },
-            { bloqueio: "Bloqueado" }
-          ]
+          bloqueio: "Bloqueado"
         })
       }
     }
@@ -146,15 +142,11 @@ export async function GET(request: NextRequest) {
       take: limit,
     })
 
-    // Ajustar status baseado em dataExclusao ou bloqueio
-    const funcionariosAjustados = funcionarios.map(func => {
-      // Considera inativo se tem data de exclusão OU se bloqueio é explicitamente "Bloqueado"
-      const isInativo = !!func.dataExclusao || func.bloqueio === "Bloqueado"
-      return {
-        ...func,
-        ativo: !isInativo
-      }
-    })
+    // Ajustar status baseado apenas em bloqueio
+    const funcionariosAjustados = funcionarios.map(func => ({
+      ...func,
+      ativo: func.bloqueio !== "Bloqueado"
+    }))
 
     return NextResponse.json({
       data: funcionariosAjustados,
