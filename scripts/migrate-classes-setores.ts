@@ -284,8 +284,14 @@ async function main() {
   // Criar pool MySQL
   const mysqlPool = mysql.createPool(MYSQL_CONFIG);
   
-  // Criar Prisma client
-  const prisma = new PrismaClient();
+  // Criar Prisma client conectado no Railway
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: 'postgresql://postgres:DtTeiZzewsGAQlbosPGcsNrWAQqVCchf@yamanote.proxy.rlwy.net:29695/railway'
+      }
+    }
+  });
   
   try {
     // Testar conexões
