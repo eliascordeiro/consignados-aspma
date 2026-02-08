@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       statusFilter = false
     }
 
-    // Filtro de busca por nome, CPF, matrícula (apenas se NÃO for busca por status)
+    // Filtro de busca por nome, CPF, matrícula ou status
     let useExactMatch = false
     if (search && statusFilter === null) {
       const cpfNumbers = search.replace(/\D/g, "")
@@ -91,17 +91,17 @@ export async function GET(request: NextRequest) {
     // Filtro por status se detectado na busca (baseado apenas em bloqueio)
     if (statusFilter !== null) {
       if (statusFilter === true) {
-        // Ativo: bloqueio não é "Bloqueado"
+        // Ativo: bloqueio não é "X"
         where.AND.push({
           OR: [
             { bloqueio: null },
-            { bloqueio: { not: "Bloqueado" } }
+            { bloqueio: { not: "X" } }
           ]
         })
       } else {
-        // Inativo: bloqueio = "Bloqueado"
+        // Inativo: bloqueio = "X"
         where.AND.push({
-          bloqueio: "Bloqueado"
+          bloqueio: "X"
         })
       }
     }
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
     // Ajustar status baseado apenas em bloqueio
     const funcionariosAjustados = funcionarios.map(func => ({
       ...func,
-      ativo: func.bloqueio !== "Bloqueado"
+      ativo: func.bloqueio !== "X"
     }))
 
     return NextResponse.json({
