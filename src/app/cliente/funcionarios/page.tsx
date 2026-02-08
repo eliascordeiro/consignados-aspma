@@ -45,6 +45,17 @@ interface Empresa {
   nome: string
 }
 
+interface Classe {
+  id: number
+  classe: string
+}
+
+interface Setor {
+  id: number
+  codigo: string
+  setores: string | null
+}
+
 interface Funcionario {
   id: string
   nome: string
@@ -101,6 +112,8 @@ export default function FuncionariosPage() {
   
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
   const [empresas, setEmpresas] = useState<Empresa[]>([])
+  const [classes, setClasses] = useState<Classe[]>([])
+  const [setores, setSetores] = useState<Setor[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [page, setPage] = useState(1)
@@ -178,6 +191,30 @@ export default function FuncionariosPage() {
     }
   }
 
+  const loadClasses = async () => {
+    try {
+      const response = await fetch("/api/classes")
+      if (response.ok) {
+        const result = await response.json()
+        setClasses(result)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar classes:", error)
+    }
+  }
+
+  const loadSetores = async () => {
+    try {
+      const response = await fetch("/api/setores")
+      if (response.ok) {
+        const result = await response.json()
+        setSetores(result)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar setores:", error)
+    }
+  }
+
   // Verificar autenticação
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -189,6 +226,8 @@ export default function FuncionariosPage() {
   useEffect(() => {
     if (status === "authenticated") {
       loadEmpresas()
+      loadClasses()
+      loadSetores()
     }
   }, [status])
 
@@ -868,12 +907,27 @@ export default function FuncionariosPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="tipo">Tipo</Label>
-                    <Input
-                      id="tipo"
-                      value={formData.tipo}
-                      onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                    />
+                    <Label htmlFor="tipo">Tipo (Classe)</Label>
+                    <Select 
+                      value={formData.tipo || ""} 
+                      onValueChange={(value) => {
+                        setFormData({ 
+                          ...formData, 
+                          tipo: value
+                        })
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a classe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classes.map((classe) => (
+                          <SelectItem key={classe.id} value={classe.classe}>
+                            {classe.classe}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -897,13 +951,27 @@ export default function FuncionariosPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="codTipo">Código Tipo</Label>
-                    <Input
-                      id="codTipo"
-                      type="number"
-                      value={formData.codTipo}
-                      onChange={(e) => setFormData({ ...formData, codTipo: e.target.value })}
-                    />
+                    <Label htmlFor="codTipo">Setor</Label>
+                    <Select 
+                      value={formData.codTipo || ""} 
+                      onValueChange={(value) => {
+                        setFormData({ 
+                          ...formData, 
+                          codTipo: value
+                        })
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o setor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {setores.map((setor) => (
+                          <SelectItem key={setor.id} value={setor.codigo}>
+                            {setor.setores || setor.codigo}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

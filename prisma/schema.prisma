@@ -68,6 +68,8 @@ model users {
   vendasUpdated     Venda[]       @relation("VendaUpdatedBy")
   parcelasCreated   Parcela[]     @relation("ParcelaCreatedBy")
   parcelasUpdated   Parcela[]     @relation("ParcelaUpdatedBy")
+  classes           Classe[]
+  setores           Setor[]
 }
 
 model convenio {
@@ -307,4 +309,23 @@ enum TipoEmpresa {
   PUBLICO
   PRIVADO
   MISTO
+}
+
+model Classe {
+  id      Int    @id @default(autoincrement()) @map("codigo")
+  userId  String
+  classe  String @db.VarChar(30)
+  users   users  @relation(fields: [userId], references: [id])
+  
+  @@map("classes")
+}
+
+model Setor {
+  id      Int     @id @default(autoincrement())
+  userId  String
+  codigo  String  @db.VarChar(3)
+  setores String? @db.VarChar(40)
+  users   users   @relation(fields: [userId], references: [id])
+  
+  @@map("setores")
 }
