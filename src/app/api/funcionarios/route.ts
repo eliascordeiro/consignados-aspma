@@ -91,24 +91,20 @@ export async function GET(request: NextRequest) {
     // Filtro por status se detectado na busca (baseado em dataExclusao)
     if (statusFilter !== null) {
       if (statusFilter === true) {
-        // Ativo: dataExclusao null, bloqueio não é "Bloqueado", motivoBloqueio vazio, motivoExclusao vazio
+        // Ativo: dataExclusao null E bloqueio não é "Bloqueado"
         where.AND.push({
           dataExclusao: null,
           OR: [
             { bloqueio: null },
             { bloqueio: { not: "Bloqueado" } }
-          ],
-          motivoBloqueio: null,
-          motivoExclusao: null
+          ]
         })
       } else {
-        // Inativo: dataExclusao preenchida OU bloqueio = "Bloqueado" OU motivoBloqueio preenchido OU motivoExclusao preenchido
+        // Inativo: dataExclusao preenchida OU bloqueio = "Bloqueado"
         where.AND.push({
           OR: [
             { dataExclusao: { not: null } },
-            { bloqueio: "Bloqueado" },
-            { motivoBloqueio: { not: null } },
-            { motivoExclusao: { not: null } }
+            { bloqueio: "Bloqueado" }
           ]
         })
       }
@@ -150,10 +146,10 @@ export async function GET(request: NextRequest) {
       take: limit,
     })
 
-    // Ajustar status baseado em dataExclusao, bloqueio, motivoBloqueio ou motivoExclusao
+    // Ajustar status baseado em dataExclusao ou bloqueio
     const funcionariosAjustados = funcionarios.map(func => ({
       ...func,
-      ativo: !func.dataExclusao && func.bloqueio !== "Bloqueado" && !func.motivoBloqueio && !func.motivoExclusao
+      ativo: !func.dataExclusao && func.bloqueio !== "Bloqueado"
     }))
 
     return NextResponse.json({
