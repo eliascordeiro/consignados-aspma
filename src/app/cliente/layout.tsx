@@ -38,11 +38,11 @@ import { signOut, useSession } from "next-auth/react"
 import { getUserModules, PERMISSION_MODULES } from "@/config/permissions"
 import { PerfilModal } from "@/components/perfil-modal"
 
-// Dashboard e Relatórios são sempre visíveis
+// Dashboard é sempre visível para todos
 const dashboardNav = { name: "Dashboard", href: "/cliente/dashboard", icon: LayoutDashboard }
-const relatoriosNav = { name: "Relatórios", href: "/cliente/relatorios", icon: FileText }
 
 // Rotas dos módulos geradas AUTOMATICAMENTE a partir de permissions.ts (fonte única de verdade)
+// A ordem no sidebar segue EXATAMENTE a ordem definida em PERMISSION_MODULES
 const moduleRoutes: Record<string, { name: string; href: string; icon: any }> = Object.fromEntries(
   PERMISSION_MODULES.map(m => [m.id, { name: m.displayName, href: m.href, icon: m.icon }])
 )
@@ -76,15 +76,12 @@ export default function ClienteLayout({
   const userPermissions = (session?.user as any)?.permissions || []
   const userModules = getUserModules(userPermissions)
   
-  // Montar navegação com ordem específica: Dashboard → módulos até vendas → Relatórios → resto
+  // Montar navegação: Dashboard (sempre) + módulos na ordem de PERMISSION_MODULES (por permissão)
   const moduleNavItems = userModules.map(module => moduleRoutes[module.id]).filter(Boolean)
-  const vendasIndex = moduleNavItems.findIndex(item => item.href === "/cliente/vendas")
   
   const navigation = [
     dashboardNav,
-    ...moduleNavItems.slice(0, vendasIndex + 1), // até vendas (inclusive)
-    relatoriosNav,
-    ...moduleNavItems.slice(vendasIndex + 1) // resto após vendas
+    ...moduleNavItems
   ]
 
   // Nome para exibir no header (MANAGER se for USER subordinado, senão próprio nome)

@@ -11,7 +11,8 @@ import {
   Download,
   UserCog,
   FileText,
-  ShoppingCart
+  ShoppingCart,
+  BarChart3
 } from "lucide-react"
 
 export interface Permission {
@@ -87,6 +88,17 @@ export const PERMISSION_MODULES: PermissionModule[] = [
       { id: "vendas.edit", name: "Editar", description: "Modificar vendas e parcelas", icon: Edit },
       { id: "vendas.delete", name: "Excluir", description: "Cancelar vendas", icon: Trash2 },
       { id: "vendas.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
+    ]
+  },
+  {
+    id: "relatorios",
+    name: "Relatórios",
+    displayName: "Relatórios",
+    href: "/cliente/relatorios",
+    icon: BarChart3,
+    permissions: [
+      { id: "relatorios.view", name: "Consultar", description: "Visualizar e gerar relatórios", icon: Eye },
+      { id: "relatorios.export", name: "Exportar", description: "Exportar relatórios para arquivo", icon: Download },
     ]
   },
   {
