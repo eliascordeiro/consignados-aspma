@@ -12,7 +12,8 @@ import {
   UserCog,
   FileText,
   ShoppingCart,
-  BarChart3
+  BarChart3,
+  Wallet
 } from "lucide-react"
 
 export interface Permission {
@@ -60,6 +61,20 @@ export const PERMISSION_MODULES: PermissionModule[] = [
       { id: "funcionarios.edit", name: "Editar", description: "Modificar sócios existentes", icon: Edit },
       { id: "funcionarios.delete", name: "Excluir", description: "Remover sócios", icon: Trash2 },
       { id: "funcionarios.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
+    ]
+  },
+  {
+    id: "margem",
+    name: "Margem Consignada",
+    displayName: "Margem Consignada",
+    href: "/cliente/margem-consignada",
+    icon: Wallet,
+    permissions: [
+      { id: "margem.view", name: "Consultar", description: "Visualizar margens e históricos", icon: Eye },
+      { id: "margem.create", name: "Incluir", description: "Definir margem para sócios", icon: Plus },
+      { id: "margem.edit", name: "Editar", description: "Alterar limite e margem consignável", icon: Edit },
+      { id: "margem.delete", name: "Excluir", description: "Remover registros de margem", icon: Trash2 },
+      { id: "margem.export", name: "Exportar", description: "Exportar dados para arquivo", icon: Download },
     ]
   },
   {

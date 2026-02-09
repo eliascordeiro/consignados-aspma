@@ -202,8 +202,7 @@ export async function POST(request: NextRequest) {
         dataCadastro: data.dataCadastro ? new Date(data.dataCadastro) : null,
         dataAdmissao: data.dataAdmissao ? new Date(data.dataAdmissao) : null,
         dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : null,
-        limite: data.limite ? parseFloat(data.limite) : null,
-        margemConsig: data.margemConsig ? parseFloat(data.margemConsig) : null,
+        // limite e margemConsig são gerenciados exclusivamente via Margem Consignada
         gratificacao: data.gratificacao ? parseFloat(data.gratificacao) : null,
         devolucao: data.devolucao && !isNaN(parseFloat(data.devolucao)) ? parseFloat(data.devolucao) : null,
         autorizado: data.autorizado || null,

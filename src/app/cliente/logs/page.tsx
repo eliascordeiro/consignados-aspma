@@ -77,6 +77,7 @@ const actionLabels: Record<string, string> = {
 const moduleLabels: Record<string, string> = {
   funcionarios: "Sócios",
   consignatarias: "Consignatárias",
+  margem: "Margem Consignada",
   usuarios: "Usuários e Permissões",
   convenios: "Conveniados",
   vendas: "Vendas",
@@ -235,6 +236,7 @@ export default function LogsPage() {
                 <SelectItem value="all">Todos os módulos</SelectItem>
                 <SelectItem value="consignatarias">Consignatárias</SelectItem>
                 <SelectItem value="funcionarios">Sócios</SelectItem>
+                <SelectItem value="margem">Margem Consignada</SelectItem>
                 <SelectItem value="convenios">Conveniados</SelectItem>
                 <SelectItem value="vendas">Vendas</SelectItem>
                 <SelectItem value="relatorios">Relatórios</SelectItem>

@@ -811,23 +811,31 @@ export default function FuncionariosPage() {
               <TabsContent value="financeiros" className="space-y-4 py-4 mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="limite">Limite de Crédito</Label>
+                    <Label htmlFor="limite" className="flex items-center gap-1">
+                      Limite de Crédito
+                      <span className="text-xs text-muted-foreground">(via Margem Consignada)</span>
+                    </Label>
                     <Input
                       id="limite"
                       type="number"
                       step="0.01"
                       value={formData.limite}
-                      onChange={(e) => setFormData({ ...formData, limite: e.target.value })}
+                      disabled
+                      className="bg-muted/50 cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="margemConsig">Margem Consignável</Label>
+                    <Label htmlFor="margemConsig" className="flex items-center gap-1">
+                      Margem Consignável
+                      <span className="text-xs text-muted-foreground">(via Margem Consignada)</span>
+                    </Label>
                     <Input
                       id="margemConsig"
                       type="number"
                       step="0.01"
                       value={formData.margemConsig}
-                      onChange={(e) => setFormData({ ...formData, margemConsig: e.target.value })}
+                      disabled
+                      className="bg-muted/50 cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-2">

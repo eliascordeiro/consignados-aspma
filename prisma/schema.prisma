@@ -70,6 +70,7 @@ model users {
   parcelasUpdated   Parcela[]     @relation("ParcelaUpdatedBy")
   classes           Classe[]
   setores           Setor[]
+  margemHistoricos  MargemHistorico[]
 }
 
 model convenio {
@@ -182,12 +183,33 @@ model Socio {
   updatedAt       DateTime  @updatedAt
   empresa         Empresa?  @relation(fields: [empresaId], references: [id])
   vendas          Venda[]
+  margemHistoricos MargemHistorico[]
 
   @@index([nome])
   @@index([matricula])
   @@index([ativo])
   @@index([empresaId])
   @@map("socios")
+}
+
+model MargemHistorico {
+  id              String    @id @default(cuid())
+  socioId         String
+  userId          String
+  limiteAnterior  Decimal?  @db.Decimal(10, 2)
+  limiteNovo      Decimal?  @db.Decimal(10, 2)
+  margemAnterior  Decimal?  @db.Decimal(10, 2)
+  margemNova      Decimal?  @db.Decimal(10, 2)
+  motivo          String?
+  observacao       String?
+  createdAt       DateTime  @default(now())
+  socio           Socio     @relation(fields: [socioId], references: [id], onDelete: Cascade)
+  usuario         users     @relation(fields: [userId], references: [id])
+
+  @@index([socioId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("margem_historicos")
 }
 
 model Venda {
