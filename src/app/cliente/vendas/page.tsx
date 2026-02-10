@@ -436,8 +436,8 @@ export default function VendasPage() {
             <div className="w-full">
               {/* Header fixo - apenas desktop */}
               {!isMobile && (
-                <div className="sticky top-0 bg-gray-100 dark:bg-gray-700 z-10 border-b-2 border-gray-300 dark:border-gray-600 shadow-sm">
-                  <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-3 py-3 text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wide">
+                <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 z-10 border-b border-gray-200 dark:border-gray-600">
+                  <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-3 py-3 font-semibold text-sm">
                     <div className="text-left">Venda</div>
                     <div className="text-left">Sócio</div>
                     <div className="text-left">Convênio</div>
@@ -476,7 +476,7 @@ export default function VendasPage() {
                     >
                       {isMobile ? (
                         // Layout Mobile (Card)
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/30">
                           <div className="space-y-2">
                             <div className="flex justify-between items-start">
                               <div>
