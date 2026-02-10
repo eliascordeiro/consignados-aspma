@@ -9,13 +9,15 @@
  * Unifica os 3 scripts de migração em um só:
  *   1. migrate-classes-setores.ts
  *   2. migrate-consignatarias-convenios-railway.ts
- *   3. migrate-socios-local-to-railway.ts
+ *   3. migrate-socios-mysql-to-railway.ts (CORRIGIDO)
  * 
  * Ordem de limpeza (respeitando FK):
  *   parcelas → vendas → sócios → empresas → convênios → classes → setores
  * 
  * Ordem de inserção:
- *   classes → setores → empresas → convênios → sócios
+ *   classes → setores → empresas → convênios → sócios (TODOS DO MYSQL)
+ * 
+ * CORREÇÃO: Sócios agora são migrados do MySQL direto, não do PostgreSQL local
  * 
  * Uso: npx tsx app/scripts/migrate-all-to-railway.ts
  */
@@ -41,7 +43,6 @@ const MYSQL_CONFIG = {
 };
 
 const RAILWAY_URL = 'postgresql://postgres:DtTeiZzewsGAQlbosPGcsNrWAQqVCchf@yamanote.proxy.rlwy.net:29695/railway';
-const LOCAL_URL = 'postgresql://postgres:postgres@localhost:5432/consignados_dev?schema=public';
 
 const BATCH_SIZE = 100;
 const MAX_RETRIES = 5;
@@ -333,79 +334,124 @@ async function migrarConvenios(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// ETAPA 6: Migrar Sócios (Local PostgreSQL → Railway)
+// ETAPA 6: Migrar Sócios (MySQL → Railway)
 // ─────────────────────────────────────────────────────────────────────
 
 async function migrarSocios(
-  local: PrismaClient,
+  mysqlPool: mysql.Pool,
   railway: PrismaClient,
-  userId: string
+  userId: string,
+  consignatariaIdMap: Map<number, number>
 ): Promise<{ migrated: number; mapeados: number; semEmpresa: number }> {
-  separator('📦 ETAPA 6: MIGRANDO SÓCIOS (Local → Railway)');
+  separator('📦 ETAPA 6: MIGRANDO SÓCIOS (MySQL → Railway)');
 
-  // Buscar empresas do Railway para mapeamento
-  const empresaPrefeitura = await railway.empresa.findFirst({
-    where: { nome: { contains: 'PREFEITURA MUNICIPAL', mode: 'insensitive' } }
+  // Buscar sócios do MySQL
+  const [sociosMySQL] = await withRetry(
+    () => mysqlPool.query<any[]>('SELECT * FROM socios ORDER BY matricula'),
+    'Buscar sócios do MySQL'
+  );
+
+  console.log(`\n   MySQL: ${fmt(sociosMySQL.length)} sócios encontrados`);
+
+  // Criar mapeamento consignataria -> empresa para facilitar
+  const consigToEmpresa = new Map<number, number>();
+  
+  // Buscar empresas Railway para mapeamento reverso
+  const empresas = await railway.empresa.findMany({
+    where: { userId },
+    select: { id: true, nome: true }
   });
-  const empresaFundo = await railway.empresa.findFirst({
-    where: { nome: { contains: 'FUNDO DE PREVIDENCIA', mode: 'insensitive' } }
-  });
 
-  if (empresaPrefeitura) {
-    console.log(`\n   ✅ PREFEITURA encontrada ID: ${empresaPrefeitura.id}`);
-  } else {
-    console.log(`\n   ⚠️  PREFEITURA não encontrada`);
-  }
-  if (empresaFundo) {
-    console.log(`   ✅ FUNDO encontrado ID: ${empresaFundo.id}`);
-  } else {
-    console.log(`   ⚠️  FUNDO não encontrado`);
+  // Mapear NENHUMA, FUNDO, PREFEITURA
+  for (const empresa of empresas) {
+    const nomeUpper = empresa.nome.trim().toUpperCase();
+    if (nomeUpper.includes('NENHUMA')) {
+      consigToEmpresa.set(0, empresa.id);
+    } else if (nomeUpper.includes('FUNDO')) {
+      consigToEmpresa.set(1, empresa.id);
+    } else if (nomeUpper.includes('PREFEITURA')) {
+      consigToEmpresa.set(2, empresa.id);
+    }
   }
 
-  // Buscar sócios do Local
-  const sociosLocal = await local.socio.findMany({ orderBy: { createdAt: 'asc' } });
-  console.log(`\n   Local: ${fmt(sociosLocal.length)} sócios encontrados`);
+  // Adicionar empresas do mapeamento de consignatarias
+  for (const [mysqlId, railwayId] of consignatariaIdMap.entries()) {
+    consigToEmpresa.set(mysqlId, railwayId);
+  }
+
+  console.log(`\n   📋 Mapeamento de consignatárias: ${consigToEmpresa.size} entradas`);
 
   let migrated = 0;
-  let sociosComEmpresaMapeada = 0;
-  let sociosSemEmpresaFinal = 0;
+  let sociosComEmpresa = 0;
+  let sociosSemEmpresa = 0;
 
-  for (let i = 0; i < sociosLocal.length; i += BATCH_SIZE) {
-    const batch = sociosLocal.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < sociosMySQL.length; i += BATCH_SIZE) {
+    const batch = sociosMySQL.slice(i, i + BATCH_SIZE);
 
-    const batchMapeado = batch.map(socio => {
-      let empresaId = socio.empresaId;
+    const batchData = batch.map((socio: any) => {
+      const consignatariaId = socio.consignataria || 0;
+      const empresaId = consigToEmpresa.get(consignatariaId);
 
-      if (!empresaId && socio.tipo) {
-        if (socio.tipo === '1' && empresaPrefeitura) {
-          empresaId = empresaPrefeitura.id;
-          sociosComEmpresaMapeada++;
-        } else if (socio.tipo === '3' && empresaFundo) {
-          empresaId = empresaFundo.id;
-          sociosComEmpresaMapeada++;
-        } else {
-          sociosSemEmpresaFinal++;
-        }
-      } else if (!empresaId) {
-        sociosSemEmpresaFinal++;
+      if (empresaId) {
+        sociosComEmpresa++;
+      } else {
+        sociosSemEmpresa++;
       }
 
-      return { ...socio, empresaId, userId };
+      return {
+        userId,
+        empresaId: empresaId || null,
+        nome: socio.associado?.trim() || 'SEM NOME',
+        cpf: socio.cpf?.trim().replace(/[^\d]/g, '') || null,
+        rg: socio.rg?.trim() || null,
+        matricula: socio.matricula?.trim() || null,
+        funcao: socio.funcao?.trim() || null,
+        lotacao: socio.lotacao?.trim() || null,
+        endereco: socio.endereco?.trim() || null,
+        bairro: socio.bairro?.trim() || null,
+        cep: socio.cep?.trim() || null,
+        cidade: socio.cidade?.trim() || null,
+        telefone: socio.fone?.trim() || null,
+        celular: socio.celular?.trim() || null,
+        email: socio.email?.trim() || null,
+        contato: socio.contato?.trim() || null,
+        dataCadastro: socio.data || null,
+        dataNascimento: socio.nascimento || null,
+        limite: socio.limite ? parseFloat(socio.limite) : null,
+        margemConsig: socio.mensal ? parseFloat(socio.mensal) : null,
+        gratificacao: socio.gratif ? parseFloat(socio.gratif) : null,
+        autorizado: socio.autorizado?.trim() || null,
+        sexo: socio.sexo?.trim() || null,
+        estadoCivil: socio.est_civil?.trim() || null,
+        numCompras: socio.ncompras ? Math.floor(socio.ncompras) : null,
+        tipo: socio.tipo?.trim() || null,
+        agencia: socio.agencia?.trim() || null,
+        conta: socio.conta?.trim() || null,
+        banco: socio.banco?.trim() || null,
+        devolucao: socio.devolucao ? parseFloat(socio.devolucao) : null,
+        bloqueio: socio.bloqueio?.trim() || null,
+        motivoBloqueio: socio.motivo?.trim() || null,
+        codTipo: socio.codtipo || null,
+        senha: socio.senha?.toString().trim() || null,
+        dataExclusao: socio.data_exclusao || null,
+        motivoExclusao: socio.motivo_exclusao?.trim() || null,
+        ativo: !socio.bloqueio || socio.bloqueio.trim() === ''
+      };
     });
 
-    await railway.socio.createMany({ data: batchMapeado, skipDuplicates: true });
+    await railway.socio.createMany({ data: batchData, skipDuplicates: true });
     migrated += batch.length;
 
-    if (migrated % 500 === 0 || migrated === sociosLocal.length) {
-      process.stdout.write(`\r   Progresso: ${fmt(migrated)}/${fmt(sociosLocal.length)}`);
+    if (migrated % 500 === 0 || migrated === sociosMySQL.length) {
+      process.stdout.write(`\r   Progresso: ${fmt(migrated)}/${fmt(sociosMySQL.length)}`);
     }
   }
 
   console.log(`\n   ✅ ${fmt(migrated)} sócios migrados`);
-  console.log(`   📊 Mapeados por tipo: ${fmt(sociosComEmpresaMapeada)}`);
-  console.log(`   ⚠️  Sem empresa: ${fmt(sociosSemEmpresaFinal)}`);
+  console.log(`   📊 Com empresa: ${fmt(sociosComEmpresa)}`);
+  console.log(`   ⚠️  Sem empresa: ${fmt(sociosSemEmpresa)}`);
 
-  return { migrated, mapeados: sociosComEmpresaMapeada, semEmpresa: sociosSemEmpresaFinal };
+  return { migrated, mapeados: sociosComEmpresa, semEmpresa: sociosSemEmpresa };
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -438,7 +484,7 @@ async function verificacaoFinal(railway: PrismaClient): Promise<void> {
 
 async function main() {
   console.log('╔══════════════════════════════════════════════════════════════════════╗');
-  console.log('║    🚀 MIGRAÇÃO UNIFICADA - MySQL + Local → Railway                   ║');
+  console.log('║    🚀 MIGRAÇÃO UNIFICADA - MySQL → Railway                           ║');
   console.log('║    Classes | Setores | Empresas | Convênios | Sócios                ║');
   console.log('║    Ordem FK | Idempotente | Retry | Batch                           ║');
   console.log('╚══════════════════════════════════════════════════════════════════════╝');
@@ -452,10 +498,6 @@ async function main() {
     datasources: { db: { url: RAILWAY_URL } }
   });
 
-  const local = new PrismaClient({
-    datasources: { db: { url: LOCAL_URL } }
-  });
-
   try {
     // Testar conexões
     console.log('\n🔌 Testando conexões...');
@@ -463,8 +505,6 @@ async function main() {
     console.log('   ✅ MySQL remoto conectado');
     await railway.$queryRaw`SELECT 1`;
     console.log('   ✅ Railway conectado');
-    await local.$queryRaw`SELECT 1`;
-    console.log('   ✅ Local conectado');
 
     // Buscar userId padrão
     console.log('\n👤 Buscando userId padrão...');
@@ -497,8 +537,8 @@ async function main() {
     // ETAPA 5: Convênios
     const conveniosCount = await migrarConvenios(mysqlPool, railway, defaultUser.id);
 
-    // ETAPA 6: Sócios
-    const sociosResult = await migrarSocios(local, railway, defaultUser.id);
+    // ETAPA 6: Sócios (MySQL → Railway)
+    const sociosResult = await migrarSocios(mysqlPool, railway, defaultUser.id, consigMap);
 
     // VERIFICAÇÃO
     await verificacaoFinal(railway);
@@ -528,7 +568,6 @@ async function main() {
   } finally {
     await mysqlPool.end();
     await railway.$disconnect();
-    await local.$disconnect();
     console.log('\n🔌 Todas as conexões fechadas');
   }
 }
