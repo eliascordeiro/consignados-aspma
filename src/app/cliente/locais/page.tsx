@@ -310,7 +310,7 @@ export default function LocaisPage() {
               <span className="md:hidden">Novo</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-full max-w-5xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-slate-50 dark:bg-gray-800 consignado:bg-blue-50 consignado:dark:bg-gray-800 flex flex-col p-4 sm:p-6">
+          <DialogContent className="w-full max-w-5xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-gray-50 dark:bg-gray-800 flex flex-col p-4 sm:p-6">
             <DialogHeader className="shrink-0">
               <DialogTitle className="text-xl sm:text-2xl">
                 {editingConvenio ? "Editar Convênio" : "Novo Convênio"}
@@ -920,11 +920,11 @@ function VirtualizedTable({
                     </div>
                     <div>
                       {convenio.ativo ? (
-                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300">
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                           Ativo
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                           Inativo
                         </span>
                       )}

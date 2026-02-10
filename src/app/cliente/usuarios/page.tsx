@@ -199,7 +199,10 @@ export default function UsuariosPage() {
                       <TableCell className="hidden md:table-cell">{user.cpf || "-"}</TableCell>
                       <TableCell className="hidden md:table-cell">{user.phone || "-"}</TableCell>
                       <TableCell>
-                        <Badge variant={user.active ? "default" : "secondary"}>
+                        <Badge 
+                          variant={user.active ? "default" : "secondary"}
+                          className={user.active ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}
+                        >
                           {user.active ? "Ativo" : "Inativo"}
                         </Badge>
                       </TableCell>

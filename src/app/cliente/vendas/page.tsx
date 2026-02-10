@@ -568,7 +568,7 @@ export default function VendasPage() {
                         </div>
                       ) : (
                         // Layout Desktop (Grid)
-                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700/50 items-center transition-colors duration-150">
+                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/30 items-center transition-colors duration-150">
                           <div className="text-left">
                             <div className="text-sm font-semibold text-gray-900 dark:text-white">
                               #{venda.numeroVenda}
