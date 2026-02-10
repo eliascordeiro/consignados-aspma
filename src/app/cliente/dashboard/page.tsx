@@ -28,7 +28,7 @@ export default async function ClienteDashboard() {
         <Card className="border-2 hover:shadow-lg transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Consignatárias</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground group-hover:text-green-600 transition-colors" />
+            <Building2 className="h-4 w-4 text-muted-foreground group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
@@ -39,7 +39,7 @@ export default async function ClienteDashboard() {
         <Card className="border-2 hover:shadow-lg transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Sócios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+            <Users className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
@@ -50,7 +50,7 @@ export default async function ClienteDashboard() {
         <Card className="border-2 hover:shadow-lg transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Conveniados</CardTitle>
-            <Store className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 transition-colors" />
+            <Store className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
@@ -70,15 +70,15 @@ export default async function ClienteDashboard() {
             </p>
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
-                <Building2 className="h-4 w-4 text-green-600 mt-0.5" />
+                <Building2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5" />
                 <span><strong>Gerenciar Consignatárias:</strong> Cadastre e administre empresas públicas e privadas</span>
               </li>
               <li className="flex items-start gap-2">
-                <Users className="h-4 w-4 text-blue-600 mt-0.5" />
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <span><strong>Cadastrar Sócios:</strong> Vincule sócios às consignatárias</span>
               </li>
               <li className="flex items-start gap-2">
-                <Store className="h-4 w-4 text-purple-600 mt-0.5" />
+                <Store className="h-4 w-4 text-purple-600 dark:text-purple-400 mt-0.5" />
                 <span><strong>Autorizar Conveniados:</strong> Defina onde os sócios podem usar suas margens</span>
               </li>
             </ul>
@@ -92,7 +92,7 @@ export default async function ClienteDashboard() {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
               <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-green-600">1</span>
+                <span className="text-sm font-bold text-green-600 dark:text-green-400">1</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Cadastre suas consignatárias</p>
@@ -102,7 +102,7 @@ export default async function ClienteDashboard() {
 
             <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
               <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-blue-600">2</span>
+                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">2</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Importe sócios</p>
@@ -112,7 +112,7 @@ export default async function ClienteDashboard() {
 
             <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
               <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-purple-600">3</span>
+                <span className="text-sm font-bold text-purple-600 dark:text-purple-400">3</span>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium">Configure autorizações</p>

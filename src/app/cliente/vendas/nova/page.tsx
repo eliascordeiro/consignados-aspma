@@ -370,7 +370,7 @@ export default function NovaVendaPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lançamento de Vendas</h1>
         <Link
           href="/cliente/vendas"
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500"
         >
           Voltar
         </Link>
@@ -430,7 +430,7 @@ export default function NovaVendaPage() {
         {/* Convênio */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative md:col-span-2">
-            <label className="block text-sm font-bold mb-2">Convênio *</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio *</label>
             <input
               type="text"
               value={searchConvenio}
@@ -631,14 +631,14 @@ export default function NovaVendaPage() {
           <button
             type="button"
             onClick={limparFormulario}
-            className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500"
           >
             Limpar
           </button>
           <button
             type="submit"
             disabled={loading || parcelas.length === 0}
-            className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             {loading ? 'Salvando...' : 'Salvar Venda'}
           </button>

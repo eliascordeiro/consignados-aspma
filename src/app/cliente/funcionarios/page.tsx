@@ -1007,7 +1007,7 @@ export default function FuncionariosPage() {
                       id="ativo"
                       checked={formData.ativo}
                       onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
-                      className="h-4 w-4 rounded border-gray-300"
+                      className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
                     />
                     <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
                   </div>
@@ -1196,11 +1196,11 @@ function VirtualizedFuncionariosTable({
                     
                     <div>
                       {funcionario.bloqueio !== "X" ? (
-                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300">
                           Ativo
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700">
+                        <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
                           Inativo
                         </span>
                       )}

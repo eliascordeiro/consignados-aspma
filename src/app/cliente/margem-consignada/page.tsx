@@ -298,12 +298,12 @@ export default function MargemConsignadaPage() {
                         {socio.empresa?.nome || "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        <span className={Number(socio.limite || 0) > 0 ? "text-green-600 font-semibold" : "text-muted-foreground"}>
+                        <span className={Number(socio.limite || 0) > 0 ? "text-green-600 dark:text-green-400 font-semibold" : "text-muted-foreground"}>
                           {formatCurrency(socio.limite)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        <span className={Number(socio.margemConsig || 0) > 0 ? "text-blue-600 font-semibold" : "text-muted-foreground"}>
+                        <span className={Number(socio.margemConsig || 0) > 0 ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-muted-foreground"}>
                           {formatCurrency(socio.margemConsig)}
                         </span>
                       </TableCell>
@@ -318,7 +318,7 @@ export default function MargemConsignadaPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                              className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-500 dark:hover:text-amber-400 dark:hover:bg-amber-900/20"
                               onClick={() => handleEdit(socio)}
                               title="Alterar margem"
                             >
@@ -328,7 +328,7 @@ export default function MargemConsignadaPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-500 dark:hover:text-blue-400 dark:hover:bg-blue-900/20"
                             onClick={() => handleHistorico(socio)}
                             title="Ver histórico"
                           >

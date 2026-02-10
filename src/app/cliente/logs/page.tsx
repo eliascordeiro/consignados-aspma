@@ -51,15 +51,15 @@ interface AuditLog {
 }
 
 const actionColors: Record<string, string> = {
-  CREATE: "bg-green-100 text-green-800",
-  UPDATE: "bg-blue-100 text-blue-800",
-  DELETE: "bg-red-100 text-red-800",
-  LOGIN: "bg-purple-100 text-purple-800",
-  LOGOUT: "bg-gray-100 text-gray-800",
-  PASSWORD_RESET: "bg-yellow-100 text-yellow-800",
-  EXPORT: "bg-orange-100 text-orange-800",
-  IMPORT: "bg-cyan-100 text-cyan-800",
-  VIEW: "bg-slate-100 text-slate-800",
+  CREATE: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  UPDATE: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  DELETE: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  LOGIN: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+  LOGOUT: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  PASSWORD_RESET: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  EXPORT: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  IMPORT: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400",
+  VIEW: "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300",
 }
 
 const actionLabels: Record<string, string> = {
@@ -184,9 +184,9 @@ export default function LogsPage() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <FileText className="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
           <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
-          <p className="text-gray-600">Você não tem permissão para visualizar logs de auditoria.</p>
+          <p className="text-gray-600 dark:text-gray-400">Você não tem permissão para visualizar logs de auditoria.</p>
         </div>
       </div>
     )
@@ -197,7 +197,7 @@ export default function LogsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Logs de Auditoria</h1>
-          <p className="text-gray-600 mt-1">Histórico de ações realizadas no sistema</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Histórico de ações realizadas no sistema</p>
         </div>
         {hasPermission(userPermissions, "logs.export") && (
           <Button onClick={exportLogs} variant="outline">
@@ -218,7 +218,7 @@ export default function LogsPage() {
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input
                   placeholder="Buscar por usuário, descrição..."
                   value={search}
@@ -281,8 +281,8 @@ export default function LogsPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : logs.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
               Nenhum log encontrado
             </div>
           ) : (
@@ -290,7 +290,7 @@ export default function LogsPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-gray-50 dark:bg-gray-900/50">
                       <TableHead>Data/Hora</TableHead>
                       <TableHead>Usuário</TableHead>
                       <TableHead>Ação</TableHead>
@@ -301,24 +301,24 @@ export default function LogsPage() {
                   </TableHeader>
                   <TableBody>
                     {logs.map((log) => (
-                      <TableRow key={log.id}>
+                      <TableRow key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
+                            <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                             {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-400" />
+                            <User className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                             <div>
                               <div className="font-medium">{log.userName}</div>
-                              <div className="text-xs text-gray-500">{log.userRole}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{log.userRole}</div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={actionColors[log.action] || "bg-gray-100 text-gray-800"}>
+                          <Badge className={actionColors[log.action] || "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"}>
                             {actionLabels[log.action] || log.action}
                           </Badge>
                         </TableCell>
@@ -332,7 +332,7 @@ export default function LogsPage() {
                             {log.description}
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs text-gray-500">
+                        <TableCell className="text-xs text-gray-500 dark:text-gray-400">
                           {log.ipAddress || "-"}
                         </TableCell>
                       </TableRow>
@@ -342,7 +342,7 @@ export default function LogsPage() {
               </div>
 
               <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
                   Página {page} de {totalPages}
                 </div>
                 <div className="flex gap-2">

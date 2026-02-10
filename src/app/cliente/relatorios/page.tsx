@@ -477,7 +477,7 @@ export default function RelatoriosPage() {
               type="button"
               onClick={gerarRelatorioPDF}
               disabled={loading}
-              className="px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-bold"
+              className="px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
             >
               📄 PDF
             </button>
@@ -485,7 +485,7 @@ export default function RelatoriosPage() {
               type="button"
               onClick={gerarRelatorioExcel}
               disabled={loading}
-              className="px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-bold"
+              className="px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
             >
               📊 Excel
             </button>
@@ -493,7 +493,7 @@ export default function RelatoriosPage() {
               type="button"
               onClick={() => setShowCSVModal(true)}
               disabled={loading}
-              className="px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-bold"
+              className="px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
             >
               📋 CSV
             </button>
