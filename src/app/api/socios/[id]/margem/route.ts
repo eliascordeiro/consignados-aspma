@@ -308,19 +308,8 @@ export async function GET(
       });
     }
 
-    // REGRA AS200.PRG: Outros tipos (exceto 3 e 4) também usam ZETRA, não tipo != 1
-    if (socio.tipo !== '1') {
-      console.log('📦 [API] Tipo != 1, 3 ou 4, retornando margem do banco de dados');
-      return NextResponse.json({
-        matricula: socio.matricula,
-        nome: socio.nome,
-        margem: Number(socio.margemConsig || 0),
-        tipo: 'banco_dados',
-        fonte: 'local',
-      });
-    }
-
-    console.log('🎯 [API] Tipo = 1 (Consignatária), consultando ZETRA...');
+    // REGRA AS200.PRG: Tipos != 3 e != 4 (prefeitura) = Consulta ZETRA
+    console.log('🎯 [API] Tipo != 3 e != 4 (Prefeitura/Consignatária), consultando ZETRA...');
     
     // Para consignatária (tipo = 1), consulta ZETRA via PHP
     const matriculaAtual = socio.matricula || '';
