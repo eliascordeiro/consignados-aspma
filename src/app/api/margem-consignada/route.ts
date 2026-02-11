@@ -74,8 +74,8 @@ export async function GET(request: NextRequest) {
           nome: true,
           cpf: true,
           matricula: true,
+          tipo: true,
           limite: true,
-          margemConsig: true,
           empresa: { select: { id: true, nome: true } },
           _count: { select: { margemHistoricos: true } }
         },
@@ -86,7 +86,32 @@ export async function GET(request: NextRequest) {
       prisma.socio.count({ where }),
     ])
 
-    return NextResponse.json({ socios, total, page, totalPages: Math.ceil(total / limit) })
+    // Buscar margem calculada para cada sócio (ZETRA ou local)
+    const sociosComMargem = await Promise.all(
+      socios.map(async (socio) => {
+        try {
+          const margemResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/socios/${socio.id}/margem`)
+          if (margemResponse.ok) {
+            const margemData = await margemResponse.json()
+            return {
+              ...socio,
+              limiteCalculado: margemData.margem || margemData.limite || 0,
+              fonteLimite: margemData.fonte || 'local'
+            }
+          }
+        } catch (error) {
+          console.error(`Erro ao buscar margem do sócio ${socio.id}:`, error)
+        }
+        // Fallback para o valor do BD
+        return {
+          ...socio,
+          limiteCalculado: socio.limite || 0,
+          fonteLimite: 'local'
+        }
+      })
+    )
+
+    return NextResponse.json({ socios: sociosComMargem, total, page, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     console.error("Erro ao buscar margens:", error)
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 })

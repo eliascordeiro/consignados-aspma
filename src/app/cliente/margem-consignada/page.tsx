@@ -63,6 +63,8 @@ interface Socio {
   matricula: string | null
   tipo: string | null
   limite: number | null
+  limiteCalculado?: number
+  fonteLimite?: string
   empresa: Empresa | null
   _count?: { margemHistoricos: number }
   margemHistoricos?: MargemHistorico[]
@@ -333,9 +335,16 @@ export default function MargemConsignadaPage() {
                         {socio.empresa?.nome || "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        <span className={Number(socio.limite || 0) > 0 ? "text-green-600 dark:text-green-400 font-semibold" : "text-muted-foreground"}>
-                          {formatCurrency(socio.limite)}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={Number(socio.limiteCalculado || socio.limite || 0) > 0 ? "text-green-600 dark:text-green-400 font-semibold" : "text-muted-foreground"}>
+                            {formatCurrency(socio.limiteCalculado || socio.limite)}
+                          </span>
+                          {socio.fonteLimite && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1">
+                              {socio.fonteLimite === 'zetra' ? 'ZETRA' : socio.fonteLimite === 'local' ? 'Local' : 'BD'}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="text-xs">
