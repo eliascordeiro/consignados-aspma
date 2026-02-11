@@ -223,7 +223,16 @@ export async function GET(
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
-  if (!hasPermission(session.user, 'margem.view')) {
+  // Permitir acesso se:
+  // 1. Tem margem.view (acesso ao módulo margem consignada)
+  // 2. Tem vendas.* (precisa consultar margem para criar/editar vendas)
+  const hasMargemAccess = hasPermission(session.user, 'margem.view');
+  const hasVendasAccess = 
+    hasPermission(session.user, 'vendas.view') ||
+    hasPermission(session.user, 'vendas.create') ||
+    hasPermission(session.user, 'vendas.edit');
+  
+  if (!hasMargemAccess && !hasVendasAccess) {
     return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
   }
 

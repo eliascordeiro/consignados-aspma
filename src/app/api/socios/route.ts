@@ -11,7 +11,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
-    if (!hasPermission(session.user, 'funcionarios.view')) {
+    // Permitir acesso se:
+    // 1. Tem funcionarios.view (acesso ao módulo funcionários)
+    // 2. Tem vendas.* (precisa ver sócios para criar/editar vendas)
+    const hasFuncionariosAccess = hasPermission(session.user, 'funcionarios.view')
+    const hasVendasAccess = 
+      hasPermission(session.user, 'vendas.view') ||
+      hasPermission(session.user, 'vendas.create') ||
+      hasPermission(session.user, 'vendas.edit')
+    
+    if (!hasFuncionariosAccess && !hasVendasAccess) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
