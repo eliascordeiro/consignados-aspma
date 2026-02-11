@@ -61,8 +61,8 @@ interface Socio {
   nome: string
   cpf: string | null
   matricula: string | null
+  tipo: string | null
   limite: number | null
-  margemConsig: number | null
   empresa: Empresa | null
   _count?: { margemHistoricos: number }
   margemHistoricos?: MargemHistorico[]
@@ -86,11 +86,12 @@ export default function MargemConsignadaPage() {
   const [selectedSocio, setSelectedSocio] = useState<Socio | null>(null)
   const [formData, setFormData] = useState({
     limite: "",
-    margemConsig: "",
     motivo: "",
     observacao: "",
   })
   const [saving, setSaving] = useState(false)
+  const [limiteReadonly, setLimiteReadonly] = useState(false)
+  const [fonteLimite, setFonteLimite] = useState<string>("")
 
   // Dialog de histórico
   const [histDialogOpen, setHistDialogOpen] = useState(false)
@@ -127,20 +128,56 @@ export default function MargemConsignadaPage() {
   }, [page])
 
   // Abrir edição
-  const handleEdit = (socio: Socio) => {
+  const handleEdit = async (socio: Socio) => {
     setSelectedSocio(socio)
+    
+    // Buscar margem via API para determinar fonte (ZETRA ou local)
+    let limiteCalculado = socio.limite?.toString() || "0"
+    let isReadonly = false
+    let fonte = "local"
+    
+    try {
+      const margemResponse = await fetch(`/api/socios/${socio.id}/margem`)
+      if (margemResponse.ok) {
+        const margemData = await margemResponse.json()
+        console.log('📊 Dados da margem:', margemData)
+        
+        // Se vier de ZETRA (tipos != 3,4), é somente leitura
+        if (margemData.fonte === 'zetra') {
+          isReadonly = true
+          fonte = 'ZETRA'
+        } else if (margemData.tipo === 'calculo_local') {
+          fonte = 'Cálculo Local'
+        } else {
+          fonte = 'Banco de Dados'
+        }
+        
+        limiteCalculado = (margemData.margem || margemData.limite || 0).toString()
+      }
+    } catch (error) {
+      console.error("Erro ao buscar margem:", error)
+    }
+    
     setFormData({
-      limite: socio.limite?.toString() || "0",
-      margemConsig: socio.margemConsig?.toString() || "0",
+      limite: limiteCalculado,
       motivo: "",
       observacao: "",
     })
+    setLimiteReadonly(isReadonly)
+    setFonteLimite(fonte)
     setEditDialogOpen(true)
   }
 
   // Salvar margem
   const handleSave = async () => {
     if (!selectedSocio) return
+    
+    // Se for ZETRA (readonly), não pode salvar
+    if (limiteReadonly) {
+      toast.error("Valores de ZETRA não podem ser alterados manualmente")
+      return
+    }
+    
     if (!formData.motivo.trim()) {
       toast.error("Motivo é obrigatório")
       return
@@ -154,7 +191,6 @@ export default function MargemConsignadaPage() {
         body: JSON.stringify({
           socioId: selectedSocio.id,
           limite: formData.limite,
-          margemConsig: formData.margemConsig,
           motivo: formData.motivo,
           observacao: formData.observacao,
         }),
@@ -166,11 +202,11 @@ export default function MargemConsignadaPage() {
         return
       }
 
-      toast.success("Margem atualizada com sucesso!")
+      toast.success("Limite atualizado com sucesso!")
       setEditDialogOpen(false)
       loadSocios()
     } catch (error) {
-      toast.error("Erro ao salvar margem")
+      toast.error("Erro ao salvar limite")
     } finally {
       setSaving(false)
     }
@@ -283,7 +319,6 @@ export default function MargemConsignadaPage() {
                     <TableHead className="font-semibold">CPF</TableHead>
                     <TableHead className="font-semibold">Empresa</TableHead>
                     <TableHead className="font-semibold text-right">Limite de Crédito</TableHead>
-                    <TableHead className="font-semibold text-right">Margem Consignável</TableHead>
                     <TableHead className="font-semibold text-center">Alterações</TableHead>
                     <TableHead className="font-semibold text-right">Ações</TableHead>
                   </TableRow>
@@ -300,11 +335,6 @@ export default function MargemConsignadaPage() {
                       <TableCell className="text-right font-mono">
                         <span className={Number(socio.limite || 0) > 0 ? "text-green-600 dark:text-green-400 font-semibold" : "text-muted-foreground"}>
                           {formatCurrency(socio.limite)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        <span className={Number(socio.margemConsig || 0) > 0 ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-muted-foreground"}>
-                          {formatCurrency(socio.margemConsig)}
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
@@ -381,7 +411,7 @@ export default function MargemConsignadaPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5 text-amber-600" />
-              Alterar Margem Consignada
+              {limiteReadonly ? "Consultar Limite (ZETRA)" : "Alterar Limite de Crédito"}
             </DialogTitle>
             <DialogDescription>
               {selectedSocio && (
@@ -394,76 +424,86 @@ export default function MargemConsignadaPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* Valores atuais */}
+            {/* Fonte dos dados */}
+            {fonteLimite && (
+              <div className={`rounded-lg p-3 ${limiteReadonly ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-muted/50'}`}>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Fonte dos Dados</p>
+                <p className="text-sm font-medium mt-1">
+                  {fonteLimite}
+                  {limiteReadonly && <span className="text-xs text-blue-600 dark:text-blue-400 ml-2">(Somente Consulta)</span>}
+                </p>
+              </div>
+            )}
+
+            {/* Valor atual */}
             <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-              <p className="text-xs font-semibold text-muted-foreground uppercase">Valores Atuais</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  Limite: <span className="font-mono font-semibold">{formatCurrency(selectedSocio?.limite)}</span>
-                </div>
-                <div>
-                  Margem: <span className="font-mono font-semibold">{formatCurrency(selectedSocio?.margemConsig)}</span>
-                </div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase">Valor Atual</p>
+              <div className="text-sm">
+                Limite: <span className="font-mono font-semibold">{formatCurrency(selectedSocio?.limite)}</span>
               </div>
             </div>
 
-            {/* Novos valores */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-limite">Novo Limite de Crédito</Label>
-                <Input
-                  id="edit-limite"
-                  type="number"
-                  step="0.01"
-                  value={formData.limite}
-                  onChange={(e) => setFormData({ ...formData, limite: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-margem">Nova Margem Consignável</Label>
-                <Input
-                  id="edit-margem"
-                  type="number"
-                  step="0.01"
-                  value={formData.margemConsig}
-                  onChange={(e) => setFormData({ ...formData, margemConsig: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Motivo (obrigatório) */}
+            {/* Novo valor */}
             <div className="space-y-2">
-              <Label htmlFor="edit-motivo">
-                Motivo da Alteração <span className="text-red-500">*</span>
+              <Label htmlFor="edit-limite" className="flex items-center gap-2">
+                {limiteReadonly ? "Limite de Crédito (ZETRA)" : "Novo Limite de Crédito"}
+                {limiteReadonly && <Badge variant="outline" className="text-xs">Somente Leitura</Badge>}
               </Label>
               <Input
-                id="edit-motivo"
-                placeholder="Ex: Reajuste salarial, Correção de valor..."
-                value={formData.motivo}
-                onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
+                id="edit-limite"
+                type="number"
+                step="0.01"
+                value={formData.limite}
+                onChange={(e) => setFormData({ ...formData, limite: e.target.value })}
+                disabled={limiteReadonly}
+                className={limiteReadonly ? "bg-muted/50 cursor-not-allowed" : ""}
               />
+              {limiteReadonly && (
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ Valores de ZETRA não podem ser alterados manualmente
+                </p>
+              )}
             </div>
 
-            {/* Observação */}
-            <div className="space-y-2">
-              <Label htmlFor="edit-obs">Observação</Label>
-              <Textarea
-                id="edit-obs"
-                placeholder="Observação adicional (opcional)"
-                value={formData.observacao}
-                onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
-                rows={2}
-              />
-            </div>
+            {/* Motivo (obrigatório) - apenas se não for readonly */}
+            {!limiteReadonly && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-motivo">
+                    Motivo da Alteração <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="edit-motivo"
+                    placeholder="Ex: Reajuste salarial, Correção de valor..."
+                    value={formData.motivo}
+                    onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
+                  />
+                </div>
+
+                {/* Observação */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-obs">Observação</Label>
+                  <Textarea
+                    id="edit-obs"
+                    placeholder="Observação adicional (opcional)"
+                    value={formData.observacao}
+                    onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
+                    rows={2}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancelar
+              {limiteReadonly ? "Fechar" : "Cancelar"}
             </Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
-              {saving ? "Salvando..." : "Salvar Alteração"}
-            </Button>
+            {!limiteReadonly && (
+              <Button onClick={handleSave} disabled={saving} className="bg-amber-600 hover:bg-amber-700">
+                {saving ? "Salvando..." : "Salvar Alteração"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -474,7 +514,7 @@ export default function MargemConsignadaPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <History className="h-5 w-5 text-blue-600" />
-              Histórico de Margem
+              Histórico de Limite
             </DialogTitle>
             <DialogDescription>
               {histSocio && (
@@ -483,8 +523,6 @@ export default function MargemConsignadaPage() {
                   {histSocio.matricula && ` — Mat. ${histSocio.matricula}`}
                   {" | "}
                   Limite atual: <span className="font-mono font-semibold">{formatCurrency(histSocio.limite)}</span>
-                  {" | "}
-                  Margem atual: <span className="font-mono font-semibold">{formatCurrency(histSocio.margemConsig)}</span>
                 </span>
               )}
             </DialogDescription>
