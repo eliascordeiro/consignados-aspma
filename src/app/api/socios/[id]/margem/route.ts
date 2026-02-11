@@ -181,7 +181,7 @@ async function calcularDescontosDoMes(socioId: string, matricula: string, dataCo
     console.log(`📋 [CÁLCULO] Total de parcelas do mês ${dataCorte.mes}/${dataCorte.ano}: ${parcelasDoMes}`);
     
     // Prisma estrutura: Parcela -> Venda -> Socio
-    // Busca parcelas não pagas (baixa vazio ou null)
+    // Busca parcelas não pagas (baixa vazio ou null) de vendas ATIVAS (não canceladas)
     const result = await prisma.parcela.aggregate({
       _sum: {
         valor: true,
@@ -189,6 +189,8 @@ async function calcularDescontosDoMes(socioId: string, matricula: string, dataCo
       where: {
         venda: {
           socioId: socioId,
+          ativo: true,        // NOVO: só conta parcelas de vendas ativas
+          cancelado: false,   // NOVO: exclui vendas canceladas
         },
         OR: [
           { baixa: '' },
