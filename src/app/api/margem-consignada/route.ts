@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { hasPermission } from "@/lib/permissions"
 
 // GET - Listar sócios com margem (busca, filtros, paginação)
 export async function GET(request: NextRequest) {
@@ -10,6 +11,10 @@ export async function GET(request: NextRequest) {
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'margem.view')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const searchParams = request.nextUrl.searchParams
@@ -94,6 +99,10 @@ export async function PUT(request: NextRequest) {
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'margem.edit')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const body = await request.json()

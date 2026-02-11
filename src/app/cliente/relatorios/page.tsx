@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { hasPermission } from '@/config/permissions';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -18,6 +20,10 @@ interface Socio {
 
 export default function RelatoriosPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userPermissions = (session?.user as any)?.permissions || [];
+  const canExport = hasPermission(userPermissions, 'relatorios.export');
+
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [socios, setSocios] = useState<Socio[]>([]);
   const [filtros, setFiltros] = useState({
@@ -476,24 +482,27 @@ export default function RelatoriosPage() {
             <button
               type="button"
               onClick={gerarRelatorioPDF}
-              disabled={loading}
+              disabled={loading || !canExport}
               className="px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
+              title={!canExport ? 'Sem permissão para exportar' : ''}
             >
               📄 PDF
             </button>
             <button
               type="button"
               onClick={gerarRelatorioExcel}
-              disabled={loading}
+              disabled={loading || !canExport}
               className="px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
+              title={!canExport ? 'Sem permissão para exportar' : ''}
             >
               📊 Excel
             </button>
             <button
               type="button"
               onClick={() => setShowCSVModal(true)}
-              disabled={loading}
+              disabled={loading || !canExport}
               className="px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
+              title={!canExport ? 'Sem permissão para exportar' : ''}
             >
               📋 CSV
             </button>

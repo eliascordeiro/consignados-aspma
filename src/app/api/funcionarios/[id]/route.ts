@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { hasPermission } from "@/lib/permissions"
 
 export async function GET(
   request: NextRequest,
@@ -12,6 +13,10 @@ export async function GET(
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'funcionarios.view')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const { id } = await params
@@ -56,6 +61,10 @@ export async function PUT(
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'funcionarios.edit')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const data = await request.json()
@@ -173,6 +182,10 @@ export async function DELETE(
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'funcionarios.delete')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const { id } = await params

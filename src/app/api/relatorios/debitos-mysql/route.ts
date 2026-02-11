@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 import { PrismaClient } from '@prisma/client';
 import iconv from 'iconv-lite';
 import { auth } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 
 const prisma = new PrismaClient();
 
@@ -33,6 +34,10 @@ export async function GET(request: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    if (!hasPermission(session.user, 'relatorios.view')) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

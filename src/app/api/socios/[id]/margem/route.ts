@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { getDataUserId } from '@/lib/get-data-user-id';
+import { hasPermission } from '@/lib/permissions';
 
 // Credenciais ZETRA (considere mover para variáveis de ambiente)
 const ZETRA_CONFIG = {
@@ -220,6 +221,10 @@ export async function GET(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
+  if (!hasPermission(session.user, 'margem.view')) {
+    return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
   }
 
   // Buscar userId correto (herda dados do MANAGER se for subordinado)

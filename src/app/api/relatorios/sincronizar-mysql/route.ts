@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import mysql from 'mysql2/promise';
 import { auth } from '@/lib/auth';
 import { getDataUserId } from '@/lib/get-data-user-id';
+import { hasPermission } from '@/lib/permissions';
 
 const prisma = new PrismaClient();
 
@@ -41,6 +42,10 @@ export async function POST(request: NextRequest) {
         { error: 'Usuário não autenticado' },
         { status: 401 }
       );
+    }
+
+    if (!hasPermission(session.user, 'relatorios.view')) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
     const userId = await getDataUserId(session as any);

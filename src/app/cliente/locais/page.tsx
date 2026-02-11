@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
+import { useSession } from "next-auth/react"
+import { hasPermission } from "@/config/permissions"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -93,6 +95,12 @@ function getDisplayTipo(convenio: Convenio): string {
 }
 
 export default function LocaisPage() {
+  const { data: session } = useSession()
+  const userPermissions = (session?.user as any)?.permissions || []
+  const canCreate = hasPermission(userPermissions, 'convenios.create')
+  const canEdit = hasPermission(userPermissions, 'convenios.edit')
+  const canDelete = hasPermission(userPermissions, 'convenios.delete')
+
   const [convenios, setConvenios] = useState<Convenio[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -303,6 +311,7 @@ export default function LocaisPage() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+          {canCreate && (
           <DialogTrigger asChild>
             <Button size="sm" className="flex-shrink-0">
               <Plus className="h-4 w-4 md:mr-2" />
@@ -310,6 +319,7 @@ export default function LocaisPage() {
               <span className="md:hidden">Novo</span>
             </Button>
           </DialogTrigger>
+          )}
           <DialogContent className="w-full max-w-5xl h-auto md:h-[85vh] max-h-[90vh] overflow-hidden bg-gray-50 dark:bg-gray-800 flex flex-col p-4 sm:p-6">
             <DialogHeader className="shrink-0">
               <DialogTitle className="text-xl sm:text-2xl">
@@ -673,6 +683,8 @@ export default function LocaisPage() {
               convenios={convenios}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
           )}
           
@@ -747,11 +759,15 @@ export default function LocaisPage() {
 function VirtualizedTable({ 
   convenios, 
   onEdit, 
-  onDelete 
+  onDelete,
+  canEdit,
+  canDelete,
 }: { 
   convenios: Convenio[]
   onEdit: (convenio: Convenio) => void
   onDelete: (id: number) => void
+  canEdit: boolean
+  canDelete: boolean
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -827,6 +843,7 @@ function VirtualizedTable({
                         )}
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
+                        {canEdit && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -835,6 +852,8 @@ function VirtualizedTable({
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
+                        )}
+                        {canDelete && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -843,6 +862,7 @@ function VirtualizedTable({
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
+                        )}
                       </div>
                     </div>
                     
@@ -930,6 +950,7 @@ function VirtualizedTable({
                       )}
                     </div>
                     <div className="flex justify-end gap-2">
+                      {canEdit && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -938,6 +959,8 @@ function VirtualizedTable({
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      )}
+                      {canDelete && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -946,6 +969,7 @@ function VirtualizedTable({
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
+                      )}
                     </div>
                   </div>
                 </div>

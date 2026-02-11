@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { hasPermission } from "@/lib/permissions"
 
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
     
     if (!session?.user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'consignatarias.view')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -98,6 +103,10 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'consignatarias.create')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const body = await request.json()

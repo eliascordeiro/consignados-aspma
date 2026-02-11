@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { hasPermission } from '@/config/permissions';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
@@ -199,6 +201,12 @@ async function fetchVendas({
 }
 
 export default function VendasPage() {
+  const { data: session } = useSession();
+  const userPermissions = (session?.user as any)?.permissions || [];
+  const canCreate = hasPermission(userPermissions, 'vendas.create');
+  const canEdit = hasPermission(userPermissions, 'vendas.edit');
+  const canDelete = hasPermission(userPermissions, 'vendas.delete');
+
   const [filtroAtivo, setFiltroAtivo] = useState('true');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -301,12 +309,14 @@ export default function VendasPage() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Vendas
         </h1>
+        {canCreate && (
         <Link
           href="/cliente/vendas/nova"
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
           + Nova Venda
         </Link>
+        )}
       </div>
 
       {/* Filtros */}
@@ -543,13 +553,15 @@ export default function VendasPage() {
                             </div>
 
                             <div className="flex gap-2 pt-2">
+                              {canEdit && (
                               <Link
                                 href={`/cliente/vendas/editar/${venda.id}`}
                                 className="flex-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs text-center"
                               >
                                 {venda.ativo && !venda.cancelado ? 'Editar' : 'Ver'}
                               </Link>
-                              {venda.ativo && !venda.cancelado && (
+                              )}
+                              {canDelete && venda.ativo && !venda.cancelado && (
                                 <button
                                   onClick={() =>
                                     excluirVenda(
@@ -627,6 +639,7 @@ export default function VendasPage() {
                           </div>
 
                           <div className="flex justify-center gap-1.5">
+                            {canEdit && (
                             <Link
                               href={`/cliente/vendas/editar/${venda.id}`}
                               className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shadow-sm"
@@ -634,7 +647,8 @@ export default function VendasPage() {
                             >
                               {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
                             </Link>
-                            {venda.ativo && !venda.cancelado && (
+                            )}
+                            {canDelete && venda.ativo && !venda.cancelado && (
                               <button
                                 onClick={() =>
                                   excluirVenda(

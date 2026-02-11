@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { hasPermission } from "@/lib/permissions"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -144,6 +145,10 @@ export async function DELETE(
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'convenios.delete')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const { id: paramId } = await params

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { hasPermission } from "@/lib/permissions"
 
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -33,12 +34,16 @@ export async function PUT(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
+    if (!hasPermission(session.user, 'consignatarias.edit')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+    }
+
     const { id: paramId } = await params
     const id = parseInt(paramId)
     const body = await request.json()
     const validatedData = empresaSchema.parse(body)
 
-    // Verificar se a empresa pertence ao usuário (ou se é MANAGER/ADMIN)
+    // Verificar se a empresa pertence ao usuário
     const existing = await prisma.empresa.findUnique({
       where: { id }
     })
@@ -128,10 +133,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
+    if (!hasPermission(session.user, 'consignatarias.delete')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+    }
+
     const { id: paramId } = await params
     const id = parseInt(paramId)
 
-    // Verificar se a empresa pertence ao usuário (ou se é MANAGER/ADMIN)
+    // Verificar se a empresa pertence ao usuário
     const existing = await prisma.empresa.findUnique({
       where: { id }
     })

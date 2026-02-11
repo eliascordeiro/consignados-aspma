@@ -2,12 +2,17 @@ import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { hasPermission } from "@/lib/permissions"
 
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'consignatarias.view')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
 
     const { searchParams } = new URL(req.url)
