@@ -86,32 +86,24 @@ export async function GET(request: NextRequest) {
       prisma.socio.count({ where }),
     ])
 
-    // Buscar margem calculada para cada sócio (ZETRA ou local)
-    const sociosComMargem = await Promise.all(
-      socios.map(async (socio) => {
-        try {
-          const margemResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/socios/${socio.id}/margem`)
-          if (margemResponse.ok) {
-            const margemData = await margemResponse.json()
-            return {
-              ...socio,
-              limiteCalculado: margemData.margem || margemData.limite || 0,
-              fonteLimite: margemData.fonte || 'local'
-            }
-          }
-        } catch (error) {
-          console.error(`Erro ao buscar margem do sócio ${socio.id}:`, error)
-        }
-        // Fallback para o valor do BD
-        return {
-          ...socio,
-          limiteCalculado: socio.limite || 0,
-          fonteLimite: 'local'
-        }
-      })
-    )
+    // Adicionar informação de fonte baseado apenas no tipo (não fazemos cálculo agora)
+    const sociosComFonte = socios.map((socio) => {
+      // Determina fonte baseado no tipo
+      let fonteLimite = 'BD'
+      if (socio.tipo === '3' || socio.tipo === '4') {
+        fonteLimite = 'Local'
+      } else if (socio.tipo === '1' || socio.tipo === '2' || socio.tipo === '5') {
+        fonteLimite = 'ZETRA'
+      }
+      
+      return {
+        ...socio,
+        limiteCalculado: socio.limite || 0,
+        fonteLimite
+      }
+    })
 
-    return NextResponse.json({ socios: sociosComMargem, total, page, totalPages: Math.ceil(total / limit) })
+    return NextResponse.json({ socios: sociosComFonte, total, page, totalPages: Math.ceil(total / limit) })
   } catch (error) {
     console.error("Erro ao buscar margens:", error)
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 })
