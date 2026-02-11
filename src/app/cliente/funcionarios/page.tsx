@@ -79,7 +79,6 @@ interface Funcionario {
   dataAdmissao?: string
   dataNascimento?: string
   limite?: number
-  margemConsig?: number
   gratificacao?: number
   autorizado?: boolean
   sexo?: string
@@ -142,7 +141,6 @@ export default function FuncionariosPage() {
     dataAdmissao: "",
     dataNascimento: "",
     limite: "",
-    margemConsig: "",
     gratificacao: "",
     autorizado: "",
     sexo: "",
@@ -271,6 +269,26 @@ export default function FuncionariosPage() {
       
       const funcionarioCompleto = await response.json()
       
+      // Buscar margem/limite via API (ZETRA ou BD conforme tipo)
+      let limiteCalculado = funcionarioCompleto.limite?.toString() || ""
+      if (funcionarioCompleto.id) {
+        try {
+          console.log(`🔍 Buscando margem para sócio ID ${funcionarioCompleto.id}, tipo: ${funcionarioCompleto.tipo}`)
+          const margemResponse = await fetch(`/api/socios/${funcionarioCompleto.id}/margem`)
+          if (margemResponse.ok) {
+            const margemData = await margemResponse.json()
+            console.log('📊 Resposta da API margem:', margemData)
+            // A API retorna 'margem' para tipos != 3,4 (ZETRA) e 'limite' para cálculo local (tipos 3,4)
+            limiteCalculado = (margemData.margem || margemData.limite || 0).toString()
+            console.log(`✅ Limite calculado: ${limiteCalculado} (fonte: ${margemData.fonte})`)
+          } else {
+            console.error(`❌ Erro na API margem: ${margemResponse.status}`)
+          }
+        } catch (error) {
+          console.error("❌ Erro ao buscar margem:", error)
+        }
+      }
+      
       setSelectedFuncionario(funcionarioCompleto)
       setFormData({
         nome: funcionarioCompleto.nome,
@@ -292,8 +310,7 @@ export default function FuncionariosPage() {
         dataCadastro: formatDate(funcionarioCompleto.dataCadastro),
         dataAdmissao: formatDate(funcionarioCompleto.dataAdmissao),
         dataNascimento: formatDate(funcionarioCompleto.dataNascimento),
-        limite: funcionarioCompleto.limite?.toString() || "",
-        margemConsig: funcionarioCompleto.margemConsig?.toString() || "",
+        limite: limiteCalculado,
         gratificacao: funcionarioCompleto.gratificacao?.toString() || "",
         autorizado: funcionarioCompleto.autorizado || "",
         sexo: funcionarioCompleto.sexo || "",
@@ -343,7 +360,6 @@ export default function FuncionariosPage() {
       dataAdmissao: "",
       dataNascimento: "",
       limite: "",
-      margemConsig: "",
       gratificacao: "",
       autorizado: "",
       sexo: "",
@@ -809,31 +825,17 @@ export default function FuncionariosPage() {
               </TabsContent>
 
               <TabsContent value="financeiros" className="space-y-4 py-4 mt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="limite" className="flex items-center gap-1">
                       Limite de Crédito
-                      <span className="text-xs text-muted-foreground">(via Margem Consignada)</span>
+                      <span className="text-xs text-muted-foreground">(calculado automaticamente)</span>
                     </Label>
                     <Input
                       id="limite"
                       type="number"
                       step="0.01"
                       value={formData.limite}
-                      disabled
-                      className="bg-muted/50 cursor-not-allowed"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="margemConsig" className="flex items-center gap-1">
-                      Margem Consignável
-                      <span className="text-xs text-muted-foreground">(via Margem Consignada)</span>
-                    </Label>
-                    <Input
-                      id="margemConsig"
-                      type="number"
-                      step="0.01"
-                      value={formData.margemConsig}
                       disabled
                       className="bg-muted/50 cursor-not-allowed"
                     />
