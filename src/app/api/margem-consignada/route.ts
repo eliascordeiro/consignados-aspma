@@ -96,6 +96,20 @@ export async function GET(request: NextRequest) {
         fonteLimite = 'ZETRA'
       }
       
+      // Debug para matrícula específica
+      if (socio.matricula === '222101') {
+        console.log('🔍 Debug sócio 222101:', {
+          tipo: socio.tipo,
+          typeofTipo: typeof socio.tipo,
+          fonteLimite,
+          comparacao1: socio.tipo === '1',
+          comparacao2: socio.tipo === '2',
+          comparacao3: socio.tipo === '3',
+          comparacao4: socio.tipo === '4',
+          comparacao5: socio.tipo === '5',
+        })
+      }
+      
       return {
         ...socio,
         limiteCalculado: socio.limite || 0,
