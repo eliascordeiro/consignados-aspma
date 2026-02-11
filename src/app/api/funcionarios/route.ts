@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,13 +23,9 @@ export async function GET(request: NextRequest) {
       AND: []
     }
 
-    // MANAGER/ADMIN pode ver todos os funcionários
-    // Usuários subordinados veem os dados do MANAGER que os criou
-    // Outros roles veem apenas os seus próprios dados
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      where.AND.push({ userId: targetUserId })
-    }
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    where.AND.push({ userId: dataUserId })
 
     // Detectar se a busca é por status
     let statusFilter: boolean | null = null
@@ -48,14 +45,10 @@ export async function GET(request: NextRequest) {
       
       // Se for apenas números, tentar busca exata de matrícula primeiro
       if (isOnlyNumbers) {
-        const targetUserId = session.user.role !== "MANAGER" && session.user.role !== "ADMIN"
-          ? (session.user.id)
-          : undefined
-        
         const exactMatch = await prisma.socio.findFirst({
           where: {
             matricula: search,
-            ...(targetUserId ? { userId: targetUserId } : {}),
+            userId: dataUserId,
             ...(empresaId ? { empresaId: parseInt(empresaId) } : {})
           }
         })

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
+import { getDataUserId } from '@/lib/get-data-user-id';
 
 // GET /api/vendas - Lista vendas com paginação
 export async function GET(request: NextRequest) {
@@ -29,6 +30,10 @@ export async function GET(request: NextRequest) {
     const cursor = searchParams.get('cursor'); // Para infinite scroll
 
     const whereClause: any = {};
+
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any);
+    whereClause.userId = dataUserId;
 
     if (socioId) {
       whereClause.socioId = socioId;
@@ -307,7 +312,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
     const body = await request.json();
 
     const {

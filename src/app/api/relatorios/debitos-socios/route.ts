@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { jsPDF } from 'jspdf';
 import ExcelJS from 'exceljs';
 import iconv from 'iconv-lite';
+import { auth } from '@/lib/auth';
+import { getDataUserId } from '@/lib/get-data-user-id';
 
 const prisma = new PrismaClient();
 
@@ -58,6 +60,15 @@ interface GrupoConvenio {
 
 export async function GET(request: NextRequest) {
   try {
+    // Verificar autenticação
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any);
+
     const searchParams = request.nextUrl.searchParams;
     const mesAno = searchParams.get('mesAno'); // formato: YYYY-MM
     const convenioId = searchParams.get('convenioId');
@@ -85,11 +96,14 @@ export async function GET(request: NextRequest) {
     const dataInicio = new Date(ano, mes - 1, 1);
     const dataFim = new Date(ano, mes, 0, 23, 59, 59);
 
-    // Buscar parcelas
+    // Buscar parcelas (filtrado pelo userId correto)
     const where: any = {
       dataVencimento: {
         gte: dataInicio,
         lte: dataFim,
+      },
+      venda: {
+        userId: dataUserId,
       },
     };
 

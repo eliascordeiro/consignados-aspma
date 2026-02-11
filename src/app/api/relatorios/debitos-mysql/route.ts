@@ -4,6 +4,7 @@ import jsPDF from 'jspdf';
 import ExcelJS from 'exceljs';
 import { PrismaClient } from '@prisma/client';
 import iconv from 'iconv-lite';
+import { auth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -28,6 +29,12 @@ interface ParcelaMySQL {
 
 export async function GET(request: NextRequest) {
   try {
+    // Verificar autenticação
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const mesAno = searchParams.get('mesAno');
     const convenioId = searchParams.get('convenioId');

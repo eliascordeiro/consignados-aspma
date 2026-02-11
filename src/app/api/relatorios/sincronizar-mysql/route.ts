@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import mysql from 'mysql2/promise';
 import { auth } from '@/lib/auth';
+import { getDataUserId } from '@/lib/get-data-user-id';
 
 const prisma = new PrismaClient();
 
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = session.user.id;
+    const userId = await getDataUserId(session as any);
 
     const body = await request.json();
     const { mesAno, convenioId } = body;

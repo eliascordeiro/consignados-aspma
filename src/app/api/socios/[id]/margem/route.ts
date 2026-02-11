@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { getDataUserId } from '@/lib/get-data-user-id';
 
 // Credenciais ZETRA (considere mover para variáveis de ambiente)
 const ZETRA_CONFIG = {
@@ -214,8 +216,15 @@ export async function GET(
 ) {
   console.log('\n🚀 [API] /api/socios/[id]/margem - Requisição recebida');
   
-  // Await params (Next.js 16+ requirement)
-  
+  // Verificar autenticação
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
+  // Buscar userId correto (herda dados do MANAGER se for subordinado)
+  const dataUserId = await getDataUserId(session as any);
+
   // Extrai valorParcela da query string (regra AS200.PRG)
   const { searchParams } = new URL(request.url);
   const valorParcelaParam = searchParams.get('valorParcela');
@@ -229,9 +238,9 @@ export async function GET(
     console.log('🔢 [API] ID do sócio:', socioId);
 
     console.log('🔍 [API] Buscando sócio no banco de dados...');
-    // Busca o sócio no banco de dados
-    const socio = await prisma.socio.findUnique({
-      where: { id: socioId },
+    // Busca o sócio no banco de dados (filtrado pelo userId correto)
+    const socio = await prisma.socio.findFirst({
+      where: { id: socioId, userId: dataUserId },
       select: {
         id: true,
         matricula: true,

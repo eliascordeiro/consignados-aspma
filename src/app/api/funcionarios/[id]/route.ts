@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 export async function GET(
   request: NextRequest,
@@ -15,13 +16,9 @@ export async function GET(
 
     const { id } = await params
 
-    // MANAGER e ADMIN podem ver todos os funcionários
-    // Usuários subordinados podem ver funcionários do MANAGER que os criou
-    const where: any = { id }
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      where.userId = targetUserId
-    }
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    const where: any = { id, userId: dataUserId }
 
     const funcionario = await prisma.socio.findFirst({
       where,
@@ -64,13 +61,9 @@ export async function PUT(
     const data = await request.json()
     const { id } = await params
 
-    // MANAGER e ADMIN podem editar todos os funcionários
-    // Usuários subordinados podem editar funcionários do MANAGER que os criou
-    const where: any = { id }
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      where.userId = targetUserId
-    }
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    const where: any = { id, userId: dataUserId }
 
     // Preparar dados removendo undefined e NaN
     const updateData: any = {
@@ -184,11 +177,9 @@ export async function DELETE(
 
     const { id } = await params
 
-    // MANAGER e ADMIN podem deletar todos os funcionários
-    const where: any = { id }
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      where.userId = session.user.id
-    }
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    const where: any = { id, userId: dataUserId }
 
     // Buscar funcionario antes de deletar para pegar o nome
     const funcionario = await prisma.socio.findFirst({ where })

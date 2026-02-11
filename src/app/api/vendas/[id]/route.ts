@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
+import { getDataUserId } from '@/lib/get-data-user-id';
 
 type RouteParams = Promise<{
   id: string;
@@ -25,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
 
     const venda = await prisma.venda.findFirst({
       where: {
@@ -100,7 +101,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
 
     // Verifica se a venda existe e pertence ao usuário
     const vendaExistente = await prisma.venda.findFirst({
@@ -266,7 +267,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
 
     // Verifica se a venda existe e pertence ao usuário
     const venda = await prisma.venda.findFirst({

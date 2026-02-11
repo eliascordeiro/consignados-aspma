@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
+import { getDataUserId } from '@/lib/get-data-user-id';
 
 type RouteParams = Promise<{
   id: string;
@@ -25,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
 
     const parcela = await prisma.parcela.findFirst({
       where: {
@@ -86,7 +87,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
 
     // Verifica se a parcela existe e pertence ao usuário
     const parcelaExistente = await prisma.parcela.findFirst({
@@ -222,7 +223,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = session.user.id;
+    const targetUserId = await getDataUserId(session as any);
 
     // Verifica se a parcela existe e pertence ao usuário
     const parcela = await prisma.parcela.findFirst({

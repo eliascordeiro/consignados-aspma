@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -49,16 +50,13 @@ export async function PUT(
       )
     }
 
-    // Apenas verificar ownership se não for MANAGER/ADMIN
-    // Usuários subordinados podem editar consignatárias do MANAGER que os criou
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      if (existing.userId !== targetUserId) {
-        return NextResponse.json(
-          { error: "Consignatária não encontrada" },
-          { status: 404 }
-        )
-      }
+    // Verificar ownership usando getDataUserId (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    if (existing.userId !== dataUserId) {
+      return NextResponse.json(
+        { error: "Consignatária não encontrada" },
+        { status: 404 }
+      )
     }
 
     // Verificar se CNPJ já existe em outra empresa (apenas se mudou)
@@ -145,16 +143,13 @@ export async function DELETE(
       )
     }
 
-    // Apenas verificar ownership se não for MANAGER/ADMIN
-    // Usuários subordinados podem deletar consignatárias do MANAGER que os criou
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      if (existing.userId !== targetUserId) {
-        return NextResponse.json(
-          { error: "Consignatária não encontrada" },
-          { status: 404 }
-        )
-      }
+    // Verificar ownership usando getDataUserId (herda dados do MANAGER se for subordinado)
+    const dataUserIdDel = await getDataUserId(session as any)
+    if (existing.userId !== dataUserIdDel) {
+      return NextResponse.json(
+        { error: "Consignatária não encontrada" },
+        { status: 404 }
+      )
     }
 
     // Verificar se há sócios vinculados

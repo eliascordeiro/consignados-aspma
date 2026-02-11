@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,14 +16,16 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50")
     const skip = (page - 1) * limit
 
-    const where = search
-      ? {
-          OR: [
-            { nome: { contains: search, mode: "insensitive" as const } },
-            { cnpj: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : {}
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+
+    const where: any = { userId: dataUserId }
+    if (search) {
+      where.OR = [
+        { nome: { contains: search, mode: "insensitive" as const } },
+        { cnpj: { contains: search, mode: "insensitive" as const } },
+      ]
+    }
 
     const [empresas, total] = await Promise.all([
       db.empresa.findMany({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 // GET - Listar sócios com margem (busca, filtros, paginação)
 export async function GET(request: NextRequest) {
@@ -17,10 +18,13 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50")
     const socioId = searchParams.get("socioId") || ""
 
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+
     // Se buscar um sócio específico com histórico
     if (socioId) {
       const socio = await prisma.socio.findUnique({
-        where: { id: socioId },
+        where: { id: socioId, userId: dataUserId },
         select: {
           id: true,
           nome: true,
@@ -46,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Listar sócios com margem (busca geral)
-    const where: any = { ativo: true }
+    const where: any = { ativo: true, userId: dataUserId }
 
     if (search) {
       const isNumericSearch = /^\d+$/.test(search)
@@ -107,9 +111,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Motivo é obrigatório" }, { status: 400 })
     }
 
-    // Buscar valores atuais
-    const socioAtual = await prisma.socio.findUnique({
-      where: { id: socioId },
+    // Buscar valores atuais (filtrado pelo userId correto)
+    const dataUserIdPut = await getDataUserId(session as any)
+    const socioAtual = await prisma.socio.findFirst({
+      where: { id: socioId, userId: dataUserIdPut },
       select: { id: true, nome: true, limite: true, margemConsig: true }
     })
 

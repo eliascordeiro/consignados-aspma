@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -53,6 +54,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+
     const { searchParams } = new URL(req.url)
     const search = searchParams.get("search") || ""
     const page = parseInt(searchParams.get("page") || "1")
@@ -69,21 +73,20 @@ export async function GET(req: NextRequest) {
       statusFilter = false
     }
 
-    const where = {
-      ...(statusFilter !== null 
-        ? { ativo: statusFilter }
-        : search && {
-            OR: [
-              { codigo: { contains: search, mode: "insensitive" as const } },
-              { razao_soc: { contains: search, mode: "insensitive" as const } },
-              { fantasia: { contains: search, mode: "insensitive" as const } },
-              { nome: { contains: search, mode: "insensitive" as const } },
-              { cgc: { contains: search, mode: "insensitive" as const } },
-              { cnpj: { contains: search, mode: "insensitive" as const } },
-              { cidade: { contains: search, mode: "insensitive" as const } },
-            ],
-          }
-      ),
+    const where: any = { userId: dataUserId }
+
+    if (statusFilter !== null) {
+      where.ativo = statusFilter
+    } else if (search) {
+      where.OR = [
+        { codigo: { contains: search, mode: "insensitive" as const } },
+        { razao_soc: { contains: search, mode: "insensitive" as const } },
+        { fantasia: { contains: search, mode: "insensitive" as const } },
+        { nome: { contains: search, mode: "insensitive" as const } },
+        { cgc: { contains: search, mode: "insensitive" as const } },
+        { cnpj: { contains: search, mode: "insensitive" as const } },
+        { cidade: { contains: search, mode: "insensitive" as const } },
+      ]
     }
 
     const [convenios, total] = await Promise.all([
@@ -148,7 +151,7 @@ export async function POST(req: NextRequest) {
       uf: data.estado || data.uf,
       fone: data.telefone || data.fone,
       tipo: getTipoFromLibera(data.libera),
-      userId: session.user.role === "MANAGER" || session.user.role === "ADMIN" ? null : session.user.id,
+      userId: await getDataUserId(session as any),
     }
 
     const convenio = await db.convenio.create({

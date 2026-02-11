@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 const empresaSchema = z.object({
   nome: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -35,14 +36,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50")
     const skip = (page - 1) * limit
 
-    // MANAGER e ADMIN podem ver todas as empresas
-    // Usuários subordinados veem as empresas do MANAGER que os criou
-    // Outros roles veem apenas as suas próprias empresas
-    let where: any = {}
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      where.userId = targetUserId
-    }
+    // Buscar userId correto (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    let where: any = { userId: dataUserId }
 
     // Detectar se a busca é por status
     const searchLower = search.toLowerCase().trim()
@@ -124,7 +120,7 @@ export async function POST(request: NextRequest) {
     const empresa = await prisma.empresa.create({
       data: {
         ...validatedData,
-        userId: session.user.id,
+        userId: await getDataUserId(session as any),
       },
     })
 

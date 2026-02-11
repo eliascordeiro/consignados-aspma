@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -74,16 +75,13 @@ export async function PUT(
       )
     }
 
-    // Apenas verificar ownership se não for MANAGER/ADMIN
-    // Usuários subordinados podem editar convênios do MANAGER que os criou
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      if (existing.userId !== targetUserId) {
-        return NextResponse.json(
-          { error: "Sem permissão para editar este convênio" },
-          { status: 403 }
-        )
-      }
+    // Verificar ownership usando getDataUserId (herda dados do MANAGER se for subordinado)
+    const dataUserId = await getDataUserId(session as any)
+    if (existing.userId !== null && existing.userId !== dataUserId) {
+      return NextResponse.json(
+        { error: "Sem permissão para editar este convênio" },
+        { status: 403 }
+      )
     }
 
     const body = await req.json()
@@ -166,16 +164,13 @@ export async function DELETE(
       )
     }
 
-    // Apenas verificar ownership se não for MANAGER/ADMIN
-    // Usuários subordinados podem deletar convênios do MANAGER que os criou
-    if (session.user.role !== "MANAGER" && session.user.role !== "ADMIN") {
-      const targetUserId = session.user.id
-      if (existing.userId !== targetUserId) {
-        return NextResponse.json(
-          { error: "Sem permissão para excluir este convênio" },
-          { status: 403 }
-        )
-      }
+    // Verificar ownership usando getDataUserId (herda dados do MANAGER se for subordinado)
+    const dataUserIdDel = await getDataUserId(session as any)
+    if (existing.userId !== null && existing.userId !== dataUserIdDel) {
+      return NextResponse.json(
+        { error: "Sem permissão para excluir este convênio" },
+        { status: 403 }
+      )
     }
 
     await db.convenio.delete({
