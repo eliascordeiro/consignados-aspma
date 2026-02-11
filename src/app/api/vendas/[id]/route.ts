@@ -288,6 +288,60 @@ export async function DELETE(
     const { searchParams } = new URL(request.url);
     const hardDelete = searchParams.get('hard') === 'true';
 
+    // AS200.PRG: Se venda é ZETRA (tipo != 3 e != 4), deve liquidar na ZETRA ANTES de deletar
+    // Conforme linha 932 do AS200.PRG - sempre chama excluir_venda() primeiro
+    const tipoSocio = venda.socio.tipo?.toString() || '';
+    const isZetra = tipoSocio !== '3' && tipoSocio !== '4';
+
+    if (isZetra) {
+      console.log(`🔥 [VENDA DELETE] Venda tipo ${tipoSocio} - Liquidando na ZETRA antes de deletar...`);
+      
+      try {
+        // Monta identificador conforme AS200.PRG: "M" + matricula + "S" + sequencia
+        const adeIdentificador = `M${venda.socio.matricula}S${venda.numeroVenda}`;
+        
+        const zetraResponse = await fetch(`${request.url.split('/api')[0]}/api/vendas/liquidar-zetra`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            adeIdentificador,
+            motivoCancelamento: 'Venda excluída',
+          }),
+        });
+
+        const zetraData = await zetraResponse.json();
+        console.log('📥 [VENDA DELETE] Resposta ZETRA liquidação:', zetraData);
+
+        if (!zetraData.sucesso) {
+          console.log('⚠️  [VENDA DELETE] ZETRA recusou a liquidação:', zetraData.mensagem);
+          return NextResponse.json(
+            {
+              error: 'ZETRA recusou a liquidação', 
+              mensagem: zetraData.mensagem,
+              detalhes: 'A margem não pôde ser liberada na ZETRA. Venda não foi excluída.',
+            },
+            { status: 400 }
+          );
+        }
+
+        console.log('✅ [VENDA DELETE] Margem liquidada na ZETRA! Prosseguindo com exclusão no banco...');
+      } catch (zetraError) {
+        console.error('❌ [VENDA DELETE] Erro ao liquidar margem na ZETRA:', zetraError);
+        return NextResponse.json(
+          {
+            error: 'Erro ao liquidar margem na ZETRA',
+            detalhes: zetraError instanceof Error ? zetraError.message : 'Erro desconhecido',
+            aviso: 'Venda não foi excluída para evitar inconsistência com ZETRA',
+          },
+          { status: 500 }
+        );
+      }
+    } else {
+      console.log(`ℹ️  [VENDA DELETE] Venda tipo ${tipoSocio} (local) - Não requer liquidação ZETRA`);
+    }
+
     if (hardDelete) {
       // Hard delete - remove completamente (as parcelas serão removidas em cascata)
       await prisma.venda.delete({
