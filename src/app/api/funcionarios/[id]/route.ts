@@ -76,7 +76,6 @@ export async function PUT(
 
     // Preparar dados removendo undefined e NaN
     const updateData: any = {
-      empresaId: data.empresaId && data.empresaId !== "0" ? parseInt(data.empresaId) : null,
       nome: data.nome,
       cpf: data.cpf?.replace(/\D/g, "") || null,
       rg: data.rg || null,
@@ -134,10 +133,15 @@ export async function PUT(
       updateData.codTipo = parseInt(data.codTipo)
     }
 
-    // Adicionar relacionamento empresa apenas se existir empresaId válido
-    if (data.empresaId && data.empresaId !== "" && !isNaN(parseInt(data.empresaId))) {
+    // Gerenciar relacionamento empresa
+    if (data.empresaId && data.empresaId !== "" && data.empresaId !== "0" && !isNaN(parseInt(data.empresaId))) {
       updateData.empresa = {
         connect: { id: parseInt(data.empresaId) }
+      }
+    } else {
+      // Se empresaId for vazio, null ou "0", desconectar empresa
+      updateData.empresa = {
+        disconnect: true
       }
     }
 
