@@ -154,7 +154,9 @@ export default function MargemConsignadaPage() {
           fonte = 'Banco de Dados'
         }
         
-        limiteCalculado = (margemData.margem || margemData.limite || 0).toString()
+        // Formata com 2 casas decimais para evitar erros de precisão
+        const valorMargem = margemData.margem || margemData.limite || 0
+        limiteCalculado = Number(valorMargem).toFixed(2)
       }
     } catch (error) {
       console.error("Erro ao buscar margem:", error)
@@ -450,37 +452,44 @@ export default function MargemConsignadaPage() {
               </div>
             )}
 
-            {/* Valor atual */}
-            <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-              <p className="text-xs font-semibold text-muted-foreground uppercase">Valor Atual</p>
-              <div className="text-sm">
-                Limite: <span className="font-mono font-semibold">{formatCurrency(selectedSocio?.limite)}</span>
-              </div>
-            </div>
-
-            {/* Novo valor */}
-            <div className="space-y-2">
-              <Label htmlFor="edit-limite" className="flex items-center gap-2">
-                {limiteReadonly ? "Margem Consignada (ZETRA)" : "Nova Margem Consignada"}
-                {limiteReadonly && <Badge variant="outline" className="text-xs">Somente Leitura</Badge>}
-              </Label>
-              <Input
-                id="edit-limite"
-                type="number"
-                step="0.01"
-                value={formData.limite}
-                onChange={(e) => setFormData({ ...formData, limite: e.target.value })}
-                disabled={limiteReadonly}
-                className={limiteReadonly ? "bg-muted/50 cursor-not-allowed" : ""}
-              />
-              {limiteReadonly && (
+            {/* Valor da Margem */}
+            {limiteReadonly ? (
+              // ZETRA: Apenas exibir valor, sem campo de edição
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-2">
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase">
+                  Margem Consignada (ZETRA)
+                </p>
+                <div className="text-2xl font-mono font-bold text-blue-700 dark:text-blue-300">
+                  {formatCurrency(Number(formData.limite))}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   ⚠️ Valores de ZETRA não podem ser alterados manualmente
                 </p>
-              )}
-            </div>
+              </div>
+            ) : (
+              // Local: Exibir valor atual e campo para nova margem
+              <>
+                <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Valor Atual</p>
+                  <div className="text-sm">
+                    Limite: <span className="font-mono font-semibold">{formatCurrency(selectedSocio?.limite)}</span>
+                  </div>
+                </div>
 
-            {/* Motivo (obrigatório) - apenas se não for readonly */}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-limite">Nova Margem Consignada</Label>
+                  <Input
+                    id="edit-limite"
+                    type="number"
+                    step="0.01"
+                    value={formData.limite}
+                    onChange={(e) => setFormData({ ...formData, limite: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Motivo e Observação - apenas se não for ZETRA readonly */}
             {!limiteReadonly && (
               <>
                 <div className="space-y-2">
