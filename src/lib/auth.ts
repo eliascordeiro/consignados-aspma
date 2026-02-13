@@ -225,6 +225,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           role: convenioUser.role,
           permissions: convenioUser.permissions || [],
           createdById: convenioUser.createdById,
+          isConvenio: true,
         }
       }
     })
@@ -242,6 +243,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         token.email = user.email
         token.permissions = (user as any).permissions || []
         token.createdById = (user as any).createdById
+        token.isConvenio = (user as any).isConvenio || false
       }
       
       // Suporte para atualização de sessão via update()
@@ -261,6 +263,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         session.user.createdById = token.createdById as string | null
         session.user.email = token.email as string
         ;(session.user as any).permissions = token.permissions || []
+        ;(session.user as any).isConvenio = token.isConvenio || false
         
         console.log("   Role na sessão:", session.user.role)
         console.log("   Permissions na sessão:", (session.user as any).permissions?.length || 0)

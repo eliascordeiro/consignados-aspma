@@ -39,7 +39,9 @@ export default function LoginPage() {
         
         console.log("📍 Redirecionando após login:", session)
         
-        if (session?.user?.role === "ADMIN") {
+        if (session?.user?.isConvenio) {
+          window.location.href = "/convenio/dashboard"
+        } else if (session?.user?.role === "ADMIN") {
           window.location.href = "/dashboard"
         } else if (session?.user?.role === "MANAGER" || session?.user?.role === "USER") {
           window.location.href = "/cliente/dashboard"
