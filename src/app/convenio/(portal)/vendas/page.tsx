@@ -42,13 +42,15 @@ interface Venda {
     matricula: string | null
     cpf: string | null
   }
-  parcelas: Parcela[]
+  parcelasPagas: number
+  parcelas?: Parcela[] // Opcional - carregado sob demanda
 }
 
 export default function VendasPage() {
   const [vendas, setVendas] = useState<Venda[]>([])
   const [loading, setLoading] = useState(true)
   const [vendaExpandida, setVendaExpandida] = useState<string | null>(null)
+  const [loadingParcelas, setLoadingParcelas] = useState<string | null>(null)
 
   useEffect(() => {
     loadVendas()
@@ -66,8 +68,38 @@ export default function VendasPage() {
     }
   }
 
-  const toggleVenda = (vendaId: string) => {
-    setVendaExpandida(vendaExpandida === vendaId ? null : vendaId)
+  const loadParcelas = async (vendaId: string) => {
+    setLoadingParcelas(vendaId)
+    try {
+      const response = await fetch(`/api/convenio/vendas/${vendaId}/parcelas`)
+      const data = await response.json()
+      
+      // Atualiza a venda com as parcelas carregadas
+      setVendas(vendas.map(v => 
+        v.id === vendaId ? { ...v, parcelas: data.parcelas } : v
+      ))
+    } catch (error) {
+      console.error('Erro ao carregar parcelas:', error)
+    } finally {
+      setLoadingParcelas(null)
+    }
+  }
+
+  const toggleVenda = async (vendaId: string) => {
+    const venda = vendas.find(v => v.id === vendaId)
+    
+    if (vendaExpandida === vendaId) {
+      // Fechando
+      setVendaExpandida(null)
+    } else {
+      // Abrindo
+      setVendaExpandida(vendaId)
+      
+      // Se ainda não tem parcelas carregadas, busca
+      if (venda && !venda.parcelas) {
+        await loadParcelas(vendaId)
+      }
+    }
   }
 
   if (loading) {
@@ -122,8 +154,7 @@ export default function VendasPage() {
       ) : (
         <div className="space-y-4">
           {vendas.map((venda) => {
-            const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
-            const percentualPago = (parcelasPagas / venda.quantidadeParcelas) * 100
+            const percentualPago = (venda.parcelasPagas / venda.quantidadeParcelas) * 100
 
             return (
               <Card key={venda.id} className="overflow-hidden">
@@ -187,7 +218,7 @@ export default function VendasPage() {
                           <CheckCircle2 className="h-4 w-4" />
                           <div>
                             <div className="font-medium text-gray-900 dark:text-white">
-                              {parcelasPagas}/{venda.quantidadeParcelas} pagas
+                              {venda.parcelasPagas}/{venda.quantidadeParcelas} pagas
                             </div>
                             <div className="text-xs">
                               {percentualPago.toFixed(0)}% concluído
@@ -216,37 +247,43 @@ export default function VendasPage() {
                       Parcelas:
                     </div>
                     
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-20">Nº</TableHead>
-                            <TableHead>Vencimento</TableHead>
-                            <TableHead>Valor</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Data Pagamento</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {venda.parcelas.map((parcela) => (
-                            <TableRow key={parcela.id}>
-                              <TableCell className="font-medium">
-                                {parcela.numeroParcela}
-                              </TableCell>
-                              <TableCell>
-                                {format(new Date(parcela.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}
-                              </TableCell>
-                              <TableCell>{formatCurrency(Number(parcela.valor))}</TableCell>
-                              <TableCell>
-                                {parcela.baixa === 'S' ? (
-                                  <Badge variant="default" className="gap-1">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    Paga
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="gap-1">
-                                    <XCircle className="h-3 w-3" />
-                                    Pendente
+                    {loadingParcelas === venda.id ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      </div>
+                    ) : venda.parcelas ? (
+                      <>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-20">Nº</TableHead>
+                                <TableHead>Vencimento</TableHead>
+                                <TableHead>Valor</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Data Pagamento</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {venda.parcelas.map((parcela) => (
+                                <TableRow key={parcela.id}>
+                                  <TableCell className="font-medium">
+                                    {parcela.numeroParcela}
+                                  </TableCell>
+                                  <TableCell>
+                                    {format(new Date(parcela.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                                  </TableCell>
+                                  <TableCell>{formatCurrency(Number(parcela.valor))}</TableCell>
+                                  <TableCell>
+                                    {parcela.baixa === 'S' ? (
+                                      <Badge variant="default" className="gap-1">
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Paga
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="secondary" className="gap-1">
+                                        <XCircle className="h-3 w-3" />
+                                        Pendente
                                   </Badge>
                                 )}
                               </TableCell>
@@ -263,12 +300,14 @@ export default function VendasPage() {
 
                     <div className="mt-4 flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Total pago: {formatCurrency(parcelasPagas * Number(venda.valorParcela))}
+                        Total pago: {formatCurrency(venda.parcelasPagas * Number(venda.valorParcela))}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Restante: {formatCurrency((venda.quantidadeParcelas - parcelasPagas) * Number(venda.valorParcela))}
+                        Restante: {formatCurrency((venda.quantidadeParcelas - venda.parcelasPagas) * Number(venda.valorParcela))}
                       </div>
                     </div>
+                      </>
+                    ) : null}
                   </CardContent>
                 )}
               </Card>

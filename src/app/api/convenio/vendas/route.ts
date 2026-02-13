@@ -112,6 +112,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireConvenioSession(request)
 
+    // Busca vendas com agregação de parcelas pagas (otimizado)
     const vendas = await prisma.venda.findMany({
       where: {
         convenioId: session.convenioId,
@@ -126,15 +127,7 @@ export async function GET(request: NextRequest) {
         },
         parcelas: {
           select: {
-            id: true,
-            numeroParcela: true,
-            dataVencimento: true,
-            valor: true,
             baixa: true,
-            dataBaixa: true,
-          },
-          orderBy: {
-            numeroParcela: 'asc',
           },
         },
       },
@@ -143,7 +136,22 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ vendas })
+    // Formata resposta com contagem de parcelas pagas
+    const vendasFormatadas = vendas.map(venda => ({
+      id: venda.id,
+      numeroVenda: venda.numeroVenda,
+      dataEmissao: venda.dataEmissao,
+      valorTotal: venda.valorTotal,
+      quantidadeParcelas: venda.quantidadeParcelas,
+      valorParcela: venda.valorParcela,
+      observacoes: venda.observacoes,
+      ativo: venda.ativo,
+      cancelado: venda.cancelado,
+      socio: venda.socio,
+      parcelasPagas: venda.parcelas.filter(p => p.baixa === 'S').length,
+    }))
+
+    return NextResponse.json({ vendas: vendasFormatadas })
   } catch (error) {
     console.error('Erro ao buscar vendas:', error)
     return NextResponse.json(
