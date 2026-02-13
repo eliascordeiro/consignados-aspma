@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button'
 
 interface ConvenioLayoutClientProps {
   children: React.ReactNode
-  fantasia: string
-  razaoSocial: string
+  fantasia: string | null
+  razaoSocial: string | null
 }
 
 function ConvenioLogoutButton() {
