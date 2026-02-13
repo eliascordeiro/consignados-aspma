@@ -58,6 +58,18 @@ export default function ClienteLayout({
   const [managerName, setManagerName] = useState<string | null>(null)
   const { data: session } = useSession()
 
+  // Verificar se é conveniado - redirecionar para portal correto
+  useEffect(() => {
+    fetch("/api/convenio/check")
+      .then(res => res.json())
+      .then(data => {
+        if (data?.isConvenio) {
+          window.location.href = "/convenio/dashboard"
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   // Buscar nome do MANAGER se for usuário subordinado
   useEffect(() => {
     if (session?.user?.role === "USER") {
