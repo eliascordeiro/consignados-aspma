@@ -320,7 +320,7 @@ export default function MargemConsignadaPage() {
                     <TableHead className="font-semibold">Matrícula</TableHead>
                     <TableHead className="font-semibold">CPF</TableHead>
                     <TableHead className="font-semibold">Empresa</TableHead>
-                    <TableHead className="font-semibold text-right">Limite de Crédito</TableHead>
+                    <TableHead className="font-semibold text-right">Margem Consignada</TableHead>
                     <TableHead className="font-semibold text-center">Alterações</TableHead>
                     <TableHead className="font-semibold text-right">Ações</TableHead>
                   </TableRow>
@@ -420,7 +420,7 @@ export default function MargemConsignadaPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5 text-amber-600" />
-              {limiteReadonly ? "Consultar Limite (ZETRA)" : "Alterar Limite de Crédito"}
+              {limiteReadonly ? "Consultar Margem (ZETRA)" : "Alterar Margem Consignada"}
             </DialogTitle>
             <DialogDescription>
               {selectedSocio && (
@@ -455,7 +455,7 @@ export default function MargemConsignadaPage() {
             {/* Novo valor */}
             <div className="space-y-2">
               <Label htmlFor="edit-limite" className="flex items-center gap-2">
-                {limiteReadonly ? "Limite de Crédito (ZETRA)" : "Novo Limite de Crédito"}
+                {limiteReadonly ? "Margem Consignada (ZETRA)" : "Nova Margem Consignada"}
                 {limiteReadonly && <Badge variant="outline" className="text-xs">Somente Leitura</Badge>}
               </Label>
               <Input
