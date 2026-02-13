@@ -72,6 +72,70 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
           console.log("   ✅ Login bem-sucedido!")
 
+          // Verificar se este user pertence a um convênio (auto-criado em login anterior)
+          const convenioVinculado = await prisma.convenio.findFirst({
+            where: {
+              userId: user.id,
+              ativo: true,
+            },
+            select: {
+              id: true,
+              usuario: true,
+              razao_soc: true,
+              fantasia: true,
+            },
+          })
+
+          if (convenioVinculado) {
+            console.log("   🏢 User é de convênio:", convenioVinculado.razao_soc)
+            
+            // Setar cookie convenio_session para manter acesso ao portal
+            const token = await new SignJWT({
+              convenioId: convenioVinculado.id,
+              usuario: convenioVinculado.usuario || user.name,
+              razaoSocial: convenioVinculado.razao_soc,
+              fantasia: convenioVinculado.fantasia,
+            })
+              .setProtectedHeader({ alg: "HS256" })
+              .setIssuedAt()
+              .setExpirationTime("8h")
+              .sign(JWT_SECRET)
+
+            const cookieStore = await cookies()
+            cookieStore.set("convenio_session", token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 8,
+              path: "/",
+            })
+
+            // Registrar log
+            createAuditLog({
+              userId: user.id,
+              userName: user.name,
+              userRole: user.role,
+              action: "LOGIN",
+              module: "auth",
+              description: `Login realizado com sucesso (convênio via user)`,
+              metadata: {
+                email: user.email,
+                login,
+                convenioId: convenioVinculado.id,
+              },
+            }).catch(err => console.error("Erro ao criar log de login:", err))
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              permissions: user.permissions || [],
+              createdById: user.createdById,
+              isConvenio: true,
+            }
+          }
+
           // Registrar log de login (não bloquear autenticação se falhar)
           createAuditLog({
             userId: user.id,
