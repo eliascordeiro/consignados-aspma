@@ -1,9 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, ShoppingCart, Calendar, User, DollarSign, CheckCircle2, XCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Loader2,
+  ShoppingCart,
+  Calendar,
+  User,
+  DollarSign,
+  CheckCircle2,
+  XCircle,
+  Search,
+  Filter,
+  X,
+  Plus,
+} from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -37,13 +51,14 @@ interface Venda {
   observacoes: string | null
   ativo: boolean
   cancelado: boolean
+  quitada: boolean
   socio: {
     nome: string
     matricula: string | null
     cpf: string | null
   }
   parcelasPagas: number
-  parcelas?: Parcela[] // Opcional - carregado sob demanda
+  parcelas?: Parcela[]
 }
 
 export default function VendasPage() {
@@ -52,13 +67,24 @@ export default function VendasPage() {
   const [vendaExpandida, setVendaExpandida] = useState<string | null>(null)
   const [loadingParcelas, setLoadingParcelas] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadVendas()
-  }, [])
+  // Filtros
+  const [busca, setBusca] = useState('')
+  const [statusFiltro, setStatusFiltro] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false)
 
-  const loadVendas = async () => {
+  const loadVendas = useCallback(async () => {
+    setLoading(true)
     try {
-      const response = await fetch('/api/convenio/vendas')
+      const params = new URLSearchParams()
+      if (busca.trim()) params.set('busca', busca.trim())
+      if (statusFiltro) params.set('status', statusFiltro)
+      if (dataInicio) params.set('dataInicio', dataInicio)
+      if (dataFim) params.set('dataFim', dataFim)
+
+      const qs = params.toString()
+      const response = await fetch('/api/convenio/vendas' + (qs ? '?' + qs : ''))
       const data = await response.json()
       setVendas(data.vendas || [])
     } catch (error) {
@@ -66,18 +92,29 @@ export default function VendasPage() {
     } finally {
       setLoading(false)
     }
+  }, [busca, statusFiltro, dataInicio, dataFim])
+
+  useEffect(() => {
+    loadVendas()
+  }, [loadVendas])
+
+  const limparFiltros = () => {
+    setBusca('')
+    setStatusFiltro('')
+    setDataInicio('')
+    setDataFim('')
   }
+
+  const temFiltrosAtivos = busca || statusFiltro || dataInicio || dataFim
 
   const loadParcelas = async (vendaId: string) => {
     setLoadingParcelas(vendaId)
     try {
-      const response = await fetch(`/api/convenio/vendas/${vendaId}/parcelas`)
+      const response = await fetch('/api/convenio/vendas/' + vendaId + '/parcelas')
       const data = await response.json()
-      
-      // Atualiza a venda com as parcelas carregadas
-      setVendas(vendas.map(v => 
-        v.id === vendaId ? { ...v, parcelas: data.parcelas } : v
-      ))
+      setVendas(prev =>
+        prev.map(v => (v.id === vendaId ? { ...v, parcelas: data.parcelas } : v))
+      )
     } catch (error) {
       console.error('Erro ao carregar parcelas:', error)
     } finally {
@@ -87,27 +124,21 @@ export default function VendasPage() {
 
   const toggleVenda = async (vendaId: string) => {
     const venda = vendas.find(v => v.id === vendaId)
-    
     if (vendaExpandida === vendaId) {
-      // Fechando
       setVendaExpandida(null)
     } else {
-      // Abrindo
       setVendaExpandida(vendaId)
-      
-      // Se ainda não tem parcelas carregadas, busca
       if (venda && !venda.parcelas) {
         await loadParcelas(vendaId)
       }
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
+  const getStatusBadge = (venda: Venda) => {
+    if (venda.cancelado) return <Badge variant="destructive">Cancelada</Badge>
+    if (venda.quitada) return <Badge className="bg-green-600 hover:bg-green-700">Quitada</Badge>
+    if (venda.ativo) return <Badge variant="default">Ativa</Badge>
+    return <Badge variant="secondary">Inativa</Badge>
   }
 
   return (
@@ -116,45 +147,152 @@ export default function VendasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Minhas Vendas
+            Tabela de Vendas
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {vendas.length} {vendas.length === 1 ? 'venda registrada' : 'vendas registradas'}
+            {vendas.length} {vendas.length === 1 ? 'venda encontrada' : 'vendas encontradas'}
           </p>
         </div>
         <Link href="/convenio/vendas/nova">
           <Button className="gap-2">
-            <ShoppingCart className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nova Venda
           </Button>
         </Link>
       </div>
 
-      {/* Lista de Vendas */}
-      {vendas.length === 0 ? (
+      {/* Filtros */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <CardTitle className="text-base">Filtros</CardTitle>
+              {temFiltrosAtivos && (
+                <Badge variant="secondary" className="ml-2">
+                  Filtros ativos
+                </Badge>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {temFiltrosAtivos && (
+                <Button variant="ghost" size="sm" onClick={limparFiltros}>
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFiltrosAbertos(!filtrosAbertos)}
+              >
+                {filtrosAbertos ? 'Ocultar' : 'Mostrar'}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        {filtrosAbertos && (
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {/* Busca por nome/matrícula/cpf */}
+              <div className="space-y-2">
+                <Label htmlFor="busca">Nome, Matrícula ou CPF</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="busca"
+                    placeholder="Buscar..."
+                    value={busca}
+                    onChange={e => setBusca(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  value={statusFiltro}
+                  onChange={e => setStatusFiltro(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Todos</option>
+                  <option value="ativa">Ativa</option>
+                  <option value="quitada">Quitada</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </div>
+
+              {/* Data início */}
+              <div className="space-y-2">
+                <Label htmlFor="dataInicio">Data Início</Label>
+                <Input
+                  id="dataInicio"
+                  type="date"
+                  value={dataInicio}
+                  onChange={e => setDataInicio(e.target.value)}
+                />
+              </div>
+
+              {/* Data fim */}
+              <div className="space-y-2">
+                <Label htmlFor="dataFim">Data Fim</Label>
+                <Input
+                  id="dataFim"
+                  type="date"
+                  value={dataFim}
+                  onChange={e => setDataFim(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Loading */}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      ) : vendas.length === 0 ? (
+        /* Sem resultados */
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
               <ShoppingCart className="h-12 w-12 text-gray-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Nenhuma venda registrada
+              {temFiltrosAtivos ? 'Nenhuma venda encontrada' : 'Nenhuma venda registrada'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
-              Comece cadastrando sua primeira venda
+              {temFiltrosAtivos
+                ? 'Tente ajustar os filtros para encontrar vendas'
+                : 'Comece cadastrando sua primeira venda'}
             </p>
-            <Link href="/convenio/vendas/nova">
-              <Button>
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Cadastrar Primeira Venda
+            {temFiltrosAtivos ? (
+              <Button variant="outline" onClick={limparFiltros}>
+                <X className="h-4 w-4 mr-2" />
+                Limpar Filtros
               </Button>
-            </Link>
+            ) : (
+              <Link href="/convenio/vendas/nova">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Cadastrar Primeira Venda
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       ) : (
+        /* Lista de Vendas */
         <div className="space-y-4">
-          {vendas.map((venda) => {
-            const percentualPago = (venda.parcelasPagas / venda.quantidadeParcelas) * 100
+          {vendas.map(venda => {
+            const percentualPago =
+              (venda.parcelasPagas / venda.quantidadeParcelas) * 100
 
             return (
               <Card key={venda.id} className="overflow-hidden">
@@ -168,15 +306,9 @@ export default function VendasPage() {
                         <CardTitle className="text-lg">
                           Venda #{venda.numeroVenda}
                         </CardTitle>
-                        {venda.cancelado ? (
-                          <Badge variant="destructive">Cancelada</Badge>
-                        ) : venda.ativo ? (
-                          <Badge variant="default">Ativa</Badge>
-                        ) : (
-                          <Badge variant="secondary">Inativa</Badge>
-                        )}
+                        {getStatusBadge(venda)}
                       </div>
-                      
+
                       <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4 text-sm">
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                           <User className="h-4 w-4" />
@@ -185,7 +317,9 @@ export default function VendasPage() {
                               {venda.socio.nome}
                             </div>
                             {venda.socio.matricula && (
-                              <div className="text-xs">Mat: {venda.socio.matricula}</div>
+                              <div className="text-xs">
+                                Mat: {venda.socio.matricula}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -194,10 +328,14 @@ export default function VendasPage() {
                           <Calendar className="h-4 w-4" />
                           <div>
                             <div className="font-medium text-gray-900 dark:text-white">
-                              {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })}
+                              {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', {
+                                locale: ptBR,
+                              })}
                             </div>
                             <div className="text-xs">
-                              {format(new Date(venda.dataEmissao), 'HH:mm', { locale: ptBR })}
+                              {format(new Date(venda.dataEmissao), 'HH:mm', {
+                                locale: ptBR,
+                              })}
                             </div>
                           </div>
                         </div>
@@ -209,7 +347,8 @@ export default function VendasPage() {
                               {formatCurrency(Number(venda.valorTotal))}
                             </div>
                             <div className="text-xs">
-                              {venda.quantidadeParcelas}x de {formatCurrency(Number(venda.valorParcela))}
+                              {venda.quantidadeParcelas}x de{' '}
+                              {formatCurrency(Number(venda.valorParcela))}
                             </div>
                           </div>
                         </div>
@@ -218,10 +357,14 @@ export default function VendasPage() {
                           <CheckCircle2 className="h-4 w-4" />
                           <div>
                             <div className="font-medium text-gray-900 dark:text-white">
-                              {venda.parcelasPagas}/{venda.quantidadeParcelas} pagas
+                              {venda.parcelasPagas}/{venda.quantidadeParcelas}{' '}
+                              pagas
                             </div>
-                            <div className="text-xs">
-                              {percentualPago.toFixed(0)}% concluído
+                            <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                              <div
+                                className="bg-blue-600 h-1.5 rounded-full transition-all"
+                                style={{ width: percentualPago + '%' }}
+                              />
                             </div>
                           </div>
                         </div>
@@ -246,7 +389,7 @@ export default function VendasPage() {
                     <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                       Parcelas:
                     </div>
-                    
+
                     {loadingParcelas === venda.id ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
@@ -265,47 +408,70 @@ export default function VendasPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {venda.parcelas.map((parcela) => (
+                              {venda.parcelas.map(parcela => (
                                 <TableRow key={parcela.id}>
                                   <TableCell className="font-medium">
                                     {parcela.numeroParcela}
                                   </TableCell>
                                   <TableCell>
-                                    {format(new Date(parcela.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}
+                                    {format(
+                                      new Date(parcela.dataVencimento),
+                                      'dd/MM/yyyy',
+                                      { locale: ptBR }
+                                    )}
                                   </TableCell>
-                                  <TableCell>{formatCurrency(Number(parcela.valor))}</TableCell>
+                                  <TableCell>
+                                    {formatCurrency(Number(parcela.valor))}
+                                  </TableCell>
                                   <TableCell>
                                     {parcela.baixa === 'S' ? (
-                                      <Badge variant="default" className="gap-1">
+                                      <Badge
+                                        variant="default"
+                                        className="gap-1"
+                                      >
                                         <CheckCircle2 className="h-3 w-3" />
                                         Paga
                                       </Badge>
                                     ) : (
-                                      <Badge variant="secondary" className="gap-1">
+                                      <Badge
+                                        variant="secondary"
+                                        className="gap-1"
+                                      >
                                         <XCircle className="h-3 w-3" />
                                         Pendente
-                                  </Badge>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {parcela.dataBaixa
-                                  ? format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })
-                                  : '-'}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    {parcela.dataBaixa
+                                      ? format(
+                                          new Date(parcela.dataBaixa),
+                                          'dd/MM/yyyy',
+                                          { locale: ptBR }
+                                        )
+                                      : '-'}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
 
-                    <div className="mt-4 flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Total pago: {formatCurrency(venda.parcelasPagas * Number(venda.valorParcela))}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Restante: {formatCurrency((venda.quantidadeParcelas - venda.parcelasPagas) * Number(venda.valorParcela))}
-                      </div>
-                    </div>
+                        <div className="mt-4 flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            Total pago:{' '}
+                            {formatCurrency(
+                              venda.parcelasPagas * Number(venda.valorParcela)
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            Restante:{' '}
+                            {formatCurrency(
+                              (venda.quantidadeParcelas - venda.parcelasPagas) *
+                                Number(venda.valorParcela)
+                            )}
+                          </div>
+                        </div>
                       </>
                     ) : null}
                   </CardContent>

@@ -112,11 +112,50 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireConvenioSession(request)
 
+    const { searchParams } = new URL(request.url)
+    const busca = searchParams.get('busca')?.trim() || ''
+    const status = searchParams.get('status') || '' // ativa, cancelada, quitada
+    const dataInicio = searchParams.get('dataInicio') || ''
+    const dataFim = searchParams.get('dataFim') || ''
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
+      convenioId: session.convenioId,
+    }
+
+    // Filtro por nome ou matrícula do sócio
+    if (busca) {
+      where.socio = {
+        OR: [
+          { nome: { contains: busca, mode: 'insensitive' } },
+          { matricula: { contains: busca, mode: 'insensitive' } },
+          { cpf: { contains: busca, mode: 'insensitive' } },
+        ],
+      }
+    }
+
+    // Filtro por status
+    if (status === 'ativa') {
+      where.ativo = true
+      where.cancelado = false
+    } else if (status === 'cancelada') {
+      where.cancelado = true
+    }
+
+    // Filtro por data
+    if (dataInicio || dataFim) {
+      where.dataEmissao = {}
+      if (dataInicio) {
+        where.dataEmissao.gte = new Date(dataInicio + 'T00:00:00.000Z')
+      }
+      if (dataFim) {
+        where.dataEmissao.lte = new Date(dataFim + 'T23:59:59.999Z')
+      }
+    }
+
     // Busca vendas com agregação de parcelas pagas (otimizado)
     const vendas = await prisma.venda.findMany({
-      where: {
-        convenioId: session.convenioId,
-      },
+      where,
       include: {
         socio: {
           select: {
@@ -137,21 +176,33 @@ export async function GET(request: NextRequest) {
     })
 
     // Formata resposta com contagem de parcelas pagas
-    const vendasFormatadas = vendas.map(venda => ({
-      id: venda.id,
-      numeroVenda: venda.numeroVenda,
-      dataEmissao: venda.dataEmissao,
-      valorTotal: venda.valorTotal,
-      quantidadeParcelas: venda.quantidadeParcelas,
-      valorParcela: venda.valorParcela,
-      observacoes: venda.observacoes,
-      ativo: venda.ativo,
-      cancelado: venda.cancelado,
-      socio: venda.socio,
-      parcelasPagas: venda.parcelas.filter(p => p.baixa === 'S').length,
-    }))
+    const vendasFormatadas = vendas.map(venda => {
+      const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
+      const quitada = parcelasPagas === venda.quantidadeParcelas
 
-    return NextResponse.json({ vendas: vendasFormatadas })
+      return {
+        id: venda.id,
+        numeroVenda: venda.numeroVenda,
+        dataEmissao: venda.dataEmissao,
+        valorTotal: venda.valorTotal,
+        quantidadeParcelas: venda.quantidadeParcelas,
+        valorParcela: venda.valorParcela,
+        observacoes: venda.observacoes,
+        ativo: venda.ativo,
+        cancelado: venda.cancelado,
+        socio: venda.socio,
+        parcelasPagas,
+        quitada,
+      }
+    })
+
+    // Filtro pós-query para "quitada" (depende da contagem de parcelas)
+    let resultado = vendasFormatadas
+    if (status === 'quitada') {
+      resultado = vendasFormatadas.filter(v => v.quitada && !v.cancelado)
+    }
+
+    return NextResponse.json({ vendas: resultado })
   } catch (error) {
     console.error('Erro ao buscar vendas:', error)
     return NextResponse.json(

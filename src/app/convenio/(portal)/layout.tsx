@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getConvenioSession } from '@/lib/convenio-auth'
-import { Building2, LogOut, Home, ShoppingCart, BarChart3 } from 'lucide-react'
-import Link from 'next/link'
+import { Building2, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import ConvenioNav from './ConvenioNav'
 
 async function ConvenioLogoutButton() {
   return (
@@ -57,33 +57,7 @@ export default async function ConvenioLayout({
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-1">
-            <Link
-              href="/convenio/dashboard"
-              className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              <Home className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <Link
-              href="/convenio/vendas"
-              className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Vendas
-            </Link>
-            <Link
-              href="/convenio/relatorios"
-              className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Relatórios
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <ConvenioNav />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
