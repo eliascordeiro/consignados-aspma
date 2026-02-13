@@ -279,7 +279,9 @@ export default function FuncionariosPage() {
             const margemData = await margemResponse.json()
             console.log('📊 Resposta da API margem:', margemData)
             // A API retorna 'margem' para tipos != 3,4 (ZETRA) e 'limite' para cálculo local (tipos 3,4)
-            limiteCalculado = (margemData.margem || margemData.limite || 0).toString()
+            const valorMargem = margemData.margem || margemData.limite || 0
+            // Formata com 2 casas decimais para evitar erros de precisão
+            limiteCalculado = Number(valorMargem).toFixed(2)
             console.log(`✅ Limite calculado: ${limiteCalculado} (fonte: ${margemData.fonte})`)
           } else {
             console.error(`❌ Erro na API margem: ${margemResponse.status}`)
@@ -828,7 +830,7 @@ export default function FuncionariosPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="limite" className="flex items-center gap-1">
-                      Limite de Crédito
+                      Margem Consignada
                       <span className="text-xs text-muted-foreground">(calculado automaticamente)</span>
                     </Label>
                     <Input
