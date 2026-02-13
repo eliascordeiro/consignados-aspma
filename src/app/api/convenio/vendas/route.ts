@@ -122,6 +122,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || '' // ativa, cancelada, quitada
     const dataInicio = searchParams.get('dataInicio') || ''
     const dataFim = searchParams.get('dataFim') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
@@ -158,6 +161,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Conta total de vendas para paginação
+    const total = await prisma.venda.count({ where })
+
     // Busca vendas com agregação de parcelas pagas (otimizado)
     const vendas = await prisma.venda.findMany({
       where,
@@ -172,12 +178,15 @@ export async function GET(request: NextRequest) {
         parcelas: {
           select: {
             baixa: true,
+            valor: true,
           },
         },
       },
       orderBy: {
         dataEmissao: 'desc',
       },
+      skip,
+      take: limit,
     })
 
     // Formata resposta com contagem de parcelas pagas
@@ -203,12 +212,45 @@ export async function GET(request: NextRequest) {
 
     // Filtro pós-query para "quitada" (depende da contagem de parcelas)
     let resultado = vendasFormatadas
+    let totalFiltrado = total
+    
     if (status === 'quitada') {
       resultado = vendasFormatadas.filter(v => v.quitada && !v.cancelado)
+      // Reconta o total para quitadas (menos eficiente, mas necessário)
+      const allVendas = await prisma.venda.findMany({
+        where,
+        include: {
+          parcelas: {
+            select: { baixa: true },
+          },
+        },
+      })
+      totalFiltrado = allVendas.filter(v => {
+        const pagas = v.parcelas.filter(p => p.baixa === 'S').length
+        return pagas === v.quantidadeParcelas && !v.cancelado
+      }).length
     }
 
-    console.log('🟢 [VENDAS API] Retornando', resultado.length, 'vendas')
-    return NextResponse.json({ vendas: resultado })
+    // Calcula valores totais
+    const valorTotalParcelas = vendas.reduce((sum, venda) => {
+      const valorVenda = venda.parcelas.reduce((s, p) => s + Number(p.valor), 0)
+      return sum + valorVenda
+    }, 0)
+
+    const totalParcelas = vendas.reduce((sum, venda) => sum + venda.parcelas.length, 0)
+
+    const pagination = {
+      page,
+      limit,
+      total: totalFiltrado,
+      totalPages: Math.ceil(totalFiltrado / limit),
+      valorTotalGeral: resultado.reduce((sum, v) => sum + Number(v.valorTotal), 0),
+      totalParcelas,
+      valorTotalParcelas,
+    }
+
+    console.log('🟢 [VENDAS API] Retornando', resultado.length, 'vendas de', totalFiltrado, 'total')
+    return NextResponse.json({ vendas: resultado, pagination })
   } catch (error) {
     console.error('❌ [VENDAS API] Erro ao buscar vendas:', error)
     return NextResponse.json(
