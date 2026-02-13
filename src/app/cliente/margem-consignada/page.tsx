@@ -336,12 +336,18 @@ export default function MargemConsignadaPage() {
                       </TableCell>
                       <TableCell className="text-right font-mono">
                         <div className="flex flex-col items-end gap-1">
-                          <span className={Number(socio.limiteCalculado || socio.limite || 0) > 0 ? "text-green-600 dark:text-green-400 font-semibold" : "text-muted-foreground"}>
-                            {formatCurrency(socio.limiteCalculado || socio.limite)}
-                          </span>
+                          {socio.fonteLimite === 'ZETRA' ? (
+                            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium uppercase">
+                              Zetra
+                            </span>
+                          ) : (
+                            <span className={Number(socio.limiteCalculado || socio.limite || 0) > 0 ? "text-green-600 dark:text-green-400 font-semibold" : "text-muted-foreground"}>
+                              {formatCurrency(socio.limiteCalculado || socio.limite)}
+                            </span>
+                          )}
                           {socio.fonteLimite && (
                             <Badge variant="outline" className="text-[10px] h-4 px-1">
-                              {socio.fonteLimite === 'zetra' ? 'ZETRA' : socio.fonteLimite === 'local' ? 'Local' : 'BD'}
+                              {socio.fonteLimite === 'zetra' || socio.fonteLimite === 'ZETRA' ? 'ZETRA' : socio.fonteLimite === 'local' || socio.fonteLimite === 'Local' ? 'Local' : 'BD'}
                             </Badge>
                           )}
                         </div>

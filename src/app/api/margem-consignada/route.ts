@@ -90,29 +90,19 @@ export async function GET(request: NextRequest) {
     const sociosComFonte = socios.map((socio) => {
       // Determina fonte baseado no tipo
       let fonteLimite = 'BD'
+      let limiteCalculado = socio.limite || 0
+      
       if (socio.tipo === '3' || socio.tipo === '4') {
         fonteLimite = 'Local'
       } else if (socio.tipo === '1' || socio.tipo === '2' || socio.tipo === '5') {
         fonteLimite = 'ZETRA'
-      }
-      
-      // Debug para matrícula específica
-      if (socio.matricula === '222101') {
-        console.log('🔍 Debug sócio 222101:', {
-          tipo: socio.tipo,
-          typeofTipo: typeof socio.tipo,
-          fonteLimite,
-          comparacao1: socio.tipo === '1',
-          comparacao2: socio.tipo === '2',
-          comparacao3: socio.tipo === '3',
-          comparacao4: socio.tipo === '4',
-          comparacao5: socio.tipo === '5',
-        })
+        // Para ZETRA, zeraremos o valor na listagem (será buscado apenas no form de edição)
+        limiteCalculado = 0
       }
       
       return {
         ...socio,
-        limiteCalculado: socio.limite || 0,
+        limiteCalculado,
         fonteLimite
       }
     })
