@@ -82,18 +82,40 @@ async function fetchVendas({
   const qs = params.toString()
   const url = '/api/convenio/vendas' + (qs ? '?' + qs : '')
   
-  console.log('Fetching vendas from:', url)
-  const response = await fetch(url)
+  console.log('🔵 Fetching vendas from:', url)
+  console.log('🔵 Cookies:', document.cookie)
+  
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      credentials: 'include', // Garantir envio de cookies
+    })
+    
+    clearTimeout(timeoutId)
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    console.error('Error response:', response.status, errorData)
-    throw new Error(errorData.error || 'Erro ao carregar vendas')
+    console.log('🔵 Response status:', response.status)
+    console.log('🔵 Response headers:', Object.fromEntries(response.headers.entries()))
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('❌ Error response:', response.status, errorData)
+      throw new Error(errorData.error || 'Erro ao carregar vendas')
+    }
+
+    const data = await response.json()
+    console.log('✅ Vendas loaded:', data.vendas?.length || 0)
+    return data.vendas || []
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('❌ Request timeout')
+      throw new Error('Timeout ao carregar vendas - servidor não respondeu em 10 segundos')
+    }
+    console.error('❌ Fetch error:', error)
+    throw error
   }
-
-  const data = await response.json()
-  console.log('Vendas loaded:', data.vendas?.length || 0)
-  return data.vendas || []
 }
 
 async function fetchParcelas(vendaId: string): Promise<Parcela[]> {

@@ -110,7 +110,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🟢 [VENDAS API] Iniciando requisição')
+    console.log('🟢 [VENDAS API] Headers:', Object.fromEntries(request.headers.entries()))
+    console.log('🟢 [VENDAS API] Cookies:', request.cookies.getAll())
+    
     const session = await requireConvenioSession(request)
+    console.log('🟢 [VENDAS API] Session obtida:', { convenioId: session.convenioId, usuario: session.usuario })
 
     const { searchParams } = new URL(request.url)
     const busca = searchParams.get('busca')?.trim() || ''
@@ -202,11 +207,12 @@ export async function GET(request: NextRequest) {
       resultado = vendasFormatadas.filter(v => v.quitada && !v.cancelado)
     }
 
+    console.log('🟢 [VENDAS API] Retornando', resultado.length, 'vendas')
     return NextResponse.json({ vendas: resultado })
   } catch (error) {
-    console.error('Erro ao buscar vendas:', error)
+    console.error('❌ [VENDAS API] Erro ao buscar vendas:', error)
     return NextResponse.json(
-      { error: 'Erro ao buscar vendas' },
+      { error: error instanceof Error ? error.message : 'Erro ao buscar vendas' },
       { status: 500 }
     )
   }
