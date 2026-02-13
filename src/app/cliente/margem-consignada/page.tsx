@@ -145,10 +145,11 @@ export default function MargemConsignadaPage() {
         console.log('📊 Dados da margem:', margemData)
         
         // Se vier de ZETRA (tipos != 3,4), é somente leitura
-        if (margemData.fonte === 'zetra') {
+        // API retorna fonte: 'tempo_real' para ZETRA, 'local' para tipos 3/4
+        if (margemData.fonte === 'tempo_real' || margemData.tipo === 'zetra') {
           isReadonly = true
           fonte = 'ZETRA'
-        } else if (margemData.tipo === 'calculo_local') {
+        } else if (margemData.tipo === 'calculo_local' || margemData.fonte === 'local') {
           fonte = 'Cálculo Local'
         } else {
           fonte = 'Banco de Dados'
