@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Loader2, Search, User } from 'lucide-react'
+import { ArrowLeft, Loader2, Search, User, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 
@@ -24,15 +24,26 @@ interface Socio {
   empresaNome: string | null
 }
 
+interface MargemInfo {
+  margem: number
+  limite?: number
+  descontos?: number
+  fonte: string
+  tipo: string | null
+  mesReferencia?: string
+  aviso?: string
+  mensagem?: string
+}
+
 export default function NovaVendaPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [buscaSocio, setBuscaSocio] = useState('')
   const [socioSelecionado, setSocioSelecionado] = useState<Socio | null>(null)
   const [socios, setSocios] = useState<Socio[]>([])
-  const [buscandoSocios, setBuscandoSocios] = useState(false)
   const [buscaMatriculaCelular, setBuscaMatriculaCelular] = useState('')
   const [buscandoPorMatricula, setBuscandoPorMatricula] = useState(false)
+  const [margemInfo, setMargemInfo] = useState<MargemInfo | null>(null)
+  const [consultandoMargem, setConsultandoMargem] = useState(false)
 
   const [formData, setFormData] = useState({
     valorTotal: '',
@@ -40,56 +51,30 @@ export default function NovaVendaPage() {
     observacoes: '',
   })
 
-  const buscarSocios = async (busca: string) => {
-    if (busca.length < 2) {
-      setSocios([])
-      return
-    }
-
-    setBuscandoSocios(true)
-    try {
-      const response = await fetch(`/api/convenio/socios?busca=${encodeURIComponent(busca)}`)
-      const data = await response.json()
-      setSocios(data.socios || [])
-    } catch (error) {
-      console.error('Erro ao buscar sócios:', error)
-    } finally {
-      setBuscandoSocios(false)
-    }
-  }
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      buscarSocios(buscaSocio)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [buscaSocio])
-
-  const selecionarSocio = (socio: Socio) => {
-    setSocioSelecionado(socio)
-    setBuscaSocio('')
-    setSocios([])
-    setBuscaMatriculaCelular('')
-  }
+  const valorParcela = formData.valorTotal && formData.quantidadeParcelas
+    ? Number(formData.valorTotal) / Number(formData.quantidadeParcelas)
+    : 0
 
   const buscarPorMatriculaCelular = async () => {
-    if (!buscaMatriculaCelular.trim()) {
+    const busca = buscaMatriculaCelular.trim()
+    if (!busca) {
       alert('Digite uma matrícula ou celular')
       return
     }
 
     setBuscandoPorMatricula(true)
+    setSocios([])
+    setSocioSelecionado(null)
+    setMargemInfo(null)
+
     try {
-      const response = await fetch(`/api/convenio/socios?busca=${encodeURIComponent(buscaMatriculaCelular)}`)
+      const response = await fetch('/api/convenio/socios?busca=' + encodeURIComponent(busca))
       const data = await response.json()
-      
+
       if (data.socios && data.socios.length > 0) {
-        // Se encontrou apenas um, seleciona automaticamente
         if (data.socios.length === 1) {
-          selecionarSocio(data.socios[0])
+          await selecionarSocio(data.socios[0])
         } else {
-          // Se encontrou mais de um, mostra a lista
           setSocios(data.socios)
         }
       } else {
@@ -103,9 +88,48 @@ export default function NovaVendaPage() {
     }
   }
 
-  const valorParcela = formData.valorTotal && formData.quantidadeParcelas
-    ? Number(formData.valorTotal) / Number(formData.quantidadeParcelas)
-    : 0
+  const selecionarSocio = async (socio: Socio) => {
+    setSocioSelecionado(socio)
+    setSocios([])
+    await consultarMargem(socio.id)
+  }
+
+  const consultarMargem = async (socioId: string, vlParcela?: number) => {
+    setConsultandoMargem(true)
+    try {
+      const vp = vlParcela || valorParcela || 0.1
+      const response = await fetch('/api/convenio/socios/margem?socioId=' + socioId + '&valorParcela=' + vp)
+      const data = await response.json()
+
+      if (response.ok) {
+        setMargemInfo({
+          margem: data.margem,
+          limite: data.limite,
+          descontos: data.descontos,
+          fonte: data.fonte,
+          tipo: data.tipo,
+          mesReferencia: data.mesReferencia,
+          aviso: data.aviso,
+          mensagem: data.mensagem,
+        })
+      } else {
+        setMargemInfo(null)
+      }
+    } catch (error) {
+      console.error('Erro ao consultar margem:', error)
+      setMargemInfo(null)
+    } finally {
+      setConsultandoMargem(false)
+    }
+  }
+
+  const trocarSocio = () => {
+    setSocioSelecionado(null)
+    setMargemInfo(null)
+    setFormData({ valorTotal: '', quantidadeParcelas: '', observacoes: '' })
+    setBuscaMatriculaCelular('')
+    setSocios([])
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,14 +139,19 @@ export default function NovaVendaPage() {
       return
     }
 
+    if (margemInfo && valorParcela > margemInfo.margem) {
+      const confirmar = confirm(
+        '⚠️ O valor da parcela (' + formatCurrency(valorParcela) + ') excede a margem consignável disponível (' + formatCurrency(margemInfo.margem) + ').\n\nDeseja continuar mesmo assim?'
+      )
+      if (!confirmar) return
+    }
+
     setLoading(true)
 
     try {
       const response = await fetch('/api/convenio/vendas', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           socioId: socioSelecionado.id,
           valorTotal: Number(formData.valorTotal),
@@ -138,7 +167,7 @@ export default function NovaVendaPage() {
         throw new Error(data.error || 'Erro ao criar venda')
       }
 
-      alert(`Venda #${data.venda.numeroVenda} criada com sucesso!`)
+      alert('Venda #' + data.venda.numeroVenda + ' criada com sucesso!')
       router.push('/convenio/vendas')
     } catch (error: any) {
       alert(error.message || 'Erro ao criar venda')
@@ -147,11 +176,22 @@ export default function NovaVendaPage() {
     }
   }
 
+  const fonteLabel = (fonte: string) => {
+    switch (fonte) {
+      case 'local': return 'Cálculo Local'
+      case 'tempo_real': return 'ZETRA (Tempo Real)'
+      case 'fallback': return 'Banco de Dados (Fallback)'
+      case 'banco': return 'Banco de Dados'
+      case 'zetra_erro': return 'ZETRA (Erro)'
+      default: return fonte
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/convenio/dashboard">
+        <Link href="/convenio/vendas">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -167,13 +207,82 @@ export default function NovaVendaPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Seleção de Sócio */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Selecione o Sócio</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {socioSelecionado ? (
+        {/* Busca por Matrícula ou Celular */}
+        {!socioSelecionado && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Buscar Sócio</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Matrícula ou Celular</Label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Digite a matrícula ou número do celular"
+                      value={buscaMatriculaCelular}
+                      onChange={(e) => setBuscaMatriculaCelular(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          buscarPorMatriculaCelular()
+                        }
+                      }}
+                      autoFocus
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={buscarPorMatriculaCelular}
+                    disabled={buscandoPorMatricula}
+                  >
+                    {buscandoPorMatricula ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Search className="mr-2 h-4 w-4" />
+                        Buscar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Lista de resultados */}
+              {socios.length > 0 && (
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto">
+                  {socios.map((socio) => (
+                    <button
+                      key={socio.id}
+                      type="button"
+                      onClick={() => selecionarSocio(socio)}
+                      className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {socio.nome}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {socio.matricula && ('Mat: ' + socio.matricula)}
+                        {socio.matricula && socio.celular && ' • '}
+                        {socio.celular && ('Cel: ' + socio.celular)}
+                        {!socio.celular && socio.cpf && (socio.matricula ? ' • ' : '')}
+                        {!socio.celular && socio.cpf && ('CPF: ' + socio.cpf)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sócio Selecionado + Margem */}
+        {socioSelecionado && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Sócio Selecionado</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
@@ -184,20 +293,21 @@ export default function NovaVendaPage() {
                       <div className="font-semibold text-gray-900 dark:text-white">
                         {socioSelecionado.nome}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-1">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5 mt-1">
                         {socioSelecionado.matricula && (
                           <div>Matrícula: {socioSelecionado.matricula}</div>
                         )}
                         {socioSelecionado.cpf && (
                           <div>CPF: {socioSelecionado.cpf}</div>
                         )}
+                        {socioSelecionado.celular && (
+                          <div>Celular: {socioSelecionado.celular}</div>
+                        )}
                         {socioSelecionado.empresaNome && (
                           <div>Empresa: {socioSelecionado.empresaNome}</div>
                         )}
-                        {socioSelecionado.margemConsig && (
-                          <div className="font-medium text-green-600 dark:text-green-400">
-                            Margem: {formatCurrency(Number(socioSelecionado.margemConsig))}
-                          </div>
+                        {socioSelecionado.tipo && (
+                          <div>Tipo: {socioSelecionado.tipo}</div>
                         )}
                       </div>
                     </div>
@@ -206,96 +316,66 @@ export default function NovaVendaPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setSocioSelecionado(null)}
+                    onClick={trocarSocio}
                   >
                     Trocar
                   </Button>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por nome, matrícula ou CPF..."
-                    value={buscaSocio}
-                    onChange={(e) => setBuscaSocio(e.target.value)}
-                    className="pl-10"
-                  />
+
+              {/* Margem Consignável */}
+              {consultandoMargem && (
+                <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Consultando margem consignável...
+                  </span>
                 </div>
+              )}
 
-                {buscandoSocios && (
-                  <div className="text-center py-4 text-gray-500">
-                    <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+              {margemInfo && !consultandoMargem && (
+                <div className={'p-4 rounded-lg border ' + (
+                  margemInfo.margem > 0
+                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                )}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {margemInfo.margem > 0 ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    )}
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Margem Consignável — {fonteLabel(margemInfo.fonte)}
+                    </span>
                   </div>
-                )}
 
-                {!buscandoSocios && socios.length > 0 && (
-                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto">
-                    {socios.map((socio) => (
-                      <button
-                        key={socio.id}
-                        type="button"
-                        onClick={() => selecionarSocio(socio)}
-                        className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                      >
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {socio.nome}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {socio.matricula && `Mat: ${socio.matricula}`}
-                          {socio.matricula && socio.cpf && ' • '}
-                          {socio.cpf && `CPF: ${socio.cpf}`}
-                        </div>
-                      </button>
-                    ))}
+                  <div className={'text-2xl font-bold mb-1 ' + (
+                    margemInfo.margem > 0 ? 'text-green-600' : 'text-red-600'
+                  )}>
+                    {formatCurrency(margemInfo.margem)}
                   </div>
-                )}
 
-                {!buscandoSocios && buscaSocio.length >= 2 && socios.length === 0 && (
-                  <div className="text-center py-4 text-gray-500">
-                    Nenhum sócio encontrado
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Busca Rápida por Matrícula/Celular */}
-        {!socioSelecionado && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Busca Rápida</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Digite matrícula ou celular"
-                    value={buscaMatriculaCelular}
-                    onChange={(e) => setBuscaMatriculaCelular(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && buscarPorMatriculaCelular()}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  onClick={buscarPorMatriculaCelular}
-                  disabled={buscandoPorMatricula}
-                >
-                  {buscandoPorMatricula ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Buscar
-                    </>
+                  {margemInfo.fonte === 'local' && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                      <div>Limite: {formatCurrency(margemInfo.limite || 0)}</div>
+                      <div>Descontos do mês ({margemInfo.mesReferencia}): {formatCurrency(margemInfo.descontos || 0)}</div>
+                    </div>
                   )}
-                </Button>
-              </div>
+
+                  {margemInfo.aviso && (
+                    <div className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                      ⚠️ {margemInfo.aviso}
+                    </div>
+                  )}
+
+                  {margemInfo.mensagem && (
+                    <div className="mt-1 text-xs text-red-600 dark:text-red-400">
+                      ❌ {margemInfo.mensagem}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -325,7 +405,7 @@ export default function NovaVendaPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quantidadeParcelas">Número de Parcelas *</Label>
+                  <Label htmlFor="quantidadeParcelas">Nº de Parcelas *</Label>
                   <Input
                     id="quantidadeParcelas"
                     type="number"
@@ -347,36 +427,50 @@ export default function NovaVendaPage() {
                     type="text"
                     value={valorParcela > 0 ? formatCurrency(valorParcela) : ''}
                     disabled
-                    className="bg-gray-100 dark:bg-gray-800"
+                    className="bg-gray-100 dark:bg-gray-800 font-semibold"
                   />
                 </div>
               </div>
 
-              {valorParcela > 0 && socioSelecionado.margemConsig && (
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              {/* Comparação com margem */}
+              {valorParcela > 0 && margemInfo && (
+                <div className={'p-4 rounded-lg border ' + (
+                  valorParcela <= margemInfo.margem
+                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                )}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-blue-800 dark:text-blue-400">
-                        Margem Consignável Disponível
-                      </div>
-                      <div className="text-lg font-bold text-blue-900 dark:text-blue-300">
-                        {formatCurrency(Number(socioSelecionado.margemConsig))}
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Margem Disponível</div>
+                      <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        {formatCurrency(margemInfo.margem)}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-sm text-blue-800 dark:text-blue-400">
-                        Valor da Parcela
-                      </div>
-                      <div className={`text-lg font-bold ${
-                        valorParcela <= Number(socioSelecionado.margemConsig)
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Valor Parcela</div>
+                      <div className={'text-lg font-bold ' + (
+                        valorParcela <= margemInfo.margem
                           ? 'text-green-600 dark:text-green-400'
                           : 'text-red-600 dark:text-red-400'
-                      }`}>
+                      )}>
                         {formatCurrency(valorParcela)}
                       </div>
                     </div>
+                    <div>
+                      {valorParcela <= margemInfo.margem ? (
+                        <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                          <CheckCircle2 className="h-5 w-5" />
+                          <span className="text-sm font-medium">Aprovado</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                          <AlertTriangle className="h-5 w-5" />
+                          <span className="text-sm font-medium">Excede</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {valorParcela > Number(socioSelecionado.margemConsig) && (
+                  {valorParcela > margemInfo.margem && (
                     <div className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">
                       ⚠️ Valor da parcela excede a margem consignável disponível
                     </div>
@@ -393,7 +487,7 @@ export default function NovaVendaPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, observacoes: e.target.value })
                   }
-                  rows={4}
+                  rows={3}
                 />
               </div>
             </CardContent>
