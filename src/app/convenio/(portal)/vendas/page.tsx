@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { useQuery } from '@tanstack/react-query'
 
 interface Parcela {
   id: string
@@ -61,11 +62,47 @@ interface Venda {
   parcelas?: Parcela[]
 }
 
+async function fetchVendas({
+  busca,
+  status,
+  dataInicio,
+  dataFim,
+}: {
+  busca: string
+  status: string
+  dataInicio: string
+  dataFim: string
+}) {
+  const params = new URLSearchParams()
+  if (busca.trim()) params.set('busca', busca.trim())
+  if (status) params.set('status', status)
+  if (dataInicio) params.set('dataInicio', dataInicio)
+  if (dataFim) params.set('dataFim', dataFim)
+
+  const qs = params.toString()
+  const response = await fetch('/api/convenio/vendas' + (qs ? '?' + qs : ''))
+
+  if (!response.ok) {
+    throw new Error('Erro ao carregar vendas')
+  }
+
+  const data = await response.json()
+  return data.vendas || []
+}
+
+async function fetchParcelas(vendaId: string): Promise<Parcela[]> {
+  const response = await fetch('/api/convenio/vendas/' + vendaId + '/parcelas')
+
+  if (!response.ok) {
+    throw new Error('Erro ao carregar parcelas')
+  }
+
+  const data = await response.json()
+  return data.parcelas || []
+}
+
 export default function VendasPage() {
-  const [vendas, setVendas] = useState<Venda[]>([])
-  const [loading, setLoading] = useState(true)
   const [vendaExpandida, setVendaExpandida] = useState<string | null>(null)
-  const [loadingParcelas, setLoadingParcelas] = useState<string | null>(null)
 
   // Filtros
   const [busca, setBusca] = useState('')
@@ -74,29 +111,35 @@ export default function VendasPage() {
   const [dataFim, setDataFim] = useState('')
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
 
-  const loadVendas = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (busca.trim()) params.set('busca', busca.trim())
-      if (statusFiltro) params.set('status', statusFiltro)
-      if (dataInicio) params.set('dataInicio', dataInicio)
-      if (dataFim) params.set('dataFim', dataFim)
+  // Query vendas com React Query
+  const {
+    data: vendas = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['convenio-vendas', busca, statusFiltro, dataInicio, dataFim],
+    queryFn: () =>
+      fetchVendas({
+        busca,
+        status: statusFiltro,
+        dataInicio,
+        dataFim,
+      }),
+    staleTime: 30000, // 30 segundos
+    refetchOnWindowFocus: false,
+  })
 
-      const qs = params.toString()
-      const response = await fetch('/api/convenio/vendas' + (qs ? '?' + qs : ''))
-      const data = await response.json()
-      setVendas(data.vendas || [])
-    } catch (error) {
-      console.error('Erro ao carregar vendas:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [busca, statusFiltro, dataInicio, dataFim])
-
-  useEffect(() => {
-    loadVendas()
-  }, [loadVendas])
+  // Query parcelas sob demanda
+  const { data: parcelasMap = {} } = useQuery({
+    queryKey: ['convenio-parcelas', vendaExpandida],
+    queryFn: async () => {
+      if (!vendaExpandida) return {}
+      const parcelas = await fetchParcelas(vendaExpandida)
+      return { [vendaExpandida]: parcelas }
+    },
+    enabled: !!vendaExpandida,
+    staleTime: 60000, // 1 minuto
+  })
 
   const limparFiltros = () => {
     setBusca('')
@@ -107,36 +150,20 @@ export default function VendasPage() {
 
   const temFiltrosAtivos = busca || statusFiltro || dataInicio || dataFim
 
-  const loadParcelas = async (vendaId: string) => {
-    setLoadingParcelas(vendaId)
-    try {
-      const response = await fetch('/api/convenio/vendas/' + vendaId + '/parcelas')
-      const data = await response.json()
-      setVendas(prev =>
-        prev.map(v => (v.id === vendaId ? { ...v, parcelas: data.parcelas } : v))
-      )
-    } catch (error) {
-      console.error('Erro ao carregar parcelas:', error)
-    } finally {
-      setLoadingParcelas(null)
-    }
-  }
-
-  const toggleVenda = async (vendaId: string) => {
-    const venda = vendas.find(v => v.id === vendaId)
+  const toggleVenda = (vendaId: string) => {
     if (vendaExpandida === vendaId) {
       setVendaExpandida(null)
     } else {
       setVendaExpandida(vendaId)
-      if (venda && !venda.parcelas) {
-        await loadParcelas(vendaId)
-      }
     }
   }
 
   const getStatusBadge = (venda: Venda) => {
     if (venda.cancelado) return <Badge variant="destructive">Cancelada</Badge>
-    if (venda.quitada) return <Badge className="bg-green-600 hover:bg-green-700">Quitada</Badge>
+    if (venda.quitada)
+      return (
+        <Badge className="bg-green-600 hover:bg-green-700">Quitada</Badge>
+      )
     if (venda.ativo) return <Badge variant="default">Ativa</Badge>
     return <Badge variant="secondary">Inativa</Badge>
   }
@@ -150,7 +177,8 @@ export default function VendasPage() {
             Tabela de Vendas
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {vendas.length} {vendas.length === 1 ? 'venda encontrada' : 'vendas encontradas'}
+            {vendas.length}{' '}
+            {vendas.length === 1 ? 'venda encontrada' : 'vendas encontradas'}
           </p>
         </div>
         <Link href="/convenio/vendas/nova">
@@ -253,7 +281,7 @@ export default function VendasPage() {
       </Card>
 
       {/* Loading */}
-      {loading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center min-h-[300px]">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
@@ -265,7 +293,9 @@ export default function VendasPage() {
               <ShoppingCart className="h-12 w-12 text-gray-400" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {temFiltrosAtivos ? 'Nenhuma venda encontrada' : 'Nenhuma venda registrada'}
+              {temFiltrosAtivos
+                ? 'Nenhuma venda encontrada'
+                : 'Nenhuma venda registrada'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
               {temFiltrosAtivos
@@ -290,9 +320,10 @@ export default function VendasPage() {
       ) : (
         /* Lista de Vendas */
         <div className="space-y-4">
-          {vendas.map(venda => {
+          {vendas.map((venda: Venda) => {
             const percentualPago =
               (venda.parcelasPagas / venda.quantidadeParcelas) * 100
+            const parcelas = parcelasMap[venda.id] || []
 
             return (
               <Card key={venda.id} className="overflow-hidden">
@@ -357,8 +388,7 @@ export default function VendasPage() {
                           <CheckCircle2 className="h-4 w-4" />
                           <div>
                             <div className="font-medium text-gray-900 dark:text-white">
-                              {venda.parcelasPagas}/{venda.quantidadeParcelas}{' '}
-                              pagas
+                              {venda.parcelasPagas}/{venda.quantidadeParcelas} pagas
                             </div>
                             <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
                               <div
@@ -390,11 +420,11 @@ export default function VendasPage() {
                       Parcelas:
                     </div>
 
-                    {loadingParcelas === venda.id ? (
+                    {parcelas.length === 0 ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                       </div>
-                    ) : venda.parcelas ? (
+                    ) : (
                       <>
                         <div className="overflow-x-auto">
                           <Table>
@@ -408,7 +438,7 @@ export default function VendasPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {venda.parcelas.map(parcela => (
+                              {parcelas.map(parcela => (
                                 <TableRow key={parcela.id}>
                                   <TableCell className="font-medium">
                                     {parcela.numeroParcela}
@@ -425,18 +455,12 @@ export default function VendasPage() {
                                   </TableCell>
                                   <TableCell>
                                     {parcela.baixa === 'S' ? (
-                                      <Badge
-                                        variant="default"
-                                        className="gap-1"
-                                      >
+                                      <Badge variant="default" className="gap-1">
                                         <CheckCircle2 className="h-3 w-3" />
                                         Paga
                                       </Badge>
                                     ) : (
-                                      <Badge
-                                        variant="secondary"
-                                        className="gap-1"
-                                      >
+                                      <Badge variant="secondary" className="gap-1">
                                         <XCircle className="h-3 w-3" />
                                         Pendente
                                       </Badge>
@@ -473,7 +497,7 @@ export default function VendasPage() {
                           </div>
                         </div>
                       </>
-                    ) : null}
+                    )}
                   </CardContent>
                 )}
               </Card>
