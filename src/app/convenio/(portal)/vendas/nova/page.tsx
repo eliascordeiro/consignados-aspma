@@ -16,8 +16,11 @@ interface Socio {
   nome: string
   matricula: string | null
   cpf: string | null
+  celular: string | null
+  telefone: string | null
   margemConsig: number | null
   limite: number | null
+  tipo: string | null
   empresaNome: string | null
 }
 
@@ -28,6 +31,8 @@ export default function NovaVendaPage() {
   const [socioSelecionado, setSocioSelecionado] = useState<Socio | null>(null)
   const [socios, setSocios] = useState<Socio[]>([])
   const [buscandoSocios, setBuscandoSocios] = useState(false)
+  const [buscaMatriculaCelular, setBuscaMatriculaCelular] = useState('')
+  const [buscandoPorMatricula, setBuscandoPorMatricula] = useState(false)
 
   const [formData, setFormData] = useState({
     valorTotal: '',
@@ -65,6 +70,37 @@ export default function NovaVendaPage() {
     setSocioSelecionado(socio)
     setBuscaSocio('')
     setSocios([])
+    setBuscaMatriculaCelular('')
+  }
+
+  const buscarPorMatriculaCelular = async () => {
+    if (!buscaMatriculaCelular.trim()) {
+      alert('Digite uma matrícula ou celular')
+      return
+    }
+
+    setBuscandoPorMatricula(true)
+    try {
+      const response = await fetch(`/api/convenio/socios?busca=${encodeURIComponent(buscaMatriculaCelular)}`)
+      const data = await response.json()
+      
+      if (data.socios && data.socios.length > 0) {
+        // Se encontrou apenas um, seleciona automaticamente
+        if (data.socios.length === 1) {
+          selecionarSocio(data.socios[0])
+        } else {
+          // Se encontrou mais de um, mostra a lista
+          setSocios(data.socios)
+        }
+      } else {
+        alert('Nenhum sócio encontrado com esta matrícula ou celular')
+      }
+    } catch (error) {
+      console.error('Erro ao buscar sócio:', error)
+      alert('Erro ao buscar sócio')
+    } finally {
+      setBuscandoPorMatricula(false)
+    }
   }
 
   const valorParcela = formData.valorTotal && formData.quantidadeParcelas
@@ -226,6 +262,44 @@ export default function NovaVendaPage() {
           </CardContent>
         </Card>
 
+        {/* Busca Rápida por Matrícula/Celular */}
+        {!socioSelecionado && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Busca Rápida</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Digite matrícula ou celular"
+                    value={buscaMatriculaCelular}
+                    onChange={(e) => setBuscaMatriculaCelular(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && buscarPorMatriculaCelular()}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={buscarPorMatriculaCelular}
+                  disabled={buscandoPorMatricula}
+                >
+                  {buscandoPorMatricula ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Buscar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Dados da Venda */}
         {socioSelecionado && (
           <Card>
@@ -233,7 +307,7 @@ export default function NovaVendaPage() {
               <CardTitle>Dados da Venda</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="valorTotal">Valor Total *</Label>
                   <Input
@@ -251,7 +325,7 @@ export default function NovaVendaPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quantidadeParcelas">Quantidade de Parcelas *</Label>
+                  <Label htmlFor="quantidadeParcelas">Número de Parcelas *</Label>
                   <Input
                     id="quantidadeParcelas"
                     type="number"
@@ -265,16 +339,48 @@ export default function NovaVendaPage() {
                     required
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="valorParcela">Valor da Parcela</Label>
+                  <Input
+                    id="valorParcela"
+                    type="text"
+                    value={valorParcela > 0 ? formatCurrency(valorParcela) : ''}
+                    disabled
+                    className="bg-gray-100 dark:bg-gray-800"
+                  />
+                </div>
               </div>
 
-              {valorParcela > 0 && (
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-sm text-green-800 dark:text-green-400">
-                    Valor de cada parcela
+              {valorParcela > 0 && socioSelecionado.margemConsig && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-blue-800 dark:text-blue-400">
+                        Margem Consignável Disponível
+                      </div>
+                      <div className="text-lg font-bold text-blue-900 dark:text-blue-300">
+                        {formatCurrency(Number(socioSelecionado.margemConsig))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-blue-800 dark:text-blue-400">
+                        Valor da Parcela
+                      </div>
+                      <div className={`text-lg font-bold ${
+                        valorParcela <= Number(socioSelecionado.margemConsig)
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {formatCurrency(valorParcela)}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-2xl font-bold text-green-900 dark:text-green-300">
-                    {formatCurrency(valorParcela)}
-                  </div>
+                  {valorParcela > Number(socioSelecionado.margemConsig) && (
+                    <div className="mt-2 text-sm text-red-600 dark:text-red-400 font-medium">
+                      ⚠️ Valor da parcela excede a margem consignável disponível
+                    </div>
+                  )}
                 </div>
               )}
 
