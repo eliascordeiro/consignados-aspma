@@ -33,21 +33,29 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Credenciais inválidas")
       } else {
-        // Verificar se é conveniado pelo cookie convenio_session
+        // Verificar se é conveniado - dupla checagem (cookie + sessão)
+        // 1. Tentar via cookie convenio_session
         const convenioCheck = await fetch("/api/convenio/check")
         const convenioData = await convenioCheck.json()
         
         if (convenioData?.isConvenio) {
-          console.log("📍 Redirecionando conveniado para portal")
+          console.log("📍 Redirecionando conveniado para portal (via cookie)")
           window.location.href = "/convenio/dashboard"
           return
         }
 
-        // Buscar sessão para verificar role
+        // 2. Buscar sessão para verificar role e isConvenio
         const response = await fetch("/api/auth/session")
         const session = await response.json()
         
-        console.log("📍 Redirecionando após login:", session)
+        console.log("📍 Session após login:", session)
+        
+        // Se session tem isConvenio, redirecionar para convenio
+        if (session?.user?.isConvenio) {
+          console.log("📍 Redirecionando conveniado para portal (via session)")
+          window.location.href = "/convenio/dashboard"
+          return
+        }
         
         if (session?.user?.role === "ADMIN") {
           window.location.href = "/dashboard"
