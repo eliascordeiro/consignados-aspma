@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import "./auth-config"
 import { createAuditLog } from "@/lib/audit-log"
+import { SignJWT } from "jose"
+import { cookies } from "next/headers"
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key-change-in-production"
+)
 
 export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -17,17 +23,23 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        login: { label: "Usuário ou Email", type: "text" },
         password: { label: "Senha", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        const login = String(credentials?.login || "").trim()
+        const password = String(credentials?.password || "")
+
+        if (!login || !password) {
           return null
         }
 
-        const user = await prisma.users.findUnique({
+        const user = await prisma.users.findFirst({
           where: {
-            email: credentials.email as string
+            OR: [
+              { email: login },
+              { name: login },
+            ],
           },
           select: {
             id: true,
@@ -41,47 +53,178 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           }
         })
 
-        if (!user || !user.active) {
+        if (user) {
+          if (!user.active) {
+            return null
+          }
+
+          const isPasswordValid = await bcrypt.compare(password, user.password)
+
+          console.log("🔐 Tentativa de login:")
+          console.log("   Login:", login)
+          console.log("   Senha válida:", isPasswordValid)
+          console.log("   Hash no banco:", user.password?.substring(0, 20) + "...")
+
+          if (!isPasswordValid) {
+            console.log("   ❌ Senha inválida!")
+            return null
+          }
+
+          console.log("   ✅ Login bem-sucedido!")
+
+          // Registrar log de login (não bloquear autenticação se falhar)
+          createAuditLog({
+            userId: user.id,
+            userName: user.name,
+            userRole: user.role,
+            action: "LOGIN",
+            module: "auth",
+            description: `Login realizado com sucesso`,
+            metadata: {
+              email: user.email,
+              login,
+            },
+          }).catch(err => console.error("Erro ao criar log de login:", err))
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            permissions: user.permissions || [],
+            createdById: user.createdById,
+          }
+        }
+
+        // Se não encontrou nas credenciais de usuários, procurar em convênios
+        const convenio = await prisma.convenio.findFirst({
+          where: {
+            ativo: true,
+            OR: [
+              { usuario: login },
+              { email: login },
+            ],
+          },
+          select: {
+            id: true,
+            usuario: true,
+            senha: true,
+            razao_soc: true,
+            fantasia: true,
+            email: true,
+            userId: true,
+          },
+        })
+
+        if (!convenio || !convenio.senha) {
           return null
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        )
-
-        console.log("🔐 Tentativa de login:")
-        console.log("   Email:", credentials.email)
-        console.log("   Senha válida:", isPasswordValid)
-        console.log("   Hash no banco:", user.password?.substring(0, 20) + "...")
-
-        if (!isPasswordValid) {
-          console.log("   ❌ Senha inválida!")
+        if (convenio.senha !== password) {
           return null
         }
 
-        console.log("   ✅ Login bem-sucedido!")
+        const convenioEmail = convenio.email?.trim().toLowerCase()
+        const convenioUsuario = convenio.usuario?.trim()
+        const generatedEmail = (convenioEmail || `${convenioUsuario || `convenio-${convenio.id}`}@convenio.local`).toLowerCase()
 
-        // Registrar log de login (não bloquear autenticação se falhar)
+        const userOr: Array<{ email?: string; name?: string }> = [{ email: generatedEmail }]
+        if (convenioUsuario) {
+          userOr.push({ name: convenioUsuario })
+        }
+
+        let convenioUser = await prisma.users.findFirst({
+          where: {
+            OR: userOr,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+            active: true,
+            permissions: true,
+            createdById: true,
+          },
+        })
+
+        if (!convenioUser) {
+          const hashedPassword = await bcrypt.hash(password, 10)
+          convenioUser = await prisma.users.create({
+            data: {
+              email: generatedEmail,
+              name: convenioUsuario || convenio.fantasia || convenio.razao_soc,
+              password: hashedPassword,
+              role: "USER",
+              active: true,
+              permissions: [],
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              password: true,
+              role: true,
+              active: true,
+              permissions: true,
+              createdById: true,
+            },
+          })
+        }
+
+        if (!convenioUser.active) {
+          return null
+        }
+
+        if (!convenio.userId || convenio.userId !== convenioUser.id) {
+          await prisma.convenio.update({
+            where: { id: convenio.id },
+            data: { userId: convenioUser.id },
+          })
+        }
+
+        const token = await new SignJWT({
+          convenioId: convenio.id,
+          usuario: convenio.usuario || convenioUser.name,
+          razaoSocial: convenio.razao_soc,
+          fantasia: convenio.fantasia,
+        })
+          .setProtectedHeader({ alg: "HS256" })
+          .setIssuedAt()
+          .setExpirationTime("8h")
+          .sign(JWT_SECRET)
+
+        const cookieStore = await cookies()
+        cookieStore.set("convenio_session", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 8,
+          path: "/",
+        })
+
         createAuditLog({
-          userId: user.id,
-          userName: user.name,
-          userRole: user.role,
+          userId: convenioUser.id,
+          userName: convenioUser.name,
+          userRole: convenioUser.role,
           action: "LOGIN",
           module: "auth",
-          description: `Login realizado com sucesso`,
+          description: `Login realizado com sucesso (convênio)`,
           metadata: {
-            email: user.email,
+            email: convenioUser.email,
+            login,
+            convenioId: convenio.id,
           },
         }).catch(err => console.error("Erro ao criar log de login:", err))
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          permissions: user.permissions || [],
-          createdById: user.createdById,
+          id: convenioUser.id,
+          email: convenioUser.email,
+          name: convenioUser.name,
+          role: convenioUser.role,
+          permissions: convenioUser.permissions || [],
+          createdById: convenioUser.createdById,
         }
       }
     })

@@ -11,7 +11,7 @@ async function ConvenioLogoutButton() {
       const { cookies } = await import('next/headers')
       const cookieStore = await cookies()
       cookieStore.delete('convenio_session')
-      redirect('/convenio/login')
+      redirect('/login')
     }}>
       <Button variant="ghost" size="sm" type="submit">
         <LogOut className="h-4 w-4 mr-2" />
@@ -29,7 +29,7 @@ export default async function ConvenioLayout({
   const session = await getConvenioSession()
 
   if (!session) {
-    redirect('/convenio/login')
+    redirect('/login')
   }
 
   return (

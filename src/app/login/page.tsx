@@ -2,22 +2,17 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CreditCard, Lock, Mail, AlertCircle, Building2, User } from "lucide-react"
+import { CreditCard, Lock, AlertCircle, User } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-type LoginMode = 'admin' | 'convenio'
-
 export default function LoginPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [loginMode, setLoginMode] = useState<LoginMode>('admin')
 
   async function onSubmitAdmin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,12 +20,12 @@ export default function LoginPage() {
     setError("")
 
     const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
+    const login = formData.get("login") as string
     const password = formData.get("password") as string
 
     try {
       const result = await signIn("credentials", {
-        email,
+        login,
         password,
         redirect: false,
       })
@@ -59,42 +54,6 @@ export default function LoginPage() {
     }
   }
 
-  async function onSubmitConvenio(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
-    const formData = new FormData(e.currentTarget)
-    const usuario = formData.get("usuario") as string
-    const senha = formData.get("senha") as string
-
-    try {
-      const response = await fetch('/api/convenio/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario, senha }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || 'Usuário ou senha inválidos')
-        return
-      }
-
-      window.location.href = '/convenio/dashboard'
-    } catch (error) {
-      setError("Erro ao conectar com o servidor")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const switchMode = (mode: LoginMode) => {
-    setLoginMode(mode)
-    setError("")
-  }
-
   return (
     <div className="flex min-h-screen">
       {/* Left side - Login form */}
@@ -118,187 +77,87 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Toggle Tabs */}
-          <div className="flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => switchMode('admin')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-md transition-all ${
-                loginMode === 'admin'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <User className="h-4 w-4" />
-              Administração
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode('convenio')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-medium rounded-md transition-all ${
-                loginMode === 'convenio'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <Building2 className="h-4 w-4" />
-              Conveniado
-            </button>
-          </div>
-
           {/* Form */}
           <div>
             <div className="mb-6">
               <h3 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Bem-vindo de volta</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                {loginMode === 'admin'
-                  ? 'Entre com suas credenciais para acessar o sistema'
-                  : 'Acesse o portal do conveniado para gerenciar suas vendas'
-                }
+                Entre com suas credenciais para acessar o sistema
               </p>
             </div>
 
-            {loginMode === 'admin' ? (
-              <form onSubmit={onSubmitAdmin} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      className="pl-10"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
+            <form onSubmit={onSubmitAdmin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="login" className="text-sm font-medium">
+                  Usuário ou Email
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="login"
+                    name="login"
+                    type="text"
+                    placeholder="usuario ou email"
+                    className="pl-10"
+                    required
+                    disabled={isLoading}
+                  />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    required
+                    disabled={isLoading}
+                  />
                 </div>
+              </div>
 
-                <div className="flex items-center justify-end">
-                  <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                    Criar ou Redefinir Senha
-                  </Link>
+              <div className="flex items-center justify-end">
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                  Criar ou Redefinir Senha
+                </Link>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 text-sm text-red-600 dark:text-red-400">
+                  <AlertCircle className="h-4 w-4" />
+                  {error}
                 </div>
+              )}
 
-                {error && (
-                  <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 text-sm text-red-600 dark:text-red-400">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  style={{
-                    width: '100%',
-                    height: '2.25rem',
-                    backgroundColor: '#6366f1',
-                    color: '#ffffff',
-                    fontWeight: '600',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    opacity: isLoading ? 0.5 : 1,
-                    boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#4f46e5')}
-                  onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#6366f1')}
-                >
-                  {isLoading ? "Entrando..." : "Entrar"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={onSubmitConvenio} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="usuario" className="text-sm font-medium">
-                    Usuário
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="usuario"
-                      name="usuario"
-                      type="text"
-                      placeholder="Digite seu usuário"
-                      className="pl-10"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="senha" className="text-sm font-medium">
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="senha"
-                      name="senha"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 text-sm text-red-600 dark:text-red-400">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  style={{
-                    width: '100%',
-                    height: '2.25rem',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    fontWeight: '600',
-                    borderRadius: '0.375rem',
-                    border: 'none',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    opacity: isLoading ? 0.5 : 1,
-                    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#1d4ed8')}
-                  onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#2563eb')}
-                >
-                  {isLoading ? "Entrando..." : "Acessar Portal"}
-                </button>
-              </form>
-            )}
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  height: '2.25rem',
+                  backgroundColor: '#6366f1',
+                  color: '#ffffff',
+                  fontWeight: '600',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.5 : 1,
+                  boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#4f46e5')}
+                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#6366f1')}
+              >
+                {isLoading ? "Entrando..." : "Entrar"}
+              </button>
+            </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
               <p>© 2026 ConsigExpress. Todos os direitos reservados.</p>
