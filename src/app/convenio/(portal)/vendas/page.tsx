@@ -80,13 +80,19 @@ async function fetchVendas({
   if (dataFim) params.set('dataFim', dataFim)
 
   const qs = params.toString()
-  const response = await fetch('/api/convenio/vendas' + (qs ? '?' + qs : ''))
+  const url = '/api/convenio/vendas' + (qs ? '?' + qs : '')
+  
+  console.log('Fetching vendas from:', url)
+  const response = await fetch(url)
 
   if (!response.ok) {
-    throw new Error('Erro ao carregar vendas')
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Error response:', response.status, errorData)
+    throw new Error(errorData.error || 'Erro ao carregar vendas')
   }
 
   const data = await response.json()
+  console.log('Vendas loaded:', data.vendas?.length || 0)
   return data.vendas || []
 }
 
@@ -115,6 +121,7 @@ export default function VendasPage() {
   const {
     data: vendas = [],
     isLoading,
+    error,
     refetch,
   } = useQuery({
     queryKey: ['convenio-vendas', busca, statusFiltro, dataInicio, dataFim],
@@ -127,7 +134,10 @@ export default function VendasPage() {
       }),
     staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: false,
+    retry: 2,
   })
+
+  console.log('Query state:', { isLoading, error, vendasCount: vendas.length })
 
   // Query parcelas sob demanda
   const { data: parcelasMap = {} } = useQuery({
@@ -282,9 +292,28 @@ export default function VendasPage() {
 
       {/* Loading */}
       {isLoading ? (
-        <div className="flex items-center justify-center min-h-[300px]">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="flex flex-col items-center justify-center min-h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+          <p className="text-sm text-gray-500">Carregando vendas...</p>
         </div>
+      ) : error ? (
+        /* Erro */
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="p-4 bg-red-100 dark:bg-red-900 rounded-full mb-4">
+              <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Erro ao carregar vendas
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+              {error instanceof Error ? error.message : 'Erro desconhecido'}
+            </p>
+            <Button onClick={() => refetch()}>
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
       ) : vendas.length === 0 ? (
         /* Sem resultados */
         <Card>
