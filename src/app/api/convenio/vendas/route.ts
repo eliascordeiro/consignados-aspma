@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
+import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireConvenioSession(request)
     const body = await request.json()
+    const requestInfo = getRequestInfo(request)
 
     const {
       socioId,
@@ -90,6 +92,37 @@ export async function POST(request: NextRequest) {
       data: parcelas,
     })
 
+    // Busca convênio para o log
+    const convenio = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { razao_soc: true, fantasia: true }
+    })
+
+    // Registra no audit log
+    await createAuditLog({
+      userId: 'convenio-' + session.convenioId,
+      userName: session.usuario,
+      userRole: 'CONVENIO',
+      action: 'CREATE',
+      module: 'vendas',
+      entityId: venda.id,
+      entityName: `Venda #${venda.numeroVenda} - ${socio.nome}`,
+      description: `Venda #${venda.numeroVenda} criada pelo convênio ${convenio?.fantasia || convenio?.razao_soc || session.convenioId} - Sócio: ${socio.nome}, Valor: R$ ${valorTotal}, Parcelas: ${quantidadeParcelas}x de R$ ${valorParcela}`,
+      metadata: {
+        convenioId: session.convenioId,
+        convenioNome: convenio?.fantasia || convenio?.razao_soc,
+        numeroVenda: venda.numeroVenda,
+        socioId,
+        socioNome: socio.nome,
+        socioMatricula: socio.matricula,
+        valorTotal,
+        quantidadeParcelas,
+        valorParcela,
+        observacoes,
+      },
+      ...requestInfo
+    })
+
     return NextResponse.json({
       success: true,
       venda: {
@@ -115,6 +148,7 @@ export async function GET(request: NextRequest) {
     console.log('🟢 [VENDAS API] Cookies:', request.cookies.getAll())
     
     const session = await requireConvenioSession(request)
+    const requestInfo = getRequestInfo(request)
     console.log('🟢 [VENDAS API] Session obtida:', { convenioId: session.convenioId, usuario: session.usuario })
 
     const { searchParams } = new URL(request.url)
@@ -293,6 +327,32 @@ export async function GET(request: NextRequest) {
       valorTotalGeral: resultado.reduce((sum, v) => sum + Number(v.valorTotal), 0),
       totalParcelas,
       valorTotalParcelas,
+    }
+
+    // Busca convênio para o log
+    const convenio = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { razao_soc: true, fantasia: true }
+    })
+
+    // Registra consulta no audit log (apenas se houver filtros aplicados)
+    if (busca || status || dataInicio || dataFim) {
+      await createAuditLog({
+        userId: 'convenio-' + session.convenioId,
+        userName: session.usuario,
+        userRole: 'CONVENIO',
+        action: 'VIEW',
+        module: 'vendas',
+        description: `Consulta de vendas pelo convênio ${convenio?.fantasia || convenio?.razao_soc || session.convenioId}`,
+        metadata: {
+          convenioId: session.convenioId,
+          convenioNome: convenio?.fantasia || convenio?.razao_soc,
+          filtros: { busca, status, dataInicio, dataFim },
+          resultados: totalFiltrado,
+          pagina: page,
+        },
+        ...requestInfo
+      })
     }
 
     console.log('🟢 [VENDAS API] Retornando', resultado.length, 'vendas de', totalFiltrado, 'total')

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
 import { cookies } from 'next/headers'
+import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -10,6 +11,7 @@ const JWT_SECRET = new TextEncoder().encode(
 export async function POST(request: NextRequest) {
   try {
     const { usuario, senha } = await request.json()
+    const requestInfo = getRequestInfo(request)
 
     if (!usuario || !senha) {
       return NextResponse.json(
@@ -61,6 +63,25 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 8, // 8 horas
       path: '/',
+    })
+
+    // Registra login no audit log
+    await createAuditLog({
+      userId: 'convenio-' + convenio.id,
+      userName: convenio.usuario || convenio.razao_soc,
+      userRole: 'CONVENIO',
+      action: 'LOGIN',
+      module: 'auth',
+      entityId: convenio.id.toString(),
+      entityName: convenio.fantasia || convenio.razao_soc,
+      description: `Login realizado pelo convênio ${convenio.fantasia || convenio.razao_soc}`,
+      metadata: {
+        convenioId: convenio.id,
+        razaoSocial: convenio.razao_soc,
+        fantasia: convenio.fantasia,
+        usuario: convenio.usuario,
+      },
+      ...requestInfo
     })
 
     return NextResponse.json({

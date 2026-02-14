@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
+import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
 // Credenciais ZETRA
 const ZETRA_CONFIG = {
@@ -122,7 +123,8 @@ async function calcularDescontosDoMes(
 // GET /api/convenio/socios/margem?socioId=xxx&valorParcela=100
 export async function GET(request: NextRequest) {
   try {
-    await requireConvenioSession(request)
+    const session = await requireConvenioSession(request)
+    const requestInfo = getRequestInfo(request)
 
     const { searchParams } = new URL(request.url)
     const socioId = searchParams.get('socioId')
@@ -217,7 +219,36 @@ export async function GET(request: NextRequest) {
         codRetorno: margemZetra.codRetorno,
       })
     }
+    // Busca convênio para o log
+    const convenio = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { razao_soc: true, fantasia: true }
+    })
 
+    // Registra consulta de margem no audit log
+    await createAuditLog({
+      userId: 'convenio-' + session.convenioId,
+      userName: session.usuario,
+      userRole: 'CONVENIO',
+      action: 'VIEW',
+      module: 'margem',
+      entityId: socioId,
+      entityName: socio.nome,
+      description: `Consulta de margem pelo convênio ${convenio?.fantasia || convenio?.razao_soc || session.convenioId} - Sócio: ${socio.nome} (${socio.matricula})`,
+      metadata: {
+        convenioId: session.convenioId,
+        convenioNome: convenio?.fantasia || convenio?.razao_soc,
+        socioId: socio.id,
+        socioNome: socio.nome,
+        socioMatricula: socio.matricula,
+        valorParcela: valorParcelaParam,
+        fonte: typeof margemZetra === 'object' && 'mensagem' in margemZetra ? 'zetra_erro' : 
+               margemZetra === null ? 'fallback' : 'tempo_real',
+        margem: typeof margemZetra === 'object' && 'margem' in margemZetra ? margemZetra.margem : 
+                margemZetra === null ? Number(socio.margemConsig || 0) : margemZetra,
+      },
+      ...requestInfo
+    })
     return NextResponse.json({
       socioId: socio.id,
       nome: socio.nome,
