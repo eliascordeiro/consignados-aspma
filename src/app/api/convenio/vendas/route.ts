@@ -308,14 +308,14 @@ export async function GET(request: NextRequest) {
           convenioId: session.convenioId,
           convenioNome: convenio?.fantasia || convenio?.razao_soc,
           filtros: { busca, status, dataInicio, dataFim },
-          resultados: totalFiltrado,
+          resultados: total,
           pagina: page,
         },
         ...requestInfo
       })
     }
 
-    console.log('🟢 [VENDAS API] Retornando', resultado.length, 'vendas de', totalFiltrado, 'total')
+    console.log('🟢 [VENDAS API] Retornando', resultado.length, 'vendas de', total, 'total')
     return NextResponse.json({ vendas: resultado, pagination })
   } catch (error) {
     console.error('❌ [VENDAS API] Erro ao buscar vendas:', error)
