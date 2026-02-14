@@ -36,7 +36,6 @@ interface VendasPeriodoData {
     totalParcelas: number
     ticketMedio: number
     vendasAtivas: number
-    vendasQuitadas: number
     vendasCanceladas: number
     valorRecebido: number
     valorAReceber: number
@@ -383,12 +382,6 @@ export default function RelatoriosPage() {
                       <span className="text-sm text-gray-600 dark:text-gray-400">Ativas</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-green-600 hover:bg-green-700">
-                        {vendasData.resumo.vendasQuitadas}
-                      </Badge>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Quitadas</span>
-                    </div>
-                    <div className="flex items-center gap-2">
                       <Badge variant="destructive">{vendasData.resumo.vendasCanceladas}</Badge>
                       <span className="text-sm text-gray-600 dark:text-gray-400">Canceladas</span>
                     </div>
@@ -428,9 +421,6 @@ export default function RelatoriosPage() {
                             <TableCell>
                               {venda.status === 'cancelada' && (
                                 <Badge variant="destructive">Cancelada</Badge>
-                              )}
-                              {venda.status === 'quitada' && (
-                                <Badge className="bg-green-600 hover:bg-green-700">Quitada</Badge>
                               )}
                               {venda.status === 'ativa' && <Badge variant="default">Ativa</Badge>}
                             </TableCell>

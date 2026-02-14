@@ -53,7 +53,6 @@ interface Venda {
   observacoes: string | null
   ativo: boolean
   cancelado: boolean
-  quitada: boolean
   socio: {
     nome: string
     matricula: string | null
@@ -246,10 +245,6 @@ export default function VendasPage() {
 
   const getStatusBadge = (venda: Venda) => {
     if (venda.cancelado) return <Badge variant="destructive">Cancelada</Badge>
-    if (venda.quitada)
-      return (
-        <Badge className="bg-green-600 hover:bg-green-700">Quitada</Badge>
-      )
     if (venda.ativo) return <Badge variant="default">Ativa</Badge>
     return <Badge variant="secondary">Inativa</Badge>
   }
