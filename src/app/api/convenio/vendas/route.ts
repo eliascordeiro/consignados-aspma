@@ -149,6 +149,7 @@ export async function GET(request: NextRequest) {
     } else if (status === 'cancelada') {
       where.cancelado = true
     }
+    // Nota: 'quitada' será filtrado após a query pois depende da contagem de parcelas
 
     // Filtro por data
     if (dataInicio || dataFim) {
@@ -161,40 +162,56 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Conta total de vendas para paginação
-    const total = await prisma.venda.count({ where })
-
-    // Busca vendas com agregação de parcelas pagas (otimizado)
-    const vendas = await prisma.venda.findMany({
-      where,
-      include: {
-        socio: {
-          select: {
-            nome: true,
-            matricula: true,
-            cpf: true,
+    // Se o filtro for "quitada", precisamos buscar todas e filtrar depois
+    // Caso contrário, fazemos paginação normal
+    let totalFiltrado = 0
+    let resultado: any[] = []
+    
+    if (status === 'quitada') {
+      // Para vendas quitadas, busca todas e filtra
+      const todasVendas = await prisma.venda.findMany({
+        where,
+        include: {
+          socio: {
+            select: {
+              nome: true,
+              matricula: true,
+              cpf: true,
+            },
+          },
+          parcelas: {
+            select: {
+              baixa: true,
+              valor: true,
+            },
           },
         },
-        parcelas: {
-          select: {
-            baixa: true,
-            valor: true,
-          },
+        orderBy: {
+          dataEmissao: 'desc',
         },
-      },
-      orderBy: {
-        dataEmissao: 'desc',
-      },
-      skip,
-      take: limit,
-    })
+      })
 
-    // Formata resposta com contagem de parcelas pagas
-    const vendasFormatadas = vendas.map(venda => {
-      const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
-      const quitada = parcelasPagas === venda.quantidadeParcelas
+      // Filtra e formata as vendas quitadas
+      const vendasQuitadas = todasVendas
+        .map(venda => {
+          const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
+          const quitada = parcelasPagas === venda.quantidadeParcelas
 
-      return {
+          return {
+            venda,
+            parcelasPagas,
+            quitada,
+          }
+        })
+        .filter(v => v.quitada && !v.venda.cancelado)
+
+      totalFiltrado = vendasQuitadas.length
+
+      // Aplica paginação manual
+      const paginatedVendas = vendasQuitadas.slice(skip, skip + limit)
+
+      // Formata resultado
+      resultado = paginatedVendas.map(({ venda, parcelasPagas, quitada }) => ({
         id: venda.id,
         numeroVenda: venda.numeroVenda,
         dataEmissao: venda.dataEmissao,
@@ -207,37 +224,66 @@ export async function GET(request: NextRequest) {
         socio: venda.socio,
         parcelasPagas,
         quitada,
-      }
-    })
+        parcelas: venda.parcelas,
+      }))
+    } else {
+      // Paginação normal para outros status
+      totalFiltrado = await prisma.venda.count({ where })
 
-    // Filtro pós-query para "quitada" (depende da contagem de parcelas)
-    let resultado = vendasFormatadas
-    let totalFiltrado = total
-    
-    if (status === 'quitada') {
-      resultado = vendasFormatadas.filter(v => v.quitada && !v.cancelado)
-      // Reconta o total para quitadas (menos eficiente, mas necessário)
-      const allVendas = await prisma.venda.findMany({
+      const vendas = await prisma.venda.findMany({
         where,
         include: {
+          socio: {
+            select: {
+              nome: true,
+              matricula: true,
+              cpf: true,
+            },
+          },
           parcelas: {
-            select: { baixa: true },
+            select: {
+              baixa: true,
+              valor: true,
+            },
           },
         },
+        orderBy: {
+          dataEmissao: 'desc',
+        },
+        skip,
+        take: limit,
       })
-      totalFiltrado = allVendas.filter(v => {
-        const pagas = v.parcelas.filter(p => p.baixa === 'S').length
-        return pagas === v.quantidadeParcelas && !v.cancelado
-      }).length
+
+      // Formata resposta com contagem de parcelas pagas
+      resultado = vendas.map(venda => {
+        const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
+        const quitada = parcelasPagas === venda.quantidadeParcelas
+
+        return {
+          id: venda.id,
+          numeroVenda: venda.numeroVenda,
+          dataEmissao: venda.dataEmissao,
+          valorTotal: venda.valorTotal,
+          quantidadeParcelas: venda.quantidadeParcelas,
+          valorParcela: venda.valorParcela,
+          observacoes: venda.observacoes,
+          ativo: venda.ativo,
+          cancelado: venda.cancelado,
+          socio: venda.socio,
+          parcelasPagas,
+          quitada,
+          parcelas: venda.parcelas,
+        }
+      })
     }
 
-    // Calcula valores totais
-    const valorTotalParcelas = vendas.reduce((sum, venda) => {
-      const valorVenda = venda.parcelas.reduce((s, p) => s + Number(p.valor), 0)
+    // Calcula valores totais (usando os resultados paginados)
+    const valorTotalParcelas = resultado.reduce((sum, venda) => {
+      const valorVenda = venda.parcelas?.reduce((s: number, p: any) => s + Number(p.valor), 0) || 0
       return sum + valorVenda
     }, 0)
 
-    const totalParcelas = vendas.reduce((sum, venda) => sum + venda.parcelas.length, 0)
+    const totalParcelas = resultado.reduce((sum, venda) => sum + (venda.parcelas?.length || 0), 0)
 
     const pagination = {
       page,
