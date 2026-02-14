@@ -64,8 +64,15 @@ export async function GET(request: NextRequest) {
     const totalParcelas = vendas.reduce((sum, v) => sum + v.quantidadeParcelas, 0)
     const ticketMedio = totalVendas > 0 ? valorTotal / totalVendas : 0
     
-    const vendasAtivas = vendas.filter(v => v.ativo && !v.cancelado).length
-    const vendasQuitadas = vendas.filter(v => v.quitada).length
+    // Calcular vendas quitadas (todas as parcelas pagas)
+    const vendasQuitadas = vendas.filter(v => {
+      if (v.cancelado) return false
+      const totalParcelasVenda = v.parcelas.length
+      const parcelasPagas = v.parcelas.filter(p => p.baixa === 'S').length
+      return totalParcelasVenda > 0 && parcelasPagas === totalParcelasVenda
+    }).length
+    
+    const vendasAtivas = vendas.filter(v => v.ativo && !v.cancelado).length - vendasQuitadas
     const vendasCanceladas = vendas.filter(v => v.cancelado).length
 
     // Valor já recebido (parcelas pagas)
@@ -135,7 +142,11 @@ export async function GET(request: NextRequest) {
         valorTotal: v.valorTotal,
         quantidadeParcelas: v.quantidadeParcelas,
         valorParcela: v.valorParcela,
-        status: v.cancelado ? 'cancelada' : v.quitada ? 'quitada' : 'ativa',
+        status: v.cancelado 
+          ? 'cancelada' 
+          : (v.parcelas.length > 0 && v.parcelas.every(p => p.baixa === 'S'))
+            ? 'quitada'
+            : 'ativa',
       })),
     })
   } catch (error) {
