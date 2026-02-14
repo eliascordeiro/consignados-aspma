@@ -282,8 +282,8 @@ export async function GET(request: NextRequest) {
     const pagination = {
       page,
       limit,
-      total: totalFiltrado,
-      totalPages: Math.ceil(totalFiltrado / limit),
+      total,
+      totalPages: Math.ceil(total / limit),
       valorTotalGeral: resultado.reduce((sum, v) => sum + Number(v.valorTotal), 0),
       totalParcelas,
       valorTotalParcelas,

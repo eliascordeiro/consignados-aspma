@@ -50,7 +50,7 @@ export default function ConvenioLayoutClient({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
         {/* Header */}
         <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="container mx-auto px-4 py-4">
@@ -80,10 +80,10 @@ export default function ConvenioLayoutClient({
         <ConvenioNav />
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-6">{children}</main>
+        <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
 
         {/* Footer */}
-        <footer className="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div className="container mx-auto px-4 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
             © 2026 Sistema de Consignados - Portal do Conveniado
           </div>
