@@ -3,6 +3,31 @@ import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
+/**
+ * Calcula a data de vencimento da primeira parcela considerando a regra do dia 9
+ * - Se dia > 9: primeira parcela vence no mês seguinte
+ * - Se dia <= 9: primeira parcela vence no mês atual
+ */
+function calcularPrimeiroVencimento(): Date {
+  const hoje = new Date()
+  const dia = hoje.getDate()
+  let mes = hoje.getMonth()
+  let ano = hoje.getFullYear()
+
+  // Se passou do dia 9, primeira parcela vence no mês seguinte
+  if (dia > 9) {
+    if (mes === 11) { // dezembro (0-indexed)
+      mes = 0 // janeiro
+      ano = ano + 1
+    } else {
+      mes = mes + 1
+    }
+  }
+
+  // Define sempre para o dia 10 do mês
+  return new Date(ano, mes, 10)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await requireConvenioSession(request)
@@ -71,17 +96,17 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Cria as parcelas
-    const dataAtual = new Date()
+    // Cria as parcelas respeitando a data de corte do dia 9
+    const primeiroVencimento = calcularPrimeiroVencimento()
     const parcelas = []
 
-    for (let i = 1; i <= quantidadeParcelas; i++) {
-      const dataVencimento = new Date(dataAtual)
-      dataVencimento.setMonth(dataVencimento.getMonth() + i)
+    for (let i = 0; i < quantidadeParcelas; i++) {
+      const dataVencimento = new Date(primeiroVencimento)
+      dataVencimento.setMonth(primeiroVencimento.getMonth() + i)
 
       parcelas.push({
         vendaId: venda.id,
-        numeroParcela: i,
+        numeroParcela: i + 1,
         dataVencimento,
         valor: valorParcela,
         baixa: 'N',
