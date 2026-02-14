@@ -22,26 +22,28 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 interface DashboardStats {
-  // Vendas ativas (com parcelas >= mês atual)
-  vendasAtivas: number
-  parcelasAtivas: number
-  valorAtivo: number
+  // Descontos do mês atual
+  parcelasMesAtual: number
+  valorMesAtual: number
 
-  // Vendas quitadas (todas parcelas < mês atual)
-  vendasQuitadas: number
-  parcelasQuitadas: number
-  valorQuitado: number
+  // Meses anteriores (já recebidos)
+  parcelasMesesAnteriores: number
+  valorMesesAnteriores: number
+
+  // Meses futuros (a receber)
+  parcelasMesesFuturos: number
+  valorMesesFuturos: number
 
   // Vendas canceladas
   vendasCanceladas: number
   parcelasCanceladas: number
-  valorCancelado: number
 
-  // Vendas do mês (por data de emissão)
-  vendasMesAtual: number
+  // Totais
+  totalVendasAtivas: number
+  vendasRegistradasMes: number
 
-  // Data de corte
-  dataCorte: string
+  // Referência do mês
+  mesReferencia: string
 }
 
 interface VendaRecente {
@@ -52,7 +54,7 @@ interface VendaRecente {
   socioMatricula: string | null
   valorTotal: number
   quantidadeParcelas: number
-  status: 'ativa' | 'quitada' | 'cancelada'
+  cancelado: boolean
 }
 
 interface DashboardData {
@@ -124,104 +126,109 @@ export default function ConvenioDashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Vendas Ativas */}
-        <Card className="border-l-4 border-l-chart-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vendas Ativas
-              </CardTitle>
-              <Clock className="h-4 w-4 text-chart-2" />
-            </div>
-            <CardDescription className="text-xs">
-              Parcelas com vencimento a partir de {format(new Date(data.stats.dataCorte), 'MM/yyyy')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-2xl font-bold text-foreground">
-              {data.stats.vendasAtivas}
-            </div>
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <div>{data.stats.parcelasAtivas} parcelas pendentes</div>
-              <div className="font-semibold text-chart-2">
-                {formatCurrency(Number(data.stats.valorAtivo))} a receber
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Vendas Quitadas */}
-        <Card className="border-l-4 border-l-chart-3">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vendas Quitadas
-              </CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-chart-3" />
-            </div>
-            <CardDescription className="text-xs">
-              Todas as parcelas anteriores a {format(new Date(data.stats.dataCorte), 'MM/yyyy')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-2xl font-bold text-foreground">
-              {data.stats.vendasQuitadas}
-            </div>
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <div>{data.stats.parcelasQuitadas} parcelas quitadas</div>
-              <div className="font-semibold text-chart-3">
-                {formatCurrency(Number(data.stats.valorQuitado))} recebido
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Vendas Canceladas */}
-        <Card className="border-l-4 border-l-destructive">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Vendas Canceladas
-              </CardTitle>
-              <XCircle className="h-4 w-4 text-destructive" />
-            </div>
-            <CardDescription className="text-xs">
-              Vendas canceladas (não serão recebidas)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-2xl font-bold text-foreground">
-              {data.stats.vendasCanceladas}
-            </div>
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <div>{data.stats.parcelasCanceladas} parcelas canceladas</div>
-              <div className="font-semibold text-destructive">
-                {formatCurrency(Number(data.stats.valorCancelado))} perdido
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Vendas deste Mês */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Descontos do Mês Atual */}
         <Card className="border-l-4 border-l-primary">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Novas Vendas
+                Descontos de {data.stats.mesReferencia}
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-primary" />
+              <Calendar className="h-4 w-4 text-primary" />
             </div>
             <CardDescription className="text-xs">
-              Vendas realizadas em {format(new Date(), 'MMMM/yyyy', { locale: ptBR })}
+              Parcelas com vencimento este mês
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-2xl font-bold text-foreground">
-              {data.stats.vendasMesAtual}
+              {data.stats.parcelasMesAtual}
             </div>
             <div className="text-sm text-muted-foreground">
-              Emitidas este mês
+              Parcelas a receber
+            </div>
+            <div className="font-semibold text-primary text-lg">
+              {formatCurrency(Number(data.stats.valorMesAtual))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Meses Futuros */}
+        <Card className="border-l-4 border-l-chart-2">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Próximos Meses
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-chart-2" />
+            </div>
+            <CardDescription className="text-xs">
+              Parcelas com vencimento futuro
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-bold text-foreground">
+              {data.stats.parcelasMesesFuturos}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Parcelas a vencer
+            </div>
+            <div className="font-semibold text-chart-2 text-lg">
+              {formatCurrency(Number(data.stats.valorMesesFuturos))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Meses Anteriores */}
+        <Card className="border-l-4 border-l-chart-3">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Meses Anteriores
+              </CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-chart-3" />
+            </div>
+            <CardDescription className="text-xs">
+              Parcelas já processadas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-bold text-foreground">
+              {data.stats.parcelasMesesAnteriores}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Parcelas recebidas
+            </div>
+            <div className="font-semibold text-chart-3 text-lg">
+              {formatCurrency(Number(data.stats.valorMesesAnteriores))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Total de Vendas */}
+        <Card className="border-l-4 border-l-accent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total de Vendas
+              </CardTitle>
+              <ShoppingCart className="h-4 w-4 text-accent-foreground" />
+            </div>
+            <CardDescription className="text-xs">
+              Vendas ativas no sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-bold text-foreground">
+              {data.stats.totalVendasAtivas}
+            </div>
+            <div className="text-sm text-muted-foreground space-y-0.5">
+              <div>{data.stats.vendasRegistradasMes} registradas este mês</div>
+              {data.stats.vendasCanceladas > 0 && (
+                <div className="text-destructive">
+                  {data.stats.vendasCanceladas} canceladas
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -232,11 +239,12 @@ export default function ConvenioDashboardPage() {
         <CardContent className="flex gap-3 py-4">
           <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
           <div className="text-sm text-muted-foreground">
-            <strong className="text-foreground">Como funciona:</strong> As vendas são classificadas pela 
-            data de vencimento das parcelas. Parcelas com vencimento <strong>a partir de {format(new Date(data.stats.dataCorte), 'MM/yyyy')}</strong> são 
-            consideradas <strong className="text-chart-2">ativas</strong> (a receber). Parcelas anteriores são 
-            <strong className="text-chart-3"> quitadas</strong>. Vendas <strong className="text-destructive">canceladas</strong> são 
-            sempre separadas, independente da data.
+            <strong className="text-foreground">Controle Mensal de Descontos:</strong> Este dashboard mostra os descontos 
+            organizados por mês de vencimento. Em <strong>{data.stats.mesReferencia}</strong> você receberá <strong className="text-primary">
+            {data.stats.parcelasMesAtual} parcelas</strong> no valor de <strong className="text-primary">
+            {formatCurrency(Number(data.stats.valorMesAtual))}</strong>. As parcelas são contabilizadas independente do status 
+            de baixa (que controla apenas o desconto em folha dos sócios). <strong className="text-destructive">Vendas canceladas</strong> nunca 
+            são incluídas nos valores a receber.
           </div>
         </CardContent>
       </Card>
@@ -244,7 +252,7 @@ export default function ConvenioDashboardPage() {
       {/* Vendas Recentes */}
       <Card>
         <CardHeader>
-          <CardTitle>Últimas Vendas</CardTitle>
+          <CardTitle>Últimas Vendas Registradas</CardTitle>
           <CardDescription>
             As 10 vendas mais recentes do seu convênio
           </CardDescription>
@@ -256,72 +264,57 @@ export default function ConvenioDashboardPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {data.vendasRecentes.map((venda) => {
-                // Define cores e ícones por status
-                const statusConfig = {
-                  ativa: {
-                    badge: 'Ativa',
-                    variant: 'default' as const,
-                    color: 'text-chart-2',
-                    icon: Clock,
-                  },
-                  quitada: {
-                    badge: 'Quitada',
-                    variant: 'secondary' as const,
-                    color: 'text-chart-3',
-                    icon: CheckCircle2,
-                  },
-                  cancelada: {
-                    badge: 'Cancelada',
-                    variant: 'destructive' as const,
-                    color: 'text-destructive',
-                    icon: XCircle,
-                  },
-                }
-
-                const config = statusConfig[venda.status]
-                const StatusIcon = config.icon
-
-                return (
-                  <div
-                    key={venda.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-muted rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <StatusIcon className={`h-5 w-5 ${config.color} flex-shrink-0 mt-0.5`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-foreground truncate">
-                          {venda.socioNome}
-                          {venda.socioMatricula && (
-                            <span className="text-sm text-muted-foreground ml-2">
-                              Mat: {venda.socioMatricula}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          Venda #{venda.numeroVenda} •{' '}
-                          {format(new Date(venda.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                        </div>
+              {data.vendasRecentes.map((venda) => (
+                <div
+                  key={venda.id}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg transition-colors ${
+                    venda.cancelado 
+                      ? 'bg-destructive/10 border border-destructive/20' 
+                      : 'bg-muted hover:bg-accent'
+                  }`}
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {venda.cancelado ? (
+                      <XCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <ShoppingCart className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-foreground truncate">
+                        {venda.socioNome}
+                        {venda.socioMatricula && (
+                          <span className="text-sm text-muted-foreground ml-2">
+                            Mat: {venda.socioMatricula}
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="font-semibold text-foreground">
-                          {formatCurrency(Number(venda.valorTotal))}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {venda.quantidadeParcelas}x de{' '}
-                          {formatCurrency(Number(venda.valorTotal) / venda.quantidadeParcelas)}
-                        </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Venda #{venda.numeroVenda} •{' '}
+                        {format(new Date(venda.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </div>
-                      <Badge variant={config.variant} className="flex-shrink-0">
-                        {config.badge}
-                      </Badge>
                     </div>
                   </div>
-                )
-              })}
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className={`font-semibold ${
+                        venda.cancelado ? 'text-destructive line-through' : 'text-foreground'
+                      }`}>
+                        {formatCurrency(Number(venda.valorTotal))}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {venda.quantidadeParcelas}x de{' '}
+                        {formatCurrency(Number(venda.valorTotal) / venda.quantidadeParcelas)}
+                      </div>
+                    </div>
+                    {venda.cancelado && (
+                      <Badge variant="destructive" className="flex-shrink-0">
+                        Cancelada
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
           

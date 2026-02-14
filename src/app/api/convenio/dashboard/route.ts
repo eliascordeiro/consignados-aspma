@@ -6,15 +6,23 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireConvenioSession(request)
 
-    // Data de corte: primeiro dia do mês atual
-    const dataCorte = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    dataCorte.setHours(0, 0, 0, 0)
+    // Mês de referência (mês atual)
+    const hoje = new Date()
+    const mesAtual = hoje.getMonth() + 1 // 1-12
+    const anoAtual = hoje.getFullYear()
 
-    // Buscar todas as parcelas do conveniado para calcular os totais
-    const parcelas = await prisma.parcela.findMany({
+    // Início e fim do mês atual
+    const inicioMesAtual = new Date(anoAtual, mesAtual - 1, 1)
+    inicioMesAtual.setHours(0, 0, 0, 0)
+    const fimMesAtual = new Date(anoAtual, mesAtual, 0)
+    fimMesAtual.setHours(23, 59, 59, 999)
+
+    // Buscar todas as parcelas do conveniado (não canceladas)
+    const todasParcelas = await prisma.parcela.findMany({
       where: {
         venda: {
           convenioId: session.convenioId,
+          cancelado: false,
         },
       },
       select: {
@@ -24,43 +32,69 @@ export async function GET(request: NextRequest) {
         venda: {
           select: {
             id: true,
-            cancelado: true,
           },
         },
       },
     })
 
-    // Separar parcelas por categoria
-    const parcelasAtivas = parcelas.filter(
-      p => !p.venda.cancelado && new Date(p.dataVencimento) >= dataCorte
-    )
-    const parcelasQuitadas = parcelas.filter(
-      p => !p.venda.cancelado && new Date(p.dataVencimento) < dataCorte
-    )
-    const parcelasCanceladas = parcelas.filter(p => p.venda.cancelado)
-
-    // Calcular totais
-    const valorAtivo = parcelasAtivas.reduce((sum, p) => sum + Number(p.valor), 0)
-    const valorQuitado = parcelasQuitadas.reduce((sum, p) => sum + Number(p.valor), 0)
-    const valorCancelado = parcelasCanceladas.reduce((sum, p) => sum + Number(p.valor), 0)
-
-    // Contar vendas únicas em cada categoria
-    const vendasAtivasIds = new Set(parcelasAtivas.map(p => p.venda.id))
-    const vendasQuitadasIds = new Set(parcelasQuitadas.map(p => p.venda.id))
-    const vendasCanceladasIds = new Set(parcelasCanceladas.map(p => p.venda.id))
-
-    // Vendas do mês atual (data de emissão no mês atual)
-    const vendasMesAtual = await prisma.venda.count({
+    // Parcelas CANCELADAS (apenas para estatística)
+    const parcelasCanceladas = await prisma.parcela.count({
       where: {
-        convenioId: session.convenioId,
-        cancelado: false,
-        dataEmissao: {
-          gte: dataCorte,
+        venda: {
+          convenioId: session.convenioId,
+          cancelado: true,
         },
       },
     })
 
-    // Últimas 10 vendas para mostrar no dashboard
+    const vendasCanceladas = await prisma.venda.count({
+      where: {
+        convenioId: session.convenioId,
+        cancelado: true,
+      },
+    })
+
+    // Separar parcelas por período de vencimento
+    const parcelasMesAtual = todasParcelas.filter(p => {
+      const venc = new Date(p.dataVencimento)
+      return venc >= inicioMesAtual && venc <= fimMesAtual
+    })
+
+    const parcelasMesesAnteriores = todasParcelas.filter(p => {
+      const venc = new Date(p.dataVencimento)
+      return venc < inicioMesAtual
+    })
+
+    const parcelasMesesFuturos = todasParcelas.filter(p => {
+      const venc = new Date(p.dataVencimento)
+      return venc > fimMesAtual
+    })
+
+    // Calcular valores
+    const valorMesAtual = parcelasMesAtual.reduce((sum, p) => sum + Number(p.valor), 0)
+    const valorMesesAnteriores = parcelasMesesAnteriores.reduce((sum, p) => sum + Number(p.valor), 0)
+    const valorMesesFuturos = parcelasMesesFuturos.reduce((sum, p) => sum + Number(p.valor), 0)
+
+    // Total de vendas ativas (não canceladas)
+    const totalVendasAtivas = await prisma.venda.count({
+      where: {
+        convenioId: session.convenioId,
+        cancelado: false,
+      },
+    })
+
+    // Vendas registradas este mês (por data de emissão)
+    const vendasRegistradasMes = await prisma.venda.count({
+      where: {
+        convenioId: session.convenioId,
+        dataEmissao: {
+          gte: inicioMesAtual,
+          lte: fimMesAtual,
+        },
+      },
+    })
+
+    // Últimas 10 vendas
     const vendasRecentes = await prisma.venda.findMany({
       where: {
         convenioId: session.convenioId,
@@ -72,12 +106,6 @@ export async function GET(request: NextRequest) {
             matricula: true,
           },
         },
-        parcelas: {
-          select: {
-            id: true,
-            dataVencimento: true,
-          },
-        },
       },
       orderBy: {
         dataEmissao: 'desc',
@@ -87,51 +115,39 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       stats: {
-        // Vendas ativas (com parcelas >= data de corte)
-        vendasAtivas: vendasAtivasIds.size,
-        parcelasAtivas: parcelasAtivas.length,
-        valorAtivo,
+        // Descontos do mês atual
+        parcelasMesAtual: parcelasMesAtual.length,
+        valorMesAtual,
 
-        // Vendas quitadas (todas as parcelas < data de corte)
-        vendasQuitadas: vendasQuitadasIds.size,
-        parcelasQuitadas: parcelasQuitadas.length,
-        valorQuitado,
+        // Meses anteriores (já recebidos)
+        parcelasMesesAnteriores: parcelasMesesAnteriores.length,
+        valorMesesAnteriores,
+
+        // Meses futuros (a receber)
+        parcelasMesesFuturos: parcelasMesesFuturos.length,
+        valorMesesFuturos,
 
         // Vendas canceladas
-        vendasCanceladas: vendasCanceladasIds.size,
-        parcelasCanceladas: parcelasCanceladas.length,
-        valorCancelado,
+        vendasCanceladas,
+        parcelasCanceladas,
 
-        // Vendas deste mês (por data de emissão)
-        vendasMesAtual,
+        // Totais
+        totalVendasAtivas,
+        vendasRegistradasMes,
 
-        // Data de corte para referência
-        dataCorte: dataCorte.toISOString(),
+        // Referência do mês
+        mesReferencia: `${mesAtual.toString().padStart(2, '0')}/${anoAtual}`,
       },
-      vendasRecentes: vendasRecentes.map((venda) => {
-        // Classificar a venda baseado nas parcelas
-        let status: 'ativa' | 'quitada' | 'cancelada' = 'quitada'
-        
-        if (venda.cancelado) {
-          status = 'cancelada'
-        } else {
-          const temParcelasFuturas = venda.parcelas.some(
-            p => new Date(p.dataVencimento) >= dataCorte
-          )
-          status = temParcelasFuturas ? 'ativa' : 'quitada'
-        }
-
-        return {
-          id: venda.id,
-          numeroVenda: venda.numeroVenda,
-          dataEmissao: venda.dataEmissao,
-          socioNome: venda.socio.nome,
-          socioMatricula: venda.socio.matricula,
-          valorTotal: venda.valorTotal,
-          quantidadeParcelas: venda.quantidadeParcelas,
-          status,
-        }
-      }),
+      vendasRecentes: vendasRecentes.map((venda) => ({
+        id: venda.id,
+        numeroVenda: venda.numeroVenda,
+        dataEmissao: venda.dataEmissao,
+        socioNome: venda.socio.nome,
+        socioMatricula: venda.socio.matricula,
+        valorTotal: venda.valorTotal,
+        quantidadeParcelas: venda.quantidadeParcelas,
+        cancelado: venda.cancelado,
+      })),
     })
   } catch (error) {
     console.error('Erro ao buscar dados do dashboard:', error)
