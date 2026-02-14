@@ -108,12 +108,14 @@ export async function GET(request: NextRequest) {
 
     // Log de auditoria
     await createAuditLog({
-      usuarioId: null,
-      convenioId: convenio.id,
-      acao: 'VIEW',
-      entidade: 'relatorio_parcelas_receber',
-      descricao: `Visualizou relatório de parcelas do mês ${mesVencimento}`,
-      metadados: {
+      userId: 'convenio-' + session.convenioId,
+      userName: session.usuario,
+      userRole: 'CONVENIO',
+      action: 'VIEW',
+      module: 'vendas',
+      description: `Visualizou relatório de parcelas do mês ${mesVencimento}`,
+      metadata: {
+        convenioId: session.convenioId,
         mesVencimento,
         totalParcelas,
         status,
