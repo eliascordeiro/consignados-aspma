@@ -6,6 +6,7 @@ import ConvenioNav from './ConvenioNav'
 import { Building2, Landmark, Store, FlaskConical, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitcher } from '@/components/theme-switcher'
+import ChatWidget from '@/components/chat-widget'
 
 interface ConvenioLayoutClientProps {
   children: React.ReactNode
@@ -129,6 +130,9 @@ export default function ConvenioLayoutClient({
             © 2026 Sistema de Consignados - Portal do Conveniado
           </div>
         </footer>
+
+        {/* Chat IA Widget */}
+        <ChatWidget />
       </div>
     </QueryClientProvider>
   )
