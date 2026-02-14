@@ -267,57 +267,9 @@ export async function GET(request: NextRequest) {
         cancelado: venda.cancelado,
         socio: venda.socio,
         parcelasPagas,
-        quitada,
         parcelas: venda.parcelas,
-      }))
-    } else {
-      // Paginação normal para outros status
-      totalFiltrado = await prisma.venda.count({ where })
-
-      const vendas = await prisma.venda.findMany({
-        where,
-        include: {
-          socio: {
-            select: {
-              nome: true,
-              matricula: true,
-              cpf: true,
-            },
-          },
-          parcelas: {
-            select: {
-              baixa: true,
-              valor: true,
-            },
-          },
-        },
-        orderBy: {
-          dataEmissao: 'desc',
-        },
-        skip,
-        take: limit,
-      })
-
-      // Formata resposta com contagem de parcelas pagas
-      resultado = vendas.map(venda => {
-        const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
-
-        return {
-          id: venda.id,
-          numeroVenda: venda.numeroVenda,
-          dataEmissao: venda.dataEmissao,
-          valorTotal: venda.valorTotal,
-          quantidadeParcelas: venda.quantidadeParcelas,
-          valorParcela: venda.valorParcela,
-          observacoes: venda.observacoes,
-          ativo: venda.ativo,
-          cancelado: venda.cancelado,
-          socio: venda.socio,
-          parcelasPagas,
-          parcelas: venda.parcelas,
-        }
-      })
-    }
+      }
+    })
 
     // Calcula valores totais (usando os resultados paginados)
     const valorTotalParcelas = resultado.reduce((sum, venda) => {
