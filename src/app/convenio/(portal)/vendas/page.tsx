@@ -33,6 +33,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useQuery } from '@tanstack/react-query'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { useMobile } from '@/hooks/useMobile'
 
 interface Parcela {
   id: string
@@ -163,7 +164,7 @@ async function fetchParcelas(vendaId: string): Promise<Parcela[]> {
 export default function VendasPage() {
   const [vendaExpandida, setVendaExpandida] = useState<string | null>(null)
   const parentRef = useRef<HTMLDivElement>(null)
-  const [isMobile, setIsMobile] = useState(false)
+  const isMobile = useMobile()
 
   // Filtros
   const [busca, setBusca] = useState('')
@@ -172,16 +173,6 @@ export default function VendasPage() {
   const [dataFim, setDataFim] = useState('')
   const [filtrosAbertos, setFiltrosAbertos] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-
-  // Check mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   // Reset page when filter changes
   useEffect(() => {
@@ -263,9 +254,9 @@ export default function VendasPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Tabela de Vendas
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -274,7 +265,7 @@ export default function VendasPage() {
           </p>
         </div>
         <Link href="/convenio/vendas/nova">
-          <Button className="gap-2">
+          <Button className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" />
             Nova Venda
           </Button>
@@ -563,7 +554,39 @@ export default function VendasPage() {
                               </div>
                             ) : (
                               <>
-                                <div className="overflow-x-auto">
+                                {/* Mobile: Cards */}
+                                <div className="md:hidden space-y-2">
+                                  {parcelas.map(parcela => (
+                                    <div key={parcela.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                          Parcela #{parcela.numeroParcela}
+                                        </span>
+                                        {parcela.baixa === 'S' ? (
+                                          <Badge variant="default" className="gap-1 text-xs">
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            Paga
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="secondary" className="gap-1 text-xs">
+                                            <XCircle className="h-3 w-3" />
+                                            Pendente
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 dark:text-gray-400">
+                                        <div>Vencimento: <span className="font-medium text-gray-900 dark:text-white">{format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}</span></div>
+                                        <div>Valor: <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(Number(parcela.valor))}</span></div>
+                                        {parcela.dataBaixa && (
+                                          <div className="col-span-2">Pago em: <span className="font-medium text-gray-900 dark:text-white">{format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })}</span></div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Desktop: Tabela */}
+                                <div className="hidden md:block overflow-x-auto">
                                   <Table>
                                     <TableHeader>
                                       <TableRow>
@@ -646,95 +669,113 @@ export default function VendasPage() {
           </div>
 
           {/* Paginação e Sumários */}
-          <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                Mostrando <strong>{vendas.length}</strong> de <strong>{pagination?.total || 0}</strong> vendas
-                {pagination && ` (Página ${pagination.page} de ${pagination.totalPages})`}
-              </div>
-              
-              {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Primeira página"
-                  >
-                    ««
-                  </button>
-                  
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Página anterior"
-                  >
-                    «
-                  </button>
-                  
-                  {/* Números de página */}
-                  <div className="flex gap-1">
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (pagination.totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= pagination.totalPages - 2) {
-                        pageNum = pagination.totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                            currentPage === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Próxima página"
-                  >
-                    »
-                  </button>
-                  
-                  <button
-                    onClick={() => handlePageChange(pagination.totalPages)}
-                    disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Última página"
-                  >
-                    »»
-                  </button>
+          <div className="bg-gray-50 dark:bg-gray-700 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex flex-col gap-3">
+              {/* Info resumida + valor total */}
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 text-center sm:text-left">
+                  <strong>{vendas.length}</strong> de <strong>{pagination?.total || 0}</strong> vendas
+                  {pagination && !isMobile && ` (Página ${pagination.page} de ${pagination.totalPages})`}
                 </div>
-              )}
-              
-              {pagination && pagination.totalParcelas > 0 && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  <span className="text-gray-500 dark:text-gray-400">Valor total:</span>{' '}
-                  <strong>
-                    {new Intl.NumberFormat('pt-BR', { 
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(Number(pagination.valorTotalParcelas || 0))}
-                  </strong>
-                  <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
-                    ({pagination.totalParcelas} parcela{pagination.totalParcelas !== 1 ? 's' : ''})
-                  </span>
+                {pagination && pagination.totalParcelas > 0 && (
+                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                    <span className="text-gray-500 dark:text-gray-400">Total:</span>{' '}
+                    <strong>
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(pagination.valorTotalParcelas || 0))}
+                    </strong>
+                    <span className="text-xs ml-1 text-gray-500 dark:text-gray-400">
+                      ({pagination.totalParcelas} parc.)
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Paginação */}
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex justify-center">
+                  {/* Mobile: Paginação simplificada */}
+                  <div className="flex md:hidden items-center gap-3">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Anterior
+                    </button>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                      {currentPage} / {pagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === pagination.totalPages}
+                      className="px-4 py-2 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Próxima →
+                    </button>
+                  </div>
+
+                  {/* Desktop: Paginação completa */}
+                  <div className="hidden md:flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Primeira página"
+                    >
+                      ««
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Página anterior"
+                    >
+                      «
+                    </button>
+                    <div className="flex gap-1">
+                      {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (pagination.totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= pagination.totalPages - 2) {
+                          pageNum = pagination.totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === pagination.totalPages}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Próxima página"
+                    >
+                      »
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(pagination.totalPages)}
+                      disabled={currentPage === pagination.totalPages}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Última página"
+                    >
+                      »»
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

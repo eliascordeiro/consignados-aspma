@@ -27,6 +27,7 @@ import {
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { formatCurrency } from '@/lib/utils'
+import { useMobile } from '@/hooks/useMobile'
 
 interface VendasPeriodoData {
   periodo: { inicio: string; fim: string }
@@ -90,6 +91,7 @@ interface ParcelasReceberData {
 
 export default function RelatoriosPage() {
   const [tipoRelatorio, setTipoRelatorio] = useState<'vendas' | 'parcelas'>('vendas')
+  const isMobile = useMobile()
   
   // Estados para Vendas do Período
   const [dataInicio, setDataInicio] = useState('')
@@ -212,7 +214,7 @@ export default function RelatoriosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
           Relatórios
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -226,7 +228,7 @@ export default function RelatoriosPage() {
           <CardTitle>Selecione o Tipo de Relatório</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <Button
               variant={tipoRelatorio === 'vendas' ? 'default' : 'outline'}
               onClick={() => setTipoRelatorio('vendas')}
@@ -300,14 +302,14 @@ export default function RelatoriosPage() {
           {vendasData && (
             <>
               {/* Cards de Resumo */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Total de Vendas</CardTitle>
+                    <CardTitle className="text-xs sm:text-sm font-medium">Total de Vendas</CardTitle>
                     <TrendingUp className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{vendasData.resumo.totalVendas}</div>
+                    <div className="text-xl sm:text-2xl font-bold">{vendasData.resumo.totalVendas}</div>
                     <p className="text-xs text-gray-500 mt-1">
                       {vendasData.resumo.totalParcelas} parcelas geradas
                     </p>
@@ -363,12 +365,13 @@ export default function RelatoriosPage() {
               {/* Status das Vendas */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Status das Vendas</CardTitle>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <CardTitle className="text-base sm:text-lg">Status das Vendas</CardTitle>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => exportarCSV('vendas')}
+                      className="w-full sm:w-auto"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Exportar CSV
@@ -387,8 +390,48 @@ export default function RelatoriosPage() {
                     </div>
                   </div>
 
-                  {/* Tabela de Vendas */}
-                  <div className="overflow-x-auto">
+                  {/* Tabela de Vendas - Mobile: Cards */}
+                  <div className="md:hidden space-y-3">
+                    {vendasData.vendas.map((venda) => (
+                      <div key={venda.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-white">Venda #{venda.numeroVenda}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })}
+                            </div>
+                          </div>
+                          {venda.status === 'cancelada' && (
+                            <Badge variant="destructive" className="text-xs">Cancelada</Badge>
+                          )}
+                          {venda.status === 'ativa' && <Badge variant="default" className="text-xs">Ativa</Badge>}
+                        </div>
+                        <div className="space-y-1.5 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Sócio:</span>
+                            <span className="font-medium text-gray-900 dark:text-white text-right truncate ml-2">{venda.socio}</span>
+                          </div>
+                          {venda.matricula && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Matrícula:</span>
+                              <span className="font-medium text-gray-900 dark:text-white">{venda.matricula}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Valor Total:</span>
+                            <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(Number(venda.valorTotal))}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Parcelas:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{venda.quantidadeParcelas}x de {formatCurrency(Number(venda.valorParcela))}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tabela de Vendas - Desktop */}
+                  <div className="hidden md:block overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -493,10 +536,10 @@ export default function RelatoriosPage() {
           {parcelasData && (
             <>
               {/* Cards de Resumo */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Total de Parcelas</CardTitle>
+                    <CardTitle className="text-xs sm:text-sm font-medium">Total de Parcelas</CardTitle>
                     <Calendar className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
@@ -556,12 +599,13 @@ export default function RelatoriosPage() {
               {/* Tabela de Parcelas */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Detalhamento das Parcelas</CardTitle>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <CardTitle className="text-base sm:text-lg">Detalhamento das Parcelas</CardTitle>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => exportarCSV('parcelas')}
+                      className="w-full sm:w-auto"
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Exportar CSV
@@ -569,7 +613,59 @@ export default function RelatoriosPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
+                  {/* Mobile: Cards */}
+                  <div className="md:hidden space-y-3">
+                    {parcelasData.parcelas.map((parcela) => (
+                      <div key={parcela.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-white text-sm">
+                              Venda #{parcela.venda.numeroVenda} — Parcela {parcela.numeroParcela}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              Venc: {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
+                            </div>
+                          </div>
+                          {parcela.baixa === 'S' ? (
+                            <Badge variant="default" className="gap-1 text-xs bg-green-600 hover:bg-green-700">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Paga
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1 text-xs">
+                              <XCircle className="h-3 w-3" />
+                              Pendente
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="space-y-1.5 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Sócio:</span>
+                            <span className="font-medium text-gray-900 dark:text-white text-right truncate ml-2">{parcela.venda.socio}</span>
+                          </div>
+                          {parcela.venda.matricula && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Matrícula:</span>
+                              <span className="font-medium text-gray-900 dark:text-white">{parcela.venda.matricula}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Valor:</span>
+                            <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(Number(parcela.valor))}</span>
+                          </div>
+                          {parcela.dataBaixa && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 dark:text-gray-400">Pago em:</span>
+                              <span className="font-medium text-gray-900 dark:text-white">{format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop: Tabela */}
+                  <div className="hidden md:block overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>

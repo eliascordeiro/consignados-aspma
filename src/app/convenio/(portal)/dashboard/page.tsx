@@ -78,9 +78,9 @@ export default function ConvenioDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Dashboard
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -88,7 +88,7 @@ export default function ConvenioDashboardPage() {
           </p>
         </div>
         <Link href="/convenio/vendas/nova">
-          <Button className="gap-2">
+          <Button className="gap-2 w-full sm:w-auto">
             <ShoppingCart className="h-4 w-4" />
             Nova Venda
           </Button>
@@ -160,10 +160,10 @@ export default function ConvenioDashboardPage() {
               {data.vendasRecentes.map((venda) => (
                 <div
                   key={venda.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 dark:text-white">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 dark:text-white truncate">
                       {venda.socioNome}
                       {venda.socioMatricula && (
                         <span className="text-sm text-gray-500 ml-2">
@@ -176,7 +176,7 @@ export default function ConvenioDashboardPage() {
                       {format(new Date(venda.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <div className="font-semibold text-gray-900 dark:text-white">
                       {formatCurrency(Number(venda.valorTotal))}
                     </div>

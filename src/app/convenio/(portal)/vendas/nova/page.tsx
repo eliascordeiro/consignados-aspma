@@ -220,7 +220,7 @@ export default function NovaVendaPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Nova Venda
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
@@ -273,7 +273,7 @@ export default function NovaVendaPage() {
 
               {/* Lista de resultados */}
               {socios.length > 0 && (
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-60 sm:max-h-80 overflow-y-auto">
                   {socios.map((socio) => (
                     <button
                       key={socio.id}
@@ -408,18 +408,18 @@ export default function NovaVendaPage() {
                       📊 Limite Disponível (Sistema Local)
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
                     <div>
                       <div className="text-gray-600 dark:text-gray-400">Limite Total</div>
-                      <div className="font-bold text-gray-900 dark:text-white">{formatCurrency(limiteInfo.limiteTotal)}</div>
+                      <div className="font-bold text-gray-900 dark:text-white text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteTotal)}</div>
                     </div>
                     <div>
                       <div className="text-gray-600 dark:text-gray-400">Em Aberto</div>
-                      <div className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(limiteInfo.totalEmAberto)}</div>
+                      <div className="font-bold text-orange-600 dark:text-orange-400 text-sm sm:text-xs">{formatCurrency(limiteInfo.totalEmAberto)}</div>
                     </div>
                     <div>
                       <div className="text-gray-600 dark:text-gray-400">Disponível</div>
-                      <div className="font-bold text-green-600 dark:text-green-400">{formatCurrency(limiteInfo.limiteDisponivel)}</div>
+                      <div className="font-bold text-green-600 dark:text-green-400 text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteDisponivel)}</div>
                     </div>
                   </div>
                 </div>
@@ -435,7 +435,7 @@ export default function NovaVendaPage() {
               <CardTitle>Dados da Venda</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="valorTotal">Valor Total *</Label>
                   <Input
@@ -487,14 +487,14 @@ export default function NovaVendaPage() {
                     ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                     : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                 )}>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">Margem Disponível</div>
                       <div className="text-lg font-bold text-gray-900 dark:text-white">
                         {formatCurrency(margemInfo.margem)}
                       </div>
                     </div>
-                    <div className="text-center">
+                    <div className="sm:text-center">
                       <div className="text-sm text-gray-600 dark:text-gray-400">Valor Parcela</div>
                       <div className={'text-lg font-bold ' + (
                         valorParcela <= margemInfo.margem
