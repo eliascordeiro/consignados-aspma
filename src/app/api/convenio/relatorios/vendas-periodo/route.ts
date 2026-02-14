@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getConvenioFromToken } from '@/lib/convenio-auth'
+import { getConvenioSession } from '@/lib/convenio-auth'
 import { createAuditLog } from '@/lib/audit-log'
 
 export async function GET(request: NextRequest) {
   try {
-    const convenio = await getConvenioFromToken(request)
+    const session = await getConvenioSession(request)
     
-    if (!convenio) {
+    if (!session) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
+
+    const convenio = { id: session.convenioId }
 
     const { searchParams } = new URL(request.url)
     const dataInicio = searchParams.get('dataInicio')
