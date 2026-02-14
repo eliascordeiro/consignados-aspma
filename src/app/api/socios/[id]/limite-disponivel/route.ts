@@ -49,7 +49,10 @@ export async function GET(
             ativo: true,
             cancelado: false
           },
-          baixa: { in: [null, ''] } // Parcelas não pagas
+          OR: [
+            { baixa: null },
+            { baixa: '' }
+          ]
         },
         select: {
           valor: true
