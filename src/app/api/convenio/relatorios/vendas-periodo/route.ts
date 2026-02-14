@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     fim.setHours(23, 59, 59, 999)
 
     // Buscar vendas do período
-    const vendas = await prisma.vendas.findMany({
+    const vendas = await prisma.venda.findMany({
       where: {
         convenioId: convenio.id,
         dataEmissao: {

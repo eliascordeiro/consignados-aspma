@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar parcelas do período
-    const parcelas = await prisma.parcelas.findMany({
+    const parcelas = await prisma.parcela.findMany({
       where: {
         dataVencimento: {
           gte: dataInicio,
