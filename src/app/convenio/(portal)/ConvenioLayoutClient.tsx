@@ -5,6 +5,7 @@ import { useState } from 'react'
 import ConvenioNav from './ConvenioNav'
 import { Building2, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/theme-switcher'
 
 interface ConvenioLayoutClientProps {
   children: React.ReactNode
@@ -67,7 +68,10 @@ export default function ConvenioLayoutClient({
                   </p>
                 </div>
               </div>
-              <ConvenioLogoutButton />
+              <div className="flex items-center gap-2">
+                <ThemeSwitcher />
+                <ConvenioLogoutButton />
+              </div>
             </div>
           </div>
         </header>
