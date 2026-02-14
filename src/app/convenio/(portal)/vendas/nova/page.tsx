@@ -35,6 +35,14 @@ interface MargemInfo {
   mensagem?: string
 }
 
+interface LimiteInfo {
+  limiteTotal: number
+  totalEmAberto: number
+  limiteDisponivel: number
+  tipo: string
+  tipoDescricao: string
+}
+
 export default function NovaVendaPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -44,6 +52,7 @@ export default function NovaVendaPage() {
   const [buscandoPorMatricula, setBuscandoPorMatricula] = useState(false)
   const [margemInfo, setMargemInfo] = useState<MargemInfo | null>(null)
   const [consultandoMargem, setConsultandoMargem] = useState(false)
+  const [limiteInfo, setLimiteInfo] = useState<LimiteInfo | null>(null)
 
   const [formData, setFormData] = useState({
     valorTotal: '',
@@ -91,7 +100,21 @@ export default function NovaVendaPage() {
   const selecionarSocio = async (socio: Socio) => {
     setSocioSelecionado(socio)
     setSocios([])
+    await consultarLimiteDisponivel(socio.id)
     await consultarMargem(socio.id)
+  }
+
+  const consultarLimiteDisponivel = async (socioId: string) => {
+    try {
+      const response = await fetch(`/api/socios/${socioId}/limite-disponivel`)
+      if (response.ok) {
+        const data = await response.json()
+        setLimiteInfo(data)
+        console.log('✅ [Conv. Nova Venda] Limite disponível:', data)
+      }
+    } catch (error) {
+      console.error('❌ [Conv. Nova Venda] Erro ao consultar limite:', error)
+    }
   }
 
   const consultarMargem = async (socioId: string, vlParcela?: number) => {
@@ -374,6 +397,31 @@ export default function NovaVendaPage() {
                       ❌ {margemInfo.mensagem}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Limite Disponível (Local) */}
+              {limiteInfo && limiteInfo.tipoDescricao === 'Local' && (
+                <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-300">
+                      📊 Limite Disponível (Sistema Local)
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Limite Total</div>
+                      <div className="font-bold text-gray-900 dark:text-white">{formatCurrency(limiteInfo.limiteTotal)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Em Aberto</div>
+                      <div className="font-bold text-orange-600 dark:text-orange-400">{formatCurrency(limiteInfo.totalEmAberto)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 dark:text-gray-400">Disponível</div>
+                      <div className="font-bold text-green-600 dark:text-green-400">{formatCurrency(limiteInfo.limiteDisponivel)}</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
