@@ -117,42 +117,111 @@
 }
 
 .consignado {
-  /* Azul corporativo profissional */
-  --background: oklch(0.98 0.01 240);
-  --foreground: oklch(0.2 0.03 240);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.03 240);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.03 240);
-  /* Primary: Azul confiança bancária */
-  --primary: oklch(0.45 0.15 240);
+  /* ═══════════════════════════════════════════════ */
+  /* 🎨 TEMA CONSIGNADO — Vibrante e Profissional  */
+  /* ═══════════════════════════════════════════════ */
+  --background: oklch(0.97 0.015 250);
+  --foreground: oklch(0.18 0.04 250);
+  --card: oklch(1 0.005 250);
+  --card-foreground: oklch(0.18 0.04 250);
+  --popover: oklch(1 0.005 250);
+  --popover-foreground: oklch(0.18 0.04 250);
+  /* Primary: Azul royal vibrante */
+  --primary: oklch(0.50 0.22 250);
   --primary-foreground: oklch(0.99 0 0);
-  /* Secondary: Verde-esmeralda financeiro */
-  --secondary: oklch(0.88 0.08 160);
-  --secondary-foreground: oklch(0.2 0.05 160);
-  --muted: oklch(0.94 0.01 240);
-  --muted-foreground: oklch(0.5 0.02 240);
-  /* Accent: Dourado/âmbar para aprovações */
-  --accent: oklch(0.92 0.1 80);
-  --accent-foreground: oklch(0.3 0.05 80);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0.02 240);
-  --input: oklch(0.88 0.02 240);
-  --ring: oklch(0.45 0.15 240);
-  --chart-1: oklch(0.55 0.18 240);
-  --chart-2: oklch(0.6 0.15 160);
-  --chart-3: oklch(0.65 0.12 80);
-  --chart-4: oklch(0.5 0.2 280);
-  --chart-5: oklch(0.7 0.15 50);
-  /* Sidebar: Azul escuro elegante */
-  --sidebar: oklch(0.25 0.05 240);
-  --sidebar-foreground: oklch(0.95 0.01 240);
-  --sidebar-primary: oklch(0.6 0.18 240);
+  /* Secondary: Esmeralda vivo */
+  --secondary: oklch(0.78 0.14 160);
+  --secondary-foreground: oklch(0.15 0.06 160);
+  --muted: oklch(0.93 0.02 250);
+  --muted-foreground: oklch(0.48 0.04 250);
+  /* Accent: Dourado quente */
+  --accent: oklch(0.85 0.16 85);
+  --accent-foreground: oklch(0.25 0.06 85);
+  --destructive: oklch(0.60 0.25 25);
+  --border: oklch(0.87 0.03 250);
+  --input: oklch(0.87 0.03 250);
+  --ring: oklch(0.50 0.22 250);
+  --chart-1: oklch(0.55 0.22 250);
+  --chart-2: oklch(0.60 0.18 160);
+  --chart-3: oklch(0.70 0.16 85);
+  --chart-4: oklch(0.52 0.22 290);
+  --chart-5: oklch(0.72 0.18 50);
+  /* Sidebar: Azul profundo elegante */
+  --sidebar: oklch(0.22 0.07 250);
+  --sidebar-foreground: oklch(0.95 0.01 250);
+  --sidebar-primary: oklch(0.62 0.20 250);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.35 0.08 240);
-  --sidebar-accent-foreground: oklch(0.95 0.01 240);
-  --sidebar-border: oklch(0.35 0.05 240);
-  --sidebar-ring: oklch(0.6 0.18 240);
+  --sidebar-accent: oklch(0.32 0.09 250);
+  --sidebar-accent-foreground: oklch(0.95 0.01 250);
+  --sidebar-border: oklch(0.32 0.06 250);
+  --sidebar-ring: oklch(0.62 0.20 250);
+}
+
+/* ═══════════════════════════════════════════════ */
+/* 🏦 BANCO — Azul marinho + Dourado (confiança) */
+/* ═══════════════════════════════════════════════ */
+.categoria-banco {
+  --primary: oklch(0.42 0.22 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.42 0.22 250);
+  --accent: oklch(0.82 0.16 85);
+  --accent-foreground: oklch(0.22 0.06 85);
+  --sidebar: oklch(0.18 0.08 250);
+  --sidebar-primary: oklch(0.55 0.22 250);
+  --sidebar-accent: oklch(0.28 0.10 250);
+  --sidebar-border: oklch(0.28 0.07 250);
+  --chart-1: oklch(0.50 0.22 250);
+  --chart-2: oklch(0.72 0.16 85);
+  --chart-3: oklch(0.60 0.15 200);
+  --categoria-badge-bg: oklch(0.92 0.06 250);
+  --categoria-badge-text: oklch(0.35 0.15 250);
+  --categoria-stripe: oklch(0.42 0.22 250);
+}
+
+/* ═══════════════════════════════════════════════ */
+/* 🏪 COMÉRCIO — Teal + Laranja (comércio vivo)   */
+/* ═══════════════════════════════════════════════ */
+.categoria-comercio {
+  --primary: oklch(0.52 0.16 175);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.52 0.16 175);
+  --accent: oklch(0.78 0.17 55);
+  --accent-foreground: oklch(0.22 0.06 55);
+  --secondary: oklch(0.80 0.14 55);
+  --secondary-foreground: oklch(0.18 0.06 55);
+  --sidebar: oklch(0.22 0.07 175);
+  --sidebar-primary: oklch(0.58 0.16 175);
+  --sidebar-accent: oklch(0.30 0.08 175);
+  --sidebar-border: oklch(0.30 0.06 175);
+  --chart-1: oklch(0.52 0.16 175);
+  --chart-2: oklch(0.72 0.17 55);
+  --chart-3: oklch(0.62 0.12 130);
+  --categoria-badge-bg: oklch(0.92 0.06 175);
+  --categoria-badge-text: oklch(0.35 0.12 175);
+  --categoria-stripe: oklch(0.52 0.16 175);
+}
+
+/* ═══════════════════════════════════════════════ */
+/* 🧪 TESTE — Roxo + Ciano (inovação/dev)        */
+/* ═══════════════════════════════════════════════ */
+.categoria-teste {
+  --primary: oklch(0.52 0.22 290);
+  --primary-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.52 0.22 290);
+  --accent: oklch(0.78 0.14 200);
+  --accent-foreground: oklch(0.20 0.06 200);
+  --secondary: oklch(0.82 0.10 290);
+  --secondary-foreground: oklch(0.20 0.08 290);
+  --sidebar: oklch(0.22 0.08 290);
+  --sidebar-primary: oklch(0.58 0.20 290);
+  --sidebar-accent: oklch(0.30 0.10 290);
+  --sidebar-border: oklch(0.30 0.07 290);
+  --chart-1: oklch(0.52 0.22 290);
+  --chart-2: oklch(0.70 0.14 200);
+  --chart-3: oklch(0.62 0.18 330);
+  --categoria-badge-bg: oklch(0.92 0.06 290);
+  --categoria-badge-text: oklch(0.35 0.15 290);
+  --categoria-stripe: oklch(0.52 0.22 290);
 }
 
 @layer base {

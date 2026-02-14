@@ -214,10 +214,10 @@ export default function RelatoriosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
           Relatórios
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-muted-foreground mt-1">
           Análises e relatórios gerenciais
         </p>
       </div>
@@ -306,7 +306,7 @@ export default function RelatoriosPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-xs sm:text-sm font-medium">Total de Vendas</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-gray-500" />
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-xl sm:text-2xl font-bold">{vendasData.resumo.totalVendas}</div>
@@ -319,7 +319,7 @@ export default function RelatoriosPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-                    <DollarSign className="h-4 w-4 text-gray-500" />
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
@@ -349,10 +349,10 @@ export default function RelatoriosPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">A Receber</CardTitle>
-                    <Calendar className="h-4 w-4 text-blue-600" />
+                    <Calendar className="h-4 w-4 text-primary" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-primary">
                       {formatCurrency(vendasData.resumo.valorAReceber)}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
@@ -382,22 +382,22 @@ export default function RelatoriosPage() {
                   <div className="flex gap-4 mb-6">
                     <div className="flex items-center gap-2">
                       <Badge variant="default">{vendasData.resumo.vendasAtivas}</Badge>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Ativas</span>
+                      <span className="text-sm text-muted-foreground">Ativas</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="destructive">{vendasData.resumo.vendasCanceladas}</Badge>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Canceladas</span>
+                      <span className="text-sm text-muted-foreground">Canceladas</span>
                     </div>
                   </div>
 
                   {/* Tabela de Vendas - Mobile: Cards */}
                   <div className="md:hidden space-y-3">
                     {vendasData.vendas.map((venda) => (
-                      <div key={venda.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div key={venda.id} className="p-4 bg-muted rounded-lg border border-border">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <div className="font-semibold text-gray-900 dark:text-white">Venda #{venda.numeroVenda}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            <div className="font-semibold text-foreground">Venda #{venda.numeroVenda}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })}
                             </div>
                           </div>
@@ -408,22 +408,22 @@ export default function RelatoriosPage() {
                         </div>
                         <div className="space-y-1.5 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Sócio:</span>
-                            <span className="font-medium text-gray-900 dark:text-white text-right truncate ml-2">{venda.socio}</span>
+                            <span className="text-muted-foreground">Sócio:</span>
+                            <span className="font-medium text-foreground text-right truncate ml-2">{venda.socio}</span>
                           </div>
                           {venda.matricula && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Matrícula:</span>
-                              <span className="font-medium text-gray-900 dark:text-white">{venda.matricula}</span>
+                              <span className="text-muted-foreground">Matrícula:</span>
+                              <span className="font-medium text-foreground">{venda.matricula}</span>
                             </div>
                           )}
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Valor Total:</span>
-                            <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(Number(venda.valorTotal))}</span>
+                            <span className="text-muted-foreground">Valor Total:</span>
+                            <span className="font-bold text-foreground">{formatCurrency(Number(venda.valorTotal))}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Parcelas:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{venda.quantidadeParcelas}x de {formatCurrency(Number(venda.valorParcela))}</span>
+                            <span className="text-muted-foreground">Parcelas:</span>
+                            <span className="font-medium text-foreground">{venda.quantidadeParcelas}x de {formatCurrency(Number(venda.valorParcela))}</span>
                           </div>
                         </div>
                       </div>
@@ -540,7 +540,7 @@ export default function RelatoriosPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-xs sm:text-sm font-medium">Total de Parcelas</CardTitle>
-                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{parcelasData.resumo.totalParcelas}</div>
@@ -553,7 +553,7 @@ export default function RelatoriosPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-                    <DollarSign className="h-4 w-4 text-gray-500" />
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
@@ -616,13 +616,13 @@ export default function RelatoriosPage() {
                   {/* Mobile: Cards */}
                   <div className="md:hidden space-y-3">
                     {parcelasData.parcelas.map((parcela) => (
-                      <div key={parcela.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div key={parcela.id} className="p-4 bg-muted rounded-lg border border-border">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <div className="font-semibold text-gray-900 dark:text-white text-sm">
+                            <div className="font-semibold text-foreground text-sm">
                               Venda #{parcela.venda.numeroVenda} — Parcela {parcela.numeroParcela}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               Venc: {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
                             </div>
                           </div>
@@ -640,23 +640,23 @@ export default function RelatoriosPage() {
                         </div>
                         <div className="space-y-1.5 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Sócio:</span>
-                            <span className="font-medium text-gray-900 dark:text-white text-right truncate ml-2">{parcela.venda.socio}</span>
+                            <span className="text-muted-foreground">Sócio:</span>
+                            <span className="font-medium text-foreground text-right truncate ml-2">{parcela.venda.socio}</span>
                           </div>
                           {parcela.venda.matricula && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Matrícula:</span>
-                              <span className="font-medium text-gray-900 dark:text-white">{parcela.venda.matricula}</span>
+                              <span className="text-muted-foreground">Matrícula:</span>
+                              <span className="font-medium text-foreground">{parcela.venda.matricula}</span>
                             </div>
                           )}
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Valor:</span>
-                            <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(Number(parcela.valor))}</span>
+                            <span className="text-muted-foreground">Valor:</span>
+                            <span className="font-bold text-foreground">{formatCurrency(Number(parcela.valor))}</span>
                           </div>
                           {parcela.dataBaixa && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Pago em:</span>
-                              <span className="font-medium text-gray-900 dark:text-white">{format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })}</span>
+                              <span className="text-muted-foreground">Pago em:</span>
+                              <span className="font-medium text-foreground">{format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })}</span>
                             </div>
                           )}
                         </div>

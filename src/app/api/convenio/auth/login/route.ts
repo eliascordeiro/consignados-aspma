@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       usuario: convenio.usuario,
       razaoSocial: convenio.razao_soc,
       fantasia: convenio.fantasia,
+      tipo: convenio.tipo || null,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()

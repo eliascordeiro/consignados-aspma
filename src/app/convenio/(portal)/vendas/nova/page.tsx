@@ -220,10 +220,10 @@ export default function NovaVendaPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Nova Venda
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             Cadastre uma nova venda consignada
           </p>
         </div>
@@ -273,18 +273,18 @@ export default function NovaVendaPage() {
 
               {/* Lista de resultados */}
               {socios.length > 0 && (
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-60 sm:max-h-80 overflow-y-auto">
+                <div className="border border-border rounded-lg divide-y divide-border max-h-60 sm:max-h-80 overflow-y-auto">
                   {socios.map((socio) => (
                     <button
                       key={socio.id}
                       type="button"
                       onClick={() => selecionarSocio(socio)}
-                      className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      className="w-full p-3 text-left hover:bg-muted transition-colors"
                     >
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-foreground">
                         {socio.nome}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-muted-foreground">
                         {socio.matricula && ('Mat: ' + socio.matricula)}
                         {socio.matricula && socio.celular && ' • '}
                         {socio.celular && ('Cel: ' + socio.celular)}
@@ -306,17 +306,17 @@ export default function NovaVendaPage() {
               <CardTitle>Sócio Selecionado</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="p-4 bg-primary/10 rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                      <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                      <User className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">
+                      <div className="font-semibold text-foreground">
                         {socioSelecionado.nome}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-0.5 mt-1">
+                      <div className="text-sm text-muted-foreground space-y-0.5 mt-1">
                         {socioSelecionado.matricula && (
                           <div>Matrícula: {socioSelecionado.matricula}</div>
                         )}
@@ -348,9 +348,9 @@ export default function NovaVendaPage() {
 
               {/* Margem Consignável */}
               {consultandoMargem && (
-                <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
                   <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-muted-foreground">
                     Consultando margem consignável...
                   </span>
                 </div>
@@ -380,7 +380,7 @@ export default function NovaVendaPage() {
                   </div>
 
                   {margemInfo.fonte === 'local' && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                    <div className="text-xs text-muted-foreground space-y-0.5">
                       <div>Limite: {formatCurrency(margemInfo.limite || 0)}</div>
                       <div>Descontos do mês ({margemInfo.mesReferencia}): {formatCurrency(margemInfo.descontos || 0)}</div>
                     </div>
@@ -410,15 +410,15 @@ export default function NovaVendaPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
                     <div>
-                      <div className="text-gray-600 dark:text-gray-400">Limite Total</div>
-                      <div className="font-bold text-gray-900 dark:text-white text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteTotal)}</div>
+                      <div className="text-muted-foreground">Limite Total</div>
+                      <div className="font-bold text-foreground text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteTotal)}</div>
                     </div>
                     <div>
-                      <div className="text-gray-600 dark:text-gray-400">Em Aberto</div>
+                      <div className="text-muted-foreground">Em Aberto</div>
                       <div className="font-bold text-orange-600 dark:text-orange-400 text-sm sm:text-xs">{formatCurrency(limiteInfo.totalEmAberto)}</div>
                     </div>
                     <div>
-                      <div className="text-gray-600 dark:text-gray-400">Disponível</div>
+                      <div className="text-muted-foreground">Disponível</div>
                       <div className="font-bold text-green-600 dark:text-green-400 text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteDisponivel)}</div>
                     </div>
                   </div>
@@ -489,13 +489,13 @@ export default function NovaVendaPage() {
                 )}>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Margem Disponível</div>
-                      <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      <div className="text-sm text-muted-foreground">Margem Disponível</div>
+                      <div className="text-lg font-bold text-foreground">
                         {formatCurrency(margemInfo.margem)}
                       </div>
                     </div>
                     <div className="sm:text-center">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Valor Parcela</div>
+                      <div className="text-sm text-muted-foreground">Valor Parcela</div>
                       <div className={'text-lg font-bold ' + (
                         valorParcela <= margemInfo.margem
                           ? 'text-green-600 dark:text-green-400'

@@ -17,6 +17,7 @@ export default async function ConvenioLayout({
     <ConvenioLayoutClient
       fantasia={session.fantasia}
       razaoSocial={session.razaoSocial}
+      tipo={session.tipo}
     >
       {children}
     </ConvenioLayoutClient>

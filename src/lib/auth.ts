@@ -83,6 +83,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
               usuario: true,
               razao_soc: true,
               fantasia: true,
+              tipo: true,
             },
           })
 
@@ -95,6 +96,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
               usuario: convenioVinculado.usuario || user.name,
               razaoSocial: convenioVinculado.razao_soc,
               fantasia: convenioVinculado.fantasia,
+              tipo: convenioVinculado.tipo || null,
             })
               .setProtectedHeader({ alg: "HS256" })
               .setIssuedAt()
@@ -177,6 +179,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             fantasia: true,
             email: true,
             userId: true,
+            tipo: true,
           },
         })
 
@@ -253,6 +256,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           usuario: convenio.usuario || convenioUser.name,
           razaoSocial: convenio.razao_soc,
           fantasia: convenio.fantasia,
+          tipo: convenio.tipo || null,
         })
           .setProtectedHeader({ alg: "HS256" })
           .setIssuedAt()

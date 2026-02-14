@@ -11,6 +11,7 @@ export interface ConvenioSession {
   usuario: string
   razaoSocial: string
   fantasia: string | null
+  tipo: string | null
 }
 
 export async function getConvenioSession(
@@ -36,6 +37,7 @@ export async function getConvenioSession(
       usuario: payload.usuario as string,
       razaoSocial: payload.razaoSocial as string,
       fantasia: payload.fantasia as string | null,
+      tipo: (payload.tipo as string | null) || null,
     }
   } catch (error) {
     console.error('❌ [CONVENIO AUTH] Erro ao verificar sessão:', error)

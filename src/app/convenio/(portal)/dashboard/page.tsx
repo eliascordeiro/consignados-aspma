@@ -62,7 +62,7 @@ export default function ConvenioDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
@@ -80,10 +80,10 @@ export default function ConvenioDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Dashboard
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             Visão geral das suas vendas
           </p>
         </div>
@@ -99,14 +99,14 @@ export default function ConvenioDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total de Vendas
             </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-blue-600" />
+            <ShoppingCart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.stats.totalVendas}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Vendas ativas
             </p>
           </CardContent>
@@ -114,14 +114,14 @@ export default function ConvenioDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Vendas deste Mês
             </CardTitle>
-            <Calendar className="h-4 w-4 text-green-600" />
+            <Calendar className="h-4 w-4 text-chart-2" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.stats.vendasMesAtual}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {format(new Date(), 'MMMM yyyy', { locale: ptBR })}
             </p>
           </CardContent>
@@ -129,16 +129,16 @@ export default function ConvenioDashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Valor Total
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <DollarSign className="h-4 w-4 text-chart-3" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCurrency(Number(data.stats.valorTotalVendas))}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Em vendas ativas
             </p>
           </CardContent>
@@ -152,7 +152,7 @@ export default function ConvenioDashboardPage() {
         </CardHeader>
         <CardContent>
           {data.vendasRecentes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               Nenhuma venda registrada ainda
             </div>
           ) : (
@@ -160,27 +160,27 @@ export default function ConvenioDashboardPage() {
               {data.vendasRecentes.map((venda) => (
                 <div
                   key={venda.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 bg-muted rounded-lg hover:bg-accent transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-white truncate">
+                    <div className="font-medium text-foreground truncate">
                       {venda.socioNome}
                       {venda.socioMatricula && (
-                        <span className="text-sm text-gray-500 ml-2">
+                        <span className="text-sm text-muted-foreground ml-2">
                           Mat: {venda.socioMatricula}
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <div className="text-sm text-muted-foreground mt-1">
                       Venda #{venda.numeroVenda} •{' '}
                       {format(new Date(venda.dataEmissao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </div>
                   </div>
                   <div className="text-left sm:text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">
+                    <div className="font-semibold text-foreground">
                       {formatCurrency(Number(venda.valorTotal))}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-muted-foreground">
                       {venda.quantidadeParcelas}x de{' '}
                       {formatCurrency(Number(venda.valorTotal) / venda.quantidadeParcelas)}
                     </div>

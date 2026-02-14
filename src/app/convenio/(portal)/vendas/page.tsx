@@ -256,10 +256,10 @@ export default function VendasPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Tabela de Vendas
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             {vendas.length}{' '}
             {vendas.length === 1 ? 'venda encontrada' : 'vendas encontradas'}
           </p>
@@ -277,7 +277,7 @@ export default function VendasPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
+              <Filter className="h-4 w-4 text-muted-foreground" />
               <CardTitle className="text-base">Filtros</CardTitle>
               {temFiltrosAtivos && (
                 <Badge variant="secondary" className="ml-2">
@@ -310,7 +310,7 @@ export default function VendasPage() {
               <div className="space-y-2">
                 <Label htmlFor="busca">Nome, Matrícula ou CPF</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="busca"
                     placeholder="Buscar..."
@@ -366,20 +366,20 @@ export default function VendasPage() {
       {/* Loading */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[300px]">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-          <p className="text-sm text-gray-500">Carregando vendas...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-sm text-muted-foreground">Carregando vendas...</p>
         </div>
       ) : error ? (
         /* Erro */
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="p-4 bg-red-100 dark:bg-red-900 rounded-full mb-4">
-              <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
+            <div className="p-4 bg-destructive/15 rounded-full mb-4">
+              <XCircle className="h-12 w-12 text-destructive" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Erro ao carregar vendas
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+            <p className="text-muted-foreground text-center mb-6">
               {error instanceof Error ? error.message : 'Erro desconhecido'}
             </p>
             <Button onClick={() => refetch()}>
@@ -391,15 +391,15 @@ export default function VendasPage() {
         /* Sem resultados */
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
-              <ShoppingCart className="h-12 w-12 text-gray-400" />
+            <div className="p-4 bg-muted rounded-full mb-4">
+              <ShoppingCart className="h-12 w-12 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               {temFiltrosAtivos
                 ? 'Nenhuma venda encontrada'
                 : 'Nenhuma venda registrada'}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+            <p className="text-muted-foreground text-center mb-6">
               {temFiltrosAtivos
                 ? 'Tente ajustar os filtros para encontrar vendas'
                 : 'Comece cadastrando sua primeira venda'}
@@ -421,7 +421,7 @@ export default function VendasPage() {
         </Card>
       ) : (
         /* Lista de Vendas com Virtualização */
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card rounded-lg shadow-md overflow-hidden">
           <div
             ref={parentRef}
             className="overflow-auto"
@@ -456,7 +456,7 @@ export default function VendasPage() {
                     >
                       <Card className="m-2 overflow-hidden">
                         <CardHeader
-                          className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors py-3"
+                          className="cursor-pointer hover:bg-muted transition-colors py-3"
                           onClick={() => toggleVenda(venda.id)}
                         >
                           <div className="flex items-start justify-between">
@@ -469,10 +469,10 @@ export default function VendasPage() {
                               </div>
 
                               <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4 text-sm">
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-muted-foreground">
                                   <User className="h-4 w-4" />
                                   <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
+                                    <div className="font-medium text-foreground">
                                       {venda.socio.nome}
                                     </div>
                                     {venda.socio.matricula && (
@@ -483,10 +483,10 @@ export default function VendasPage() {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-muted-foreground">
                                   <Calendar className="h-4 w-4" />
                                   <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
+                                    <div className="font-medium text-foreground">
                                       {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', {
                                         locale: ptBR,
                                       })}
@@ -499,10 +499,10 @@ export default function VendasPage() {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-muted-foreground">
                                   <DollarSign className="h-4 w-4" />
                                   <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
+                                    <div className="font-medium text-foreground">
                                       {formatCurrency(Number(venda.valorTotal))}
                                     </div>
                                     <div className="text-xs">
@@ -512,15 +512,15 @@ export default function VendasPage() {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-muted-foreground">
                                   <CheckCircle2 className="h-4 w-4" />
                                   <div>
-                                    <div className="font-medium text-gray-900 dark:text-white">
+                                    <div className="font-medium text-foreground">
                                       {venda.parcelasPagas}/{venda.quantidadeParcelas} pagas
                                     </div>
-                                    <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
+                                    <div className="w-24 bg-muted rounded-full h-1.5 mt-1">
                                       <div
-                                        className="bg-blue-600 h-1.5 rounded-full transition-all"
+                                        className="bg-primary h-1.5 rounded-full transition-all"
                                         style={{ width: percentualPago + '%' }}
                                       />
                                     </div>
@@ -532,34 +532,34 @@ export default function VendasPage() {
                         </CardHeader>
 
                         {vendaExpandida === venda.id && (
-                          <CardContent className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                          <CardContent className="border-t border-border pt-4">
                             {venda.observacoes && (
-                              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              <div className="mb-4 p-3 bg-muted rounded-lg">
+                                <div className="text-sm font-medium text-foreground/80 mb-1">
                                   Observações:
                                 </div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div className="text-sm text-muted-foreground">
                                   {venda.observacoes}
                                 </div>
                               </div>
                             )}
 
-                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            <div className="text-sm font-medium text-foreground/80 mb-3">
                               Parcelas:
                             </div>
 
                             {parcelas.length === 0 ? (
                               <div className="flex items-center justify-center py-8">
-                                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
                               </div>
                             ) : (
                               <>
                                 {/* Mobile: Cards */}
                                 <div className="md:hidden space-y-2">
                                   {parcelas.map(parcela => (
-                                    <div key={parcela.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div key={parcela.id} className="p-3 bg-muted rounded-lg border border-border">
                                       <div className="flex justify-between items-center mb-2">
-                                        <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                        <span className="font-medium text-sm text-foreground">
                                           Parcela #{parcela.numeroParcela}
                                         </span>
                                         {parcela.baixa === 'S' ? (
@@ -574,11 +574,11 @@ export default function VendasPage() {
                                           </Badge>
                                         )}
                                       </div>
-                                      <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                        <div>Vencimento: <span className="font-medium text-gray-900 dark:text-white">{format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}</span></div>
-                                        <div>Valor: <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(Number(parcela.valor))}</span></div>
+                                      <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                                        <div>Vencimento: <span className="font-medium text-foreground">{format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}</span></div>
+                                        <div>Valor: <span className="font-medium text-foreground">{formatCurrency(Number(parcela.valor))}</span></div>
                                         {parcela.dataBaixa && (
-                                          <div className="col-span-2">Pago em: <span className="font-medium text-gray-900 dark:text-white">{format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })}</span></div>
+                                          <div className="col-span-2">Pago em: <span className="font-medium text-foreground">{format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })}</span></div>
                                         )}
                                       </div>
                                     </div>
@@ -641,14 +641,14 @@ export default function VendasPage() {
                                   </Table>
                                 </div>
 
-                                <div className="mt-4 flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                <div className="mt-4 flex items-center justify-between p-3 bg-muted rounded-lg">
+                                  <div className="text-sm text-muted-foreground">
                                     Total pago:{' '}
                                     {formatCurrency(
                                       venda.parcelasPagas * Number(venda.valorParcela)
                                     )}
                                   </div>
-                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                  <div className="text-sm text-muted-foreground">
                                     Restante:{' '}
                                     {formatCurrency(
                                       (venda.quantidadeParcelas - venda.parcelasPagas) *
@@ -679,11 +679,11 @@ export default function VendasPage() {
                 </div>
                 {pagination && pagination.totalParcelas > 0 && (
                   <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                    <span className="text-gray-500 dark:text-gray-400">Total:</span>{' '}
+                    <span className="text-muted-foreground">Total:</span>{' '}
                     <strong>
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(pagination.valorTotalParcelas || 0))}
                     </strong>
-                    <span className="text-xs ml-1 text-gray-500 dark:text-gray-400">
+                    <span className="text-xs ml-1 text-muted-foreground">
                       ({pagination.totalParcelas} parc.)
                     </span>
                   </div>
