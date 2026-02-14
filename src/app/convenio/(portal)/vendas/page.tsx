@@ -573,7 +573,7 @@ export default function VendasPage() {
                                     <TableHeader>
                                       <TableRow>
                                         <TableHead className="w-20">Nº</TableHead>
-                                        <TableHead>Vencimento</TableHead>
+                                        <TableHead>Vencimento (Mês/Ano)</TableHead>
                                         <TableHead>Valor</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Data Pagamento</TableHead>
@@ -588,7 +588,7 @@ export default function VendasPage() {
                                           <TableCell>
                                             {format(
                                               new Date(parcela.dataVencimento),
-                                              'dd/MM/yyyy',
+                                              'MM/yyyy',
                                               { locale: ptBR }
                                             )}
                                           </TableCell>

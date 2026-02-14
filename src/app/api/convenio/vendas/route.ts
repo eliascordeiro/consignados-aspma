@@ -5,8 +5,11 @@ import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
 /**
  * Calcula a data de vencimento da primeira parcela considerando a regra do dia 9
- * - Se dia > 9: primeira parcela vence no mês seguinte
- * - Se dia <= 9: primeira parcela vence no mês atual
+ * - Se dia > 9: primeira parcela vence no mês seguinte (dia 01)
+ * - Se dia <= 9: primeira parcela vence no mês atual (dia 01)
+ * 
+ * IMPORTANTE: Usa sempre dia 01 porque para o convênio interessa o MÊS de desconto.
+ * Evita problemas com meses de diferentes tamanhos (28, 29, 30, 31 dias).
  */
 function calcularPrimeiroVencimento(): Date {
   const hoje = new Date()
@@ -24,8 +27,8 @@ function calcularPrimeiroVencimento(): Date {
     }
   }
 
-  // Define sempre para o dia 10 do mês
-  return new Date(ano, mes, 10)
+  // Define sempre para o dia 01 do mês (padrão AS200.PRG)
+  return new Date(ano, mes, 1)
 }
 
 export async function POST(request: NextRequest) {

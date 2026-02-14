@@ -285,7 +285,7 @@ export default function EditarVendaPage() {
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
                   <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">#</th>
-                  <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">Vencimento</th>
+                  <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">Vencimento (Mês/Ano)</th>
                   <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">Valor</th>
                   <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white">Baixa</th>
                 </tr>
