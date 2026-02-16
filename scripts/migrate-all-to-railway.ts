@@ -267,7 +267,8 @@ async function migrarEmpresas(
 
 async function migrarConvenios(
   mysqlPool: mysql.Pool,
-  railway: PrismaClient
+  railway: PrismaClient,
+  userId: string
 ): Promise<number> {
   separator('📦 ETAPA 5: MIGRANDO CONVÊNIOS (MySQL → Railway)');
 
@@ -285,9 +286,8 @@ async function migrarConvenios(
     try {
       await railway.convenio.create({
         data: {
-          // NÃO setar userId aqui! Este campo vincula o convênio ao user de login.
-          // Será preenchido automaticamente no primeiro login via auth.ts.
-          // Setar userId de admin causa redirecionamento errado (admin vira conveniado).
+          // userId do MANAGER que gerencia os convênios (dados visíveis na tela)
+          userId,
           codigo: conv.codigo?.trim() || null,
           data: conv.data ? new Date(conv.data) : null,
           razao_soc: conv.razao_soc?.trim() || 'Sem razão social',
@@ -495,8 +495,8 @@ async function main() {
     // ETAPA 4: Empresas (consignatárias)
     const consigMap = await migrarEmpresas(mysqlPool, railway, defaultUser.id);
 
-    // ETAPA 5: Convênios (sem userId - vinculação automática no primeiro login)
-    const conveniosCount = await migrarConvenios(mysqlPool, railway);
+    // ETAPA 5: Convênios (com userId do MANAGER para serem visíveis na tela)
+    const conveniosCount = await migrarConvenios(mysqlPool, railway, defaultUser.id);
 
     // ETAPA 6: Sócios
     const sociosResult = await migrarSocios(local, railway, defaultUser.id);
