@@ -73,12 +73,11 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           console.log("   ✅ Login bem-sucedido via tabela USERS!")
           console.log("   👤 User role:", user.role)
 
-          // Verificar se este user é um user auto-criado de convênio
-          // (email @convenio.local ou tem convênio vinculado por userId)
-          const isConvenioUser = user.email.endsWith('@convenio.local')
-          
+          // Verificar se este user tem convênio vinculado
+          // ADMIN e MANAGER NUNCA são tratados como convênio
+          // Para USER, verificar se tem convênio vinculado por userId OU por usuario (login)
           let convenioVinculado = null
-          if (isConvenioUser) {
+          if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
             convenioVinculado = await prisma.convenio.findFirst({
               where: {
                 ativo: true,
@@ -97,7 +96,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             })
           }
 
-          if (isConvenioUser && convenioVinculado) {
+          if (convenioVinculado) {
             console.log("   🏢 User auto-criado de convênio:", convenioVinculado.razao_soc)
 
             // Re-vincular se necessário
