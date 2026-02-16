@@ -73,9 +73,89 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           console.log("   ✅ Login bem-sucedido via tabela USERS!")
           console.log("   👤 User role:", user.role)
 
-          // Login encontrado na tabela users → retornar baseado no role
-          // NÃO verificar se tem convênio vinculado (evita confusão entre users admin/manager e convênios)
+          // Verificar se este user é um user auto-criado de convênio
+          // (email @convenio.local ou tem convênio vinculado por userId)
+          const isConvenioUser = user.email.endsWith('@convenio.local')
           
+          let convenioVinculado = null
+          if (isConvenioUser) {
+            convenioVinculado = await prisma.convenio.findFirst({
+              where: {
+                ativo: true,
+                OR: [
+                  { userId: user.id },
+                  { usuario: { equals: login, mode: 'insensitive' } },
+                ],
+              },
+              select: {
+                id: true,
+                usuario: true,
+                razao_soc: true,
+                fantasia: true,
+                tipo: true,
+              },
+            })
+          }
+
+          if (isConvenioUser && convenioVinculado) {
+            console.log("   🏢 User auto-criado de convênio:", convenioVinculado.razao_soc)
+
+            // Re-vincular se necessário
+            if (!await prisma.convenio.findFirst({ where: { userId: user.id } })) {
+              await prisma.convenio.update({
+                where: { id: convenioVinculado.id },
+                data: { userId: user.id },
+              })
+            }
+
+            // Setar cookie convenio_session
+            const convenioToken = await new SignJWT({
+              convenioId: convenioVinculado.id,
+              usuario: convenioVinculado.usuario || user.name,
+              razaoSocial: convenioVinculado.razao_soc,
+              fantasia: convenioVinculado.fantasia,
+              tipo: convenioVinculado.tipo || null,
+            })
+              .setProtectedHeader({ alg: "HS256" })
+              .setIssuedAt()
+              .setExpirationTime("8h")
+              .sign(JWT_SECRET)
+
+            const cookieStore = await cookies()
+            cookieStore.set("convenio_session", convenioToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 8,
+              path: "/",
+            })
+
+            createAuditLog({
+              userId: user.id,
+              userName: user.name,
+              userRole: user.role,
+              action: "LOGIN",
+              module: "auth",
+              description: `Login realizado com sucesso (convênio via user auto-criado)`,
+              metadata: {
+                email: user.email,
+                login,
+                convenioId: convenioVinculado.id,
+              },
+            }).catch(err => console.error("Erro ao criar log de login:", err))
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              permissions: user.permissions || [],
+              createdById: user.createdById,
+              isConvenio: true,
+            }
+          }
+
+          // User real (ADMIN/MANAGER/USER) - NÃO é convênio
           // Registrar log de login
           createAuditLog({
             userId: user.id,
