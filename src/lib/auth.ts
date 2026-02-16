@@ -72,8 +72,10 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
           console.log("   ✅ Login bem-sucedido!")
 
-          // Verificar se este user pertence a um convênio (auto-criado em login anterior)
-          const convenioVinculado = await prisma.convenio.findFirst({
+          // Verificar se este user pertence a um convênio:
+          // 1. Primeiro: buscar por userId vinculado diretamente
+          // 2. Fallback: buscar por usuario/email do convênio (caso vínculo foi perdido após migração)
+          let convenioVinculado = await prisma.convenio.findFirst({
             where: {
               userId: user.id,
               ativo: true,
@@ -86,6 +88,37 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
               tipo: true,
             },
           })
+
+          // Se não encontrou por userId, tentar por usuario/email do convênio
+          // (handles caso onde migração limpou o userId do convênio)
+          if (!convenioVinculado) {
+            convenioVinculado = await prisma.convenio.findFirst({
+              where: {
+                ativo: true,
+                OR: [
+                  { usuario: { equals: login, mode: 'insensitive' } },
+                  { email: { equals: login, mode: 'insensitive' } },
+                ],
+                senha: password,
+              },
+              select: {
+                id: true,
+                usuario: true,
+                razao_soc: true,
+                fantasia: true,
+                tipo: true,
+              },
+            })
+
+            // Re-vincular o convênio ao user
+            if (convenioVinculado) {
+              console.log("   🔗 Re-vinculando convênio ao user:", convenioVinculado.razao_soc)
+              await prisma.convenio.update({
+                where: { id: convenioVinculado.id },
+                data: { userId: user.id },
+              })
+            }
+          }
 
           if (convenioVinculado) {
             console.log("   🏢 User é de convênio:", convenioVinculado.razao_soc)
@@ -167,8 +200,8 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           where: {
             ativo: true,
             OR: [
-              { usuario: login },
-              { email: login },
+              { usuario: { equals: login, mode: 'insensitive' } },
+              { email: { equals: login, mode: 'insensitive' } },
             ],
           },
           select: {
@@ -195,14 +228,14 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         const convenioUsuario = convenio.usuario?.trim()
         const generatedEmail = (convenioEmail || `${convenioUsuario || `convenio-${convenio.id}`}@convenio.local`).toLowerCase()
 
-        const userOr: Array<{ email?: string; name?: string }> = [{ email: generatedEmail }]
+        const userOr: Array<{ email?: string | { equals: string; mode: 'insensitive' }; name?: { equals: string; mode: 'insensitive' } }> = [{ email: generatedEmail }]
         if (convenioUsuario) {
-          userOr.push({ name: convenioUsuario })
+          userOr.push({ name: { equals: convenioUsuario, mode: 'insensitive' } })
         }
 
         let convenioUser = await prisma.users.findFirst({
           where: {
-            OR: userOr,
+            OR: userOr as any,
           },
           select: {
             id: true,
