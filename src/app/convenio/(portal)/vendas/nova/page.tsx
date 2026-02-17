@@ -400,30 +400,6 @@ export default function NovaVendaPage() {
                 </div>
               )}
 
-              {/* Limite Disponível (Local) */}
-              {limiteInfo && limiteInfo.tipoDescricao === 'Local' && (
-                <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm font-medium text-blue-900 dark:text-blue-300">
-                      📊 Limite Disponível (Sistema Local)
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
-                    <div>
-                      <div className="text-muted-foreground">Limite Total</div>
-                      <div className="font-bold text-foreground text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteTotal)}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Em Aberto</div>
-                      <div className="font-bold text-orange-600 dark:text-orange-400 text-sm sm:text-xs">{formatCurrency(limiteInfo.totalEmAberto)}</div>
-                    </div>
-                    <div>
-                      <div className="text-muted-foreground">Disponível</div>
-                      <div className="font-bold text-green-600 dark:text-green-400 text-sm sm:text-xs">{formatCurrency(limiteInfo.limiteDisponivel)}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         )}
