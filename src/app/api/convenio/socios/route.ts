@@ -10,6 +10,9 @@ export async function GET(request: NextRequest) {
     const busca = searchParams.get('busca') || ''
 
     // Busca sócios ativos e sem bloqueio
+    // Por segurança: busca apenas por matrícula EXATA ou CPF EXATO (somente números)
+    const buscaLimpa = busca.replace(/\D/g, '') // Remove tudo que não é número
+
     const socios = await prisma.socio.findMany({
       where: {
         ativo: true,
@@ -18,13 +21,11 @@ export async function GET(request: NextRequest) {
           { bloqueio: '' },
           { bloqueio: 'N' },
         ],
-        AND: busca ? {
+        AND: buscaLimpa ? {
           OR: [
-            { nome: { contains: busca, mode: 'insensitive' } },
-            { matricula: { contains: busca, mode: 'insensitive' } },
-            { cpf: { contains: busca, mode: 'insensitive' } },
-            { celular: { contains: busca, mode: 'insensitive' } },
-            { telefone: { contains: busca, mode: 'insensitive' } },
+            { matricula: { equals: buscaLimpa } },
+            { matricula: { equals: busca.trim() } },
+            { cpf: { equals: buscaLimpa } },
           ],
         } : undefined,
       },

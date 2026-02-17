@@ -65,9 +65,9 @@ export default function NovaVendaPage() {
     : 0
 
   const buscarPorMatriculaCelular = async () => {
-    const busca = buscaMatriculaCelular.trim()
+    const busca = buscaMatriculaCelular.trim().replace(/\D/g, '') // Apenas números
     if (!busca) {
-      alert('Digite uma matrícula ou celular')
+      alert('Digite a matrícula ou CPF do sócio')
       return
     }
 
@@ -87,7 +87,7 @@ export default function NovaVendaPage() {
           setSocios(data.socios)
         }
       } else {
-        alert('Nenhum sócio encontrado com esta matrícula ou celular')
+        alert('Nenhum sócio encontrado com esta matrícula ou CPF')
       }
     } catch (error) {
       console.error('Erro ao buscar sócio:', error)
@@ -230,7 +230,7 @@ export default function NovaVendaPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Busca por Matrícula ou Celular */}
+        {/* Busca por Matrícula ou CPF */}
         {!socioSelecionado && (
           <Card>
             <CardHeader>
@@ -238,11 +238,11 @@ export default function NovaVendaPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Matrícula ou Celular</Label>
+                <Label>Matrícula ou CPF</Label>
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Input
-                      placeholder="Digite a matrícula ou número do celular"
+                      placeholder="Digite a matrícula ou CPF (número exato)"
                       value={buscaMatriculaCelular}
                       onChange={(e) => setBuscaMatriculaCelular(e.target.value)}
                       onKeyDown={(e) => {
