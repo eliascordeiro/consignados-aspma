@@ -10,8 +10,14 @@ export async function GET(request: NextRequest) {
     const busca = searchParams.get('busca') || ''
 
     // Busca sócios ativos e sem bloqueio
-    // Por segurança: busca apenas por matrícula EXATA ou CPF EXATO (somente números)
-    const buscaLimpa = busca.replace(/\D/g, '') // Remove tudo que não é número
+    // Por segurança: busca apenas por matrícula EXATA ou CPF EXATO
+    const buscaTrimmed = busca.trim()
+    const buscaLimpa = buscaTrimmed.replace(/\D/g, '') // Somente números
+
+    // Formatar CPF para comparação: 12345678900 → 123.456.789-00
+    const cpfFormatado = buscaLimpa.length === 11
+      ? `${buscaLimpa.slice(0,3)}.${buscaLimpa.slice(3,6)}.${buscaLimpa.slice(6,9)}-${buscaLimpa.slice(9,11)}`
+      : null
 
     const socios = await prisma.socio.findMany({
       where: {
@@ -24,8 +30,10 @@ export async function GET(request: NextRequest) {
         AND: buscaLimpa ? {
           OR: [
             { matricula: { equals: buscaLimpa } },
-            { matricula: { equals: busca.trim() } },
+            { matricula: { equals: buscaTrimmed } },
             { cpf: { equals: buscaLimpa } },
+            { cpf: { equals: buscaTrimmed } },
+            ...(cpfFormatado ? [{ cpf: { equals: cpfFormatado } }] : []),
           ],
         } : undefined,
       },
