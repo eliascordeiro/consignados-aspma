@@ -188,15 +188,13 @@ export default function RelatoriosPage() {
       link.click()
     } else if (tipo === 'parcelas' && parcelasData) {
       const csv = [
-        ['Nº Venda', 'Parcela', 'Vencimento', 'Valor', 'Status', 'Data Pagamento', 'Sócio', 'Matrícula'].join(';'),
+        ['Nº Venda', 'Parcela', 'Vencimento', 'Valor', 'Sócio', 'Matrícula'].join(';'),
         ...parcelasData.parcelas.map(p =>
           [
             p.venda.numeroVenda,
             p.numeroParcela,
             format(new Date(p.dataVencimento), 'MM/yyyy'),
             p.valor.toFixed(2).replace('.', ','),
-            p.baixa === 'S' ? 'Paga' : 'Pendente',
-            p.dataBaixa ? format(new Date(p.dataBaixa), 'dd/MM/yyyy') : '',
             p.venda.socio,
             p.venda.matricula || '',
           ].join(';')
@@ -642,8 +640,6 @@ export default function RelatoriosPage() {
                           <TableHead>Sócio</TableHead>
                           <TableHead>Matrícula</TableHead>
                           <TableHead className="text-right">Valor</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Data Pagamento</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -658,24 +654,6 @@ export default function RelatoriosPage() {
                             <TableCell>{parcela.venda.matricula || '-'}</TableCell>
                             <TableCell className="text-right">
                               {formatCurrency(Number(parcela.valor))}
-                            </TableCell>
-                            <TableCell>
-                              {parcela.baixa === 'S' ? (
-                                <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-700">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Paga
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="gap-1">
-                                  <XCircle className="h-3 w-3" />
-                                  Pendente
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {parcela.dataBaixa
-                                ? format(new Date(parcela.dataBaixa), 'dd/MM/yyyy', { locale: ptBR })
-                                : '-'}
                             </TableCell>
                           </TableRow>
                         ))}
