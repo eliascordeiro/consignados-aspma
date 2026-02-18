@@ -594,7 +594,6 @@ export default function VendasPage() {
                                         <TableHead>Vencimento (Mês/Ano)</TableHead>
                                         <TableHead>Valor</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead>Data Pagamento</TableHead>
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -625,15 +624,6 @@ export default function VendasPage() {
                                                 Pendente
                                               </Badge>
                                             )}
-                                          </TableCell>
-                                          <TableCell>
-                                            {parcela.dataBaixa
-                                              ? format(
-                                                  new Date(parcela.dataBaixa),
-                                                  'dd/MM/yyyy',
-                                                  { locale: ptBR }
-                                                )
-                                              : '-'}
                                           </TableCell>
                                         </TableRow>
                                       ))}
