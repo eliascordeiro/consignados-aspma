@@ -552,46 +552,13 @@ export default function RelatoriosPage() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
+                    <CardTitle className="text-sm font-medium">Valor Total a Receber</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(parcelasData.resumo.valorTotal)}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Média: {formatCurrency(parcelasData.resumo.valorTotal / parcelasData.resumo.totalParcelas)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Parcelas Pagas</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(parcelasData.resumo.valorPago)}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {parcelasData.resumo.parcelasPagas} parcelas ({parcelasData.resumo.percentualPago.toFixed(1)}%)
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Parcelas Pendentes</CardTitle>
-                    <XCircle className="h-4 w-4 text-orange-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {formatCurrency(parcelasData.resumo.valorPendente)}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {parcelasData.resumo.parcelasPendentes} parcelas ({(100 - parcelasData.resumo.percentualPago).toFixed(1)}%)
-                    </p>
                   </CardContent>
                 </Card>
               </div>
