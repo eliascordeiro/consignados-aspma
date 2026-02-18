@@ -101,7 +101,6 @@ export default function RelatoriosPage() {
 
   // Estados para Parcelas a Receber
   const [mesVencimento, setMesVencimento] = useState('')
-  const [statusParcelas, setStatusParcelas] = useState('todas')
   const [parcelasData, setParcelasData] = useState<ParcelasReceberData | null>(null)
   const [loadingParcelas, setLoadingParcelas] = useState(false)
 
@@ -144,7 +143,6 @@ export default function RelatoriosPage() {
     try {
       const params = new URLSearchParams({
         mesVencimento,
-        status: statusParcelas,
       })
       
       const response = await fetch(`/api/convenio/relatorios/parcelas-receber?${params}`)
@@ -494,19 +492,6 @@ export default function RelatoriosPage() {
                     value={mesVencimento}
                     onChange={(e) => setMesVencimento(e.target.value)}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="statusParcelas">Status</Label>
-                  <select
-                    id="statusParcelas"
-                    value={statusParcelas}
-                    onChange={(e) => setStatusParcelas(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <option value="todas">Todas</option>
-                    <option value="pagas">Pagas</option>
-                    <option value="pendentes">Pendentes</option>
-                  </select>
                 </div>
                 <div className="flex items-end">
                   <Button
