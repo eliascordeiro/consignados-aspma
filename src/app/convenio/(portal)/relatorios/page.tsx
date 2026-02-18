@@ -554,7 +554,7 @@ export default function RelatoriosPage() {
                           ) : (
                             <Badge variant="secondary" className="gap-1 text-xs">
                               <XCircle className="h-3 w-3" />
-                              Pendente
+                              Confirmada
                             </Badge>
                           )}
                         </div>

@@ -570,7 +570,7 @@ export default function VendasPage() {
                                         ) : (
                                           <Badge variant="secondary" className="gap-1 text-xs">
                                             <XCircle className="h-3 w-3" />
-                                            Pendente
+                                            Confirmada
                                           </Badge>
                                         )}
                                       </div>
@@ -621,7 +621,7 @@ export default function VendasPage() {
                                             ) : (
                                               <Badge variant="secondary" className="gap-1">
                                                 <XCircle className="h-3 w-3" />
-                                                Pendente
+                                                Confirmada
                                               </Badge>
                                             )}
                                           </TableCell>
