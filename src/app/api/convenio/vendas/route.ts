@@ -4,6 +4,59 @@ import { requireConvenioSession } from '@/lib/convenio-auth'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
 /**
+ * Calcula o mês/ano de referência para cálculo de margem
+ * Regra do AS200.PRG: se dia > 9, considera o mês seguinte
+ */
+function calcularDataCorte(): { mes: number; ano: number } {
+  const hoje = new Date()
+  const dia = hoje.getDate()
+  let mes = hoje.getMonth() + 1 // getMonth() retorna 0-11, precisamos 1-12
+  let ano = hoje.getFullYear()
+
+  if (dia > 9) {
+    if (mes === 12) {
+      mes = 1
+      ano = ano + 1
+    } else {
+      mes = mes + 1
+    }
+  }
+
+  return { mes, ano }
+}
+
+/**
+ * Calcula o total de descontos (parcelas ativas) no mês de referência
+ */
+async function calcularDescontosDoMes(
+  socioId: string,
+  dataCorte: { mes: number; ano: number }
+): Promise<number> {
+  try {
+    const result = await prisma.parcela.aggregate({
+      _sum: { valor: true },
+      where: {
+        venda: {
+          socioId,
+          ativo: true,
+          cancelado: false,
+        },
+        OR: [{ baixa: '' }, { baixa: null }, { baixa: 'N' }],
+        dataVencimento: {
+          gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1),
+          lt: new Date(dataCorte.ano, dataCorte.mes, 1),
+        },
+      },
+    })
+
+    return Number(result._sum.valor || 0)
+  } catch (error) {
+    console.error('[VENDAS] Erro ao calcular descontos:', error)
+    return 0
+  }
+}
+
+/**
  * Calcula a data de vencimento da primeira parcela considerando a regra do dia 9
  * - Se dia > 9: primeira parcela vence no mês seguinte (dia 01)
  * - Se dia <= 9: primeira parcela vence no mês atual (dia 01)
@@ -119,6 +172,21 @@ export async function POST(request: NextRequest) {
     await prisma.parcela.createMany({
       data: parcelas,
     })
+
+    // Atualizar margemConsig do sócio (apenas para tipo 3 e 4 - cálculo local)
+    if (socio.tipo === '3' || socio.tipo === '4') {
+      const dataCorte = calcularDataCorte()
+      const descontos = await calcularDescontosDoMes(socio.id, dataCorte)
+      const limite = Number(socio.limite || 0)
+      const novaMargemConsig = limite - descontos
+
+      await prisma.socio.update({
+        where: { id: socio.id },
+        data: { margemConsig: novaMargemConsig },
+      })
+
+      console.log(`✅ [VENDA] Margem atualizada - Sócio: ${socio.nome}, Limite: ${limite}, Descontos: ${descontos}, Nova Margem: ${novaMargemConsig}`)
+    }
 
     // Busca convênio para o log
     const convenio = await prisma.convenio.findUnique({
