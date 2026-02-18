@@ -98,6 +98,20 @@ export async function POST(request: NextRequest) {
     const margemAtual = Number(socio.margemConsig) || 0
     const novoLimite = margemAtual - Number(venda.valorParcela)
 
+    // Calcular início e fim do desconto
+    const hoje = new Date()
+    const inicioDesconto = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1) // Próximo mês
+    const fimDesconto = new Date(
+      inicioDesconto.getFullYear(),
+      inicioDesconto.getMonth() + venda.quantidadeParcelas - 1,
+      1
+    )
+
+    const formatarMesAno = (data: Date) => {
+      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+      return `${meses[data.getMonth()]}/${data.getFullYear()}`
+    }
+
     // Montar mensagem de confirmação
     const messageCustomId = `venda-confirmacao-${Date.now()}`
     let mensagem = `✅ *ASPMA - Venda Confirmada*\n\n`
@@ -106,7 +120,8 @@ export async function POST(request: NextRequest) {
     mensagem += `📋 *Número da Venda:* #${venda.numeroVenda}\n`
     mensagem += `💰 *Valor Total:* R$ ${Number(venda.valorTotal).toFixed(2).replace('.', ',')}\n`
     mensagem += `📅 *Parcelas:* ${venda.quantidadeParcelas}x de R$ ${Number(venda.valorParcela).toFixed(2).replace('.', ',')}\n`
-    mensagem += `📊 *Status:* ${venda.cancelado ? 'Cancelado' : (venda.ativo ? 'Ativo' : 'Inativo')}\n\n`
+    mensagem += `📆 *Início do Desconto:* ${formatarMesAno(inicioDesconto)}\n`
+    mensagem += `📆 *Fim do Desconto:* ${formatarMesAno(fimDesconto)}\n\n`
     mensagem += `💳 *Margem Anterior:* R$ ${margemAtual.toFixed(2).replace('.', ',')}\n`
     mensagem += `💳 *Novo Limite Disponível:* R$ ${novoLimite.toFixed(2).replace('.', ',')}\n\n`
     mensagem += `Em caso de dúvidas, entre em contato com a ASPMA.`
