@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Users, Store } from "lucide-react"
+import { prisma } from "@/lib/prisma"
 
 export default async function ClienteDashboard() {
   const session = await auth()
@@ -14,6 +15,13 @@ export default async function ClienteDashboard() {
   if (session.user.role !== "MANAGER" && session.user.role !== "USER") {
     redirect("/login")
   }
+
+  // Buscar contagens do banco
+  const [totalEmpresas, totalSocios, totalConvenios] = await Promise.all([
+    prisma.empresa.count(),
+    prisma.socio.count({ where: { ativo: true } }),
+    prisma.convenio.count(),
+  ])
 
   return (
     <div className="space-y-8">
@@ -31,7 +39,7 @@ export default async function ClienteDashboard() {
             <Building2 className="h-4 w-4 text-muted-foreground group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{totalEmpresas}</div>
             <p className="text-xs text-muted-foreground">Empresas cadastradas</p>
           </CardContent>
         </Card>
@@ -42,7 +50,7 @@ export default async function ClienteDashboard() {
             <Users className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{totalSocios}</div>
             <p className="text-xs text-muted-foreground">Sócios ativos</p>
           </CardContent>
         </Card>
@@ -53,7 +61,7 @@ export default async function ClienteDashboard() {
             <Store className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{totalConvenios}</div>
             <p className="text-xs text-muted-foreground">Convênios ativos</p>
           </CardContent>
         </Card>
