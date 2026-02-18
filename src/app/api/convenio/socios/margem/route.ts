@@ -105,7 +105,7 @@ async function calcularDescontosDoMes(
           ativo: true,
           cancelado: false,
         },
-        OR: [{ baixa: '' }, { baixa: null }],
+        OR: [{ baixa: '' }, { baixa: null }, { baixa: 'N' }],
         dataVencimento: {
           gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1),
           lt: new Date(dataCorte.ano, dataCorte.mes, 1),
