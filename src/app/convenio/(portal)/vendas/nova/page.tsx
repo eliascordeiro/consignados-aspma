@@ -482,19 +482,6 @@ export default function NovaVendaPage() {
                   )}
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea
-                  id="observacoes"
-                  placeholder="Informações adicionais sobre a venda..."
-                  value={formData.observacoes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, observacoes: e.target.value })
-                  }
-                  rows={3}
-                />
-              </div>
             </CardContent>
           </Card>
         )}
