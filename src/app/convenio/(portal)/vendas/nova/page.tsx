@@ -357,22 +357,15 @@ export default function NovaVendaPage() {
                       <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                     )}
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Margem Consignável — {fonteLabel(margemInfo.fonte)}
+                      Margem Disponível:
                     </span>
                   </div>
 
-                  <div className={'text-2xl font-bold mb-1 ' + (
+                  <div className={'text-2xl font-bold ' + (
                     margemInfo.margem > 0 ? 'text-green-600' : 'text-red-600'
                   )}>
                     {formatCurrency(margemInfo.margem)}
                   </div>
-
-                  {margemInfo.fonte === 'local' && (
-                    <div className="text-xs text-muted-foreground space-y-0.5">
-                      <div>Limite: {formatCurrency(margemInfo.limite || 0)}</div>
-                      <div>Descontos do mês ({margemInfo.mesReferencia}): {formatCurrency(margemInfo.descontos || 0)}</div>
-                    </div>
-                  )}
 
                   {margemInfo.aviso && (
                     <div className="mt-1 text-xs text-amber-600 dark:text-amber-400">
