@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const session = await requireConvenioSession(request)
 
     const body = await request.json()
-    const { socioId, celular } = body
+    const { socioId, celular, valorTotal, quantidadeParcelas, valorParcela, nomeSocio } = body
 
     if (!socioId || !celular) {
       return NextResponse.json(
@@ -73,7 +73,24 @@ export async function POST(request: NextRequest) {
 
     // Enviar mensagem via WhatsGW
     const messageCustomId = `venda-code-${Date.now()}`
-    const mensagem = `🔐 *ASPMA - Código de Verificação*\n\nSeu código para autorizar a venda consignada é:\n\n*${codigo}*\n\nVálido por 10 minutos.\n\n⚠️ Não compartilhe este código.`
+    
+    // Montar mensagem com dados da venda
+    let mensagem = `🔐 *ASPMA - Código de Verificação*\n\n`
+    
+    if (nomeSocio) {
+      mensagem += `Olá *${nomeSocio}*!\n\n`
+    }
+    
+    mensagem += `Confirme a autorização da venda consignada:\n\n`
+    
+    if (valorTotal && quantidadeParcelas && valorParcela) {
+      mensagem += `💰 *Valor Total:* R$ ${Number(valorTotal).toFixed(2).replace('.', ',')}\n`
+      mensagem += `📅 *Parcelas:* ${quantidadeParcelas}x de R$ ${Number(valorParcela).toFixed(2).replace('.', ',')}\n\n`
+    }
+    
+    mensagem += `Seu código de verificação é:\n\n*${codigo}*\n\n`
+    mensagem += `✅ Válido por 10 minutos\n`
+    mensagem += `⚠️ Não compartilhe este código`
 
     const payload = {
       apikey: apiKey,

@@ -196,6 +196,10 @@ export default function NovaVendaPage() {
         body: JSON.stringify({
           socioId: socioSelecionado.id,
           celular: celular,
+          valorTotal: formData.valorTotal,
+          quantidadeParcelas: formData.quantidadeParcelas,
+          valorParcela: valorParcela,
+          nomeSocio: socioSelecionado.nome,
         }),
       })
 
@@ -261,6 +265,21 @@ export default function NovaVendaPage() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao criar venda')
+      }
+
+      // Enviar notificação de confirmação
+      try {
+        await fetch('/api/convenio/vendas/notificar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendaId: data.venda.id,
+            socioId: socioSelecionado.id,
+          }),
+        })
+        // Não bloqueia se notificação falhar
+      } catch (notifError) {
+        console.error('Erro ao enviar notificação:', notifError)
       }
 
       alert('✅ Venda #' + data.venda.numeroVenda + ' criada com sucesso!')
