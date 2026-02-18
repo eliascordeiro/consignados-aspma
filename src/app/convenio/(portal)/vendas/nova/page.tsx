@@ -320,18 +320,6 @@ export default function NovaVendaPage() {
                         {socioSelecionado.matricula && (
                           <div>Matrícula: {socioSelecionado.matricula}</div>
                         )}
-                        {socioSelecionado.cpf && (
-                          <div>CPF: {socioSelecionado.cpf}</div>
-                        )}
-                        {socioSelecionado.celular && (
-                          <div>Celular: {socioSelecionado.celular}</div>
-                        )}
-                        {socioSelecionado.empresaNome && (
-                          <div>Empresa: {socioSelecionado.empresaNome}</div>
-                        )}
-                        {socioSelecionado.tipo && (
-                          <div>Tipo: {socioSelecionado.tipo}</div>
-                        )}
                       </div>
                     </div>
                   </div>
