@@ -108,7 +108,6 @@ export async function GET(request: NextRequest) {
         convenioId: session.convenioId,
         mesVencimento,
         totalParcelas,
-        status,
       },
     })
 
