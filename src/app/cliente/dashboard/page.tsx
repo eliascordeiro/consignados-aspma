@@ -19,7 +19,16 @@ export default async function ClienteDashboard() {
   // Buscar contagens do banco
   const [totalEmpresas, totalSocios, totalConvenios] = await Promise.all([
     prisma.empresa.count(),
-    prisma.socio.count({ where: { ativo: true } }),
+    prisma.socio.count({ 
+      where: { 
+        ativo: true,
+        OR: [
+          { bloqueio: null },
+          { bloqueio: '' },
+          { bloqueio: 'N' },
+        ]
+      } 
+    }),
     prisma.convenio.count(),
   ])
 
