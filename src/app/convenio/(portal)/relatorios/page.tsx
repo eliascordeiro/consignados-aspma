@@ -82,6 +82,7 @@ interface ParcelasReceberData {
     dataBaixa: string | null
     venda: {
       numeroVenda: number
+      quantidadeParcelas: number
       socio: string
       matricula: string | null
       cpf: string | null
@@ -190,7 +191,7 @@ export default function RelatoriosPage() {
         ...parcelasData.parcelas.map(p =>
           [
             p.venda.numeroVenda,
-            p.numeroParcela,
+            `${p.numeroParcela}/${p.venda.quantidadeParcelas}`,
             format(new Date(p.dataVencimento), 'MM/yyyy'),
             p.valor.toFixed(2).replace('.', ','),
             p.venda.socio,
@@ -540,7 +541,7 @@ export default function RelatoriosPage() {
                         <div className="flex justify-between items-start mb-3">
                           <div>
                             <div className="font-semibold text-foreground text-sm">
-                              Venda #{parcela.venda.numeroVenda} — Parcela {parcela.numeroParcela}
+                              Venda #{parcela.venda.numeroVenda} — Parcela {parcela.numeroParcela}/{parcela.venda.quantidadeParcelas}
                             </div>
                             <div className="text-xs text-muted-foreground mt-0.5">
                               Venc: {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
@@ -601,7 +602,7 @@ export default function RelatoriosPage() {
                         {parcelasData.parcelas.map((parcela) => (
                           <TableRow key={parcela.id}>
                             <TableCell className="font-medium">#{parcela.venda.numeroVenda}</TableCell>
-                            <TableCell>{parcela.numeroParcela}</TableCell>
+                            <TableCell>{parcela.numeroParcela}/{parcela.venda.quantidadeParcelas}</TableCell>
                             <TableCell>
                               {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
                             </TableCell>

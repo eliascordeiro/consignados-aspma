@@ -52,6 +52,11 @@ export async function GET(request: NextRequest) {
               },
             },
           },
+          select: {
+            numeroVenda: true,
+            quantidadeParcelas: true,
+            socio: true,
+          },
         },
       },
       orderBy: [
