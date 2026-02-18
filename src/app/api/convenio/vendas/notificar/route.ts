@@ -94,9 +94,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calcular novo limite (margem - valor da parcela)
-    const margemAtual = Number(socio.margemConsig) || 0
-    const novoLimite = margemAtual - Number(venda.valorParcela)
+    // margemConsig já está atualizada pelo sistema após criar a venda
+    // Não precisa subtrair novamente o valor da parcela
+    const limiteDisponivel = Number(socio.margemConsig) || 0
 
     // Calcular início e fim do desconto
     const hoje = new Date()
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     mensagem += `📅 *Parcelas:* ${venda.quantidadeParcelas}x de R$ ${Number(venda.valorParcela).toFixed(2).replace('.', ',')}\n`
     mensagem += `📆 *Início do Desconto:* ${formatarMesAno(inicioDesconto)}\n`
     mensagem += `📆 *Fim do Desconto:* ${formatarMesAno(fimDesconto)}\n\n`
-    mensagem += `💳 *Limite Disponível por Parcela:* R$ ${novoLimite.toFixed(2).replace('.', ',')}\n\n`
+    mensagem += `💳 *Limite Disponível por Parcela:* R$ ${limiteDisponivel.toFixed(2).replace('.', ',')}\n\n`
     mensagem += `Em caso de dúvidas, entre em contato com a ASPMA.`
 
     const payload = {
