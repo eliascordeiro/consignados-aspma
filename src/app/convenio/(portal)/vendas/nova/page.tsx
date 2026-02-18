@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { ArrowLeft, Loader2, Search, User, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Search, User, AlertTriangle, CheckCircle2, MessageSquare, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 
@@ -53,6 +52,13 @@ export default function NovaVendaPage() {
   const [margemInfo, setMargemInfo] = useState<MargemInfo | null>(null)
   const [consultandoMargem, setConsultandoMargem] = useState(false)
   const [limiteInfo, setLimiteInfo] = useState<LimiteInfo | null>(null)
+
+  // Fluxo de verificação WhatsApp
+  const [codigoEnviado, setCodigoEnviado] = useState(false)
+  const [enviandoCodigo, setEnviandoCodigo] = useState(false)
+  const [codigoDigitado, setCodigoDigitado] = useState('')
+  const [validandoCodigo, setValidandoCodigo] = useState(false)
+  const [celularEnviado, setCelularEnviado] = useState('')
 
   const [formData, setFormData] = useState({
     valorTotal: '',
@@ -152,26 +158,93 @@ export default function NovaVendaPage() {
     setFormData({ valorTotal: '', quantidadeParcelas: '', observacoes: '' })
     setBuscaMatriculaCelular('')
     setSocios([])
+    // Resetar fluxo WhatsApp
+    setCodigoEnviado(false)
+    setCodigoDigitado('')
+    setCelularEnviado('')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  // PASSO 1: Enviar código via WhatsApp
+  const enviarCodigoWhatsApp = async () => {
     if (!socioSelecionado) {
       alert('Selecione um sócio')
       return
     }
 
-    if (margemInfo && valorParcela > margemInfo.margem) {
-      const confirmar = confirm(
-        '⚠️ O valor da parcela (' + formatCurrency(valorParcela) + ') excede a margem consignável disponível (' + formatCurrency(margemInfo.margem) + ').\n\nDeseja continuar mesmo assim?'
-      )
-      if (!confirmar) return
+    if (!formData.valorTotal || !formData.quantidadeParcelas) {
+      alert('Preencha o valor total e número de parcelas')
+      return
     }
 
-    setLoading(true)
+    if (margemInfo && valorParcela > margemInfo.margem) {
+      alert('⚠️ O valor da parcela (' + formatCurrency(valorParcela) + ') excede a margem disponível (' + formatCurrency(margemInfo.margem) + ').\n\nAjuste os valores antes de enviar o código.')
+      return
+    }
+
+    const celular = socioSelecionado.celular || socioSelecionado.telefone
+    if (!celular) {
+      alert('Este sócio não possui celular cadastrado. Não é possível enviar o código de verificação.')
+      return
+    }
+
+    setEnviandoCodigo(true)
 
     try {
+      const response = await fetch('/api/convenio/vendas/verificar-codigo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          socioId: socioSelecionado.id,
+          celular: celular,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao enviar código')
+      }
+
+      setCodigoEnviado(true)
+      setCelularEnviado(data.celularEnviado || celular)
+      setCodigoDigitado('')
+      alert('✅ Código enviado via WhatsApp para ' + (data.celularEnviado || celular))
+    } catch (error: any) {
+      alert(error.message || 'Erro ao enviar código via WhatsApp')
+    } finally {
+      setEnviandoCodigo(false)
+    }
+  }
+
+  // PASSO 2: Validar código e criar venda
+  const validarCodigoECriarVenda = async () => {
+    if (!codigoDigitado.trim()) {
+      alert('Digite o código recebido via WhatsApp')
+      return
+    }
+
+    if (!socioSelecionado) return
+
+    setValidandoCodigo(true)
+
+    try {
+      // Validar código
+      const validarResponse = await fetch('/api/convenio/vendas/verificar-codigo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          socioId: socioSelecionado.id,
+          codigo: codigoDigitado.trim(),
+        }),
+      })
+
+      const validarData = await validarResponse.json()
+
+      if (!validarResponse.ok) {
+        throw new Error(validarData.error || 'Código inválido')
+      }
+
+      // Código válido - criar venda
       const response = await fetch('/api/convenio/vendas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,13 +263,18 @@ export default function NovaVendaPage() {
         throw new Error(data.error || 'Erro ao criar venda')
       }
 
-      alert('Venda #' + data.venda.numeroVenda + ' criada com sucesso!')
+      alert('✅ Venda #' + data.venda.numeroVenda + ' criada com sucesso!')
       router.push('/convenio/vendas')
     } catch (error: any) {
-      alert(error.message || 'Erro ao criar venda')
+      alert(error.message || 'Erro ao processar venda')
     } finally {
-      setLoading(false)
+      setValidandoCodigo(false)
     }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Formulário não faz submit direto — fluxo controlado pelos botões
   }
 
   const fonteLabel = (fonte: string) => {
@@ -486,28 +564,104 @@ export default function NovaVendaPage() {
           </Card>
         )}
 
-        {/* Botões */}
-        {socioSelecionado && (
+        {/* Verificação WhatsApp e Confirmação */}
+        {socioSelecionado && !codigoEnviado && (
           <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              disabled={loading}
+              disabled={enviandoCodigo}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? (
+            <Button
+              type="button"
+              onClick={enviarCodigoWhatsApp}
+              disabled={enviandoCodigo || !formData.valorTotal || !formData.quantidadeParcelas || (margemInfo !== null && valorParcela > margemInfo.margem)}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              {enviandoCodigo ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando Venda...
+                  Enviando código...
                 </>
               ) : (
-                'Criar Venda'
+                <>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Enviar Código WhatsApp
+                </>
               )}
             </Button>
           </div>
+        )}
+
+        {/* Input do código + botão confirmar */}
+        {socioSelecionado && codigoEnviado && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+                Verificação WhatsApp
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-800 dark:text-green-300">
+                  📱 Código enviado para <strong>{celularEnviado}</strong>
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  O código é válido por 10 minutos.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="codigoVerificacao">Digite o código recebido</Label>
+                <Input
+                  id="codigoVerificacao"
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={codigoDigitado}
+                  onChange={(e) => setCodigoDigitado(e.target.value.replace(/\D/g, ''))}
+                  className="text-center text-2xl font-bold tracking-[0.5em] max-w-[200px]"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCodigoEnviado(false)
+                    setCodigoDigitado('')
+                  }}
+                  disabled={validandoCodigo}
+                >
+                  Reenviar Código
+                </Button>
+                <Button
+                  type="button"
+                  onClick={validarCodigoECriarVenda}
+                  disabled={validandoCodigo || codigoDigitado.length < 6}
+                  className="flex-1"
+                >
+                  {validandoCodigo ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verificando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Confirmar Venda
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </form>
     </div>
