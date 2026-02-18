@@ -641,15 +641,9 @@ export default function VendasPage() {
                                   </Table>
                                 </div>
 
-                                <div className="mt-4 flex items-center justify-between p-3 bg-muted rounded-lg">
-                                  <div className="text-sm text-muted-foreground">
-                                    Total pago:{' '}
-                                    {formatCurrency(
-                                      venda.parcelasPagas * Number(venda.valorParcela)
-                                    )}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    Restante:{' '}
+                                <div className="mt-4 flex items-center justify-end p-3 bg-muted rounded-lg">
+                                  <div className="text-sm font-semibold">
+                                    Total:{' '}
                                     {formatCurrency(
                                       (venda.quantidadeParcelas - venda.parcelasPagas) *
                                         Number(venda.valorParcela)
