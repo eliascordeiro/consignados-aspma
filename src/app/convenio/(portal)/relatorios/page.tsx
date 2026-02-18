@@ -326,36 +326,6 @@ export default function RelatoriosPage() {
                     </p>
                   </CardContent>
                 </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Já Recebido</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(vendasData.resumo.valorRecebido)}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {((vendasData.resumo.valorRecebido / vendasData.resumo.valorTotal) * 100).toFixed(1)}% do total
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">A Receber</CardTitle>
-                    <Calendar className="h-4 w-4 text-primary" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-primary">
-                      {formatCurrency(vendasData.resumo.valorAReceber)}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {((vendasData.resumo.valorAReceber / vendasData.resumo.valorTotal) * 100).toFixed(1)}% do total
-                    </p>
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Status das Vendas */}
