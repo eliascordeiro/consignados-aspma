@@ -63,6 +63,7 @@ async function calcularDescontosDoMes(
  * 
  * IMPORTANTE: Usa sempre dia 01 porque para o convênio interessa o MÊS de desconto.
  * Evita problemas com meses de diferentes tamanhos (28, 29, 30, 31 dias).
+ * Usa Date.UTC para evitar problemas de timezone.
  */
 function calcularPrimeiroVencimento(): Date {
   const hoje = new Date()
@@ -80,8 +81,9 @@ function calcularPrimeiroVencimento(): Date {
     }
   }
 
-  // Define sempre para o dia 01 do mês (padrão AS200.PRG)
-  return new Date(ano, mes, 1)
+  // Define sempre para o dia 01 do mês às 12:00 UTC (padrão AS200.PRG)
+  // Usa Date.UTC para evitar problemas de timezone ao salvar no banco
+  return new Date(Date.UTC(ano, mes, 1, 12, 0, 0, 0))
 }
 
 export async function POST(request: NextRequest) {
@@ -157,8 +159,13 @@ export async function POST(request: NextRequest) {
     const parcelas = []
 
     for (let i = 0; i < quantidadeParcelas; i++) {
-      const dataVencimento = new Date(primeiroVencimento)
-      dataVencimento.setMonth(primeiroVencimento.getMonth() + i)
+      // Calcula o mês de vencimento
+      const mesVencimento = primeiroVencimento.getMonth() + i
+      const anoVencimento = primeiroVencimento.getFullYear() + Math.floor(mesVencimento / 12)
+      const mesAjustado = mesVencimento % 12
+
+      // Cria data UTC para evitar problemas de timezone
+      const dataVencimento = new Date(Date.UTC(anoVencimento, mesAjustado, 1, 12, 0, 0, 0))
 
       parcelas.push({
         vendaId: venda.id,
