@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const mesVencimento = searchParams.get('mesVencimento') // formato: YYYY-MM
-    const status = searchParams.get('status') // 'todas', 'pagas', 'pendentes'
 
     if (!mesVencimento) {
       return NextResponse.json(
@@ -31,14 +30,6 @@ export async function GET(request: NextRequest) {
     const dataFim = new Date(ano, mes, 0)
     dataFim.setHours(23, 59, 59, 999)
 
-    // Construir filtro de status
-    let statusFilter: any = {}
-    if (status === 'pagas') {
-      statusFilter = { baixa: 'S' }
-    } else if (status === 'pendentes') {
-      statusFilter = { baixa: { not: 'S' } }
-    }
-
     // Buscar parcelas do período
     const parcelas = await prisma.parcela.findMany({
       where: {
@@ -49,7 +40,6 @@ export async function GET(request: NextRequest) {
         venda: {
           convenioId: convenio.id,
         },
-        ...statusFilter,
       },
       include: {
         venda: {
