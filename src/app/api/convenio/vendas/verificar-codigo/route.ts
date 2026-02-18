@@ -38,9 +38,25 @@ export async function POST(request: NextRequest) {
     // Limpar número (apenas dígitos)
     let phone = celular.replace(/\D/g, '')
     
-    // Adicionar DDI se não tiver
-    if (!phone.startsWith('55')) {
+    // Validar e formatar número
+    // Formato esperado: 5541988318343 (13 dígitos: 55 + DDD + número)
+    if (phone.length === 8 || phone.length === 9) {
+      // Número sem DDD → adicionar DDD 41 (Curitiba) + DDI 55
+      phone = '5541' + phone
+    } else if (phone.length === 10 || phone.length === 11) {
+      // Número com DDD → adicionar apenas DDI 55
       phone = '55' + phone
+    } else if (!phone.startsWith('55')) {
+      // Outros casos → adicionar DDI 55
+      phone = '55' + phone
+    }
+
+    // Validar tamanho final (deve ter 12-13 dígitos)
+    if (phone.length < 12 || phone.length > 13) {
+      return NextResponse.json(
+        { error: `Número de celular inválido: ${celular}. Deve ter 8-11 dígitos.` },
+        { status: 400 }
+      )
     }
 
     // Configuração WhatsGW
