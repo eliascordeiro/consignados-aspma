@@ -122,8 +122,7 @@ export async function POST(request: NextRequest) {
     mensagem += `📅 *Parcelas:* ${venda.quantidadeParcelas}x de R$ ${Number(venda.valorParcela).toFixed(2).replace('.', ',')}\n`
     mensagem += `📆 *Início do Desconto:* ${formatarMesAno(inicioDesconto)}\n`
     mensagem += `📆 *Fim do Desconto:* ${formatarMesAno(fimDesconto)}\n\n`
-    mensagem += `💳 *Margem Anterior:* R$ ${margemAtual.toFixed(2).replace('.', ',')}\n`
-    mensagem += `💳 *Novo Limite Disponível:* R$ ${novoLimite.toFixed(2).replace('.', ',')}\n\n`
+    mensagem += `💳 *Limite Disponível por Parcela:* R$ ${novoLimite.toFixed(2).replace('.', ',')}\n\n`
     mensagem += `Em caso de dúvidas, entre em contato com a ASPMA.`
 
     const payload = {
