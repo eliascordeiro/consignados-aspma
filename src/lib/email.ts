@@ -7,7 +7,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
 
   try {
     await resend.emails.send({
-      from: process.env.SMTP_FROM || 'noreply@consigexpress.com',
+      from: process.env.SMTP_FROM || 'aspma@aspma-consignados.com.br',
       to: email,
       subject: 'Redefinição de Senha - ConsigExpress',
       html: `
@@ -61,7 +61,7 @@ export async function sendWelcomeEmail(email: string, name: string, createdBy: s
 
   try {
     await resend.emails.send({
-      from: process.env.SMTP_FROM || 'noreply@consigexpress.com',
+      from: process.env.SMTP_FROM || 'aspma@aspma-consignados.com.br',
       to: email,
       subject: 'Bem-vindo ao ConsigExpress',
       html: `
