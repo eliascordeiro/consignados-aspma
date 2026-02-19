@@ -43,7 +43,9 @@ export async function GET(request: NextRequest) {
       },
       include: {
         venda: {
-          include: {
+          select: {
+            numeroVenda: true,
+            quantidadeParcelas: true,
             socio: {
               select: {
                 nome: true,
@@ -51,11 +53,6 @@ export async function GET(request: NextRequest) {
                 cpf: true,
               },
             },
-          },
-          select: {
-            numeroVenda: true,
-            quantidadeParcelas: true,
-            socio: true,
           },
         },
       },
