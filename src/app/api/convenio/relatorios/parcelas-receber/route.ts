@@ -138,6 +138,7 @@ export async function GET(request: NextRequest) {
         dataBaixa: p.dataBaixa,
         venda: {
           numeroVenda: p.venda.numeroVenda,
+          quantidadeParcelas: p.venda.quantidadeParcelas,
           socio: p.venda.socio.nome,
           matricula: p.venda.socio.matricula,
           cpf: p.venda.socio.cpf,
