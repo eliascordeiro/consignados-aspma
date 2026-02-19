@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import ChatWidget from "@/components/chat-widget"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -266,6 +267,9 @@ export default function ClienteLayout({
 
       {/* Modal de Perfil */}
       <PerfilModal open={perfilModalOpen} onOpenChange={setPerfilModalOpen} />
+
+      {/* Chat IA Widget */}
+      <ChatWidget />
     </div>
   )
 }
