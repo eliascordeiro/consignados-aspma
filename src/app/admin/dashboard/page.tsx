@@ -15,7 +15,7 @@ export default async function AdminDashboard() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard Administrativo</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          Bem-vindo ao painel de administração do ConsigExpress
+          Bem-vindo ao Gestor de Consignados - A.S.P.M.A
         </p>
       </div>
 

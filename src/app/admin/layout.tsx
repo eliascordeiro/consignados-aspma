@@ -64,7 +64,7 @@ export default function AdminLayout({
               </div>
               <div>
                 <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  ConsigExpress
+                  A.S.P.M.A
                 </h1>
                 <span className="text-xs text-muted-foreground">Administrador</span>
               </div>

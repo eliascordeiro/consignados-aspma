@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ConsigExpress - Plataforma de Consignados",
+  title: "A.S.P.M.A - Gestor de Consignados",
   description: "Plataforma de gestão de descontos em folha de pagamento",
 };
 

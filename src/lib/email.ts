@@ -9,7 +9,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
     await resend.emails.send({
       from: process.env.SMTP_FROM || 'aspma@aspma-consignados.com.br',
       to: email,
-      subject: 'Redefinição de Senha - ConsigExpress',
+      subject: 'Redefinição de Senha - A.S.P.M.A',
       html: `
         <!DOCTYPE html>
         <html>
@@ -31,7 +31,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
               </div>
               <div class="content">
                 <p>Olá,</p>
-                <p>Você solicitou a redefinição de senha para sua conta no <strong>ConsigExpress</strong>.</p>
+                <p>Você solicitou a redefinição de senha para sua conta no <strong>A.S.P.M.A - Gestor de Consignados</strong>.</p>
                 <p>Clique no botão abaixo para criar uma nova senha:</p>
                 <div style="text-align: center;">
                   <a href="${resetUrl}" class="button">Redefinir Senha</a>
@@ -42,7 +42,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
                 <p>Se você não solicitou esta redefinição, ignore este email.</p>
               </div>
               <div class="footer">
-                <p>© 2026 ConsigExpress - Plataforma de Consignados</p>
+                <p>© 2026 A.S.P.M.A - Associação dos Servidores Municipais de Araucária</p>
               </div>
             </div>
           </body>
@@ -63,7 +63,7 @@ export async function sendWelcomeEmail(email: string, name: string, createdBy: s
     await resend.emails.send({
       from: process.env.SMTP_FROM || 'aspma@aspma-consignados.com.br',
       to: email,
-      subject: 'Bem-vindo ao ConsigExpress',
+      subject: 'Bem-vindo ao A.S.P.M.A - Gestor de Consignados',
       html: `
         <!DOCTYPE html>
         <html>
@@ -82,7 +82,7 @@ export async function sendWelcomeEmail(email: string, name: string, createdBy: s
           <body>
             <div class="container">
               <div class="header">
-                <h1>Bem-vindo ao ConsigExpress!</h1>
+                <h1>Bem-vindo ao A.S.P.M.A!</h1>
               </div>
               <div class="content">
                 <p>Olá <strong>${name}</strong>,</p>
@@ -113,7 +113,7 @@ export async function sendWelcomeEmail(email: string, name: string, createdBy: s
                 <p>Qualquer dúvida, entre em contato com o administrador do sistema.</p>
               </div>
               <div class="footer">
-                <p>© 2026 ConsigExpress - Plataforma de Consignados</p>
+                <p>© 2026 A.S.P.M.A - Associação dos Servidores Municipais de Araucária</p>
               </div>
             </div>
           </body>

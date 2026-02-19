@@ -128,7 +128,7 @@ export default function ClienteLayout({
               </div>
               <div>
                 <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  ConsigExpress
+                  A.S.P.M.A
                 </h1>
                 <span className="text-xs text-muted-foreground">Portal do Cliente</span>
               </div>

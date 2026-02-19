@@ -84,14 +84,14 @@ export default function LoginPage() {
 
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
               <CreditCard style={{ color: '#ffffff', width: '28px', height: '28px' }} />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                ConsigExpress
+                A.S.P.M.A
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Plataforma de Consignados</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Gestor de Consignados</p>
             </div>
           </div>
 
@@ -178,14 +178,14 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
-              <p>© 2026 ConsigExpress. Todos os direitos reservados.</p>
+              <p>© 2026 A.S.P.M.A - Associação dos Servidores Municipais de Araucária</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Right side - Gradient background (hidden on mobile) */}
-      <div className="relative hidden lg:block lg:flex-1 bg-gradient-to-br from-blue-700 via-purple-700 to-pink-700 dark:from-blue-500 dark:via-purple-500 dark:to-pink-500">
+      <div className="relative hidden lg:block lg:flex-1 bg-gradient-to-br from-emerald-600 via-teal-600 to-green-700 dark:from-emerald-500 dark:via-teal-500 dark:to-green-600">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-black/30 dark:bg-black/0" />
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
@@ -197,10 +197,10 @@ export default function LoginPage() {
                 </div>
               </div>
               <h2 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)', lineHeight: '1.2' }}>
-                Gerencie consignados com facilidade
+                Gestão de Margem Consignada
               </h2>
               <p style={{ fontSize: '1.125rem', color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.4)', lineHeight: '1.6' }}>
-                Plataforma completa para gestão de descontos em folha de pagamento
+                Sistema completo para controle de crédito consignado dos servidores municipais
               </p>
             </div>
           </div>
