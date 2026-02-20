@@ -58,10 +58,9 @@ export async function GET(request: NextRequest) {
 As rotas estão organizadas nas seguintes categorias:
 
 - **Documentação**: Endpoints sobre a própria documentação
-- **Funcionários**: Gestão de funcionários/sócios
-- **Sócios**: Operações específicas de sócios
+- **Autenticação**: Login e logout de convênios
+- **Consulta de Margem**: Busca de sócios e consulta de margem consignável por matrícula/CPF
 - **Vendas**: Gestão de vendas
-- **Convênios**: Informações de convênios
 - **Relatórios**: Geração de relatórios
 
 ## 🔐 Autenticação
@@ -94,7 +93,10 @@ Depois use com `$ref: '#/components/schemas/Usuario'` nas rotas.
 
 ## 🚀 Exemplo Completo
 
-Veja o arquivo `src/app/api/funcionarios/route.ts` para exemplos completos de documentação dos métodos GET e POST.
+Veja os arquivos abaixo para exemplos completos de documentação:
+- [src/app/api/convenio/auth/login/route.ts](src/app/api/convenio/auth/login/route.ts) - Endpoint de autenticação
+- [src/app/api/convenio/socios/route.ts](src/app/api/convenio/socios/route.ts) - Busca de sócios por matrícula/CPF
+- [src/app/api/convenio/socios/margem/route.ts](src/app/api/convenio/socios/margem/route.ts) - Consulta de margem consignável
 
 ## 📖 Recursos Adicionais
 
