@@ -10,17 +10,29 @@ const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false });
 export default function SwaggerUIClient() {
   const [spec, setSpec] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Busca a especificação OpenAPI do endpoint
-    fetch('/api/docs')
-      .then((res) => res.json())
+    fetch('/api/docs', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         setSpec(data);
         setLoading(false);
       })
       .catch((error) => {
         console.error('Erro ao carregar especificação da API:', error);
+        setError(error.message);
         setLoading(false);
       });
   }, []);
@@ -36,11 +48,12 @@ export default function SwaggerUIClient() {
     );
   }
 
-  if (!spec) {
+  if (!spec || error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-red-600">
-          <p>Erro ao carregar a documentação da API.</p>
+        <div className="text-center">
+          <p className="text-red-600 font-semibold mb-2">Erro ao carregar a documentação da API.</p>
+          {error && <p className="text-gray-600 text-sm">{error}</p>}
         </div>
       </div>
     );
@@ -48,7 +61,15 @@ export default function SwaggerUIClient() {
 
   return (
     <div className="swagger-ui-container">
-      <SwaggerUI spec={spec} />
+      <SwaggerUI 
+        spec={spec}
+        supportedSubmitMethods={['get', 'post', 'put', 'delete', 'patch']}
+        tryItOutEnabled={true}
+        displayRequestDuration={true}
+        docExpansion="list"
+        defaultModelsExpandDepth={1}
+        filter={true}
+      />
     </div>
   );
 }

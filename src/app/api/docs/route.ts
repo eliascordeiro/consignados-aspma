@@ -18,5 +18,10 @@ import { swaggerSpec } from '@/lib/swagger';
  *               type: object
  */
 export async function GET() {
-  return NextResponse.json(swaggerSpec);
+  return NextResponse.json(swaggerSpec, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
+  });
 }

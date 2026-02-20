@@ -14,12 +14,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
-        description: 'Servidor de Desenvolvimento',
-      },
-      {
-        url: 'https://seu-dominio.com',
-        description: 'Servidor de Produção',
+        url: '/api',
+        description: 'API do Sistema',
       },
     ],
     components: {
