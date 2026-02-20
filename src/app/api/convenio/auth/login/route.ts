@@ -8,6 +8,65 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 )
 
+/**
+ * @swagger
+ * /api/convenio/auth/login:
+ *   post:
+ *     summary: Realiza login de convênio
+ *     description: Autentica um convênio e retorna um token JWT de sessão via cookie
+ *     tags:
+ *       - Autenticação
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - usuario
+ *               - senha
+ *             properties:
+ *               usuario:
+ *                 type: string
+ *                 description: Nome de usuário do convênio
+ *                 example: "admin"
+ *               senha:
+ *                 type: string
+ *                 description: Senha do convênio
+ *                 example: "senha123"
+ *     responses:
+ *       200:
+ *         description: Login realizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 convenio:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     usuario:
+ *                       type: string
+ *                     razaoSocial:
+ *                       type: string
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Credenciais inválidas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function POST(request: NextRequest) {
   try {
     const { usuario, senha } = await request.json()

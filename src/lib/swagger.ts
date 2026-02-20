@@ -6,7 +6,17 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Sistema de Consignados - API',
       version: '1.0.0',
-      description: 'Documentação completa da API do Sistema de Consignados',
+      description: `Documentação completa da API do Sistema de Consignados
+
+## Autenticação
+
+Esta API utiliza autenticação baseada em **sessão via cookies**. Para testar os endpoints:
+
+1. Faça login na aplicação através de: \`/convenio/auth/login\`
+2. O cookie de sessão será armazenado automaticamente
+3. As requisições subsequentes usarão esse cookie
+
+**Nota:** Endpoints que requerem autenticação retornarão erro 401 se não estiver logado.`,
       contact: {
         name: 'Equipe de Desenvolvimento',
         email: 'suporte@consignados.com.br',

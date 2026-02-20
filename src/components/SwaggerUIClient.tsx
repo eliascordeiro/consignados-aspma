@@ -69,6 +69,13 @@ export default function SwaggerUIClient() {
         docExpansion="list"
         defaultModelsExpandDepth={1}
         filter={true}
+        persistAuthorization={true}
+        withCredentials={true}
+        requestInterceptor={(req: any) => {
+          // Garante que cookies sejam enviados com as requisições
+          req.credentials = 'include';
+          return req;
+        }}
       />
     </div>
   );

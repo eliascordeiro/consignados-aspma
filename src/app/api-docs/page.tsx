@@ -17,6 +17,13 @@ export default function ApiDocsPage() {
           <p className="mt-2 text-gray-600">
             Explore e teste todos os endpoints disponíveis da API
           </p>
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>🔐 Autenticação:</strong> Para testar endpoints protegidos, primeiro faça login usando o endpoint{' '}
+              <code className="bg-blue-100 px-2 py-1 rounded">/api/convenio/auth/login</code>.
+              Os cookies de sessão serão armazenados automaticamente.
+            </p>
+          </div>
         </header>
         <SwaggerUIClient />
       </div>
