@@ -1,56 +1,61 @@
 # 🚂 Como Criar Dados de Teste no Railway
 
-## Opção 1: Via Railway CLI (Recomendado)
+## ✅ Método Recomendado: Via Railway Shell
 
-1. **Conecte ao banco de dados:**
-   ```bash
-   railway connect postgres
-   ```
+Esta é a forma mais fácil e direta:
 
-2. **Execute o script SQL:**
-   ```bash
-   \i scripts/seed-swagger-railway.sql
-   ```
-
-   Ou copie e cole o conteúdo do arquivo.
-
-## Opção 2: Via Interface do Railway
-
-1. Acesse o [Railway Dashboard](https://railway.app)
+### Passo 1: Acesse seu projeto no Railway
+1. Abra https://railway.app
 2. Selecione seu projeto
-3. Clique no serviço **Postgres**
-4. Vá em **Data** → **Query**
-5. Cole o conteúdo de [scripts/seed-swagger-railway.sql](./scripts/seed-swagger-railway.sql)
-6. Clique em **Run**
+3. Clique no serviço da **aplicação Next.js** (não no Postgres)
 
-## Opção 3: Via Cliente PostgreSQL
-
-1. **Obtenha as credenciais do Railway:**
-   - Dashboard → Postgres → Connect → PostgreSQL
-
-2. **Conecte via psql:**
+### Passo 2: Execute o script
+1. No canto superior direito, clique nos **3 pontinhos** (⋮)
+2. Selecione **"Shell"** ou **"Run command"**
+3. Digite:
    ```bash
-   psql postgres://user:pass@host:port/railway
+   npm run seed:railway
    ```
 
-3. **Execute o script:**
-   ```bash
-   \i scripts/seed-swagger-railway.sql
-   ```
+Pronto! Os dados serão criados automaticamente. ✅
 
-## Opção 4: Via Script Node (Railway Shell)
+---
 
-1. **Abra o Railway Shell:**
-   ```bash
-   railway run bash
-   ```
+## 🔄 Alternativa: Executar Localmente (conectando ao Railway)
 
-2. **Execute o script:**
-   ```bash
-   npm run seed:swagger
-   ```
+Se preferir executar da sua máquina:
 
-## Verificação
+### Passo 1: Obtenha a DATABASE_URL do Railway
+1. Railway Dashboard → Seu Projeto → Postgres
+2. Vá em **"Connect"**
+3. Copie a **"Postgres Connection URL"**
+
+### Passo 2: Execute localmente
+```bash
+DATABASE_URL="sua-url-copiada-aqui" npm run seed:railway
+```
+
+---
+
+## 🗑️ Remover Dados de Teste (Se necessário)
+
+Caso precise limpar, execute estes comandos no Railway Shell:
+
+```bash
+npx prisma studio
+```
+
+Ou conecte via qualquer cliente PostgreSQL e execute:
+
+```sql
+DELETE FROM "Socio" WHERE matricula LIKE '999%';
+DELETE FROM convenio WHERE usuario = 'teste';
+DELETE FROM "Empresa" WHERE nome = 'EMPRESA TESTE SWAGGER';
+```
+
+---
+
+## ✅ Verificar se funcionou
 
 Após executar, teste no Swagger:
 
@@ -64,13 +69,3 @@ Após executar, teste no Swagger:
    }
    ```
 4. Deve retornar **200 OK** ✅
-
-## 🗑️ Remover Dados de Teste
-
-Se precisar limpar:
-
-```sql
-DELETE FROM "Socio" WHERE matricula LIKE '999%';
-DELETE FROM convenio WHERE usuario = 'teste';
-DELETE FROM "Empresa" WHERE nome = 'EMPRESA TESTE SWAGGER';
-```
