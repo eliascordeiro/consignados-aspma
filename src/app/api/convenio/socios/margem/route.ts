@@ -3,6 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Consulta de Margem
+ *     description: Endpoints para consulta de margem consignável por matrícula ou CPF
+ */
+
 // Credenciais ZETRA
 const ZETRA_CONFIG = {
   phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/consultaMargemZetra.php',
@@ -120,6 +127,145 @@ async function calcularDescontosDoMes(
   }
 }
 
+/**
+ * @swagger
+ * /api/convenio/socios/margem:
+ *   get:
+ *     summary: Consulta margem consignável por matrícula ou CPF
+ *     description: |
+ *       Consulta a margem consignável disponível de um sócio.
+ *       
+ *       **Regras de consulta:**
+ *       - **Tipo 3 ou 4**: Cálculo local (limite - descontos do mês)
+ *       - **Outros tipos**: Consulta integrada com sistema ZETRA
+ *       - **Fallback**: Se ZETRA indisponível, usa valor do banco de dados
+ *       
+ *       **Data de corte:** 
+ *       - Se dia > 9: considera mês seguinte
+ *       - Se dia ≤ 9: considera mês atual
+ *     tags:
+ *       - Consulta de Margem
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: socioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do sócio (UUID)
+ *         example: "550e8400-e29b-41d4-a716-446655440000"
+ *       - in: query
+ *         name: valorParcela
+ *         schema:
+ *           type: string
+ *           default: "0.1"
+ *         description: Valor da parcela para simulação (opcional)
+ *         example: "100.00"
+ *     responses:
+ *       200:
+ *         description: Margem consultada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 socioId:
+ *                   type: string
+ *                   description: ID do sócio
+ *                 nome:
+ *                   type: string
+ *                   description: Nome do sócio
+ *                 matricula:
+ *                   type: string
+ *                   description: Matrícula do sócio
+ *                 margem:
+ *                   type: number
+ *                   format: float
+ *                   description: Margem disponível em reais
+ *                 limite:
+ *                   type: number
+ *                   format: float
+ *                   description: Limite total (apenas cálculo local)
+ *                 descontos:
+ *                   type: number
+ *                   format: float
+ *                   description: Descontos do mês (apenas cálculo local)
+ *                 mesReferencia:
+ *                   type: string
+ *                   description: Mês/ano de referência (apenas cálculo local)
+ *                   example: "2/2026"
+ *                 fonte:
+ *                   type: string
+ *                   enum: [local, zetra, fallback, banco, zetra_erro]
+ *                   description: Origem da informação
+ *                 tipo:
+ *                   type: string
+ *                   description: Tipo do sócio
+ *                 mensagem:
+ *                   type: string
+ *                   description: Mensagem de erro da ZETRA (se aplicável)
+ *                 codRetorno:
+ *                   type: string
+ *                   description: Código de retorno da ZETRA (se aplicável)
+ *                 aviso:
+ *                   type: string
+ *                   description: Avisos sobre a consulta
+ *             examples:
+ *               calculoLocal:
+ *                 summary: Cálculo local (tipo 3 ou 4)
+ *                 value:
+ *                   socioId: "550e8400-e29b-41d4-a716-446655440000"
+ *                   nome: "João da Silva"
+ *                   matricula: "12345"
+ *                   margem: 850.50
+ *                   limite: 1000.00
+ *                   descontos: 149.50
+ *                   mesReferencia: "2/2026"
+ *                   fonte: "local"
+ *                   tipo: "3"
+ *               consultaZetra:
+ *                 summary: Consulta ZETRA (outros tipos)
+ *                 value:
+ *                   socioId: "550e8400-e29b-41d4-a716-446655440000"
+ *                   nome: "Maria Santos"
+ *                   matricula: "67890"
+ *                   margem: 1250.00
+ *                   fonte: "zetra"
+ *                   tipo: "1"
+ *               fallback:
+ *                 summary: Fallback (ZETRA indisponível)
+ *                 value:
+ *                   socioId: "550e8400-e29b-41d4-a716-446655440000"
+ *                   nome: "Pedro Oliveira"
+ *                   matricula: "11111"
+ *                   margem: 500.00
+ *                   fonte: "fallback"
+ *                   tipo: "2"
+ *                   aviso: "ZETRA indisponível, usando valor do banco"
+ *       400:
+ *         description: Parâmetros inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "socioId é obrigatório"
+ *       401:
+ *         description: Não autorizado - É necessário fazer login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Sócio não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Sócio não encontrado"
+ */
 // GET /api/convenio/socios/margem?socioId=xxx&valorParcela=100
 export async function GET(request: NextRequest) {
   try {

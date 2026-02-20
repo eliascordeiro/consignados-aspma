@@ -5,70 +5,6 @@ import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 import { getDataUserId } from "@/lib/get-data-user-id"
 import { hasPermission } from "@/lib/permissions"
 
-/**
- * @swagger
- * /api/funcionarios:
- *   get:
- *     summary: Lista todos os funcionários/sócios
- *     description: Retorna uma lista paginada de funcionários/sócios com suporte a busca e filtros
- *     tags:
- *       - Funcionários
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         description: Termo de busca (nome, CPF, matrícula ou status - 'ativo'/'inativo')
- *       - in: query
- *         name: empresaId
- *         schema:
- *           type: integer
- *         description: ID da empresa para filtrar
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Número da página
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Quantidade de itens por página
- *     responses:
- *       200:
- *         description: Lista de funcionários retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 funcionarios:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Socio'
- *                 total:
- *                   type: integer
- *                 page:
- *                   type: integer
- *                 totalPages:
- *                   type: integer
- *       401:
- *         description: Não autorizado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Sem permissão
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
@@ -237,66 +173,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * @swagger
- * /api/funcionarios:
- *   post:
- *     summary: Cria um novo funcionário/sócio
- *     description: Cria um novo funcionário/sócio no sistema
- *     tags:
- *       - Funcionários
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - nome
- *               - cpf
- *               - matricula
- *             properties:
- *               nome:
- *                 type: string
- *                 description: Nome do funcionário
- *               cpf:
- *                 type: string
- *                 description: CPF do funcionário
- *               matricula:
- *                 type: string
- *                 description: Matrícula do funcionário
- *               cargo:
- *                 type: string
- *                 description: Cargo do funcionário
- *               salario:
- *                 type: number
- *                 format: float
- *                 description: Salário do funcionário
- *               empresaId:
- *                 type: integer
- *                 description: ID da empresa
- *     responses:
- *       201:
- *         description: Funcionário criado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Socio'
- *       401:
- *         description: Não autorizado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Sem permissão
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
