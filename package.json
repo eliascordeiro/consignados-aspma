@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "(prisma migrate resolve --rolled-back 20260117001937_add_password_reset_fields || true) && (prisma migrate resolve --rolled-back 20260118230137_add_user_permissions || true) && prisma migrate deploy && next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed:swagger": "npx tsx scripts/seed-swagger-test-data.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

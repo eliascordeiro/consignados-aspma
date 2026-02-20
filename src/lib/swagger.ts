@@ -16,7 +16,22 @@ Esta API utiliza autenticação baseada em **sessão via cookies**. Para testar 
 2. O cookie de sessão será armazenado automaticamente
 3. As requisições subsequentes usarão esse cookie
 
-**Nota:** Endpoints que requerem autenticação retornarão erro 401 se não estiver logado.`,
+**Nota:** Endpoints que requerem autenticação retornarão erro 401 se não estiver logado.
+
+## 🧪 Dados de Teste
+
+Para facilitar os testes, use as credenciais abaixo:
+
+### Login de Teste
+- **Usuário:** \`teste\`
+- **Senha:** \`teste123\`
+
+### Sócios de Teste (para consulta de margem)
+- **Matrícula 999001** - CPF: 111.111.111-11 (Tipo 1 - Consulta ZETRA)
+- **Matrícula 999002** - CPF: 222.222.222-22 (Tipo 3 - Cálculo Local)
+- **Matrícula 999003** - CPF: 333.333.333-33 (Tipo 4 - Cálculo Local)
+
+Use essas matrículas ou CPFs para testar os endpoints de busca e consulta de margem.`,
       contact: {
         name: 'Equipe de Desenvolvimento',
         email: 'suporte@consignados.com.br',

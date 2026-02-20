@@ -24,6 +24,19 @@ export default function ApiDocsPage() {
               Os cookies de sessão serão armazenados automaticamente.
             </p>
           </div>
+          <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800 mb-2">
+              <strong>🧪 Dados de Teste:</strong> Use as credenciais abaixo para testar a API:
+            </p>
+            <ul className="text-sm text-green-700 ml-4 space-y-1">
+              <li>• <strong>Login:</strong> usuário <code className="bg-green-100 px-1 rounded">teste</code> / senha <code className="bg-green-100 px-1 rounded">teste123</code></li>
+              <li>• <strong>Matrículas:</strong> 999001, 999002, 999003</li>
+              <li>• <strong>CPFs:</strong> 111.111.111-11, 222.222.222-22, 333.333.333-33</li>
+            </ul>
+            <p className="text-xs text-green-600 mt-2">
+              📖 Ver <a href="/SWAGGER_TEST_GUIDE.md" className="underline font-medium">SWAGGER_TEST_GUIDE.md</a> para instruções detalhadas
+            </p>
+          </div>
         </header>
         <SwaggerUIClient />
       </div>
