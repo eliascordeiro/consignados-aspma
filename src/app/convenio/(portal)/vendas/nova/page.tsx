@@ -329,51 +329,52 @@ export default function NovaVendaPage() {
       return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     }
 
-    // Largura fixa de 32 chars para linhas (cabe em 80mm com fonte 12px Courier)
-    const SEP1 = '================================'
-    const SEP2 = '--------------------------------'
+    // Largura fixa de 32 chars (cabe em 80mm com fonte 12px Courier)
+    const W = 32
+    const SEP1 = '='.repeat(W)
+    const SEP2 = '-'.repeat(W)
+    const CORTE = '- '.repeat(W / 2)   // "- - - - ..." exatamente 32 chars
 
-    // Centraliza texto em 32 chars
+    // Centraliza texto em W chars usando apenas espaços (sem CSS text-align)
     const center = (txt: string) => {
-      const w = 32
-      if (txt.length >= w) return txt
-      const pad = Math.floor((w - txt.length) / 2)
+      if (txt.length >= W) return txt
+      const pad = Math.floor((W - txt.length) / 2)
       return ' '.repeat(pad) + txt
     }
 
-    // Linha chave: valor alinhados à direita (total 32 chars)
+    // Linha chave: valor alinhado à direita — total W chars
     const row = (label: string, value: string, bold = false) => {
-      const maxLabel = 32 - value.length - 1
+      const maxLabel = W - value.length - 1
       const l = label.length > maxLabel ? label.substring(0, maxLabel) : label
-      const spaces = 32 - l.length - value.length
+      const spaces = W - l.length - value.length
       const line = l + ' '.repeat(Math.max(1, spaces)) + value
       return bold
-        ? `<div class="bold mono">${line}</div>`
-        : `<div class="mono">${line}</div>`
+        ? `<div class="m b">${line}</div>`
+        : `<div class="m">${line}</div>`
     }
 
     const viaHtml = (via: string) => `
       <div class="via">
-        <div class="mono bold center">${center(venda.convenio.nome || 'CONVÊNIO')}</div>
-        <div class="mono center">${center('COMPROVANTE DE VENDA')}</div>
-        <div class="mono">${SEP1}</div>
+        <div class="m b">${center(venda.convenio.nome || 'CONVÊNIO')}</div>
+        <div class="m">${center('COMPROVANTE DE VENDA')}</div>
+        <div class="m">${SEP1}</div>
         ${row('Data:', formatData(venda.dataEmissao))}
         ${row('Venda N\u00ba:', String(venda.numeroVenda).padStart(5, '0'))}
         ${row('Operador:', venda.operador || '-')}
-        <div class="mono">${SEP2}</div>
-        <div class="mono label">ASSOCIADO:</div>
-        <div class="mono bold">${venda.socio.nome}</div>
+        <div class="m">${SEP2}</div>
+        <div class="m">ASSOCIADO:</div>
+        <div class="m b">${venda.socio.nome}</div>
         ${venda.socio.matricula ? row('Matr\u00edcula:', venda.socio.matricula) : ''}
         ${venda.socio.cpf ? row('CPF:', venda.socio.cpf) : ''}
-        <div class="mono">${SEP2}</div>
+        <div class="m">${SEP2}</div>
         ${row('Valor Total:', formatMoeda(venda.valorTotal), true)}
         ${row('N\u00ba Parcelas:', venda.quantidadeParcelas + 'x')}
         ${row('Valor Parcela:', formatMoeda(venda.valorParcela), true)}
-        <div class="mono">${SEP1}</div>
-        <div class="mono center assinatura-label">${center('Assinatura do Associado')}</div>
-        <div class="mono center">${center('________________________________')}</div>
-        <div class="mono center bold via-label">${center(via)}</div>
-        <div class="mono">${SEP1}</div>
+        <div class="m">${SEP1}</div>
+        <div class="m mt">${center('Assinatura do Associado')}</div>
+        <div class="m">${center('________________________________')}</div>
+        <div class="m b">${center(via)}</div>
+        <div class="m">${SEP1}</div>
       </div>
     `
 
@@ -384,50 +385,31 @@ export default function NovaVendaPage() {
         <meta charset="UTF-8">
         <title>Comprovante #${String(venda.numeroVenda).padStart(5, '0')}</title>
         <style>
-          @page {
-            size: 80mm auto;
-            margin: 0;
-          }
+          @page { size: 80mm auto; margin: 0; }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'Courier New', Courier, monospace;
             font-size: 12px;
-            line-height: 1.4;
+            line-height: 1.45;
             width: 80mm;
             margin: 0;
             padding: 4mm 3mm;
             color: #000;
             background: #fff;
           }
-          .via { padding: 3mm 0; page-break-inside: avoid; }
-          .mono { white-space: pre; font-family: 'Courier New', Courier, monospace; font-size: 12px; }
-          .bold { font-weight: bold; }
-          .center { text-align: center; }
-          .label { font-size: 10px; text-transform: uppercase; margin-top: 2px; }
-          .assinatura-label { margin-top: 6px; font-size: 10px; }
-          .via-label { margin-top: 3px; font-size: 11px; }
-          .corte-wrap {
-            text-align: center;
-            margin: 3mm 0;
-          }
-          .corte-linha {
-            border: none;
-            border-top: 1.5px dashed #000;
-            margin: 2mm 0;
-          }
-          .corte-txt {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 10px;
-            color: #444;
-          }
+          .via { padding: 2mm 0; page-break-inside: avoid; }
+          .m { white-space: pre; font-family: 'Courier New', Courier, monospace; font-size: 12px; }
+          .b { font-weight: bold; }
+          .mt { margin-top: 4mm; }
+          .corte { margin: 3mm 0; }
         </style>
       </head>
       <body>
         ${viaHtml('1\u00aa Via - Conv\u00eanio')}
-        <div class="corte-wrap">
-          <hr class="corte-linha">
-          <span class="corte-txt">\u2702 recortar aqui</span>
-          <hr class="corte-linha">
+        <div class="corte">
+          <div class="m">${CORTE}</div>
+          <div class="m">${center('\u2702 recortar aqui')}</div>
+          <div class="m">${CORTE}</div>
         </div>
         ${viaHtml('2\u00aa Via - Associado')}
         <script>window.onload = function(){ window.print(); }<\/script>
