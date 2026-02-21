@@ -11,27 +11,38 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Criar convênio de teste
-    const convenio = await prisma.convenio.upsert({
+    let convenio = await prisma.convenio.findFirst({
       where: { usuario: 'teste' },
-      update: {
-        senha: 'teste123',
-        ativo: true,
-        razao_soc: 'CONVÊNIO DE TESTE',
-      },
-      create: {
-        usuario: 'teste',
-        senha: 'teste123',
-        ativo: true,
-        razao_soc: 'CONVÊNIO DE TESTE',
-        cnpj: '00000000000001',
-        endereco: 'Rua Teste, 123',
-        cidade: 'Teste City',
-        uf: 'TS',
-        cep: '00000-000',
-        telefone: '(00) 0000-0000',
-        email: 'teste@teste.com',
-      },
     })
+
+    if (convenio) {
+      // Atualizar convênio existente
+      convenio = await prisma.convenio.update({
+        where: { id: convenio.id },
+        data: {
+          senha: 'teste123',
+          ativo: true,
+          razao_soc: 'CONVÊNIO DE TESTE',
+        },
+      })
+    } else {
+      // Criar novo convênio
+      convenio = await prisma.convenio.create({
+        data: {
+          usuario: 'teste',
+          senha: 'teste123',
+          ativo: true,
+          razao_soc: 'CONVÊNIO DE TESTE',
+          cnpj: '00000000000001',
+          endereco: 'Rua Teste, 123',
+          cidade: 'Teste City',
+          uf: 'TS',
+          cep: '00000-000',
+          telefone: '(00) 0000-0000',
+          email: 'teste@teste.com',
+        },
+      })
+    }
 
     // 2. Criar sócios de teste
     const socios = []
@@ -39,24 +50,35 @@ export async function POST(request: NextRequest) {
       const matricula = `99900${i}`
       const cpf = `00000000${i}00`
       
-      const socio = await prisma.socio.upsert({
+      let socio = await prisma.socio.findFirst({
         where: { matricula },
-        update: {
-          nome: `SOCIO TESTE ${i}`,
-          cpf,
-          convenio_id: convenio.id,
-        },
-        create: {
-          matricula,
-          nome: `SOCIO TESTE ${i}`,
-          cpf,
-          convenio_id: convenio.id,
-          nascimento: new Date('1980-01-01'),
-          situacao: 'A',
-          cargo: 'TESTE',
-          admissao: new Date('2020-01-01'),
-        },
       })
+
+      if (socio) {
+        // Atualizar sócio existente
+        socio = await prisma.socio.update({
+          where: { id: socio.id },
+          data: {
+            nome: `SOCIO TESTE ${i}`,
+            cpf,
+            convenio_id: convenio.id,
+          },
+        })
+      } else {
+        // Criar novo sócio
+        socio = await prisma.socio.create({
+          data: {
+            matricula,
+            nome: `SOCIO TESTE ${i}`,
+            cpf,
+            convenio_id: convenio.id,
+            nascimento: new Date('1980-01-01'),
+            situacao: 'A',
+            cargo: 'TESTE',
+            admissao: new Date('2020-01-01'),
+          },
+        })
+      }
       
       socios.push(socio)
     }
