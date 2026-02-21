@@ -44,7 +44,22 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 2. Criar sócios de teste
+    // 2. Criar empresa de teste
+    let empresa = await prisma.empresa.findFirst({
+      where: { nome: 'EMPRESA TESTE SWAGGER' },
+    })
+
+    if (!empresa) {
+      empresa = await prisma.empresa.create({
+        data: {
+          nome: 'EMPRESA TESTE SWAGGER',
+          cnpj: '11.111.111/0001-11',
+          ativo: true,
+        },
+      })
+    }
+
+    // 3. Criar sócios de teste
     const socios = []
     for (let i = 1; i <= 3; i++) {
       const matricula = `99900${i}`
@@ -61,7 +76,7 @@ export async function POST(request: NextRequest) {
           data: {
             nome: `SOCIO TESTE ${i}`,
             cpf,
-            convenio_id: convenio.id,
+            empresaId: empresa.id,
           },
         })
       } else {
@@ -71,11 +86,14 @@ export async function POST(request: NextRequest) {
             matricula,
             nome: `SOCIO TESTE ${i}`,
             cpf,
-            convenio_id: convenio.id,
-            nascimento: new Date('1980-01-01'),
-            situacao: 'A',
-            cargo: 'TESTE',
-            admissao: new Date('2020-01-01'),
+            empresaId: empresa.id,
+            dataNascimento: new Date('1980-01-01'),
+            ativo: true,
+            bloqueio: 'N',
+            dataAdmissao: new Date('2020-01-01'),
+            tipo: `${i}`,
+            margemConsig: 1000.00,
+            limite: 2000.00,
           },
         })
       }
@@ -89,6 +107,10 @@ export async function POST(request: NextRequest) {
         id: convenio.id,
         usuario: convenio.usuario,
         razao_soc: convenio.razao_soc,
+      },
+      empresa: {
+        id: empresa.id,
+        nome: empresa.nome,
       },
       socios: socios.map(s => ({
         id: s.id,
