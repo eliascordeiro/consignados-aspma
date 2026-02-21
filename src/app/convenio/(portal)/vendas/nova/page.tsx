@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2, Search, User, AlertTriangle, CheckCircle2, MessageSquare, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Loader2, Search, User, AlertTriangle, CheckCircle2, MessageSquare, ShieldCheck, Printer, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 
@@ -42,6 +42,18 @@ interface LimiteInfo {
   tipoDescricao: string
 }
 
+interface VendaConfirmada {
+  id: string
+  numeroVenda: number
+  valorTotal: number
+  valorParcela: number
+  quantidadeParcelas: number
+  dataEmissao: string
+  operador: string
+  socio: { nome: string; matricula: string | null; cpf: string | null }
+  convenio: { nome: string }
+}
+
 export default function NovaVendaPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -52,6 +64,8 @@ export default function NovaVendaPage() {
   const [margemInfo, setMargemInfo] = useState<MargemInfo | null>(null)
   const [consultandoMargem, setConsultandoMargem] = useState(false)
   const [limiteInfo, setLimiteInfo] = useState<LimiteInfo | null>(null)
+
+  const [vendaConfirmada, setVendaConfirmada] = useState<VendaConfirmada | null>(null)
 
   // Fluxo de verificação WhatsApp
   const [codigoEnviado, setCodigoEnviado] = useState(false)
@@ -282,8 +296,18 @@ export default function NovaVendaPage() {
         console.error('Erro ao enviar notificação:', notifError)
       }
 
-      alert('✅ Venda #' + data.venda.numeroVenda + ' criada com sucesso!')
-      router.push('/convenio/vendas')
+      // Mostrar tela de sucesso com opção de imprimir
+      setVendaConfirmada({
+        id: data.venda.id,
+        numeroVenda: data.venda.numeroVenda,
+        valorTotal: Number(data.venda.valorTotal),
+        valorParcela: Number(data.venda.valorParcela),
+        quantidadeParcelas: data.venda.quantidadeParcelas,
+        dataEmissao: data.venda.dataEmissao || new Date().toISOString(),
+        operador: data.venda.operador || '',
+        socio: data.socio || { nome: socioSelecionado.nome, matricula: socioSelecionado.matricula, cpf: socioSelecionado.cpf },
+        convenio: data.convenio || { nome: '' },
+      })
     } catch (error: any) {
       alert(error.message || 'Erro ao processar venda')
     } finally {
@@ -296,6 +320,100 @@ export default function NovaVendaPage() {
     // Formulário não faz submit direto — fluxo controlado pelos botões
   }
 
+  const imprimirComprovante = (venda: VendaConfirmada) => {
+    const formatMoeda = (v: number) =>
+      v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+    const formatData = (iso: string) => {
+      const d = new Date(iso)
+      return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    }
+
+    const viaHtml = (via: string) => `
+      <div class="via">
+        <div class="center bold">${venda.convenio.nome || 'CONVÊNIO'}</div>
+        <div class="center">COMPROVANTE DE VENDA</div>
+        <div class="linha">================================</div>
+        <div class="row"><span>Data:</span><span>${formatData(venda.dataEmissao)}</span></div>
+        <div class="row"><span>Venda Nº:</span><span>${String(venda.numeroVenda).padStart(5, '0')}</span></div>
+        <div class="row"><span>Operador:</span><span>${venda.operador || '-'}</span></div>
+        <div class="linha">--------------------------------</div>
+        <div class="label">ASSOCIADO:</div>
+        <div class="bold">${venda.socio.nome}</div>
+        ${venda.socio.matricula ? `<div class="row"><span>Matrícula:</span><span>${venda.socio.matricula}</span></div>` : ''}
+        ${venda.socio.cpf ? `<div class="row"><span>CPF:</span><span>${venda.socio.cpf}</span></div>` : ''}
+        <div class="linha">--------------------------------</div>
+        <div class="row bold"><span>Valor Total:</span><span>${formatMoeda(venda.valorTotal)}</span></div>
+        <div class="row"><span>Nº Parcelas:</span><span>${venda.quantidadeParcelas}x</span></div>
+        <div class="row bold"><span>Valor Parcela:</span><span>${formatMoeda(venda.valorParcela)}</span></div>
+        <div class="linha">================================</div>
+        <div class="center small">Assinatura do Associado</div>
+        <div class="assinatura">_______________________________</div>
+        <div class="center bold via-label">${via}</div>
+        <div class="linha">================================</div>
+      </div>
+    `
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>Comprovante de Venda #${venda.numeroVenda}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            width: 80mm;
+            margin: 0 auto;
+            padding: 4px;
+            color: #000;
+          }
+          .via { padding: 6px 0; page-break-inside: avoid; }
+          .corte {
+            margin: 4px 0;
+            border: none;
+            border-top: 2px dashed #000;
+            text-align: center;
+          }
+          .corte-label {
+            text-align: center;
+            font-size: 9px;
+            color: #555;
+            margin-bottom: 6px;
+          }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .small { font-size: 9px; }
+          .linha { letter-spacing: 0; margin: 3px 0; overflow: hidden; white-space: nowrap; }
+          .row { display: flex; justify-content: space-between; margin: 2px 0; }
+          .label { font-size: 9px; text-transform: uppercase; color: #555; margin-top: 3px; }
+          .assinatura { text-align: center; margin: 8px auto; }
+          .via-label { font-size: 10px; margin-top: 4px; }
+          @media print {
+            body { width: 80mm; }
+            .corte { border-top: 2px dashed #000; }
+          }
+        </style>
+      </head>
+      <body>
+        ${viaHtml('1ª Via - Convênio')}
+        <hr class="corte">
+        <div class="corte-label">✂ recortar aqui</div>
+        ${viaHtml('2ª Via - Associado')}
+        <script>window.onload = function(){ window.print(); }<\/script>
+      </body>
+      </html>
+    `
+
+    const janela = window.open('', '_blank', 'width=400,height=700')
+    if (janela) {
+      janela.document.write(html)
+      janela.document.close()
+    }
+  }
+
   const fonteLabel = (fonte: string) => {
     switch (fonte) {
       case 'local': return 'Cálculo Local'
@@ -305,6 +423,104 @@ export default function NovaVendaPage() {
       case 'zetra_erro': return 'ZETRA (Erro)'
       default: return fonte
     }
+  }
+
+  // Tela de sucesso após confirmar venda
+  if (vendaConfirmada) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header sucesso */}
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Venda Confirmada
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Venda registrada com sucesso
+            </p>
+          </div>
+        </div>
+
+        {/* Card de sucesso */}
+        <Card className="border-green-200 dark:border-green-800">
+          <CardContent className="pt-6 space-y-5">
+            <div className="flex flex-col items-center gap-2 py-2">
+              <div className="p-4 rounded-full bg-green-100 dark:bg-green-900/30">
+                <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-700 dark:text-green-400">
+                  Venda #{String(vendaConfirmada.numeroVenda).padStart(5, '0')} criada!
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {new Date(vendaConfirmada.dataEmissao).toLocaleDateString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit',
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Resumo */}
+            <div className="rounded-lg border border-border divide-y divide-border text-sm">
+              <div className="flex justify-between px-4 py-2">
+                <span className="text-muted-foreground">Associado</span>
+                <span className="font-medium text-right max-w-[60%]">{vendaConfirmada.socio.nome}</span>
+              </div>
+              {vendaConfirmada.socio.matricula && (
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-muted-foreground">Matrícula</span>
+                  <span className="font-medium">{vendaConfirmada.socio.matricula}</span>
+                </div>
+              )}
+              <div className="flex justify-between px-4 py-2">
+                <span className="text-muted-foreground">Valor Total</span>
+                <span className="font-bold text-foreground">
+                  {vendaConfirmada.valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+              <div className="flex justify-between px-4 py-2">
+                <span className="text-muted-foreground">Parcelas</span>
+                <span className="font-medium">
+                  {vendaConfirmada.quantidadeParcelas}x de{' '}
+                  {vendaConfirmada.valorParcela.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                type="button"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => imprimirComprovante(vendaConfirmada)}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir Comprovante (2 vias)
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setVendaConfirmada(null)
+                  trocarSocio()
+                }}
+              >
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Nova Venda
+              </Button>
+            </div>
+
+            <div className="text-center">
+              <Link href="/convenio/vendas" className="text-sm text-muted-foreground hover:underline">
+                Voltar para lista de vendas
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

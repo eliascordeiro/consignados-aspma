@@ -232,7 +232,18 @@ export async function POST(request: NextRequest) {
         id: venda.id,
         numeroVenda: venda.numeroVenda,
         valorTotal: venda.valorTotal,
+        valorParcela: venda.valorParcela,
         quantidadeParcelas: venda.quantidadeParcelas,
+        dataEmissao: venda.dataEmissao,
+        operador: venda.operador,
+      },
+      socio: {
+        nome: socio.nome,
+        matricula: socio.matricula,
+        cpf: socio.cpf,
+      },
+      convenio: {
+        nome: convenio?.fantasia || convenio?.razao_soc || '',
       },
     })
   } catch (error) {
