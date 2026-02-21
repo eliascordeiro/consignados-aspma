@@ -137,6 +137,17 @@ export async function POST(request: NextRequest) {
 
     const numeroVenda = (ultimaVenda?.numeroVenda || 0) + 1
 
+    // Busca convênio para obter userId do MANAGER dono do convênio
+    // Isso é necessário para que o MANAGER veja as vendas feitas pelo convênio
+    const convenioData = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { userId: true, razao_soc: true, fantasia: true },
+    })
+
+    // Se o convênio tem userId (MANAGER dono), usa esse ID para que o MANAGER veja a venda
+    // Caso contrário, mantém o ID virtual como fallback
+    const vendaUserId = convenioData?.userId || ('convenio-' + session.convenioId)
+
     // Cria a venda
     const venda = await prisma.venda.create({
       data: {
@@ -147,7 +158,7 @@ export async function POST(request: NextRequest) {
         quantidadeParcelas,
         valorParcela,
         observacoes,
-        userId: 'convenio-' + session.convenioId, // ID virtual para vendas de conveniados
+        userId: vendaUserId,
         operador: session.usuario,
         ativo: true,
         cancelado: false,
@@ -195,11 +206,8 @@ export async function POST(request: NextRequest) {
       console.log(`✅ [VENDA] Margem atualizada - Sócio: ${socio.nome}, Limite: ${limite}, Descontos: ${descontos}, Nova Margem: ${novaMargemConsig}`)
     }
 
-    // Busca convênio para o log
-    const convenio = await prisma.convenio.findUnique({
-      where: { id: session.convenioId },
-      select: { razao_soc: true, fantasia: true }
-    })
+    // Reutiliza dado já buscado antes da criação da venda
+    const convenio = convenioData
 
     // Registra no audit log
     await createAuditLog({
