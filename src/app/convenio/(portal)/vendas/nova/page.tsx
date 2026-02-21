@@ -329,28 +329,51 @@ export default function NovaVendaPage() {
       return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     }
 
+    // Largura fixa de 32 chars para linhas (cabe em 80mm com fonte 12px Courier)
+    const SEP1 = '================================'
+    const SEP2 = '--------------------------------'
+
+    // Centraliza texto em 32 chars
+    const center = (txt: string) => {
+      const w = 32
+      if (txt.length >= w) return txt
+      const pad = Math.floor((w - txt.length) / 2)
+      return ' '.repeat(pad) + txt
+    }
+
+    // Linha chave: valor alinhados à direita (total 32 chars)
+    const row = (label: string, value: string, bold = false) => {
+      const maxLabel = 32 - value.length - 1
+      const l = label.length > maxLabel ? label.substring(0, maxLabel) : label
+      const spaces = 32 - l.length - value.length
+      const line = l + ' '.repeat(Math.max(1, spaces)) + value
+      return bold
+        ? `<div class="bold mono">${line}</div>`
+        : `<div class="mono">${line}</div>`
+    }
+
     const viaHtml = (via: string) => `
       <div class="via">
-        <div class="center bold">${venda.convenio.nome || 'CONVÊNIO'}</div>
-        <div class="center">COMPROVANTE DE VENDA</div>
-        <div class="linha">================================</div>
-        <div class="row"><span>Data:</span><span>${formatData(venda.dataEmissao)}</span></div>
-        <div class="row"><span>Venda Nº:</span><span>${String(venda.numeroVenda).padStart(5, '0')}</span></div>
-        <div class="row"><span>Operador:</span><span>${venda.operador || '-'}</span></div>
-        <div class="linha">--------------------------------</div>
-        <div class="label">ASSOCIADO:</div>
-        <div class="bold">${venda.socio.nome}</div>
-        ${venda.socio.matricula ? `<div class="row"><span>Matrícula:</span><span>${venda.socio.matricula}</span></div>` : ''}
-        ${venda.socio.cpf ? `<div class="row"><span>CPF:</span><span>${venda.socio.cpf}</span></div>` : ''}
-        <div class="linha">--------------------------------</div>
-        <div class="row bold"><span>Valor Total:</span><span>${formatMoeda(venda.valorTotal)}</span></div>
-        <div class="row"><span>Nº Parcelas:</span><span>${venda.quantidadeParcelas}x</span></div>
-        <div class="row bold"><span>Valor Parcela:</span><span>${formatMoeda(venda.valorParcela)}</span></div>
-        <div class="linha">================================</div>
-        <div class="center small">Assinatura do Associado</div>
-        <div class="assinatura">_______________________________</div>
-        <div class="center bold via-label">${via}</div>
-        <div class="linha">================================</div>
+        <div class="mono bold center">${center(venda.convenio.nome || 'CONVÊNIO')}</div>
+        <div class="mono center">${center('COMPROVANTE DE VENDA')}</div>
+        <div class="mono">${SEP1}</div>
+        ${row('Data:', formatData(venda.dataEmissao))}
+        ${row('Venda N\u00ba:', String(venda.numeroVenda).padStart(5, '0'))}
+        ${row('Operador:', venda.operador || '-')}
+        <div class="mono">${SEP2}</div>
+        <div class="mono label">ASSOCIADO:</div>
+        <div class="mono bold">${venda.socio.nome}</div>
+        ${venda.socio.matricula ? row('Matr\u00edcula:', venda.socio.matricula) : ''}
+        ${venda.socio.cpf ? row('CPF:', venda.socio.cpf) : ''}
+        <div class="mono">${SEP2}</div>
+        ${row('Valor Total:', formatMoeda(venda.valorTotal), true)}
+        ${row('N\u00ba Parcelas:', venda.quantidadeParcelas + 'x')}
+        ${row('Valor Parcela:', formatMoeda(venda.valorParcela), true)}
+        <div class="mono">${SEP1}</div>
+        <div class="mono center assinatura-label">${center('Assinatura do Associado')}</div>
+        <div class="mono center">${center('________________________________')}</div>
+        <div class="mono center bold via-label">${center(via)}</div>
+        <div class="mono">${SEP1}</div>
       </div>
     `
 
@@ -359,55 +382,60 @@ export default function NovaVendaPage() {
       <html lang="pt-BR">
       <head>
         <meta charset="UTF-8">
-        <title>Comprovante de Venda #${venda.numeroVenda}</title>
+        <title>Comprovante #${String(venda.numeroVenda).padStart(5, '0')}</title>
         <style>
+          @page {
+            size: 80mm auto;
+            margin: 0;
+          }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 11px;
+            font-size: 12px;
+            line-height: 1.4;
             width: 80mm;
-            margin: 0 auto;
-            padding: 4px;
+            margin: 0;
+            padding: 4mm 3mm;
             color: #000;
+            background: #fff;
           }
-          .via { padding: 6px 0; page-break-inside: avoid; }
-          .corte {
-            margin: 4px 0;
-            border: none;
-            border-top: 2px dashed #000;
-            text-align: center;
-          }
-          .corte-label {
-            text-align: center;
-            font-size: 9px;
-            color: #555;
-            margin-bottom: 6px;
-          }
-          .center { text-align: center; }
+          .via { padding: 3mm 0; page-break-inside: avoid; }
+          .mono { white-space: pre; font-family: 'Courier New', Courier, monospace; font-size: 12px; }
           .bold { font-weight: bold; }
-          .small { font-size: 9px; }
-          .linha { letter-spacing: 0; margin: 3px 0; overflow: hidden; white-space: nowrap; }
-          .row { display: flex; justify-content: space-between; margin: 2px 0; }
-          .label { font-size: 9px; text-transform: uppercase; color: #555; margin-top: 3px; }
-          .assinatura { text-align: center; margin: 8px auto; }
-          .via-label { font-size: 10px; margin-top: 4px; }
-          @media print {
-            body { width: 80mm; }
-            .corte { border-top: 2px dashed #000; }
+          .center { text-align: center; }
+          .label { font-size: 10px; text-transform: uppercase; margin-top: 2px; }
+          .assinatura-label { margin-top: 6px; font-size: 10px; }
+          .via-label { margin-top: 3px; font-size: 11px; }
+          .corte-wrap {
+            text-align: center;
+            margin: 3mm 0;
+          }
+          .corte-linha {
+            border: none;
+            border-top: 1.5px dashed #000;
+            margin: 2mm 0;
+          }
+          .corte-txt {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 10px;
+            color: #444;
           }
         </style>
       </head>
       <body>
-        ${viaHtml('1ª Via - Convênio')}
-        <hr class="corte">
-        <div class="corte-label">✂ recortar aqui</div>
-        ${viaHtml('2ª Via - Associado')}
+        ${viaHtml('1\u00aa Via - Conv\u00eanio')}
+        <div class="corte-wrap">
+          <hr class="corte-linha">
+          <span class="corte-txt">\u2702 recortar aqui</span>
+          <hr class="corte-linha">
+        </div>
+        ${viaHtml('2\u00aa Via - Associado')}
         <script>window.onload = function(){ window.print(); }<\/script>
       </body>
       </html>
     `
 
-    const janela = window.open('', '_blank', 'width=400,height=700')
+    const janela = window.open('', '_blank', 'width=420,height=750')
     if (janela) {
       janela.document.write(html)
       janela.document.close()
