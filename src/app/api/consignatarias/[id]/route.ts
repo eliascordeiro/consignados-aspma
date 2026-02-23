@@ -22,6 +22,48 @@ const empresaSchema = z.object({
   ativo: z.boolean().default(true),
 })
 
+// GET - Buscar consignatária por ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth()
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    if (!hasPermission(session.user, 'consignatarias.view')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+    }
+
+    const { id: paramId } = await params
+    const id = parseInt(paramId)
+
+    const dataUserId = await getDataUserId(session as any)
+
+    const empresa = await prisma.empresa.findFirst({
+      where: { id, userId: dataUserId },
+    })
+
+    if (!empresa) {
+      return NextResponse.json(
+        { error: "Consignatária não encontrada" },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(empresa)
+  } catch (error) {
+    console.error("Erro ao buscar consignatária:", error)
+    return NextResponse.json(
+      { error: "Erro ao buscar consignatária" },
+      { status: 500 }
+    )
+  }
+}
+
 //PUT - Atualizar consignatária
 export async function PUT(
   request: NextRequest,
