@@ -26,25 +26,13 @@ export async function GET(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = await getDataUserId(session as any);
-
-    // Buscar convênios vinculados ao usuário (para vendas lançadas pelo portal de convênios)
-    const conveniosDoUsuario = await prisma.convenio.findMany({
-      where: { userId: targetUserId },
-      select: { id: true },
-    });
-    const convenioIdsDoUsuario = conveniosDoUsuario.map((c) => c.id);
-
-    const vendaWhere =
-      convenioIdsDoUsuario.length > 0
-        ? {
-            id: params.id,
-            OR: [
-              { userId: targetUserId },
-              { convenioId: { in: convenioIdsDoUsuario } },
-            ],
-          }
-        : { id: params.id, userId: targetUserId };
+    // MANAGER vê qualquer venda; USER subordinado filtra pelo userId do MANAGER
+    const userRole = session.user.role;
+    let vendaWhere: any = { id: params.id };
+    if (userRole !== 'MANAGER' && userRole !== 'ADMIN') {
+      const targetUserId = await getDataUserId(session as any);
+      vendaWhere.userId = targetUserId;
+    }
 
     const venda = await prisma.venda.findFirst({
       where: vendaWhere,
