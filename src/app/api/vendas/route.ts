@@ -33,7 +33,22 @@ export async function GET(request: NextRequest) {
 
     // Buscar userId correto (herda dados do MANAGER se for subordinado)
     const dataUserId = await getDataUserId(session as any);
-    whereClause.userId = dataUserId;
+
+    // Buscar convênios vinculados ao usuário (vendas lançadas pelo portal de convênios)
+    const conveniosDoUsuario = await prisma.convenio.findMany({
+      where: { userId: dataUserId },
+      select: { id: true },
+    });
+    const convenioIdsDoUsuario = conveniosDoUsuario.map((c) => c.id);
+
+    // Inclui vendas criadas diretamente pelo usuário E vendas lançadas via portal de convênios deste usuário
+    if (convenioIdsDoUsuario.length > 0) {
+      whereClause.AND = [
+        { OR: [{ userId: dataUserId }, { convenioId: { in: convenioIdsDoUsuario } }] },
+      ];
+    } else {
+      whereClause.userId = dataUserId;
+    }
 
     if (socioId) {
       whereClause.socioId = socioId;

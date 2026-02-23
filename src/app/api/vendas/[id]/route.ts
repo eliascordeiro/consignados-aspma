@@ -28,11 +28,26 @@ export async function GET(
 
     const targetUserId = await getDataUserId(session as any);
 
+    // Buscar convênios vinculados ao usuário (para vendas lançadas pelo portal de convênios)
+    const conveniosDoUsuario = await prisma.convenio.findMany({
+      where: { userId: targetUserId },
+      select: { id: true },
+    });
+    const convenioIdsDoUsuario = conveniosDoUsuario.map((c) => c.id);
+
+    const vendaWhere =
+      convenioIdsDoUsuario.length > 0
+        ? {
+            id: params.id,
+            OR: [
+              { userId: targetUserId },
+              { convenioId: { in: convenioIdsDoUsuario } },
+            ],
+          }
+        : { id: params.id, userId: targetUserId };
+
     const venda = await prisma.venda.findFirst({
-      where: {
-        id: params.id,
-        userId: targetUserId,
-      },
+      where: vendaWhere,
       include: {
         socio: {
           select: {
