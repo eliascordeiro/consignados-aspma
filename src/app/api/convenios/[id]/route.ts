@@ -48,6 +48,27 @@ const convenioSchema = z.object({
   ativo: z.boolean().default(true),
 })
 
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session?.user) return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    if (!hasPermission(session.user, 'convenios.view') && !hasPermission(session.user, 'convenios.edit')) {
+      return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
+    }
+    const { id } = await params
+    const dataUserId = await getDataUserId(session as any)
+    const convenio = await db.convenio.findFirst({ where: { id: parseInt(id), userId: dataUserId } })
+    if (!convenio) return NextResponse.json({ error: "Convênio não encontrado" }, { status: 404 })
+    return NextResponse.json(convenio)
+  } catch (error) {
+    console.error("Erro ao buscar convênio:", error)
+    return NextResponse.json({ error: "Erro ao buscar convênio" }, { status: 500 })
+  }
+}
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
