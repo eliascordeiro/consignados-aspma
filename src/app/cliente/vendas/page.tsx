@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pencil, XCircle, Eye } from 'lucide-react';
+import { Pencil, XCircle, Eye, Plus } from 'lucide-react';
 
 // ===================================================================
 // COMPONENTES DE FILTRO
@@ -295,8 +295,8 @@ export default function VendasPage() {
   const rowVirtualizer = useVirtualizer({
     count: vendas.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => (isMobile ? 250 : 80),
-    overscan: 5,
+    estimateSize: () => (isMobile ? 150 : 56),
+    overscan: 10,
   });
 
   const handlePageChange = (newPage: number) => {
@@ -306,16 +306,19 @@ export default function VendasPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Vendas
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendas</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Gerencie as vendas e consignações</p>
+        </div>
         {canCreate && (
-        <Link
-          href="/cliente/vendas/nova"
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          + Nova Venda
-        </Link>
+          <Link
+            href="/cliente/vendas/nova"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Nova Venda</span>
+            <span className="sm:hidden">Nova</span>
+          </Link>
         )}
       </div>
 
@@ -323,7 +326,7 @@ export default function VendasPage() {
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Pesquisar
             </label>
             <input
@@ -331,18 +334,18 @@ export default function VendasPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Número, sócio, matrícula ou convênio..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Status
             </label>
             <select
               value={filtroAtivo}
               onChange={(e) => setFiltroAtivo(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="">Todos</option>
               <option value="true">Ativos</option>
@@ -351,93 +354,96 @@ export default function VendasPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Mês de Vencimento
             </label>
             <input
               type="month"
               value={mesVencimento}
               onChange={(e) => setMesVencimento(e.target.value)}
-              placeholder="Todos"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Consignatária
             </label>
             <FiltroEmpresa value={empresaId} onChange={setEmpresaId} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Sócio
             </label>
             <FiltroSocio value={socioId} onChange={setSocioId} empresaId={empresaId} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
               Convênio
             </label>
             <FiltroConvenio value={convenioId} onChange={setConvenioId} />
           </div>
 
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            Atualizar
+          </button>
           {(empresaId || socioId || convenioId || mesVencimento) && (
-            <div className="md:col-span-3 flex justify-end">
-              <button
-                onClick={() => {
-                  setEmpresaId('');
-                  setSocioId('');
-                  setConvenioId('');
-                  setMesVencimento('');
-                }}
-                className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500"
-              >
-                Limpar Filtros
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setEmpresaId('');
+                setSocioId('');
+                setConvenioId('');
+                setMesVencimento('');
+              }}
+              className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+            >
+              Limpar Filtros
+            </button>
           )}
         </div>
       </div>
 
       {/* Lista de Vendas */}
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Carregando vendas...
-          </p>
-        </div>
-      ) : isError ? (
-        <div className="bg-red-50 dark:bg-red-900/20 p-12 rounded-lg shadow-md text-center">
-          <p className="text-red-600 dark:text-red-400 text-lg">
-            Erro ao carregar vendas. Tente novamente.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Recarregar
-          </button>
-        </div>
-      ) : vendas.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-md text-center">
-          <p className="text-gray-500 dark:text-gray-400 text-lg">
-            {searchTerm
-              ? 'Nenhuma venda encontrada com os filtros aplicados.'
-              : 'Nenhuma venda cadastrada.'}
-          </p>
-          <Link
-            href="/cliente/vendas/nova"
-            className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Cadastrar primeira venda
-          </Link>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando vendas...</p>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-red-600 dark:text-red-400 text-sm mb-4">Erro ao carregar vendas. Tente novamente.</p>
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+            >
+              Recarregar
+            </button>
+          </div>
+        ) : vendas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+              {searchTerm ? 'Nenhuma venda encontrada com os filtros aplicados.' : 'Nenhuma venda cadastrada.'}
+            </p>
+            {canCreate && (
+              <Link
+                href="/cliente/vendas/nova"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+              >
+                <Plus size={14} />
+                Cadastrar primeira venda
+              </Link>
+            )}
+          </div>
+        ) : (
+          <>
           <div
             ref={parentRef}
             className="overflow-auto"
@@ -446,12 +452,12 @@ export default function VendasPage() {
             <div className="w-full">
               {/* Header fixo - apenas desktop */}
               {!isMobile && (
-                <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 z-10 border-b border-gray-200 dark:border-gray-600">
-                  <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-3 py-3 font-semibold text-sm">
-                    <div className="text-left">Venda</div>
-                    <div className="text-left">Sócio</div>
-                    <div className="text-left">Convênio</div>
-                    <div className="text-left">Emissão</div>
+                <div className="sticky top-0 z-10">
+                  <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                    <div>Venda</div>
+                    <div>Sócio</div>
+                    <div>Convênio</div>
+                    <div>Emissão</div>
                     <div className="text-center">Parc.</div>
                     <div className="text-right">Total</div>
                     <div className="text-center">Status</div>
@@ -554,25 +560,21 @@ export default function VendasPage() {
 
                             <div className="flex gap-2 pt-2">
                               {canEdit && (
-                              <Link
-                                href={`/cliente/vendas/editar/${venda.id}`}
-                                className="flex-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs text-center"
-                              >
-                                {venda.ativo && !venda.cancelado ? 'Editar' : 'Ver'}
-                              </Link>
+                                <Link
+                                  href={`/cliente/vendas/editar/${venda.id}`}
+                                  className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                  title={venda.ativo && !venda.cancelado ? 'Editar venda' : 'Ver detalhes'}
+                                >
+                                  {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
+                                </Link>
                               )}
                               {canDelete && venda.ativo && !venda.cancelado && (
                                 <button
-                                  onClick={() =>
-                                    excluirVenda(
-                                      venda.id,
-                                      venda.numeroVenda,
-                                      venda.socio.nome
-                                    )
-                                  }
-                                  className="flex-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs text-center"
+                                  onClick={() => excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)}
+                                  className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                                  title="Cancelar venda"
                                 >
-                                  Cancelar
+                                  <XCircle size={16} />
                                 </button>
                               )}
                             </div>
@@ -580,7 +582,7 @@ export default function VendasPage() {
                         </div>
                       ) : (
                         // Layout Desktop (Grid)
-                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/30 items-center transition-colors duration-150">
+                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 items-center transition-colors duration-150">
                           <div className="text-left">
                             <div className="text-sm font-semibold text-gray-900 dark:text-white">
                               #{venda.numeroVenda}
@@ -638,26 +640,20 @@ export default function VendasPage() {
                             )}
                           </div>
 
-                          <div className="flex justify-center gap-1.5">
+                          <div className="flex justify-center gap-1">
                             {canEdit && (
-                            <Link
-                              href={`/cliente/vendas/editar/${venda.id}`}
-                              className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shadow-sm"
-                              title={venda.ativo && !venda.cancelado ? "Editar venda" : "Ver detalhes"}
-                            >
-                              {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
-                            </Link>
+                              <Link
+                                href={`/cliente/vendas/editar/${venda.id}`}
+                                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                title={venda.ativo && !venda.cancelado ? 'Editar venda' : 'Ver detalhes'}
+                              >
+                                {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
+                              </Link>
                             )}
                             {canDelete && venda.ativo && !venda.cancelado && (
                               <button
-                                onClick={() =>
-                                  excluirVenda(
-                                    venda.id,
-                                    venda.numeroVenda,
-                                    venda.socio.nome
-                                  )
-                                }
-                                className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors shadow-sm"
+                                onClick={() => excluirVenda(venda.id, venda.numeroVenda, venda.socio.nome)}
+                                className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
                                 title="Cancelar venda"
                               >
                                 <XCircle size={16} />
@@ -674,101 +670,50 @@ export default function VendasPage() {
           </div>
 
           {/* Paginação */}
-          <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Mostrando <strong>{vendas.length}</strong> de <strong>{pagination?.total || 0}</strong> vendas
-                {pagination && ` (Página ${pagination.page} de ${pagination.totalPages})`}
-              </div>
-              
+              </p>
+
               {pagination && pagination.totalPages > 1 && (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Primeira página"
-                  >
-                    ««
-                  </button>
-                  
-                  <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Página anterior"
+                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-200"
                   >
-                    «
+                    Anterior
                   </button>
-                  
-                  {/* Números de página */}
-                  <div className="flex gap-1">
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (pagination.totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= pagination.totalPages - 2) {
-                        pageNum = pagination.totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                            currentPage === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
+                  <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
+                    {currentPage} / {pagination.totalPages}
+                  </span>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Próxima página"
+                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-200"
                   >
-                    »
-                  </button>
-                  
-                  <button
-                    onClick={() => handlePageChange(pagination.totalPages)}
-                    disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Última página"
-                  >
-                    »»
+                    Próxima
                   </button>
                 </div>
               )}
-              
+
               {pagination && pagination.totalParcelas > 0 && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  <span className="text-gray-500 dark:text-gray-400">Valor total:</span>{' '}
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Total:{' '}
                   <strong>
-                    {new Intl.NumberFormat('pt-BR', { 
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(Number(pagination.valorTotalParcelas || 0))}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(pagination.valorTotalParcelas || 0))}
                   </strong>
                   <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
                     ({pagination.totalParcelas} parcela{pagination.totalParcelas !== 1 ? 's' : ''})
                   </span>
-                </div>
+                </p>
               )}
             </div>
           </div>
-        </div>
-      )}
+        </>
+        )}
+      </div>
     </div>
   );
 }
