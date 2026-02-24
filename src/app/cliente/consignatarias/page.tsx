@@ -78,6 +78,15 @@ export default function ConsignatariasPage() {
 
   const empresas = data?.data ?? [];
   const pagination = data?.pagination;
+  const total = pagination?.total ?? 0;
+  const totalPages = pagination?.totalPages ?? 1;
+
+  const rowVirtualizer = useVirtualizer({
+    count: empresas.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => (isMobile ? 110 : 56),
+    overscan: 10,
+  });
 
   const excluirEmpresa = async (empresa: Empresa) => {
     if (!confirm(`Tem certeza que deseja excluir "${empresa.nome}"?`)) return;
@@ -94,301 +103,184 @@ export default function ConsignatariasPage() {
     }
   };
 
-  const rowVirtualizer = useVirtualizer({
-    count: empresas.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => (isMobile ? 180 : 64),
-    overscan: 5,
-  });
-
-  const handlePageChange = (newPage: number) => setCurrentPage(newPage);
-
   return (
     <div className="container mx-auto p-6">
-      {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Consignatárias
-        </h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Consignatárias</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie as consignatárias cadastradas</p>
+        </div>
         {canCreate && (
           <Link
             href="/cliente/consignatarias/nova"
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
           >
-            + Nova Consignatária
+            <span>+</span>
+            <span className="hidden sm:inline">Nova Consignatária</span>
+            <span className="sm:hidden">Nova</span>
           </Link>
         )}
       </div>
 
-      {/* Filtros */}
+      {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2 dark:text-gray-300">
-              Pesquisar
-            </label>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
             <input
               type="text"
+              placeholder="Nome, CNPJ, tipo ou status (ativo/inativo)..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nome, CNPJ ou status (ativo/inativo)..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              Atualizar
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Lista */}
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando...</p>
-        </div>
-      ) : isError ? (
-        <div className="bg-red-50 dark:bg-red-900/20 p-12 rounded-lg shadow-md text-center">
-          <p className="text-red-600 dark:text-red-400 text-lg">
-            Erro ao carregar consignatárias. Tente novamente.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Recarregar
-          </button>
-        </div>
-      ) : empresas.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-md text-center">
-          <p className="text-gray-500 dark:text-gray-400 text-lg">
-            {searchTerm
-              ? 'Nenhuma consignatária encontrada com os filtros aplicados.'
-              : 'Nenhuma consignatária cadastrada.'}
-          </p>
-          {canCreate && (
-            <Link
-              href="/cliente/consignatarias/nova"
-              className="inline-block mt-4 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Cadastrar primeira consignatária
-            </Link>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-          <div
-            ref={parentRef}
-            className="overflow-auto"
-            style={{ height: '600px' }}
-          >
-            <div className="w-full">
-              {/* Header fixo — desktop */}
-              {!isMobile && (
-                <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 z-10 border-b border-gray-200 dark:border-gray-600">
-                  <div className="grid grid-cols-[3fr_1.5fr_1fr_90px_100px] gap-2 px-3 py-3 font-semibold text-sm text-gray-700 dark:text-gray-300">
-                    <div>Nome</div>
-                    <div>Contato</div>
-                    <div>Tipo</div>
-                    <div className="text-center">Status</div>
-                    <div className="text-center">Ações</div>
-                  </div>
-                </div>
-              )}
+      {/* Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        {isLoading ? (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
+        ) : isError ? (
+          <div className="text-center py-12 text-red-500">Erro ao carregar consignatárias</div>
+        ) : empresas.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Nenhuma consignatária encontrada</div>
+        ) : (
+          <>
+            {/* Desktop Header */}
+            {!isMobile && (
+              <div className="grid grid-cols-[3fr_1.5fr_110px_100px_90px] gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                <div>Nome</div>
+                <div>Contato</div>
+                <div>Tipo</div>
+                <div>Status</div>
+                <div className="text-right">Ações</div>
+              </div>
+            )}
 
-              {/* Virtual scrolling */}
-              <div
-                style={{
-                  height: `${rowVirtualizer.getTotalSize()}px`,
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
+            {/* Virtual scrolling */}
+            <div ref={parentRef} className="overflow-auto" style={{ height: '600px' }}>
+              <div style={{ height: rowVirtualizer.getTotalSize(), width: '100%', position: 'relative' }}>
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                   const empresa = empresas[virtualRow.index];
+                  if (!empresa) return null;
                   return (
                     <div
-                      key={virtualRow.key}
-                      data-index={virtualRow.index}
-                      ref={rowVirtualizer.measureElement}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
+                      key={empresa.id}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
+                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
                     >
-                      {isMobile ? (
-                        /* Card mobile */
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/30">
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <div className="font-semibold text-sm text-gray-900 dark:text-white">
-                                {empresa.nome}
-                              </div>
-                              <div className="flex gap-1 flex-shrink-0">
-                                {canEdit && (
-                                  <Link
-                                    href={`/cliente/consignatarias/editar/${empresa.id}`}
-                                    className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                                    title="Editar"
-                                  >
-                                    <Pencil size={14} />
-                                  </Link>
-                                )}
-                                {canDelete && (
-                                  <button
-                                    onClick={() => excluirEmpresa(empresa)}
-                                    className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                                    title="Excluir"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                              {empresa.cnpj && <div>CNPJ: {empresa.cnpj}</div>}
-                              {empresa.contato && <div>Contato: {empresa.contato}</div>}
-                              {empresa.telefone && <div>Tel: {empresa.telefone}</div>}
-                              <div className="flex gap-3 pt-1">
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${empresa.tipo === 'PUBLICO' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'}`}>
-                                  {empresa.tipo === 'PUBLICO' ? 'Público' : 'Privado'}
-                                </span>
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${empresa.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                                  {empresa.ativo ? 'Ativo' : 'Inativo'}
-                                </span>
-                              </div>
-                            </div>
+                      {/* Mobile card */}
+                      <div className="md:hidden p-3 flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{empresa.nome}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {empresa.cnpj && <span>{empresa.cnpj} · </span>}
+                            {empresa.contato || empresa.telefone || ''}
                           </div>
-                        </div>
-                      ) : (
-                        /* Linha desktop */
-                        <div className="grid grid-cols-[3fr_1.5fr_1fr_90px_100px] gap-2 px-3 py-2.5 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/30 items-center transition-colors duration-150">
-                          <div className="overflow-hidden">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={empresa.nome}>
-                              {empresa.nome}
-                            </div>
-                            {empresa.cnpj && (
-                              <div className="text-xs text-gray-500 dark:text-gray-400">{empresa.cnpj}</div>
-                            )}
-                          </div>
-
-                          <div className="overflow-hidden text-xs text-gray-700 dark:text-gray-300">
-                            {empresa.contato
-                              ? <div className="truncate" title={empresa.contato}>{empresa.contato}</div>
-                              : null}
-                            {empresa.telefone
-                              ? <div className="text-gray-500 dark:text-gray-400">{empresa.telefone}</div>
-                              : null}
-                            {!empresa.contato && !empresa.telefone && (
-                              <span className="italic text-gray-400">—</span>
-                            )}
-                          </div>
-
-                          <div>
-                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${empresa.tipo === 'PUBLICO' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'}`}>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${empresa.tipo === 'PUBLICO' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'}`}>
                               {empresa.tipo === 'PUBLICO' ? 'Público' : 'Privado'}
                             </span>
-                          </div>
-
-                          <div className="flex justify-center">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${empresa.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'}`}>
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${empresa.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
                               {empresa.ativo ? 'Ativo' : 'Inativo'}
                             </span>
                           </div>
-
-                          <div className="flex justify-center gap-1.5">
-                            {canEdit && (
-                              <Link
-                                href={`/cliente/consignatarias/editar/${empresa.id}`}
-                                className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shadow-sm"
-                                title="Editar"
-                              >
-                                <Pencil size={16} />
-                              </Link>
-                            )}
-                            {canDelete && (
-                              <button
-                                onClick={() => excluirEmpresa(empresa)}
-                                className="p-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors shadow-sm"
-                                title="Excluir"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
                         </div>
-                      )}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {canEdit && (
+                            <Link href={`/cliente/consignatarias/editar/${empresa.id}`} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 transition-colors">
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          )}
+                          {canDelete && (
+                            <button onClick={() => excluirEmpresa(empresa)} className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Desktop row */}
+                      <div className="hidden md:grid md:grid-cols-[3fr_1.5fr_110px_100px_90px] gap-3 px-4 items-center h-full text-sm">
+                        <div className="min-w-0">
+                          <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{empresa.nome}</div>
+                          {empresa.cnpj && <div className="text-xs text-gray-400 dark:text-gray-500">{empresa.cnpj}</div>}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300 min-w-0">
+                          {empresa.contato && <div className="truncate">{empresa.contato}</div>}
+                          {empresa.telefone && <div className="text-gray-400 dark:text-gray-500">{empresa.telefone}</div>}
+                          {!empresa.contato && !empresa.telefone && <span className="text-gray-400">—</span>}
+                        </div>
+                        <div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${empresa.tipo === 'PUBLICO' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'}`}>
+                            {empresa.tipo === 'PUBLICO' ? 'Público' : 'Privado'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${empresa.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                            {empresa.ativo ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+                        <div className="flex justify-end gap-1">
+                          {canEdit && (
+                            <Link href={`/cliente/consignatarias/editar/${empresa.id}`} title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors">
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          )}
+                          {canDelete && (
+                            <button onClick={() => excluirEmpresa(empresa)} title="Excluir" className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-          </div>
+          </>
+        )}
 
-          {/* Paginação */}
-          <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                Mostrando <strong>{empresas.length}</strong> de <strong>{pagination?.total || 0}</strong> consignatárias
-                {pagination && ` (Página ${pagination.page} de ${pagination.totalPages})`}
-              </div>
-
-              {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Primeira página"
-                  >
-                    ««
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    «
-                  </button>
-                  <div className="flex gap-1">
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      let pageNum: number;
-                      if (pagination.totalPages <= 5) pageNum = i + 1;
-                      else if (currentPage <= 3) pageNum = i + 1;
-                      else if (currentPage >= pagination.totalPages - 2) pageNum = pagination.totalPages - 4 + i;
-                      else pageNum = currentPage - 2 + i;
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500'}`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    »
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(pagination.totalPages)}
-                    disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    title="Última página"
-                  >
-                    »»
-                  </button>
-                </div>
-              )}
+        {/* Pagination */}
+        {!isLoading && totalPages > 1 && (
+          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              {((currentPage - 1) * 50) + 1}–{Math.min(currentPage * 50, total)} de {total} consignatárias
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                Anterior
+              </button>
+              <span className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
+              >
+                Próxima
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
