@@ -363,6 +363,20 @@ async function migrarSocios(
     console.log(`   ⚠️  FUNDO não encontrado`);
   }
 
+  // Construir mapa Local empresaId → Railway empresaId
+  // Busca todas as empresas do Railway para mapear por nome
+  const empresasRailway = await railway.empresa.findMany({ select: { id: true, nome: true } });
+  const empresasLocal = await local.empresa.findMany({ select: { id: true, nome: true } });
+  
+  const empresaIdMap: Record<number, number | null> = {};
+  for (const el of empresasLocal) {
+    const match = empresasRailway.find(er => 
+      er.nome.toLowerCase().trim() === el.nome.toLowerCase().trim()
+    );
+    empresaIdMap[el.id] = match ? match.id : null;
+    console.log(`   📎 Mapa empresa: ${el.nome} (local ${el.id}) → ${match ? `railway ${match.id}` : '❌ sem correspondência'}`);
+  }
+
   // Buscar sócios do Local
   const sociosLocal = await local.socio.findMany({ orderBy: { createdAt: 'asc' } });
   console.log(`\n   Local: ${fmt(sociosLocal.length)} sócios encontrados`);
@@ -375,13 +389,20 @@ async function migrarSocios(
     const batch = sociosLocal.slice(i, i + BATCH_SIZE);
 
     const batchMapeado = batch.map(socio => {
-      let empresaId = socio.empresaId;
+      let empresaId: number | null = null;
 
+      // 1. Se o sócio já tem empresaId do local, mapear para o Railway
+      if (socio.empresaId && empresaIdMap[socio.empresaId] !== undefined) {
+        empresaId = empresaIdMap[socio.empresaId];
+        if (empresaId) sociosComEmpresaMapeada++;
+      }
+
+      // 2. Se não mapeou (ou mapeou para null), usar fallback por tipo
       if (!empresaId && socio.tipo) {
         if (socio.tipo === '1' && empresaPrefeitura) {
           empresaId = empresaPrefeitura.id;
           sociosComEmpresaMapeada++;
-        } else if (socio.tipo === '3' && empresaFundo) {
+        } else if ((socio.tipo === '3' || socio.tipo === '4') && empresaFundo) {
           empresaId = empresaFundo.id;
           sociosComEmpresaMapeada++;
         } else {
