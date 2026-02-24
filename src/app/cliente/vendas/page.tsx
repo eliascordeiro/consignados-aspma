@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pencil, XCircle, Eye, Plus } from 'lucide-react';
+import { Pencil, Trash2, Eye, Plus } from 'lucide-react';
 
 // ===================================================================
 // COMPONENTES DE FILTRO
@@ -574,7 +574,7 @@ export default function VendasPage() {
                                   className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
                                   title="Cancelar venda"
                                 >
-                                  <XCircle size={16} />
+                                  <Trash2 size={16} />
                                 </button>
                               )}
                             </div>
@@ -656,7 +656,7 @@ export default function VendasPage() {
                                 className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
                                 title="Cancelar venda"
                               >
-                                <XCircle size={16} />
+                                <Trash2 size={16} />
                               </button>
                             )}
                           </div>
