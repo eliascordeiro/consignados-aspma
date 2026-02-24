@@ -10,7 +10,11 @@ interface ChatMessage {
   timestamp: Date
 }
 
-export default function ChatWidget() {
+interface ChatWidgetProps {
+  apiEndpoint?: string
+}
+
+export default function ChatWidget({ apiEndpoint = '/api/convenio/chat' }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -79,7 +83,7 @@ export default function ChatWidget() {
         .filter((m) => m.id !== 'welcome')
         .map((m) => ({ role: m.role, content: m.content }))
 
-      const response = await fetch('/api/convenio/chat', {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history }),

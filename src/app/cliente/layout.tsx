@@ -269,7 +269,7 @@ export default function ClienteLayout({
       <PerfilModal open={perfilModalOpen} onOpenChange={setPerfilModalOpen} />
 
       {/* Chat IA Widget */}
-      <ChatWidget />
+      <ChatWidget apiEndpoint="/api/cliente/chat" />
     </div>
   )
 }
