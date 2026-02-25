@@ -24,16 +24,14 @@ import {
 } from "@/components/ui/tooltip"
 import { 
   LayoutDashboard, 
-  Building2,
   Users,
-  Store,
   LogOut,
   Menu,
   X,
   CreditCard,
   UserCog,
-  FileText,
-  ShoppingCart
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserModules, PERMISSION_MODULES } from "@/config/permissions"
@@ -55,9 +53,34 @@ export default function ClienteLayout({
 }) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
   const [perfilModalOpen, setPerfilModalOpen] = useState(false)
   const [managerName, setManagerName] = useState<string | null>(null)
   const { data: session } = useSession()
+
+  // Detectar desktop para aplicar padding inline
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    setIsDesktop(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  // Restaurar estado colapsado do localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed')
+    if (saved === 'true') setCollapsed(true)
+  }, [])
+
+  const toggleCollapsed = () => {
+    setCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem('sidebar-collapsed', String(next))
+      return next
+    })
+  }
 
   // Verificar se é conveniado - redirecionar para portal correto
   useEffect(() => {
@@ -115,28 +138,29 @@ export default function ClienteLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-white/95 backdrop-blur-sm dark:bg-gray-950/95 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 transform bg-white/95 backdrop-blur-sm dark:bg-gray-950/95 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{ width: isDesktop ? (collapsed ? 72 : 256) : 256 }}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
+          <div className="flex h-16 items-center justify-between border-b border-gray-200 dark:border-gray-800 px-4">
+            <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "lg:justify-center")}>
+              <div className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
                 <CreditCard className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              <div className={cn("transition-all duration-300 overflow-hidden", collapsed ? "lg:w-0 lg:opacity-0" : "w-auto opacity-100")}>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                   A.S.P.M.A
                 </h1>
-                <span className="text-xs text-muted-foreground">Portal do Cliente</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Portal do Cliente</span>
               </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="lg:hidden"
+              className="lg:hidden shrink-0"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="h-5 w-5" />
@@ -144,71 +168,140 @@ export default function ClienteLayout({
           </div>
           
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
-            {navigation.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
-              
-              return (
-                <Link key={item.name} href={item.href} onClick={() => setSidebarOpen(false)}>
+          <TooltipProvider delayDuration={0}>
+            <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
+              {navigation.map((item) => {
+                const Icon = item.icon
+                const isActive = pathname === item.href || (item.href !== '/cliente/dashboard' && pathname.startsWith(item.href))
+                
+                const linkContent = (
+                  <Link key={item.name} href={item.href} onClick={() => setSidebarOpen(false)}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full transition-all duration-200 group",
+                        collapsed ? "lg:justify-center lg:px-2" : "justify-start gap-3",
+                        isActive && "bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 dark:text-green-400 border-l-4 border-green-500",
+                        !isActive && "hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-green-600 dark:text-green-400")} />
+                      <span className={cn(
+                        "font-medium whitespace-nowrap transition-all duration-300 overflow-hidden",
+                        collapsed ? "lg:w-0 lg:opacity-0 lg:hidden" : "w-auto opacity-100"
+                      )}>
+                        {item.name}
+                      </span>
+                    </Button>
+                  </Link>
+                )
+
+                // No modo colapsado no desktop, mostrar tooltip
+                if (collapsed) {
+                  return (
+                    <Tooltip key={item.name}>
+                      <TooltipTrigger asChild>
+                        {linkContent}
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="hidden lg:block font-medium">
+                        {item.name}
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                }
+
+                return <div key={item.name}>{linkContent}</div>
+              })}
+            </nav>
+          </TooltipProvider>
+
+          {/* Collapse toggle button - desktop only */}
+          <div className="hidden lg:flex justify-center border-t border-gray-200 dark:border-gray-800 py-2">
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    className={cn(
-                      "w-full justify-start gap-3 transition-all",
-                      isActive && "bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 dark:text-green-400 border-l-4 border-green-500"
-                    )}
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleCollapsed}
+                    className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="font-medium">{item.name}</span>
+                    {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
                   </Button>
-                </Link>
-              )
-            })}
-          </nav>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {collapsed ? "Expandir menu" : "Recolher menu"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           {/* User menu */}
-          <div className="border-t border-gray-200 dark:border-gray-800 p-4">
-            <TooltipProvider>
+          <div className="border-t border-gray-200 dark:border-gray-800 p-3">
+            <TooltipProvider delayDuration={0}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3">
-                    <Avatar className="h-10 w-10 border-2 border-green-500">
-                      <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
-                        {session?.user?.name
-                          ?.split(' ')
-                          .map(n => n[0])
-                          .join('')
-                          .substring(0, 2)
-                          .toUpperCase() || 'CL'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start text-sm overflow-hidden flex-1">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="font-semibold truncate w-full text-left">
-                            {session?.user?.name || 'Cliente'}
-                          </span>
-                        </TooltipTrigger>
-                        {session?.user?.name && session.user.name.length > 20 && (
-                          <TooltipContent side="top" align="start">
-                            <p>{session.user.name}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-xs text-muted-foreground truncate w-full text-left">
-                            {session?.user?.email || 'cliente@example.com'}
-                          </span>
-                        </TooltipTrigger>
-                        {session?.user?.email && session.user.email.length > 25 && (
-                          <TooltipContent side="top" align="start">
-                            <p>{session.user.email}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </div>
-                  </Button>
+                  {collapsed ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-center h-auto p-2 lg:p-2">
+                          <Avatar className="h-9 w-9 border-2 border-green-500 shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold text-xs">
+                              {session?.user?.name
+                                ?.split(' ')
+                                .map(n => n[0])
+                                .join('')
+                                .substring(0, 2)
+                                .toUpperCase() || 'CL'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="hidden lg:block">
+                        <p className="font-medium">{session?.user?.name || 'Cliente'}</p>
+                        <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3">
+                      <Avatar className="h-10 w-10 border-2 border-green-500 shrink-0">
+                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
+                          {session?.user?.name
+                            ?.split(' ')
+                            .map(n => n[0])
+                            .join('')
+                            .substring(0, 2)
+                            .toUpperCase() || 'CL'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-start text-sm overflow-hidden flex-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="font-semibold truncate w-full text-left">
+                              {session?.user?.name || 'Cliente'}
+                            </span>
+                          </TooltipTrigger>
+                          {session?.user?.name && session.user.name.length > 20 && (
+                            <TooltipContent side="top" align="start">
+                              <p>{session.user.name}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs text-muted-foreground truncate w-full text-left">
+                              {session?.user?.email || 'cliente@example.com'}
+                            </span>
+                          </TooltipTrigger>
+                          {session?.user?.email && session.user.email.length > 25 && (
+                            <TooltipContent side="top" align="start">
+                              <p>{session.user.email}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </div>
+                    </Button>
+                  )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
@@ -229,7 +322,7 @@ export default function ClienteLayout({
       </aside>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
+      <div className="transition-all duration-300" style={{ paddingLeft: isDesktop ? (collapsed ? 72 : 256) : 0 }}>
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm px-4 md:px-6">
           <Button
