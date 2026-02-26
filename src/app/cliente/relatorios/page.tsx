@@ -796,6 +796,7 @@ export default function RelatoriosPage() {
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* Placeholder para comparação - a ser implementado */}
