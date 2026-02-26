@@ -325,216 +325,400 @@ export default function RelatoriosPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Relatórios - Débitos de Sócios
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Gere relatórios de parcelas por período
-        </p>
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+            <svg className="w-7 h-7 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Central de Relatórios
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Gere e exporte relatórios de débitos e parcelas
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Links para outros relatórios */}
-      <div className="mb-6 flex flex-wrap gap-3">
-        <Link 
-          href="/cliente/relatorios/pensionistas"
-          className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          <span>👥</span>
-          Débitos Pensionistas (AS302)
-        </Link>
-        <Link 
-          href="/cliente/relatorios/comparacao"
-          className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          <span>🔄</span>
-          Comparar PostgreSQL vs MySQL
-        </Link>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md">
-        <div className="space-y-4">
-          {/* Agrupa por */}
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
-              Agrupa por *
-            </label>
-            <select
-              value={filtros.agrupaPor}
-              onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="socio">Sócio</option>
-              <option value="convenio">Convênio</option>
-            </select>
+      {/* Cards de Relatórios Disponíveis */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {/* Card Débitos de Sócios (ativo - é esta página) */}
+        <div className="relative bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-xl p-5 text-white shadow-lg ring-2 ring-blue-400/50">
+          <div className="absolute top-3 right-3">
+            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
           </div>
-
-          {/* Sócio (opcional) - Com busca */}
-          <div className="relative">
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
-              Sócio - Matrícula/Nome (opcional)
-            </label>
-            <input
-              type="text"
-              value={searchSocio}
-              onChange={(e) => {
-                setSearchSocio(e.target.value);
-                if (!e.target.value) {
-                  limparSocio();
-                }
-              }}
-              placeholder="Digite matrícula ou nome (ou deixe vazio para todos)"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {filtros.socioMatricula && (
-              <button
-                type="button"
-                onClick={limparSocio}
-                className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                title="Limpar seleção"
-              >
-                ✕
-              </button>
-            )}
-            {showSocioList && socios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
-                {socios.map((socio) => (
-                  <div
-                    key={socio.id}
-                    onClick={() => selecionarSocio(socio)}
-                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
-                  >
-                    <div className="font-semibold text-gray-900 dark:text-white">{socio.nome}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {socio.matricula && <span>Matrícula: {socio.matricula}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Convênio (opcional) - Com busca */}
-          <div className="relative">
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
-              Convênio (opcional)
-            </label>
-            <input
-              type="text"
-              value={searchConvenio}
-              onChange={(e) => {
-                setSearchConvenio(e.target.value);
-                if (!e.target.value) {
-                  limparConvenio();
-                }
-              }}
-              placeholder="Digite código ou razão social (ou deixe vazio para todos)"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {filtros.convenioId && (
-              <button
-                type="button"
-                onClick={limparConvenio}
-                className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                title="Limpar seleção"
-              >
-                ✕
-              </button>
-            )}
-            {showConvenioList && convenios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
-                {convenios.map((convenio) => (
-                  <div
-                    key={convenio.id}
-                    onClick={() => selecionarConvenio(convenio)}
-                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
-                  >
-                    <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {convenio.codigo && <span>Código: {convenio.codigo}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Período (Mês-Ano) */}
-          <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
-              Período (Mês-Ano) *
-            </label>
-            <input
-              type="month"
-              value={filtros.mesAno}
-              onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {/* Barra de Progresso */}
-          {loading && (
-            <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
-              <div
-                className="bg-blue-600 h-4 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
             </div>
-          )}
+            <h3 className="font-bold text-lg">Débitos de Sócios</h3>
+          </div>
+          <p className="text-sm text-blue-100 leading-relaxed">
+            Parcelas por período com agrupamento por sócio ou convênio. PDF, Excel e CSV.
+          </p>
+        </div>
 
-          {/* Botões */}
-          <div className="grid grid-cols-3 gap-3 pt-4">
-            <button
-              type="button"
-              onClick={gerarRelatorioPDF}
-              disabled={loading || !canExport}
-              className="px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
-              title={!canExport ? 'Sem permissão para exportar' : ''}
-            >
-              📄 PDF
-            </button>
-            <button
-              type="button"
-              onClick={gerarRelatorioExcel}
-              disabled={loading || !canExport}
-              className="px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
-              title={!canExport ? 'Sem permissão para exportar' : ''}
-            >
-              📊 Excel
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCSVModal(true)}
-              disabled={loading || !canExport}
-              className="px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold"
-              title={!canExport ? 'Sem permissão para exportar' : ''}
-            >
-              📋 CSV
-            </button>
+        {/* Card Débitos Pensionistas */}
+        <Link
+          href="/cliente/relatorios/pensionistas"
+          className="group bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-200"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg group-hover:bg-amber-200 dark:group-hover:bg-amber-800/50 transition-colors">
+              <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              </svg>
+            </div>
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+              Débitos Pensionistas
+            </h3>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            Parcelas em aberto de sócios tipo Pensionista/Local (Tipo 3 e 4). Baseado no AS302.
+          </p>
+          <div className="mt-3 flex items-center text-sm text-amber-600 dark:text-amber-400 font-medium">
+            Acessar
+            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </Link>
+
+        {/* Card Comparação */}
+        <Link
+          href="/cliente/relatorios/comparacao"
+          className="group bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-200"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/50 transition-colors">
+              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+              Comparar Bases
+            </h3>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            Compare dados entre PostgreSQL e MySQL para auditoria e validação.
+          </p>
+          <div className="mt-3 flex items-center text-sm text-purple-600 dark:text-purple-400 font-medium">
+            Acessar
+            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </Link>
+      </div>
+
+      {/* Formulário Principal */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Header do formulário */}
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filtros do Relatório
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Configure os filtros e escolha o formato de exportação
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Coluna Esquerda - Filtros */}
+            <div className="space-y-5">
+              {/* Período e Agrupamento lado a lado */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
+                    Período *
+                  </label>
+                  <input
+                    type="month"
+                    value={filtros.mesAno}
+                    onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
+                    Agrupar por *
+                  </label>
+                  <select
+                    value={filtros.agrupaPor}
+                    onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  >
+                    <option value="socio">Sócio</option>
+                    <option value="convenio">Convênio</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Sócio */}
+              <div className="relative">
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
+                  Sócio
+                  <span className="ml-1 text-xs font-normal text-gray-400">(opcional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchSocio}
+                    onChange={(e) => {
+                      setSearchSocio(e.target.value);
+                      if (!e.target.value) {
+                        limparSocio();
+                      }
+                    }}
+                    placeholder="Buscar por matrícula ou nome..."
+                    className="w-full px-3 py-2.5 pr-9 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  />
+                  {filtros.socioMatricula ? (
+                    <button
+                      type="button"
+                      onClick={limparSocio}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Limpar seleção"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                </div>
+                {showSocioList && socios.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    {socios.map((socio) => (
+                      <div
+                        key={socio.id}
+                        onClick={() => selecionarSocio(socio)}
+                        className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
+                      >
+                        <div className="font-semibold text-gray-900 dark:text-white text-sm">{socio.nome}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {socio.matricula && <span>Matrícula: {socio.matricula}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Convênio */}
+              <div className="relative">
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
+                  Convênio
+                  <span className="ml-1 text-xs font-normal text-gray-400">(opcional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchConvenio}
+                    onChange={(e) => {
+                      setSearchConvenio(e.target.value);
+                      if (!e.target.value) {
+                        limparConvenio();
+                      }
+                    }}
+                    placeholder="Buscar por código ou razão social..."
+                    className="w-full px-3 py-2.5 pr-9 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  />
+                  {filtros.convenioId ? (
+                    <button
+                      type="button"
+                      onClick={limparConvenio}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Limpar seleção"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                </div>
+                {showConvenioList && convenios.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                    {convenios.map((convenio) => (
+                      <div
+                        key={convenio.id}
+                        onClick={() => selecionarConvenio(convenio)}
+                        className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
+                      >
+                        <div className="font-semibold text-gray-900 dark:text-white text-sm">{convenio.razao_soc}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {convenio.codigo && <span>Código: {convenio.codigo}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Coluna Direita - Exportação */}
+            <div className="lg:border-l lg:border-gray-200 dark:lg:border-gray-700 lg:pl-6">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Exportar Relatório
+              </h3>
+
+              <div className="space-y-3">
+                {/* Botão PDF */}
+                <button
+                  type="button"
+                  onClick={gerarRelatorioPDF}
+                  disabled={loading || !canExport}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+                  title={!canExport ? 'Sem permissão para exportar' : 'Gerar relatório em PDF'}
+                >
+                  <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-lg group-hover:bg-red-200 dark:group-hover:bg-red-800/40 transition-colors">
+                    <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-gray-900 dark:text-white text-sm">PDF</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Documento para impressão</div>
+                  </div>
+                </button>
+
+                {/* Botão Excel */}
+                <button
+                  type="button"
+                  onClick={gerarRelatorioExcel}
+                  disabled={loading || !canExport}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg hover:border-green-400 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+                  title={!canExport ? 'Sem permissão para exportar' : 'Gerar relatório em Excel'}
+                >
+                  <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors">
+                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-gray-900 dark:text-white text-sm">Excel</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Planilha editável (.xlsx)</div>
+                  </div>
+                </button>
+
+                {/* Botão CSV */}
+                <button
+                  type="button"
+                  onClick={() => setShowCSVModal(true)}
+                  disabled={loading || !canExport}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+                  title={!canExport ? 'Sem permissão para exportar' : 'Gerar relatório em CSV'}
+                >
+                  <div className="p-2 bg-orange-100 dark:bg-orange-900/40 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800/40 transition-colors">
+                    <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-gray-900 dark:text-white text-sm">CSV</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Dados delimitados (configurável)</div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Barra de Progresso */}
+              {loading && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Gerando relatório...</span>
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Info resumo */}
+              <div className="mt-5 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                  O que o relatório inclui
+                </h4>
+                <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5">
+                  <li className="flex items-start gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Todas as parcelas do período selecionado
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Agrupamento por sócio ou convênio
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Subtotais por grupo e total geral
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Indicação de parcelas pagas (OK)
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Modal de Configuração CSV */}
       {showCSVModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              ⚙️ Configuração de Exportação CSV
-            </h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="px-6 py-4 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Configuração CSV
+              </h2>
+            </div>
 
-            <div className="space-y-4">
-              {/* Delimitador */}
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
                   Delimitador de campos
                 </label>
                 <select
                   value={csvOptions.delimiter}
                   onChange={(e) => setCsvOptions({ ...csvOptions, delimiter: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value=";">Ponto e vírgula (;) - Padrão Excel Brasil</option>
                   <option value=",">Vírgula (,) - Padrão internacional</option>
@@ -543,81 +727,68 @@ export default function RelatoriosPage() {
                 </select>
               </div>
 
-              {/* Separador decimal */}
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
                   Separador decimal
                 </label>
                 <select
                   value={csvOptions.decimalSeparator}
                   onChange={(e) => setCsvOptions({ ...csvOptions, decimalSeparator: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value=",">Vírgula (,) - Padrão brasileiro</option>
                   <option value=".">Ponto (.) - Padrão internacional</option>
                 </select>
               </div>
 
-              {/* Codificação */}
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
                   Codificação de caracteres
                 </label>
                 <select
                   value={csvOptions.encoding}
                   onChange={(e) => setCsvOptions({ ...csvOptions, encoding: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="utf-8">UTF-8 (Recomendado - suporta acentos)</option>
-                  <option value="iso-8859-1">ISO-8859-1 / Latin1 (Compatibilidade legada)</option>
+                  <option value="utf-8">UTF-8 (Recomendado)</option>
+                  <option value="iso-8859-1">ISO-8859-1 / Latin1</option>
                 </select>
               </div>
 
-              {/* Incluir cabeçalho */}
-              <div className="flex items-center">
+              <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <input
                   type="checkbox"
                   id="includeHeader"
                   checked={csvOptions.includeHeader}
                   onChange={(e) => setCsvOptions({ ...csvOptions, includeHeader: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 border-gray-300"
                 />
-                <label htmlFor="includeHeader" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="includeHeader" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Incluir linha de cabeçalho
                 </label>
               </div>
             </div>
 
-            {/* Botões do modal */}
-            <div className="flex gap-3 mt-6">
+            <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex gap-3">
               <button
                 onClick={() => setShowCSVModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500 font-bold"
+                className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 font-semibold transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={gerarRelatorioCSV}
-                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 font-bold"
+                className="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                📋 Gerar CSV
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Gerar CSV
               </button>
             </div>
           </div>
         </div>
       )}
-
-      <div className="mt-8 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-        <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2">
-          ℹ️ Informações do Relatório
-        </h3>
-        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-          <li>• Lista todas as parcelas do período selecionado</li>
-          <li>• Agrupa por associado (matrícula)</li>
-          <li>• Mostra total por associado e total geral</li>
-          <li>• Indica parcelas pagas com "OK"</li>
-        </ul>
-      </div>
     </div>
   );
 }
