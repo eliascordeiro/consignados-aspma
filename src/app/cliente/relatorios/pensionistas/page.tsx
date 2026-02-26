@@ -12,34 +12,23 @@ interface Convenio {
   razao_soc: string;
 }
 
-interface Socio {
-  id: number;
-  matricula: string;
-  nome: string;
-}
-
-export default function RelatoriosPage() {
+export default function RelatorioPensionistasPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const userPermissions = (session?.user as any)?.permissions || [];
   const canExport = hasPermission(userPermissions, 'relatorios.export');
 
   const [convenios, setConvenios] = useState<Convenio[]>([]);
-  const [socios, setSocios] = useState<Socio[]>([]);
   const [filtros, setFiltros] = useState({
     convenioId: '',
     convenioNome: '',
-    socioMatricula: '',
-    socioNome: '',
     mesAno: new Date().toISOString().slice(0, 7), // YYYY-MM
-    agrupaPor: 'socio', // 'socio' ou 'convenio'
+    agrupaPor: 'socio',
   });
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [searchConvenio, setSearchConvenio] = useState('');
   const [showConvenioList, setShowConvenioList] = useState(false);
-  const [searchSocio, setSearchSocio] = useState('');
-  const [showSocioList, setShowSocioList] = useState(false);
   const [showCSVModal, setShowCSVModal] = useState(false);
   const [csvOptions, setCsvOptions] = useState({
     delimiter: ';',
@@ -57,31 +46,19 @@ export default function RelatoriosPage() {
     }
   }, [searchConvenio]);
 
-  // Busca sócios ao digitar
-  useEffect(() => {
-    if (searchSocio.length >= 2 && !filtros.socioMatricula) {
-      carregarSocios();
-    } else if (searchSocio.length < 2) {
-      setShowSocioList(false);
-    }
-  }, [searchSocio]);
-
   const carregarConvenios = async () => {
     try {
       const response = await fetch(`/api/convenios?search=${searchConvenio}`);
       if (response.ok) {
         const data = await response.json();
-        // API pode retornar { data: [], pagination: {} } ou array direto
         const conveniosData = data.data || data;
         if (Array.isArray(conveniosData)) {
           setConvenios(conveniosData);
           setShowConvenioList(true);
         } else {
-          console.error('API retornou dados inválidos:', data);
           setConvenios([]);
         }
       } else {
-        console.error('Erro ao carregar convênios:', response.status);
         setConvenios([]);
       }
     } catch (error) {
@@ -112,49 +89,19 @@ export default function RelatoriosPage() {
     setConvenios([]);
   };
 
-  const carregarSocios = async () => {
-    try {
-      const response = await fetch(`/api/socios?search=${searchSocio}`);
-      if (response.ok) {
-        const data = await response.json();
-        const sociosData = data.data || data;
-        if (Array.isArray(sociosData)) {
-          setSocios(sociosData);
-          setShowSocioList(true);
-        } else {
-          console.error('API retornou dados inválidos:', data);
-          setSocios([]);
-        }
-      } else {
-        console.error('Erro ao carregar sócios:', response.status);
-        setSocios([]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar sócios:', error);
-      setSocios([]);
+  // Monta query params base (com filtro pensionistas + em aberto)
+  const buildQueryParams = (formato: string) => {
+    const params = new URLSearchParams({
+      mesAno: filtros.mesAno,
+      agrupaPor: filtros.agrupaPor,
+      formato,
+      tipoSocio: 'pensionistas',         // AS302.PRG: codtipo = 3 ou 4
+      apenasEmAberto: 'true',             // AS302.PRG: TRIM(parcelas.baixa) = ''
+    });
+    if (filtros.convenioId) {
+      params.set('convenioId', filtros.convenioId);
     }
-  };
-
-  const selecionarSocio = (socio: Socio) => {
-    setFiltros({
-      ...filtros,
-      socioMatricula: socio.matricula,
-      socioNome: socio.nome,
-    });
-    setSearchSocio(`${socio.matricula} - ${socio.nome}`);
-    setShowSocioList(false);
-    setSocios([]);
-  };
-
-  const limparSocio = () => {
-    setFiltros({
-      ...filtros,
-      socioMatricula: '',
-      socioNome: '',
-    });
-    setSearchSocio('');
-    setShowSocioList(false);
-    setSocios([]);
+    return params;
   };
 
   const gerarRelatorioPDF = async () => {
@@ -167,18 +114,10 @@ export default function RelatoriosPage() {
     setProgress(10);
 
     try {
-      const queryParams = new URLSearchParams({
-        mesAno: filtros.mesAno,
-        ...(filtros.convenioId && { convenioId: filtros.convenioId }),
-        ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
-        agrupaPor: filtros.agrupaPor,
-        formato: 'pdf'
-      });
-
+      const queryParams = buildQueryParams('pdf');
       setProgress(30);
 
       const response = await fetch(`/api/relatorios/debitos-socios?${queryParams}`);
-      
       setProgress(60);
 
       if (response.ok) {
@@ -186,13 +125,13 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `debitos-socios-${filtros.mesAno}.pdf`;
+        a.download = `debitos-pensionistas-${filtros.mesAno}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        
+
         setTimeout(() => {
           setProgress(0);
           alert('Relatório PDF gerado com sucesso!');
@@ -221,18 +160,10 @@ export default function RelatoriosPage() {
     setProgress(10);
 
     try {
-      const queryParams = new URLSearchParams({
-        mesAno: filtros.mesAno,
-        ...(filtros.convenioId && { convenioId: filtros.convenioId }),
-        ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
-        agrupaPor: filtros.agrupaPor,
-        formato: 'excel'
-      });
-
+      const queryParams = buildQueryParams('excel');
       setProgress(30);
 
       const response = await fetch(`/api/relatorios/debitos-socios?${queryParams}`);
-      
       setProgress(60);
 
       if (response.ok) {
@@ -240,13 +171,13 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `debitos-socios-${filtros.mesAno}.xlsx`;
+        a.download = `debitos-pensionistas-${filtros.mesAno}.xlsx`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        
+
         setTimeout(() => {
           setProgress(0);
           alert('Relatório Excel gerado com sucesso!');
@@ -276,22 +207,14 @@ export default function RelatoriosPage() {
     setShowCSVModal(false);
 
     try {
-      const queryParams = new URLSearchParams({
-        mesAno: filtros.mesAno,
-        ...(filtros.convenioId && { convenioId: filtros.convenioId }),
-        ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
-        agrupaPor: filtros.agrupaPor,
-        formato: 'csv',
-        delimiter: csvOptions.delimiter,
-        encoding: csvOptions.encoding,
-        includeHeader: csvOptions.includeHeader.toString(),
-        decimalSeparator: csvOptions.decimalSeparator,
-      });
-
+      const queryParams = buildQueryParams('csv');
+      queryParams.set('delimiter', csvOptions.delimiter);
+      queryParams.set('encoding', csvOptions.encoding);
+      queryParams.set('includeHeader', csvOptions.includeHeader.toString());
+      queryParams.set('decimalSeparator', csvOptions.decimalSeparator);
       setProgress(30);
 
       const response = await fetch(`/api/relatorios/debitos-socios?${queryParams}`);
-      
       setProgress(60);
 
       if (response.ok) {
@@ -299,13 +222,13 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `debitos-socios-${filtros.mesAno}.csv`;
+        a.download = `debitos-pensionistas-${filtros.mesAno}.csv`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        
+
         setTimeout(() => {
           setProgress(0);
           alert('Relatório CSV gerado com sucesso!');
@@ -327,30 +250,21 @@ export default function RelatoriosPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Link
+            href="/cliente/relatorios"
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            title="Voltar para Relatórios"
+          >
+            ← Voltar
+          </Link>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Relatórios - Débitos de Sócios
+          Relatório - Débitos de Pensionistas
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Gere relatórios de parcelas por período
+          Parcelas em aberto de sócios tipo Pensionista/Local (Tipo 3 e 4) — Baseado no AS302.PRG
         </p>
-      </div>
-
-      {/* Links para outros relatórios */}
-      <div className="mb-6 flex flex-wrap gap-3">
-        <Link 
-          href="/cliente/relatorios/pensionistas"
-          className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          <span>👥</span>
-          Débitos Pensionistas (AS302)
-        </Link>
-        <Link 
-          href="/cliente/relatorios/comparacao"
-          className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
-        >
-          <span>🔄</span>
-          Comparar PostgreSQL vs MySQL
-        </Link>
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-md">
@@ -368,51 +282,6 @@ export default function RelatoriosPage() {
               <option value="socio">Sócio</option>
               <option value="convenio">Convênio</option>
             </select>
-          </div>
-
-          {/* Sócio (opcional) - Com busca */}
-          <div className="relative">
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
-              Sócio - Matrícula/Nome (opcional)
-            </label>
-            <input
-              type="text"
-              value={searchSocio}
-              onChange={(e) => {
-                setSearchSocio(e.target.value);
-                if (!e.target.value) {
-                  limparSocio();
-                }
-              }}
-              placeholder="Digite matrícula ou nome (ou deixe vazio para todos)"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {filtros.socioMatricula && (
-              <button
-                type="button"
-                onClick={limparSocio}
-                className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                title="Limpar seleção"
-              >
-                ✕
-              </button>
-            )}
-            {showSocioList && socios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
-                {socios.map((socio) => (
-                  <div
-                    key={socio.id}
-                    onClick={() => selecionarSocio(socio)}
-                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
-                  >
-                    <div className="font-semibold text-gray-900 dark:text-white">{socio.nome}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {socio.matricula && <span>Matrícula: {socio.matricula}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Convênio (opcional) - Com busca */}
@@ -538,7 +407,7 @@ export default function RelatoriosPage() {
                 >
                   <option value=";">Ponto e vírgula (;) - Padrão Excel Brasil</option>
                   <option value=",">Vírgula (,) - Padrão internacional</option>
-                  <option value="	">Tabulação (Tab)</option>
+                  <option value="\t">Tabulação (Tab)</option>
                   <option value="|">Barra vertical (|)</option>
                 </select>
               </div>
@@ -607,15 +476,16 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      <div className="mt-8 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-        <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2">
-          ℹ️ Informações do Relatório
+      <div className="mt-8 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+        <h3 className="font-bold text-amber-900 dark:text-amber-100 mb-2">
+          ℹ️ Informações do Relatório (AS302.PRG)
         </h3>
-        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-          <li>• Lista todas as parcelas do período selecionado</li>
-          <li>• Agrupa por associado (matrícula)</li>
-          <li>• Mostra total por associado e total geral</li>
-          <li>• Indica parcelas pagas com "OK"</li>
+        <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+          <li>• Filtra apenas sócios do tipo <strong>Pensionista/Local</strong> (codTipo 3 e 4)</li>
+          <li>• Mostra somente <strong>parcelas em aberto</strong> (sem baixa)</li>
+          <li>• Colunas: Matrícula, Associado, Conveniado, Parcela, De, Valor, Total</li>
+          <li>• Agrupa por sócio com subtotal e total geral</li>
+          <li>• Filtro opcional por Convênio</li>
         </ul>
       </div>
     </div>

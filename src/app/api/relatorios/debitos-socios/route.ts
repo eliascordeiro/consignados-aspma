@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
     const socioMatricula = searchParams.get('socioMatricula');
     const agrupaPor = searchParams.get('agrupaPor') || 'socio'; // 'socio' ou 'convenio'
     const formato = searchParams.get('formato') || 'pdf'; // 'pdf' ou 'excel'
+    const tipoSocio = searchParams.get('tipoSocio'); // 'pensionistas' = codTipo 3 e 4
+    const apenasEmAberto = searchParams.get('apenasEmAberto'); // 'true' = somente parcelas sem baixa
 
     if (!mesAno) {
       return NextResponse.json(
@@ -112,22 +114,36 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Adiciona filtro de convênio e/ou sócio se especificado
-    if (convenioId || socioMatricula) {
-      const vendaFilter: any = {};
-      
-      if (convenioId) {
-        vendaFilter.convenio = {
-          id: parseInt(convenioId),
-        };
-      }
-      
-      if (socioMatricula) {
-        vendaFilter.socio = {
-          matricula: socioMatricula,
-        };
-      }
-      
+    // Filtro de parcelas em aberto (sem baixa) - AS302.PRG: TRIM(parcelas.baixa) = ''
+    if (apenasEmAberto === 'true') {
+      where.OR = [
+        { baixa: null },
+        { baixa: '' },
+        { baixa: ' ' },
+      ];
+    }
+
+    // Monta filtros de venda (convênio, sócio, tipoSocio)
+    const vendaFilter: any = { userId: dataUserId };
+    let hasVendaFilter = false;
+
+    if (convenioId) {
+      vendaFilter.convenio = { id: parseInt(convenioId) };
+      hasVendaFilter = true;
+    }
+
+    if (socioMatricula) {
+      vendaFilter.socio = { ...vendaFilter.socio, matricula: socioMatricula };
+      hasVendaFilter = true;
+    }
+
+    // Filtro por tipo de sócio - AS302.PRG: codtipo = '3' OR codtipo = '4' (pensionistas/local)
+    if (tipoSocio === 'pensionistas') {
+      vendaFilter.socio = { ...vendaFilter.socio, codTipo: { in: [3, 4] } };
+      hasVendaFilter = true;
+    }
+
+    if (hasVendaFilter) {
       where.venda = vendaFilter;
     }
 
