@@ -177,9 +177,10 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: [
-        { venda: { socio: { matricula: 'asc' } } },
-        { venda: { numeroVenda: 'asc' } },
-        { numeroParcela: 'asc' },
+        { venda: { socio: { nome: 'asc' } } },      // associado (AS302: parcelas.associado)
+        { venda: { socio: { matricula: 'asc' } } }, // matricula (AS302: parcelas.matricula)
+        { venda: { numeroVenda: 'asc' } },          // sequencia (AS302: parcelas.sequencia)
+        { numeroParcela: 'asc' },                   // nrseq (AS302: parcelas.nrseq)
       ],
     });
 
