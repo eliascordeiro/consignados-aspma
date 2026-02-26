@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 interface Convenio {
   id: number;
@@ -18,12 +17,15 @@ interface Socio {
   nome: string;
 }
 
+type TipoRelatorio = 'socios' | 'pensionistas' | 'comparacao' | null;
+
 export default function RelatoriosPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const userPermissions = (session?.user as any)?.permissions || [];
   const canExport = hasPermission(userPermissions, 'relatorios.export');
 
+  const [tipoRelatorio, setTipoRelatorio] = useState<TipoRelatorio>(null);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [socios, setSocios] = useState<Socio[]>([]);
   const [filtros, setFiltros] = useState({
@@ -172,7 +174,12 @@ export default function RelatoriosPage() {
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
-        formato: 'pdf'
+        formato: 'pdf',
+        // Adiciona parâmetros específicos para pensionistas
+        ...(tipoRelatorio === 'pensionistas' && { 
+          tipoSocio: 'pensionistas',
+          apenasEmAberto: 'true' 
+        }),
       });
 
       setProgress(30);
@@ -186,7 +193,10 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `debitos-socios-${filtros.mesAno}.pdf`;
+        const nomeArquivo = tipoRelatorio === 'pensionistas' 
+          ? `debitos-pensionistas-${filtros.mesAno}.pdf`
+          : `debitos-socios-${filtros.mesAno}.pdf`;
+        a.download = nomeArquivo;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -226,7 +236,12 @@ export default function RelatoriosPage() {
         ...(filtros.convenioId && { convenioId: filtros.convenioId }),
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
-        formato: 'excel'
+        formato: 'excel',
+        // Adiciona parâmetros específicos para pensionistas
+        ...(tipoRelatorio === 'pensionistas' && { 
+          tipoSocio: 'pensionistas',
+          apenasEmAberto: 'true' 
+        }),
       });
 
       setProgress(30);
@@ -240,7 +255,10 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `debitos-socios-${filtros.mesAno}.xlsx`;
+        const nomeArquivo = tipoRelatorio === 'pensionistas' 
+          ? `debitos-pensionistas-${filtros.mesAno}.xlsx`
+          : `debitos-socios-${filtros.mesAno}.xlsx`;
+        a.download = nomeArquivo;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -286,6 +304,11 @@ export default function RelatoriosPage() {
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
         decimalSeparator: csvOptions.decimalSeparator,
+        // Adiciona parâmetros específicos para pensionistas
+        ...(tipoRelatorio === 'pensionistas' && { 
+          tipoSocio: 'pensionistas',
+          apenasEmAberto: 'true' 
+        }),
       });
 
       setProgress(30);
@@ -299,7 +322,10 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `debitos-socios-${filtros.mesAno}.csv`;
+        const nomeArquivo = tipoRelatorio === 'pensionistas' 
+          ? `debitos-pensionistas-${filtros.mesAno}.csv`
+          : `debitos-socios-${filtros.mesAno}.csv`;
+        a.download = nomeArquivo;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -347,91 +373,136 @@ export default function RelatoriosPage() {
 
       {/* Cards de Relatórios Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {/* Card Débitos de Sócios (ativo - é esta página) */}
-        <div className="relative bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 rounded-xl p-5 text-white shadow-lg ring-2 ring-blue-400/50">
-          <div className="absolute top-3 right-3">
-            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
-          </div>
+        {/* Card Débitos de Sócios */}
+        <div 
+          onClick={() => setTipoRelatorio('socios')}
+          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 ${
+            tipoRelatorio === 'socios'
+              ? 'bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 text-white ring-2 ring-blue-400/50'
+              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500'
+          }`}
+        >
+          {tipoRelatorio === 'socios' && (
+            <div className="absolute top-3 right-3">
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
+            </div>
+          )}
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className={`p-2 rounded-lg ${
+              tipoRelatorio === 'socios'
+                ? 'bg-white/20'
+                : 'bg-blue-100 dark:bg-blue-900/50'
+            }`}>
+              <svg className={`w-6 h-6 ${tipoRelatorio === 'socios' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h3 className="font-bold text-lg">Débitos de Sócios</h3>
+            <h3 className={`font-bold text-lg ${tipoRelatorio === 'socios' ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+              Débitos de Sócios
+            </h3>
           </div>
-          <p className="text-sm text-blue-100 leading-relaxed">
+          <p className={`text-sm leading-relaxed ${
+            tipoRelatorio === 'socios'
+              ? 'text-blue-100'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}>
             Parcelas por período com agrupamento por sócio ou convênio. PDF, Excel e CSV.
           </p>
         </div>
 
         {/* Card Débitos Pensionistas */}
-        <Link
-          href="/cliente/relatorios/pensionistas"
-          className="group bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-amber-400 dark:hover:border-amber-500 transition-all duration-200"
+        <div
+          onClick={() => setTipoRelatorio('pensionistas')}
+          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 ${
+            tipoRelatorio === 'pensionistas'
+              ? 'bg-gradient-to-br from-amber-500 to-amber-700 dark:from-amber-600 dark:to-amber-800 text-white ring-2 ring-amber-400/50'
+              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-amber-400 dark:hover:border-amber-500'
+          }`}
         >
+          {tipoRelatorio === 'pensionistas' && (
+            <div className="absolute top-3 right-3">
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
+            </div>
+          )}
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg group-hover:bg-amber-200 dark:group-hover:bg-amber-800/50 transition-colors">
-              <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className={`p-2 rounded-lg ${
+              tipoRelatorio === 'pensionistas'
+                ? 'bg-white/20'
+                : 'bg-amber-100 dark:bg-amber-900/50'
+            }`}>
+              <svg className={`w-6 h-6 ${tipoRelatorio === 'pensionistas' ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
               </svg>
             </div>
-            <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+            <h3 className={`font-bold text-lg ${tipoRelatorio === 'pensionistas' ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
               Débitos Pensionistas
             </h3>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className={`text-sm leading-relaxed ${
+            tipoRelatorio === 'pensionistas'
+              ? 'text-amber-100'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}>
             Parcelas em aberto de sócios tipo Pensionista/Local (Tipo 3 e 4). Baseado no AS302.
           </p>
-          <div className="mt-3 flex items-center text-sm text-amber-600 dark:text-amber-400 font-medium">
-            Acessar
-            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
+        </div>
 
         {/* Card Comparação */}
-        <Link
-          href="/cliente/relatorios/comparacao"
-          className="group bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-purple-400 dark:hover:border-purple-500 transition-all duration-200"
+        <div
+          onClick={() => setTipoRelatorio('comparacao')}
+          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 ${
+            tipoRelatorio === 'comparacao'
+              ? 'bg-gradient-to-br from-purple-500 to-purple-700 dark:from-purple-600 dark:to-purple-800 text-white ring-2 ring-purple-400/50'
+              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500'
+          }`}
         >
+          {tipoRelatorio === 'comparacao' && (
+            <div className="absolute top-3 right-3">
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
+            </div>
+          )}
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/50 transition-colors">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className={`p-2 rounded-lg ${
+              tipoRelatorio === 'comparacao'
+                ? 'bg-white/20'
+                : 'bg-purple-100 dark:bg-purple-900/50'
+            }`}>
+              <svg className={`w-6 h-6 ${tipoRelatorio === 'comparacao' ? 'text-white' : 'text-purple-600 dark:text-purple-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+            <h3 className={`font-bold text-lg ${tipoRelatorio === 'comparacao' ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
               Comparar Bases
             </h3>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          <p className={`text-sm leading-relaxed ${
+            tipoRelatorio === 'comparacao'
+              ? 'text-purple-100'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}>
             Compare dados entre PostgreSQL e MySQL para auditoria e validação.
           </p>
-          <div className="mt-3 flex items-center text-sm text-purple-600 dark:text-purple-400 font-medium">
-            Acessar
-            <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Link>
+        </div>
       </div>
 
-      {/* Formulário Principal */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {/* Header do formulário */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filtros do Relatório
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Configure os filtros e escolha o formato de exportação
-          </p>
-        </div>
+      {/* Formulário Principal - Exibe apenas se um tipo de relatório for selecionado */}
+      {tipoRelatorio && tipoRelatorio !== 'comparacao' && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Header do formulário */}
+          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filtros do Relatório {tipoRelatorio === 'pensionistas' && '- Pensionistas'}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {tipoRelatorio === 'pensionistas' 
+                ? 'Filtros para parcelas em aberto de pensionistas (Tipo 3 e 4)'
+                : 'Configure os filtros e escolha o formato de exportação'
+              }
+            </p>
+          </div>
 
         <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -466,59 +537,61 @@ export default function RelatoriosPage() {
                 </div>
               </div>
 
-              {/* Sócio */}
-              <div className="relative">
-                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
-                  Sócio
-                  <span className="ml-1 text-xs font-normal text-gray-400">(opcional)</span>
-                </label>
+              {/* Sócio - Não exibe para relatório de pensionistas */}
+              {tipoRelatorio !== 'pensionistas' && (
                 <div className="relative">
-                  <input
-                    type="text"
-                    value={searchSocio}
-                    onChange={(e) => {
-                      setSearchSocio(e.target.value);
-                      if (!e.target.value) {
-                        limparSocio();
-                      }
-                    }}
-                    placeholder="Buscar por matrícula ou nome..."
-                    className="w-full px-3 py-2.5 pr-9 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-                  />
-                  {filtros.socioMatricula ? (
-                    <button
-                      type="button"
-                      onClick={limparSocio}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
-                      title="Limpar seleção"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300">
+                    Sócio
+                    <span className="ml-1 text-xs font-normal text-gray-400">(opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchSocio}
+                      onChange={(e) => {
+                        setSearchSocio(e.target.value);
+                        if (!e.target.value) {
+                          limparSocio();
+                        }
+                      }}
+                      placeholder="Buscar por matrícula ou nome..."
+                      className="w-full px-3 py-2.5 pr-9 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    />
+                    {filtros.socioMatricula ? (
+                      <button
+                        type="button"
+                        onClick={limparSocio}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                        title="Limpar seleção"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    ) : (
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                    </button>
-                  ) : (
-                    <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    )}
+                  </div>
+                  {showSocioList && socios.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                      {socios.map((socio) => (
+                        <div
+                          key={socio.id}
+                          onClick={() => selecionarSocio(socio)}
+                          className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
+                        >
+                          <div className="font-semibold text-gray-900 dark:text-white text-sm">{socio.nome}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {socio.matricula && <span>Matrícula: {socio.matricula}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {showSocioList && socios.length > 0 && (
-                  <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    {socios.map((socio) => (
-                      <div
-                        key={socio.id}
-                        onClick={() => selecionarSocio(socio)}
-                        className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
-                      >
-                        <div className="font-semibold text-gray-900 dark:text-white text-sm">{socio.nome}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                          {socio.matricula && <span>Matrícula: {socio.matricula}</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Convênio */}
               <div className="relative">
@@ -664,37 +737,83 @@ export default function RelatoriosPage() {
                 <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   O que o relatório inclui
                 </h4>
-                <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5">
-                  <li className="flex items-start gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Todas as parcelas do período selecionado
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Agrupamento por sócio ou convênio
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Subtotais por grupo e total geral
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Indicação de parcelas pagas (OK)
-                  </li>
-                </ul>
+                {tipoRelatorio === 'pensionistas' ? (
+                  <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5">
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Apenas sócios Tipo 3 e 4 (Pensionistas/Locais)
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Somente parcelas em aberto (sem baixa)
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Agrupamento por sócio ou convênio
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Baseado no relatório AS302 (Harbour)
+                    </li>
+                  </ul>
+                ) : (
+                  <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5">
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Todas as parcelas do período selecionado
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Agrupamento por sócio ou convênio
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Subtotais por grupo e total geral
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Indicação de parcelas pagas (OK)
+                    </li>
+                  </ul>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Placeholder para comparação - a ser implementado */}
+      {tipoRelatorio === 'comparacao' && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-4">
+            <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            Comparação de Bases
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            Funcionalidade em desenvolvimento. Em breve você poderá comparar dados entre PostgreSQL e MySQL.
+          </p>
+        </div>
+      )}
 
       {/* Modal de Configuração CSV */}
       {showCSVModal && (
