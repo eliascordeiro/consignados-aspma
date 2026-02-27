@@ -105,14 +105,11 @@ export async function GET(request: NextRequest) {
     const dataInicio = new Date(ano, mes - 1, 1, 0, 0, 0);
     const dataFim = new Date(ano, mes, 0, 23, 59, 59, 999);
 
-    // Buscar parcelas (filtrado pelo userId correto)
+    // Buscar parcelas (SEM filtro de userId - AS302.PRG traz TODOS os pensionistas)
     const where: any = {
       dataVencimento: {
         gte: dataInicio,
         lte: dataFim,
-      },
-      venda: {
-        userId: dataUserId,
       },
     };
 
@@ -129,7 +126,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Monta filtros de venda (convênio, sócio, tipoSocio)
-    const vendaFilter: any = { userId: dataUserId };
+    // IMPORTANTE: SEM filtro de userId - AS302.PRG traz TODOS os pensionistas do sistema
+    const vendaFilter: any = {};
     let hasVendaFilter = false;
 
     if (convenioId) {
