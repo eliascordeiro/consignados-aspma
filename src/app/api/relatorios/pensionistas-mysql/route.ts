@@ -255,29 +255,29 @@ async function gerarPDF(grupos: any[], mesAno: string): Promise<ArrayBuffer> {
 
       // Matrícula, Associado e Tipo apenas na primeira linha
       if (firstLine) {
-        doc.text(grupo.matricula || '', 10, y);
-        doc.text((grupo.associado || '').substring(0, 25), 35, y);
-        doc.text(grupo.codTipo || '', 90, y);
+        doc.text(String(grupo.matricula || ''), 10, y);
+        doc.text(String(grupo.associado || '').substring(0, 25), 35, y);
+        doc.text(String(grupo.codTipo || ''), 90, y);
         firstLine = false;
       }
 
       // Conveniado (código + nome)
-      const conveniadoTexto = `${parcela.convenio_codigo || ''} - ${(parcela.convenio_nome || '').substring(0, 35)}`;
+      const conveniadoTexto = `${parcela.convenio_codigo || ''} - ${String(parcela.convenio_nome || '').substring(0, 35)}`;
       doc.text(conveniadoTexto, 100, y);
 
       // Pc (parcela atual) e De (total de parcelas)
-      doc.text(parcela.num_parcela?.toString().padStart(2, '0') || '00', 190, y);
-      doc.text(parcela.qtd_parcelas?.toString().padStart(2, '0') || '00', 200, y);
+      doc.text(String(parcela.num_parcela || '').padStart(2, '0') || '00', 190, y);
+      doc.text(String(parcela.qtd_parcelas || '').padStart(2, '0') || '00', 200, y);
 
       // Valor
-      doc.text(valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), 225, y, { align: 'right' });
+      doc.text(String(valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })), 225, y, { align: 'right' });
 
       y += 5;
     }
 
     // Total do grupo
     doc.setFont('Courier', 'bold');
-    doc.text(totalGrupo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), 260, y - 5, { align: 'right' });
+    doc.text(String(totalGrupo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })), 260, y - 5, { align: 'right' });
     doc.setFont('Courier', 'normal');
     y += 2;
   }
