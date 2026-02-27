@@ -117,10 +117,15 @@ export async function GET(request: NextRequest) {
     };
 
     // Filtro de parcelas em aberto (sem baixa) - AS302.PRG: TRIM(parcelas.baixa) = ''
-    // MySQL considera apenas string vazia (não NULL) como "em aberto"
-    // Importante: NULL != '' no MySQL, por isso não incluímos null aqui
+    // IMPORTANTE: No MySQL, parcelas sem baixa têm baixa = '' (string vazia)
+    // No PostgreSQL, parcelas sem baixa têm baixa = null (padrão do Prisma)
+    // Por isso aceitamos OR: null, '', ou ' ' (espaço)
     if (apenasEmAberto === 'true') {
-      where.baixa = '';
+      where.OR = [
+        { baixa: null },
+        { baixa: '' },
+        { baixa: ' ' },
+      ];
     }
 
     // Monta filtros de venda (convênio, sócio, tipoSocio)
