@@ -100,8 +100,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Data início e fim do mês
-    const dataInicio = new Date(ano, mes - 1, 1);
-    const dataFim = new Date(ano, mes, 0, 23, 59, 59);
+    // AS302.PRG usa: MONTH(parcelas.vencimento) = X AND YEAR(parcelas.vencimento) = Y
+    // Equivalente no PostgreSQL: range de data com início e fim do mês
+    const dataInicio = new Date(ano, mes - 1, 1, 0, 0, 0);
+    const dataFim = new Date(ano, mes, 0, 23, 59, 59, 999);
 
     // Buscar parcelas (filtrado pelo userId correto)
     const where: any = {
@@ -115,12 +117,10 @@ export async function GET(request: NextRequest) {
     };
 
     // Filtro de parcelas em aberto (sem baixa) - AS302.PRG: TRIM(parcelas.baixa) = ''
+    // MySQL considera apenas string vazia (não NULL) como "em aberto"
+    // Importante: NULL != '' no MySQL, por isso não incluímos null aqui
     if (apenasEmAberto === 'true') {
-      where.OR = [
-        { baixa: null },
-        { baixa: '' },
-        { baixa: ' ' },
-      ];
+      where.baixa = '';
     }
 
     // Monta filtros de venda (convênio, sócio, tipoSocio)
@@ -133,11 +133,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (socioMatricula) {
-      vendaFilter.socio = { ...vendaFilter.socio, matricula: socioMatricula };
+      // AS302.PRG usa: LEFT JOIN socios ON TRIM(parcelas.matricula) = TRIM(socios.matricula)
+      // No Prisma, o JOIN é feito via FK (sem TRIM). Garantir que matrículas estejam sem espaços na base
+      vendaFilter.socio = { ...vendaFilter.socio, matricula: socioMatricula.trim() };
       hasVendaFilter = true;
     }
 
     // Filtro por tipo de sócio - AS302.PRG: codtipo = '3' OR codtipo = '4' (pensionistas/local)
+    // MySQL armazena como VARCHAR, PostgreSQL como INTEGER. Prisma converte automaticamente.
     if (tipoSocio === 'pensionistas') {
       vendaFilter.socio = { ...vendaFilter.socio, codTipo: { in: [3, 4] } };
       hasVendaFilter = true;
