@@ -255,14 +255,14 @@ async function gerarPDF(grupos: any[], mesAno: string): Promise<ArrayBuffer> {
 
       // Matrícula, Associado e Tipo apenas na primeira linha
       if (firstLine) {
-        doc.text(String(grupo.matricula || ''), 10, y);
-        doc.text(String(grupo.associado || '').substring(0, 25), 35, y);
-        doc.text(String(grupo.codTipo || ''), 90, y);
+        doc.text(String(grupo.matricula || '').trim(), 10, y);
+        doc.text(String(grupo.associado || '').trim().substring(0, 25), 35, y);
+        doc.text(String(grupo.codTipo || '').trim(), 90, y);
         firstLine = false;
       }
 
       // Conveniado (código + nome)
-      const conveniadoTexto = `${parcela.convenio_codigo || ''} - ${String(parcela.convenio_nome || '').substring(0, 35)}`;
+      const conveniadoTexto = `${String(parcela.convenio_codigo || '').trim()} - ${String(parcela.convenio_nome || '').trim().substring(0, 35)}`;
       doc.text(conveniadoTexto, 100, y);
 
       // Pc (parcela atual) e De (total de parcelas)
@@ -339,10 +339,10 @@ async function gerarExcel(grupos: any[], mesAno: string): Promise<ArrayBuffer> {
       totalGrupo += valor;
 
       const row = worksheet.addRow([
-        firstLine ? (grupo.matricula || '') : '',
-        firstLine ? (grupo.associado || '') : '',
-        firstLine ? (grupo.codTipo || '') : '',
-        `${parcela.convenio_codigo || ''} - ${parcela.convenio_nome || ''}`,
+        firstLine ? String(grupo.matricula || '').trim() : '',
+        firstLine ? String(grupo.associado || '').trim() : '',
+        firstLine ? String(grupo.codTipo || '').trim() : '',
+        `${String(parcela.convenio_codigo || '').trim()} - ${String(parcela.convenio_nome || '').trim()}`,
         parcela.num_parcela,
         parcela.qtd_parcelas,
         valor,
@@ -425,10 +425,10 @@ function gerarCSV(
         : valor.toFixed(2);
       
       const row = [
-        grupo.matricula,
-        `"${grupo.associado}"`,
-        grupo.codTipo,
-        `"${parcela.convenio_codigo || ''} - ${parcela.convenio_nome || ''}"`,
+        String(grupo.matricula || '').trim(),
+        `"${String(grupo.associado || '').trim()}"`,
+        String(grupo.codTipo || '').trim(),
+        `"${String(parcela.convenio_codigo || '').trim()} - ${String(parcela.convenio_nome || '').trim()}"`,
         parcela.num_parcela.toString(),
         parcela.qtd_parcelas.toString(),
         valorFormatado,
