@@ -161,7 +161,7 @@ export default function UsuariosPage() {
                     <div
                       key={user.id}
                       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <div className="md:hidden p-3 flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
