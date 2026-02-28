@@ -93,8 +93,8 @@ export default function MargemConsignadaPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Margem Consignada</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie limites de crédito e margens consignáveis dos sócios</p>
+          <h1 className="text-2xl font-bold text-foreground">Margem Consignada</h1>
+          <p className="text-sm text-muted-foreground">Gerencie limites de crédito e margens consignáveis dos sócios</p>
         </div>
       </div>
 
@@ -102,22 +102,22 @@ export default function MargemConsignadaPage() {
       <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Buscar</label>
             <input
               type="text"
               placeholder="Nome, CPF ou matrícula..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex items-end gap-2">
-            <span className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
+            <span className="px-3 py-2 text-sm text-muted-foreground border border-border rounded-md bg-muted/50">
               {total} sócio{total !== 1 ? 's' : ''}
             </span>
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 border border-border rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
             >
               Atualizar
             </button>
@@ -128,16 +128,16 @@ export default function MargemConsignadaPage() {
       {/* Table */}
       <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
+          <div className="text-center py-12 text-muted-foreground">Carregando...</div>
         ) : isError ? (
           <div className="text-center py-12 text-red-500">Erro ao carregar dados</div>
         ) : socios.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Nenhum sócio encontrado</div>
+          <div className="text-center py-12 text-muted-foreground">Nenhum sócio encontrado</div>
         ) : (
           <>
             {/* Desktop Header */}
             {!isMobile && (
-              <div className="grid grid-cols-[1fr_130px_130px_160px_110px_100px_90px] gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <div className="grid grid-cols-[1fr_130px_130px_160px_110px_100px_90px] gap-3 px-4 py-3 bg-muted/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <div>Nome</div>
                 <div>Matrícula</div>
                 <div>CPF</div>
@@ -161,14 +161,14 @@ export default function MargemConsignadaPage() {
                     <div
                       key={socio.id}
                       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
+                      className="border-b border-border hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
                     >
                       {/* Mobile card */}
                       <div className="md:hidden p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{socio.nome}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="font-medium text-sm text-foreground truncate">{socio.nome}</div>
+                            <div className="text-xs text-muted-foreground">
                               {socio.matricula && <span>Mat: {socio.matricula} · </span>}
                               {socio.empresa?.nome || 'Sem empresa'}
                             </div>
@@ -192,16 +192,16 @@ export default function MargemConsignadaPage() {
                               {formatCurrency(valorMargem)}
                             </span>
                           )}
-                          {fonteBadge && <span className="text-[10px] px-1.5 py-0.5 border border-gray-300 dark:border-gray-600 rounded text-gray-500">{fonteBadge}</span>}
+                          {fonteBadge && <span className="text-[10px] px-1.5 py-0.5 border border-border rounded text-gray-500">{fonteBadge}</span>}
                         </div>
                       </div>
 
                       {/* Desktop row */}
                       <div className="hidden md:grid md:grid-cols-[1fr_130px_130px_160px_110px_100px_90px] gap-3 px-4 items-center h-full text-sm">
-                        <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{socio.nome}</div>
-                        <div className="text-gray-500 dark:text-gray-400 font-mono text-xs">{socio.matricula || '—'}</div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs">{socio.cpf || '—'}</div>
-                        <div className="text-gray-500 dark:text-gray-400 text-xs truncate">{socio.empresa?.nome || '—'}</div>
+                        <div className="font-medium text-foreground truncate">{socio.nome}</div>
+                        <div className="text-muted-foreground font-mono text-xs">{socio.matricula || '—'}</div>
+                        <div className="text-muted-foreground text-xs">{socio.cpf || '—'}</div>
+                        <div className="text-muted-foreground text-xs truncate">{socio.empresa?.nome || '—'}</div>
                         <div className="text-right">
                           <div className="flex flex-col items-end gap-0.5">
                             {isZetra ? (
@@ -211,11 +211,11 @@ export default function MargemConsignadaPage() {
                                 {formatCurrency(valorMargem)}
                               </span>
                             )}
-                            {fonteBadge && <span className="text-[10px] px-1 border border-gray-300 dark:border-gray-500 rounded text-gray-400">{fonteBadge}</span>}
+                            {fonteBadge && <span className="text-[10px] px-1 border border-border rounded text-muted-foreground">{fonteBadge}</span>}
                           </div>
                         </div>
                         <div className="text-center">
-                          <span className="text-xs px-2 py-0.5 border border-gray-300 dark:border-gray-600 rounded text-gray-500">
+                          <span className="text-xs px-2 py-0.5 border border-border rounded text-gray-500">
                             {socio._count?.margemHistoricos ?? 0}
                           </span>
                         </div>
@@ -240,14 +240,14 @@ export default function MargemConsignadaPage() {
 
         {/* Pagination */}
         {!isLoading && totalPages > 1 && (
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="px-4 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
               {((currentPage - 1) * 50) + 1}–{Math.min(currentPage * 50, total)} de {total}
             </span>
             <div className="flex gap-2">
-              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">Anterior</button>
-              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">{currentPage} / {totalPages}</span>
-              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">Próxima</button>
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 text-sm border border-border rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-muted-foreground transition-colors">Anterior</button>
+              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-border rounded-md text-muted-foreground">{currentPage} / {totalPages}</span>
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 text-sm border border-border rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-muted-foreground transition-colors">Próxima</button>
             </div>
           </div>
         )}

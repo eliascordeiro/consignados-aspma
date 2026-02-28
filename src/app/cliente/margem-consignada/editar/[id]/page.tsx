@@ -119,25 +119,25 @@ export default function EditarMargemPage() {
     );
   }
 
-  const inputCls = 'w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const labelCls = 'block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1';
+  const inputCls = 'w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const labelCls = 'block text-xs font-medium text-muted-foreground mb-1';
 
   return (
     <div className="container mx-auto p-6 max-w-lg">
-      <Link href="/cliente/margem-consignada" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 mb-4 transition-colors">
+      <Link href="/cliente/margem-consignada" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-muted-foreground dark:hover:text-gray-100 mb-4 transition-colors">
         <ChevronLeft className="h-4 w-4" />
         Voltar para Margem Consignada
       </Link>
 
       <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+        <div className="px-6 py-4 border-b border-border flex items-center gap-2">
           <Wallet className="h-5 w-5 text-amber-600" />
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-xl font-bold text-foreground">
               {isReadonly ? 'Consultar Margem (ZETRA)' : 'Alterar Margem Consignada'}
             </h1>
             {socio && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {socio.nome}{socio.matricula && ` — Mat. ${socio.matricula}`}
               </p>
             )}
@@ -150,9 +150,9 @@ export default function EditarMargemPage() {
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Fonte dos dados */}
             {fonte && (
-              <div className={`rounded-lg p-3 ${isReadonly ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-gray-700'}`}>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Fonte dos Dados</p>
-                <p className="text-sm font-medium mt-1 text-gray-900 dark:text-gray-100">
+              <div className={`rounded-lg p-3 ${isReadonly ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-muted/50'}`}>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Fonte dos Dados</p>
+                <p className="text-sm font-medium mt-1 text-foreground">
                   {fonte}
                   {isReadonly && <span className="text-xs text-blue-600 dark:text-blue-400 ml-2">(Somente Consulta)</span>}
                 </p>
@@ -166,16 +166,16 @@ export default function EditarMargemPage() {
                 <div className="text-2xl font-mono font-bold text-blue-700 dark:text-blue-300">
                   {formatCurrency(Number(formData.limite))}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   ⚠️ Valores de ZETRA não podem ser alterados manualmente
                 </p>
               </div>
             ) : (
               <>
                 {socio?.limite !== null && (
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-1">
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                     <p className="text-xs font-semibold text-gray-500 uppercase">Valor Atual</p>
-                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                    <div className="text-sm text-muted-foreground">
                       Limite: <span className="font-mono font-semibold">{formatCurrency(socio?.limite)}</span>
                     </div>
                   </div>
@@ -222,7 +222,7 @@ export default function EditarMargemPage() {
             <div className="flex justify-end gap-3 pt-2">
               <Link
                 href="/cliente/margem-consignada"
-                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-sm border border-border rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
               >
                 {isReadonly ? 'Fechar' : 'Cancelar'}
               </Link>

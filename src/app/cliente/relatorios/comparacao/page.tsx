@@ -226,10 +226,10 @@ export default function ComparacaoRelatoriosPage() {
             ← Voltar
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-foreground">
               Comparação de Relatórios
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-muted-foreground mt-2">
               Compare dados entre PostgreSQL (migrado) e MySQL (original)
             </p>
           </div>
@@ -239,11 +239,11 @@ export default function ComparacaoRelatoriosPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Filtros */}
         <div className="bg-card text-card-foreground p-6 rounded-lg shadow-md lg:col-span-2">
-          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Filtros</h2>
+          <h2 className="text-xl font-bold mb-4 text-foreground">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Convênio */}
             <div className="relative">
-              <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+              <label className="block text-sm font-bold mb-2 text-foreground">
                 Convênio (opcional)
               </label>
               <input
@@ -256,28 +256,28 @@ export default function ComparacaoRelatoriosPage() {
                   }
                 }}
                 placeholder="Digite código ou razão social (ou deixe vazio para todos)"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {filtros.convenioId && (
                 <button
                   type="button"
                   onClick={limparConvenio}
-                  className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="absolute right-3 top-10 text-gray-500 hover:text-muted-foreground dark:hover:text-gray-200"
                   title="Limpar seleção"
                 >
                   ✕
                 </button>
               )}
               {showConvenioList && convenios.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg max-h-60 overflow-y-auto">
                   {convenios.map((convenio) => (
                     <div
                       key={convenio.id}
                       onClick={() => selecionarConvenio(convenio)}
-                      className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
+                      className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border"
                     >
-                      <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="font-semibold text-foreground">{convenio.razao_soc}</div>
+                      <div className="text-sm text-muted-foreground">
                         {convenio.codigo && <span>Código: {convenio.codigo}</span>}
                       </div>
                     </div>
@@ -288,14 +288,14 @@ export default function ComparacaoRelatoriosPage() {
 
             {/* Período */}
             <div>
-              <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+              <label className="block text-sm font-bold mb-2 text-foreground">
                 Período (Mês-Ano) *
               </label>
               <input
                 type="month"
                 value={filtros.mesAno}
                 onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
@@ -303,7 +303,7 @@ export default function ComparacaoRelatoriosPage() {
 
           {/* Barra de Progresso */}
           {loading && (
-            <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 mt-4">
+            <div className="w-full bg-muted rounded-full h-4 mt-4">
               <div 
                 className="bg-blue-600 h-4 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -393,19 +393,19 @@ export default function ComparacaoRelatoriosPage() {
       {showCSVModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-card text-card-foreground rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">
               ⚙️ Configuração CSV - {csvSource === 'postgres' ? 'PostgreSQL' : 'MySQL'}
             </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-bold mb-2 text-muted-foreground">
                   Delimitador de campos
                 </label>
                 <select
                   value={csvOptions.delimiter}
                   onChange={(e) => setCsvOptions({ ...csvOptions, delimiter: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
                 >
                   <option value=";">Ponto e vírgula (;) - Excel Brasil</option>
                   <option value=",">Vírgula (,) - Padrão internacional</option>
@@ -415,13 +415,13 @@ export default function ComparacaoRelatoriosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-bold mb-2 text-muted-foreground">
                   Separador decimal
                 </label>
                 <select
                   value={csvOptions.decimalSeparator}
                   onChange={(e) => setCsvOptions({ ...csvOptions, decimalSeparator: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
                 >
                   <option value=",">Vírgula (,) - Brasil</option>
                   <option value=".">Ponto (.) - Internacional</option>
@@ -429,13 +429,13 @@ export default function ComparacaoRelatoriosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-bold mb-2 text-muted-foreground">
                   Codificação
                 </label>
                 <select
                   value={csvOptions.encoding}
                   onChange={(e) => setCsvOptions({ ...csvOptions, encoding: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
                 >
                   <option value="utf-8">UTF-8 (Recomendado)</option>
                   <option value="iso-8859-1">ISO-8859-1 (Legado)</option>
@@ -450,7 +450,7 @@ export default function ComparacaoRelatoriosPage() {
                   onChange={(e) => setCsvOptions({ ...csvOptions, includeHeader: e.target.checked })}
                   className="w-4 h-4 text-blue-600 rounded"
                 />
-                <label htmlFor="includeHeader" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="includeHeader" className="ml-2 text-sm font-medium text-muted-foreground">
                   Incluir cabeçalho
                 </label>
               </div>
@@ -459,7 +459,7 @@ export default function ComparacaoRelatoriosPage() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowCSVModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 font-bold"
+                className="flex-1 px-4 py-2 bg-muted text-foreground rounded hover:bg-gray-400 font-bold"
               >
                 Cancelar
               </button>
@@ -475,7 +475,7 @@ export default function ComparacaoRelatoriosPage() {
       )}
 
       {/* Instruções */}
-      <div className="mt-6 bg-yellow-50 dark:bg-gray-800 border-l-4 border-yellow-400 p-4 rounded">
+      <div className="mt-6 bg-yellow-50 dark:bg-yellow-950/40 border-l-4 border-yellow-400 p-4 rounded">
         <h3 className="font-bold text-yellow-900 dark:text-yellow-300 mb-2">💡 Como usar:</h3>
         <ol className="list-decimal list-inside text-yellow-800 dark:text-yellow-400 space-y-1 text-sm">
           <li>Selecione um convênio (opcional) ou deixe vazio para todos</li>
@@ -491,40 +491,40 @@ export default function ComparacaoRelatoriosPage() {
       {showSyncModal && syncResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-card text-card-foreground rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-2xl font-bold mb-4 text-foreground flex items-center gap-2">
               {syncResult.success ? '✅' : '⚠️'}
               Resultado da Sincronização
             </h2>
 
             <div className="space-y-4">
               {/* Resumo */}
-              <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg">
+              <div className="bg-blue-50 dark:bg-blue-950/40 p-4 rounded-lg">
                 <h3 className="font-bold text-lg mb-2 text-blue-900 dark:text-blue-300">Resumo</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">Período:</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{syncResult.periodo}</p>
+                    <p className="text-muted-foreground">Período:</p>
+                    <p className="font-semibold text-foreground">{syncResult.periodo}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 dark:text-gray-400">Duração:</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{syncResult.duracao}</p>
+                    <p className="text-muted-foreground">Duração:</p>
+                    <p className="font-semibold text-foreground">{syncResult.duracao}</p>
                   </div>
                 </div>
               </div>
 
               {/* Estatísticas */}
               {syncResult.resultado && (
-                <div className="bg-green-50 dark:bg-gray-700 p-4 rounded-lg">
+                <div className="bg-green-50 dark:bg-green-950/40 p-4 rounded-lg">
                   <h3 className="font-bold text-lg mb-2 text-green-900 dark:text-green-300">Dados Processados</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Vendas migradas:</span>
+                      <span className="text-muted-foreground">Vendas migradas:</span>
                       <span className="font-bold text-green-700 dark:text-green-400">
                         {syncResult.resultado.vendasMigradas}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Parcelas migradas:</span>
+                      <span className="text-muted-foreground">Parcelas migradas:</span>
                       <span className="font-bold text-green-700 dark:text-green-400">
                         {syncResult.resultado.parcelasMigradas}
                       </span>
@@ -532,22 +532,22 @@ export default function ComparacaoRelatoriosPage() {
                     
                     {syncResult.resultado.detalhes && (
                       <>
-                        <hr className="my-2 border-gray-300 dark:border-gray-600" />
+                        <hr className="my-2 border-border" />
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Vendas novas:</span>
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <span className="text-muted-foreground">Vendas novas:</span>
+                          <span className="text-muted-foreground">
                             {syncResult.resultado.detalhes.vendasNovas}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Parcelas novas:</span>
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <span className="text-muted-foreground">Parcelas novas:</span>
+                          <span className="text-muted-foreground">
                             {syncResult.resultado.detalhes.parcelasNovas}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-gray-500 dark:text-gray-400">Parcelas atualizadas:</span>
-                          <span className="text-gray-700 dark:text-gray-300">
+                          <span className="text-muted-foreground">Parcelas atualizadas:</span>
+                          <span className="text-muted-foreground">
                             {syncResult.resultado.detalhes.parcelasAtualizadas}
                           </span>
                         </div>
@@ -559,7 +559,7 @@ export default function ComparacaoRelatoriosPage() {
 
               {/* Erros */}
               {syncResult.resultado?.erros && syncResult.resultado.erros.length > 0 && (
-                <div className="bg-red-50 dark:bg-gray-700 p-4 rounded-lg">
+                <div className="bg-red-50 dark:bg-red-950/40 p-4 rounded-lg">
                   <h3 className="font-bold text-lg mb-2 text-red-900 dark:text-red-300">
                     Erros ({syncResult.resultado.erros.length})
                   </h3>
@@ -575,16 +575,16 @@ export default function ComparacaoRelatoriosPage() {
 
               {/* Mensagem de erro geral */}
               {syncResult.error && (
-                <div className="bg-red-50 dark:bg-gray-700 p-4 rounded-lg">
+                <div className="bg-red-50 dark:bg-red-950/40 p-4 rounded-lg">
                   <h3 className="font-bold text-lg mb-2 text-red-900 dark:text-red-300">❌ Erro</h3>
                   <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">{syncResult.error}</p>
                   {syncResult.details && (
-                    <p className="text-xs text-red-600 dark:text-red-500 mt-2 font-mono bg-red-100 dark:bg-gray-800 p-2 rounded">
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-2 font-mono bg-red-50 dark:bg-red-950/40 p-2 rounded">
                       {syncResult.details}
                     </p>
                   )}
                   {syncResult.help && (
-                    <div className="mt-3 bg-yellow-50 dark:bg-gray-800 border-l-4 border-yellow-400 p-3 rounded">
+                    <div className="mt-3 bg-yellow-50 dark:bg-yellow-950/40 border-l-4 border-yellow-400 p-3 rounded">
                       <p className="text-xs font-bold text-yellow-900 dark:text-yellow-300 mb-1">💡 Solução:</p>
                       <p className="text-xs text-yellow-800 dark:text-yellow-400 whitespace-pre-wrap">
                         {syncResult.help}

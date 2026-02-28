@@ -410,7 +410,7 @@ export default function NovaVendaPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lançamento de Vendas</h1>
+        <h1 className="text-2xl font-bold text-foreground">Lançamento de Vendas</h1>
         <Link
           href="/cliente/vendas"
           className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500"
@@ -423,7 +423,7 @@ export default function NovaVendaPage() {
         {/* Sócio/Associado */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative md:col-span-2">
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Nome do Associado *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Nome do Associado *</label>
             <input
               type="text"
               value={searchSocio}
@@ -434,19 +434,19 @@ export default function NovaVendaPage() {
                 }
               }}
               placeholder="Digite matrícula, nome ou CPF"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
             {showSocioList && socios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg max-h-60 overflow-y-auto">
                 {socios.map((socio) => (
                   <div
                     key={socio.id}
                     onClick={() => selecionarSocio(socio)}
-                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border"
                   >
-                    <div className="font-semibold text-gray-900 dark:text-white">{socio.nome}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="font-semibold text-foreground">{socio.nome}</div>
+                    <div className="text-sm text-muted-foreground">
                       {socio.matricula && <span>Mat: {socio.matricula}</span>}
                       {socio.cpf && socio.matricula && <span> | </span>}
                       {socio.cpf && <span>CPF: {socio.cpf}</span>}
@@ -460,12 +460,12 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Matrícula</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Matrícula</label>
             <input
               type="text"
               value={formData.matricula}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
         </div>
@@ -473,7 +473,7 @@ export default function NovaVendaPage() {
         {/* Convênio */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative md:col-span-2">
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Convênio *</label>
             <input
               type="text"
               value={searchConvenio}
@@ -484,19 +484,19 @@ export default function NovaVendaPage() {
                 }
               }}
               placeholder="Digite código, razão social ou nome fantasia"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
             {showConvenioList && convenios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg max-h-60 overflow-y-auto">
                 {convenios.map((convenio) => (
                   <div
                     key={convenio.id}
                     onClick={() => selecionarConvenio(convenio)}
-                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border"
                   >
-                    <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="font-semibold text-foreground">{convenio.razao_soc}</div>
+                    <div className="text-sm text-muted-foreground">
                       {convenio.fantasia && <span>Fantasia: {convenio.fantasia} | </span>}
                       {convenio.codigo && <span>Código: {convenio.codigo}</span>}
                     </div>
@@ -507,12 +507,12 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Código</label>
+            <label className="block text-sm font-bold mb-2 text-foreground">Código</label>
             <input
               type="text"
               value={formData.convenioNumero}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
         </div>
@@ -523,15 +523,15 @@ export default function NovaVendaPage() {
             <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-2">📊 Informações de Limite (Sistema Local)</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-gray-600 dark:text-gray-400">Limite Total:</span>
-                <p className="font-bold text-gray-900 dark:text-white">R$ {limiteInfo.limiteTotal.toFixed(2)}</p>
+                <span className="text-muted-foreground">Limite Total:</span>
+                <p className="font-bold text-foreground">R$ {limiteInfo.limiteTotal.toFixed(2)}</p>
               </div>
               <div>
-                <span className="text-gray-600 dark:text-gray-400">Total em Aberto:</span>
+                <span className="text-muted-foreground">Total em Aberto:</span>
                 <p className="font-bold text-orange-600 dark:text-orange-400">R$ {limiteInfo.totalEmAberto.toFixed(2)}</p>
               </div>
               <div>
-                <span className="text-gray-600 dark:text-gray-400">Limite Disponível:</span>
+                <span className="text-muted-foreground">Limite Disponível:</span>
                 <p className="font-bold text-green-600 dark:text-green-400">R$ {limiteInfo.limiteDisponivel.toFixed(2)}</p>
               </div>
             </div>
@@ -541,14 +541,14 @@ export default function NovaVendaPage() {
         {/* Limite, Data, Parcelas e Valor */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Limite por Parcela</label>
+            <label className="block text-sm font-bold mb-2 text-foreground">Limite por Parcela</label>
             <div className="relative">
               <input
                 type="text"
                 value={buscandoLimiteParcela ? 'Consultando...' : `R$ ${formData.limite.toFixed(2)}`}
                 readOnly
-                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 font-bold ${
-                  buscandoLimiteParcela ? 'text-gray-400 dark:text-gray-500' : 'text-blue-600 dark:text-blue-400'
+                className={`w-full px-3 py-2 border border-border rounded bg-muted font-bold ${
+                  buscandoLimiteParcela ? 'text-muted-foreground' : 'text-blue-600 dark:text-blue-400'
                 }`}
               />
               {buscandoLimiteParcela && (
@@ -563,31 +563,31 @@ export default function NovaVendaPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Data de Emissão *</label>
+            <label className="block text-sm font-bold mb-2 text-foreground">Data de Emissão *</label>
             <input
               type="date"
               value={formData.dataEmissao}
               onChange={(e) => setFormData({ ...formData, dataEmissao: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Nº de Parcelas *</label>
+            <label className="block text-sm font-bold mb-2 text-foreground">Nº de Parcelas *</label>
             <input
               type="number"
               min="1"
               max="99"
               value={formData.quantidadeParcelas}
               onChange={(e) => setFormData({ ...formData, quantidadeParcelas: parseInt(e.target.value) || 1 })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">Valor da Parcela *</label>
+            <label className="block text-sm font-bold mb-2 text-foreground">Valor da Parcela *</label>
             <input
               type="text"
               value={formData.valorParcela}
@@ -636,7 +636,7 @@ export default function NovaVendaPage() {
                 }
               }}
               placeholder="0,00"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -656,43 +656,43 @@ export default function NovaVendaPage() {
         {/* Tabela de Parcelas */}
         {parcelas.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Parcelas Geradas</h3>
+            <h3 className="text-lg font-bold mb-3 text-foreground">Parcelas Geradas</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-card text-card-foreground border border-gray-300 dark:border-gray-600">
-                <thead className="bg-gray-100 dark:bg-gray-700">
+              <table className="min-w-full bg-card text-card-foreground border border-border">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">#</th>
-                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">Vencimento (Mês/Ano)</th>
-                    <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">Valor</th>
+                    <th className="px-4 py-2 border border-border text-left text-foreground">#</th>
+                    <th className="px-4 py-2 border border-border text-left text-foreground">Vencimento (Mês/Ano)</th>
+                    <th className="px-4 py-2 border border-border text-right text-foreground">Valor</th>
                   </tr>
                 </thead>
                 <tbody>
                   {parcelas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((parcela, index) => (
-                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">{parcela.numeroParcela}</td>
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600">
+                    <tr key={index} className="hover:bg-muted/50">
+                      <td className="px-4 py-2 border border-border text-foreground">{parcela.numeroParcela}</td>
+                      <td className="px-4 py-2 border border-border">
                         <input
                           type="text"
                           value={new Date(parcela.dataVencimento).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}
                           readOnly
-                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed"
+                          className="w-full px-2 py-1 border border-border rounded bg-muted text-foreground cursor-not-allowed"
                         />
                       </td>
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right">
+                      <td className="px-4 py-2 border border-border text-right">
                         <input
                           type="text"
                           value={formatarMoeda(parcela.valor)}
                           readOnly
-                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed"
+                          className="w-full px-2 py-1 border border-border rounded text-right bg-muted text-foreground cursor-not-allowed"
                         />
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-gray-100 dark:bg-gray-700 font-bold">
+                <tfoot className="bg-muted font-bold">
                   <tr>
-                    <td colSpan={2} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">TOTAL:</td>
-                    <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">
+                    <td colSpan={2} className="px-4 py-2 border border-border text-right text-foreground">TOTAL:</td>
+                    <td className="px-4 py-2 border border-border text-right text-foreground">
                       R$ {formatarMoeda(parcelas.reduce((sum, p) => sum + p.valor, 0))}
                     </td>
                   </tr>
@@ -706,7 +706,7 @@ export default function NovaVendaPage() {
                   type="button"
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >←</button>
                 {(() => {
                   const total = Math.ceil(parcelas.length / ITEMS_PER_PAGE);
@@ -725,7 +725,7 @@ export default function NovaVendaPage() {
                   ) : (
                     <button key={p} type="button" onClick={() => setCurrentPage(p as number)}
                       className={`px-3 py-1 text-sm rounded ${
-                        currentPage === p ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        currentPage === p ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}>{p}</button>
                   ));
                 })()}
@@ -733,9 +733,9 @@ export default function NovaVendaPage() {
                   type="button"
                   onClick={() => setCurrentPage(p => Math.min(Math.ceil(parcelas.length / ITEMS_PER_PAGE), p + 1))}
                   disabled={currentPage === Math.ceil(parcelas.length / ITEMS_PER_PAGE)}
-                  className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >→</button>
-                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{parcelas.length} parcelas</span>
+                <span className="text-xs text-muted-foreground ml-2">{parcelas.length} parcelas</span>
               </div>
             )}
           </div>

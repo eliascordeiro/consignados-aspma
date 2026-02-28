@@ -110,8 +110,8 @@ export default function LocaisPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Convênios</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie os convênios autorizados (bancos, comércios, cooperativas, etc)</p>
+          <h1 className="text-2xl font-bold text-foreground">Convênios</h1>
+          <p className="text-sm text-muted-foreground">Gerencie os convênios autorizados (bancos, comércios, cooperativas, etc)</p>
         </div>
         {canCreate && (
           <Link
@@ -129,19 +129,19 @@ export default function LocaisPage() {
       <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Buscar</label>
             <input
               type="text"
               placeholder="Nome, CNPJ, tipo, cidade ou status..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex items-end">
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 border border-border rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
             >
               Atualizar
             </button>
@@ -152,16 +152,16 @@ export default function LocaisPage() {
       {/* Table */}
       <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
+          <div className="text-center py-12 text-muted-foreground">Carregando...</div>
         ) : isError ? (
           <div className="text-center py-12 text-red-500">Erro ao carregar convênios</div>
         ) : convenios.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Nenhum convênio encontrado</div>
+          <div className="text-center py-12 text-muted-foreground">Nenhum convênio encontrado</div>
         ) : (
           <>
             {/* Desktop Header */}
             {!isMobile && (
-              <div className="grid grid-cols-[90px_1fr_120px_150px_100px_100px] gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <div className="grid grid-cols-[90px_1fr_120px_150px_100px_100px] gap-3 px-4 py-3 bg-muted/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <div>Código</div>
                 <div>Nome / Fantasia</div>
                 <div>Tipo</div>
@@ -182,28 +182,28 @@ export default function LocaisPage() {
                     <div
                       key={conv.id}
                       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
+                      className="border-b border-border hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
                     >
                       {/* Mobile card */}
                       <div className="md:hidden p-3 flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{nomePrincipal}</div>
+                          <div className="font-medium text-sm text-foreground truncate">{nomePrincipal}</div>
                           {conv.fantasia && conv.fantasia !== nomePrincipal && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{conv.fantasia}</div>
+                            <div className="text-xs text-muted-foreground truncate">{conv.fantasia}</div>
                           )}
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${getTipoBadgeCls(conv.libera)}`}>
                               {getDisplayTipo(conv.libera)}
                             </span>
                             {conv.codigo && <span className="text-xs text-gray-400 font-mono">#{conv.codigo}</span>}
-                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${conv.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${conv.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                               {conv.ativo ? 'Ativo' : 'Inativo'}
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {canEdit && (
-                            <Link href={`/cliente/locais/editar/${conv.id}`} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 transition-colors">
+                            <Link href={`/cliente/locais/editar/${conv.id}`} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
                             </Link>
                           )}
@@ -217,9 +217,9 @@ export default function LocaisPage() {
 
                       {/* Desktop row */}
                       <div className="hidden md:grid md:grid-cols-[90px_1fr_120px_150px_100px_100px] gap-3 px-4 items-center h-full text-sm">
-                        <div className="font-mono text-xs text-gray-500 dark:text-gray-400">{conv.codigo || '—'}</div>
+                        <div className="font-mono text-xs text-muted-foreground">{conv.codigo || '—'}</div>
                         <div className="min-w-0">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{nomePrincipal}</div>
+                          <div className="font-medium text-foreground truncate">{nomePrincipal}</div>
                           {conv.fantasia && conv.fantasia !== nomePrincipal && (
                             <div className="text-xs text-gray-400 truncate">{conv.fantasia}</div>
                           )}
@@ -229,19 +229,19 @@ export default function LocaisPage() {
                             {getDisplayTipo(conv.libera)}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        <div className="text-xs text-muted-foreground truncate">
                           {conv.banco ? (
                             <span>{conv.banco}{conv.agencia ? ` · Ag: ${conv.agencia}` : ''}</span>
                           ) : '—'}
                         </div>
                         <div>
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${conv.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${conv.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                             {conv.ativo ? 'Ativo' : 'Inativo'}
                           </span>
                         </div>
                         <div className="flex justify-end gap-1">
                           {canEdit && (
-                            <Link href={`/cliente/locais/editar/${conv.id}`} title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors">
+                            <Link href={`/cliente/locais/editar/${conv.id}`} title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
                             </Link>
                           )}
@@ -262,14 +262,14 @@ export default function LocaisPage() {
 
         {/* Pagination */}
         {!isLoading && totalPages > 1 && (
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="px-4 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
               {((currentPage - 1) * 50) + 1}–{Math.min(currentPage * 50, total)} de {total} convênios
             </span>
             <div className="flex gap-2">
-              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">Anterior</button>
-              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">{currentPage} / {totalPages}</span>
-              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">Próxima</button>
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 text-sm border border-border rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-muted-foreground transition-colors">Anterior</button>
+              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-border rounded-md text-muted-foreground">{currentPage} / {totalPages}</span>
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 text-sm border border-border rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-muted-foreground transition-colors">Próxima</button>
             </div>
           </div>
         )}

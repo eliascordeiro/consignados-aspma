@@ -162,10 +162,10 @@ export default function EditarFuncionarioPage() {
     );
   }
 
-  const inputCls = 'w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputCls = 'w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500';
   const selectCls = inputCls;
-  const labelCls = 'block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1';
-  const disabledCls = `${inputCls} bg-gray-100 dark:bg-gray-600 cursor-not-allowed`;
+  const labelCls = 'block text-xs font-medium text-muted-foreground mb-1';
+  const disabledCls = `${inputCls} bg-muted cursor-not-allowed`;
   const tabs: { id: Tab; label: string }[] = [
     { id: 'pessoais', label: 'Pessoais' },
     { id: 'profissionais', label: 'Profissionais' },
@@ -183,22 +183,22 @@ export default function EditarFuncionarioPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <Link href="/cliente/funcionarios" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 mb-4 transition-colors">
+      <Link href="/cliente/funcionarios" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-muted-foreground dark:hover:text-gray-100 mb-4 transition-colors">
         <ChevronLeft className="h-4 w-4" />
         Voltar para Sócios
       </Link>
 
       <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Editar Sócio</h1>
+        <div className="px-6 py-4 border-b border-border">
+          <h1 className="text-xl font-bold text-foreground">Editar Sócio</h1>
           {formData.nome && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formData.nome}</p>
+            <p className="text-sm text-muted-foreground mt-1">{formData.nome}</p>
           )}
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700 px-6">
+          <div className="border-b border-border px-6">
             <div className="flex gap-0 -mb-px">
               {tabs.map((tab) => (
                 <button
@@ -208,7 +208,7 @@ export default function EditarFuncionarioPage() {
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      : 'border-transparent text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200'
                   }`}
                 >
                   {tab.label}
@@ -458,9 +458,9 @@ export default function EditarFuncionarioPage() {
                       checked={formData.ativo}
                       onChange={(e) => set('ativo', e.target.checked)}
                       disabled={!canEdit}
-                      className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                      className="h-4 w-4 rounded border-border"
                     />
-                    <label htmlFor="ativo" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">Ativo</label>
+                    <label htmlFor="ativo" className="text-sm text-muted-foreground cursor-pointer">Ativo</label>
                   </div>
                 </div>
               </div>
@@ -468,10 +468,10 @@ export default function EditarFuncionarioPage() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+          <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
             <Link
               href="/cliente/funcionarios"
-              className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm border border-border rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
             >
               Cancelar
             </Link>

@@ -259,10 +259,10 @@ export default function RelatorioPensionistasPage() {
             ← Voltar
           </Link>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           Relatório - Débitos de Pensionistas
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-muted-foreground mt-2">
           Parcelas em aberto de sócios tipo Pensionista/Local (Tipo 3 e 4) — Baseado no AS302.PRG
         </p>
       </div>
@@ -271,13 +271,13 @@ export default function RelatorioPensionistasPage() {
         <div className="space-y-4">
           {/* Agrupa por */}
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+            <label className="block text-sm font-bold mb-2 text-foreground">
               Agrupa por *
             </label>
             <select
               value={filtros.agrupaPor}
               onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="socio">Sócio</option>
               <option value="convenio">Convênio</option>
@@ -286,7 +286,7 @@ export default function RelatorioPensionistasPage() {
 
           {/* Convênio (opcional) - Com busca */}
           <div className="relative">
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+            <label className="block text-sm font-bold mb-2 text-foreground">
               Convênio (opcional)
             </label>
             <input
@@ -299,28 +299,28 @@ export default function RelatorioPensionistasPage() {
                 }
               }}
               placeholder="Digite código ou razão social (ou deixe vazio para todos)"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {filtros.convenioId && (
               <button
                 type="button"
                 onClick={limparConvenio}
-                className="absolute right-3 top-10 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="absolute right-3 top-10 text-gray-500 hover:text-muted-foreground dark:hover:text-gray-200"
                 title="Limpar seleção"
               >
                 ✕
               </button>
             )}
             {showConvenioList && convenios.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded shadow-lg max-h-60 overflow-y-auto">
                 {convenios.map((convenio) => (
                   <div
                     key={convenio.id}
                     onClick={() => selecionarConvenio(convenio)}
-                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600"
+                    className="p-3 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border"
                   >
-                    <div className="font-semibold text-gray-900 dark:text-white">{convenio.razao_soc}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="font-semibold text-foreground">{convenio.razao_soc}</div>
+                    <div className="text-sm text-muted-foreground">
                       {convenio.codigo && <span>Código: {convenio.codigo}</span>}
                     </div>
                   </div>
@@ -331,21 +331,21 @@ export default function RelatorioPensionistasPage() {
 
           {/* Período (Mês-Ano) */}
           <div>
-            <label className="block text-sm font-bold mb-2 dark:text-gray-300">
+            <label className="block text-sm font-bold mb-2 text-foreground">
               Período (Mês-Ano) *
             </label>
             <input
               type="month"
               value={filtros.mesAno}
               onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           {/* Barra de Progresso */}
           {loading && (
-            <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+            <div className="w-full bg-muted rounded-full h-4">
               <div
                 className="bg-blue-600 h-4 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -390,20 +390,20 @@ export default function RelatorioPensionistasPage() {
       {showCSVModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-card text-card-foreground rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">
               ⚙️ Configuração de Exportação CSV
             </h2>
 
             <div className="space-y-4">
               {/* Delimitador */}
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-bold mb-2 text-muted-foreground">
                   Delimitador de campos
                 </label>
                 <select
                   value={csvOptions.delimiter}
                   onChange={(e) => setCsvOptions({ ...csvOptions, delimiter: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
                 >
                   <option value=";">Ponto e vírgula (;) - Padrão Excel Brasil</option>
                   <option value=",">Vírgula (,) - Padrão internacional</option>
@@ -414,13 +414,13 @@ export default function RelatorioPensionistasPage() {
 
               {/* Separador decimal */}
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-bold mb-2 text-muted-foreground">
                   Separador decimal
                 </label>
                 <select
                   value={csvOptions.decimalSeparator}
                   onChange={(e) => setCsvOptions({ ...csvOptions, decimalSeparator: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
                 >
                   <option value=",">Vírgula (,) - Padrão brasileiro</option>
                   <option value=".">Ponto (.) - Padrão internacional</option>
@@ -429,13 +429,13 @@ export default function RelatorioPensionistasPage() {
 
               {/* Codificação */}
               <div>
-                <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-bold mb-2 text-muted-foreground">
                   Codificação de caracteres
                 </label>
                 <select
                   value={csvOptions.encoding}
                   onChange={(e) => setCsvOptions({ ...csvOptions, encoding: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground"
                 >
                   <option value="utf-8">UTF-8 (Recomendado - suporta acentos)</option>
                   <option value="iso-8859-1">ISO-8859-1 / Latin1 (Compatibilidade legada)</option>
@@ -451,7 +451,7 @@ export default function RelatorioPensionistasPage() {
                   onChange={(e) => setCsvOptions({ ...csvOptions, includeHeader: e.target.checked })}
                   className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="includeHeader" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="includeHeader" className="ml-2 text-sm font-medium text-muted-foreground">
                   Incluir linha de cabeçalho
                 </label>
               </div>
@@ -461,7 +461,7 @@ export default function RelatorioPensionistasPage() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowCSVModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500 font-bold"
+                className="flex-1 px-4 py-2 bg-muted text-foreground rounded hover:bg-gray-400 dark:hover:bg-gray-500 font-bold"
               >
                 Cancelar
               </button>

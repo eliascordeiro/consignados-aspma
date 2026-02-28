@@ -138,20 +138,20 @@ export default function ClienteLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 transform bg-white/95 backdrop-blur-sm dark:bg-gray-950/95 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 transform bg-sidebar/95 backdrop-blur-sm border-r border-border transition-all duration-300 ease-in-out lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ width: isDesktop ? (collapsed ? 72 : 256) : 256 }}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between border-b border-gray-200 dark:border-gray-800 px-4">
+          <div className="flex h-16 items-center justify-between border-b border-border px-4">
             <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "lg:justify-center")}>
               <div className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
                 <CreditCard className="h-5 w-5 text-white" />
               </div>
               <div className={cn("transition-all duration-300 overflow-hidden", collapsed ? "lg:w-0 lg:opacity-0" : "w-auto opacity-100")}>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                <h1 className="text-lg font-bold text-foreground whitespace-nowrap">
                   A.S.P.M.A
                 </h1>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">Portal do Cliente</span>
@@ -216,7 +216,7 @@ export default function ClienteLayout({
           </TooltipProvider>
 
           {/* Collapse toggle button - desktop only */}
-          <div className="hidden lg:flex justify-center border-t border-gray-200 dark:border-gray-800 py-2">
+          <div className="hidden lg:flex justify-center border-t border-border py-2">
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -237,7 +237,7 @@ export default function ClienteLayout({
           </div>
 
           {/* User menu */}
-          <div className="border-t border-gray-200 dark:border-gray-800 p-3">
+          <div className="border-t border-border p-3">
             <TooltipProvider delayDuration={0}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -324,7 +324,7 @@ export default function ClienteLayout({
       {/* Main Content */}
       <div className="transition-all duration-300" style={{ paddingLeft: isDesktop ? (collapsed ? 72 : 256) : 0 }}>
         {/* Top bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm px-4 md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 md:gap-4 border-b border-border bg-background/80 backdrop-blur-sm px-4 md:px-6">
           <Button
             variant="ghost"
             size="sm"
@@ -338,7 +338,7 @@ export default function ClienteLayout({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <h2 className="text-sm md:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  <h2 className="text-sm md:text-lg font-semibold text-foreground truncate">
                     {headerName}
                   </h2>
                 </TooltipTrigger>

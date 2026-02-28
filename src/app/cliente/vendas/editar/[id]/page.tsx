@@ -160,7 +160,7 @@ export default function EditarVendaPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">Carregando venda...</p>
+          <p className="text-muted-foreground">Carregando venda...</p>
         </div>
       </div>
     );
@@ -169,7 +169,7 @@ export default function EditarVendaPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-foreground">
           Editar Venda #{formData.numeroVenda}
         </h1>
         <Link
@@ -184,22 +184,22 @@ export default function EditarVendaPage() {
         {/* Sócio/Associado */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Nome do Associado *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Nome do Associado *</label>
             <input
               type="text"
               value={formData.socioNome}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Matrícula</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Matrícula</label>
             <input
               type="text"
               value={formData.socioMatricula}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
         </div>
@@ -207,22 +207,22 @@ export default function EditarVendaPage() {
         {/* Convênio */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Convênio *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Convênio *</label>
             <input
               type="text"
               value={formData.convenioNome}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Código</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Código</label>
             <input
               type="text"
               value={formData.convenioNumero}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
         </div>
@@ -230,90 +230,90 @@ export default function EditarVendaPage() {
         {/* Data, Parcelas e Valor */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Data de Emissão *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Data de Emissão *</label>
             <input
               type="date"
               value={formData.dataEmissao}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Nº de Parcelas *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Nº de Parcelas *</label>
             <input
               type="number"
               value={formData.quantidadeParcelas}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Valor da Parcela *</label>
+            <label className="block text-sm font-bold mb-2 text-muted-foreground">Valor da Parcela *</label>
             <input
               type="text"
               value={`R$ ${parseFloat(formData.valorParcela || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               readOnly
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-border rounded bg-muted text-foreground"
             />
           </div>
         </div>
 
         {/* Informações de Auditoria */}
-        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-          <h3 className="text-sm font-bold mb-3 text-gray-900 dark:text-white">Informações de Auditoria</h3>
+        <div className="bg-muted/50 p-4 rounded-lg">
+          <h3 className="text-sm font-bold mb-3 text-foreground">Informações de Auditoria</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Criado por:</span>{' '}
-              <span className="text-gray-900 dark:text-white font-medium">{auditInfo.createdBy}</span>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{auditInfo.createdAt}</div>
+              <span className="text-muted-foreground">Criado por:</span>{' '}
+              <span className="text-foreground font-medium">{auditInfo.createdBy}</span>
+              <div className="text-xs text-muted-foreground">{auditInfo.createdAt}</div>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Última alteração por:</span>{' '}
-              <span className="text-gray-900 dark:text-white font-medium">{auditInfo.updatedBy}</span>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{auditInfo.updatedAt}</div>
+              <span className="text-muted-foreground">Última alteração por:</span>{' '}
+              <span className="text-foreground font-medium">{auditInfo.updatedBy}</span>
+              <div className="text-xs text-muted-foreground">{auditInfo.updatedAt}</div>
             </div>
           </div>
         </div>
 
         {/* Tabela de Parcelas */}
         <div className="mt-6">
-          <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Parcelas</h3>
+          <h3 className="text-lg font-bold mb-3 text-foreground">Parcelas</h3>
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-card text-card-foreground border border-gray-300 dark:border-gray-600">
-              <thead className="bg-gray-100 dark:bg-gray-700">
+            <table className="min-w-full bg-card text-card-foreground border border-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">#</th>
-                  <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">Vencimento (Mês/Ano)</th>
-                  <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">Valor</th>
-                  <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white">Baixa</th>
+                  <th className="px-4 py-2 border border-border text-left text-foreground">#</th>
+                  <th className="px-4 py-2 border border-border text-left text-foreground">Vencimento (Mês/Ano)</th>
+                  <th className="px-4 py-2 border border-border text-right text-foreground">Valor</th>
+                  <th className="px-4 py-2 border border-border text-center text-foreground">Baixa</th>
                 </tr>
               </thead>
               <tbody>
                 {parcelas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((parcela, index) => {
                   const originalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
                   return (
-                    <tr key={originalIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">{parcela.numeroParcela}</td>
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600">
+                    <tr key={originalIndex} className="hover:bg-muted/50">
+                      <td className="px-4 py-2 border border-border text-foreground">{parcela.numeroParcela}</td>
+                      <td className="px-4 py-2 border border-border">
                         <input
                           type="date"
                           value={parcela.dataVencimento}
                           onChange={(e) => atualizarParcela(originalIndex, 'dataVencimento', e.target.value)}
-                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-2 py-1 border border-border rounded bg-background text-foreground"
                         />
                       </td>
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right">
+                      <td className="px-4 py-2 border border-border text-right">
                         <input
                           type="number"
                           step="0.01"
                           value={parcela.valor}
                           onChange={(e) => atualizarParcela(originalIndex, 'valor', parseFloat(e.target.value))}
-                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-right bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-2 py-1 border border-border rounded text-right bg-background text-foreground"
                         />
                       </td>
-                      <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-center">
+                      <td className="px-4 py-2 border border-border text-center">
                         <input
                           type="checkbox"
                           checked={parcela.baixa === 'X'}
@@ -325,13 +325,13 @@ export default function EditarVendaPage() {
                   );
                 })}
               </tbody>
-              <tfoot className="bg-gray-100 dark:bg-gray-700 font-bold">
+              <tfoot className="bg-muted font-bold">
                 <tr>
-                  <td colSpan={2} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">TOTAL:</td>
-                  <td className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-right text-gray-900 dark:text-white">
+                  <td colSpan={2} className="px-4 py-2 border border-border text-right text-foreground">TOTAL:</td>
+                  <td className="px-4 py-2 border border-border text-right text-foreground">
                     R$ {parcelas.reduce((sum, p) => sum + p.valor, 0).toFixed(2)}
                   </td>
-                  <td className="px-4 py-2 border border-gray-300 dark:border-gray-600"></td>
+                  <td className="px-4 py-2 border border-border"></td>
                 </tr>
               </tfoot>
             </table>
@@ -343,7 +343,7 @@ export default function EditarVendaPage() {
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
               >←</button>
               {(() => {
                 const total = Math.ceil(parcelas.length / ITEMS_PER_PAGE);
@@ -362,16 +362,16 @@ export default function EditarVendaPage() {
                 ) : (
                   <button key={p} onClick={() => setCurrentPage(p as number)}
                     className={`px-3 py-1 text-sm rounded ${
-                      currentPage === p ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      currentPage === p ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}>{p}</button>
                 ));
               })()}
               <button
                 onClick={() => setCurrentPage(p => Math.min(Math.ceil(parcelas.length / ITEMS_PER_PAGE), p + 1))}
                 disabled={currentPage === Math.ceil(parcelas.length / ITEMS_PER_PAGE)}
-                className="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
               >→</button>
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{parcelas.length} parcelas</span>
+              <span className="text-xs text-muted-foreground ml-2">{parcelas.length} parcelas</span>
             </div>
           )}
         </div>

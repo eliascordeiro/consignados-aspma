@@ -28,7 +28,7 @@ const actionColors: Record<string, string> = {
   UPDATE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   LOGIN: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  LOGOUT: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  LOGOUT: 'bg-muted text-muted-foreground text-muted-foreground',
   PASSWORD_RESET: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   EXPORT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   IMPORT: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
@@ -180,7 +180,7 @@ export default function LogsPage() {
   if (!canView) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 text-muted-foreground">
           Você não tem permissão para visualizar logs de auditoria.
         </div>
       </div>
@@ -192,13 +192,13 @@ export default function LogsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Logs de Auditoria</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Histórico de ações realizadas no sistema</p>
+          <h1 className="text-2xl font-bold text-foreground">Logs de Auditoria</h1>
+          <p className="text-sm text-muted-foreground">Histórico de ações realizadas no sistema</p>
         </div>
         {canExport && (
           <button
             onClick={exportLogs}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-border text-muted-foreground rounded-lg hover:bg-muted/50 transition-colors text-sm font-medium"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Exportar CSV</span>
@@ -211,32 +211,32 @@ export default function LogsPage() {
       <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Buscar</label>
             <input
               type="text"
               placeholder="Usuário, descrição..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Módulo</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Módulo</label>
             <select
               value={moduleFilter}
               onChange={(e) => { setModuleFilter(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Todos os módulos</option>
               {MODULE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Ação</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Ação</label>
             <select
               value={actionFilter}
               onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Todas as ações</option>
               {ACTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -248,14 +248,14 @@ export default function LogsPage() {
       {/* Table */}
       <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {loading ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
+          <div className="text-center py-12 text-muted-foreground">Carregando...</div>
         ) : logs.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">Nenhum log encontrado</div>
+          <div className="text-center py-12 text-muted-foreground">Nenhum log encontrado</div>
         ) : (
           <>
             {/* Desktop header */}
             {!isMobile && (
-              <div className="grid grid-cols-[160px_1fr_100px_130px_2fr_100px] gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+              <div className="grid grid-cols-[160px_1fr_100px_130px_2fr_100px] gap-3 px-4 py-3 bg-muted/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <div>Data/Hora</div>
                 <div>Usuário</div>
                 <div>Ação</div>
@@ -270,30 +270,30 @@ export default function LogsPage() {
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                   const log = logs[virtualRow.index];
                   if (!log) return null;
-                  const actionCls = actionColors[log.action] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+                  const actionCls = actionColors[log.action] || 'bg-muted text-muted-foreground text-muted-foreground';
                   return (
                     <div
                       key={log.id}
                       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
+                      className="border-b border-border hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
                     >
                       {/* Mobile card */}
                       <div className="md:hidden p-3 space-y-1">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{log.userName}</span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">({log.userRole})</span>
+                            <span className="font-medium text-sm text-foreground">{log.userName}</span>
+                            <span className="text-xs text-muted-foreground ml-1">({log.userRole})</span>
                           </div>
                           <span className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${actionCls}`}>
                             {actionLabels[log.action] || log.action}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{log.description}</div>
+                        <div className="text-xs text-muted-foreground truncate">{log.description}</div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs px-1.5 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
+                          <span className="text-xs px-1.5 py-0.5 border border-border rounded text-muted-foreground">
                             {moduleLabels[log.module] || log.module}
                           </span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
                           </span>
                         </div>
@@ -301,12 +301,12 @@ export default function LogsPage() {
 
                       {/* Desktop row */}
                       <div className="hidden md:grid md:grid-cols-[160px_1fr_100px_130px_2fr_100px] gap-3 px-4 items-center h-full text-sm">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        <div className="text-xs text-muted-foreground whitespace-nowrap">
                           {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 truncate">{log.userName}</div>
-                          <div className="text-xs text-gray-400 dark:text-gray-500">{log.userRole}</div>
+                          <div className="font-medium text-foreground truncate">{log.userName}</div>
+                          <div className="text-xs text-muted-foreground">{log.userRole}</div>
                         </div>
                         <div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${actionCls}`}>
@@ -314,14 +314,14 @@ export default function LogsPage() {
                           </span>
                         </div>
                         <div>
-                          <span className="text-xs px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-gray-600 dark:text-gray-300">
+                          <span className="text-xs px-2 py-1 border border-border rounded text-muted-foreground">
                             {moduleLabels[log.module] || log.module}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-300 truncate" title={log.description}>
+                        <div className="text-xs text-muted-foreground truncate" title={log.description}>
                           {log.description}
                         </div>
-                        <div className="text-xs text-gray-400 dark:text-gray-500">{log.ipAddress || '—'}</div>
+                        <div className="text-xs text-muted-foreground">{log.ipAddress || '—'}</div>
                       </div>
                     </div>
                   );
@@ -333,20 +333,20 @@ export default function LogsPage() {
 
         {/* Pagination */}
         {!loading && totalPages > 0 && (
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="px-4 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
               Página {page} de {totalPages} &mdash; {total} registro{total !== 1 ? 's' : ''}
             </span>
             <div className="flex gap-2">
               <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">
+                className="px-3 py-1 text-sm border border-border rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-muted-foreground transition-colors">
                 Anterior
               </button>
-              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">
+              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-border rounded-md text-muted-foreground">
                 {page} / {totalPages}
               </span>
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">
+                className="px-3 py-1 text-sm border border-border rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-muted-foreground transition-colors">
                 Próxima
               </button>
             </div>

@@ -29,7 +29,7 @@ function FiltroEmpresa({ value, onChange }: { value: string; onChange: (value: s
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="">Todas</option>
       {empresas?.map((emp: any) => (
@@ -60,7 +60,7 @@ function FiltroSocio({ value, onChange, empresaId }: { value: string; onChange: 
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="">Todos</option>
       {socios?.map((socio: any) => (
@@ -88,7 +88,7 @@ function FiltroConvenio({ value, onChange }: { value: string; onChange: (value: 
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="">Todos</option>
       {convenios?.map((conv: any) => (
@@ -307,8 +307,8 @@ export default function VendasPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendas</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Gerencie as vendas e consignações</p>
+          <h1 className="text-2xl font-bold text-foreground">Vendas</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Gerencie as vendas e consignações</p>
         </div>
         {canCreate && (
           <Link
@@ -326,7 +326,7 @@ export default function VendasPage() {
       <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Pesquisar
             </label>
             <input
@@ -334,18 +334,18 @@ export default function VendasPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Número, sócio, matrícula ou convênio..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Status
             </label>
             <select
               value={filtroAtivo}
               onChange={(e) => setFiltroAtivo(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="">Todos</option>
               <option value="true">Ativos</option>
@@ -354,33 +354,33 @@ export default function VendasPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Mês de Vencimento
             </label>
             <input
               type="month"
               value={mesVencimento}
               onChange={(e) => setMesVencimento(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Consignatária
             </label>
             <FiltroEmpresa value={empresaId} onChange={setEmpresaId} />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Sócio
             </label>
             <FiltroSocio value={socioId} onChange={setSocioId} empresaId={empresaId} />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
               Convênio
             </label>
             <FiltroConvenio value={convenioId} onChange={setConvenioId} />
@@ -390,7 +390,7 @@ export default function VendasPage() {
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="px-4 py-2 border border-border rounded-md text-sm text-foreground hover:bg-muted/50"
           >
             Atualizar
           </button>
@@ -402,7 +402,7 @@ export default function VendasPage() {
                 setConvenioId('');
                 setMesVencimento('');
               }}
-              className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+              className="px-4 py-2 text-sm bg-muted text-foreground rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
             >
               Limpar Filtros
             </button>
@@ -415,7 +415,7 @@ export default function VendasPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Carregando vendas...</p>
+            <p className="text-muted-foreground text-sm">Carregando vendas...</p>
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -429,7 +429,7 @@ export default function VendasPage() {
           </div>
         ) : vendas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-4">
               {searchTerm ? 'Nenhuma venda encontrada com os filtros aplicados.' : 'Nenhuma venda cadastrada.'}
             </p>
             {canCreate && (
@@ -453,7 +453,7 @@ export default function VendasPage() {
               {/* Header fixo - apenas desktop */}
               {!isMobile && (
                 <div className="sticky top-0 z-10">
-                  <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                  <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-3 bg-muted/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     <div>Venda</div>
                     <div>Sócio</div>
                     <div>Convênio</div>
@@ -492,15 +492,15 @@ export default function VendasPage() {
                     >
                       {isMobile ? (
                         // Layout Mobile (Card)
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700">
+                        <div className="p-4 border-b border-border hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700">
                           <div className="space-y-2">
                             <div className="flex justify-between items-start">
                               <div>
-                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                <div className="text-sm font-medium text-foreground">
                                   Venda #{venda.numeroVenda}
                                 </div>
                                 {venda.operador && (
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  <div className="text-xs text-muted-foreground">
                                     Op: {venda.operador}
                                   </div>
                                 )}
@@ -515,45 +515,45 @@ export default function VendasPage() {
                                     Ativo
                                   </span>
                                 ) : (
-                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-muted text-foreground">
                                     Inativo
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            <div className="text-sm text-gray-900 dark:text-white">
+                            <div className="text-sm text-foreground">
                               <strong>Sócio:</strong> {venda.socio.nome}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-muted-foreground">
                               Mat: {venda.socio.matricula || 'N/A'}
                             </div>
 
-                            <div className="text-sm text-gray-900 dark:text-white">
+                            <div className="text-sm text-foreground">
                               <strong>Convênio:</strong>{' '}
                               {venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                <div className="text-xs text-muted-foreground">
                                   Data Emissão
                                 </div>
-                                <div className="text-gray-900 dark:text-white">
+                                <div className="text-foreground">
                                   {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                <div className="text-xs text-muted-foreground">
                                   Parcelas
                                 </div>
-                                <div className="text-gray-900 dark:text-white">
+                                <div className="text-foreground">
                                   {venda.quantidadeParcelas}
                                 </div>
                               </div>
                             </div>
 
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-sm font-medium text-foreground">
                               Valor Total: R${' '}
                               {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
@@ -562,7 +562,7 @@ export default function VendasPage() {
                               {canEdit && (
                                 <Link
                                   href={`/cliente/vendas/editar/${venda.id}`}
-                                  className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                  className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground"
                                   title={venda.ativo && !venda.cancelado ? 'Editar venda' : 'Ver detalhes'}
                                 >
                                   {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
@@ -582,45 +582,45 @@ export default function VendasPage() {
                         </div>
                       ) : (
                         // Layout Desktop (Grid)
-                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700 items-center transition-colors duration-150">
+                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-2.5 border-b border-border hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700 items-center transition-colors duration-150">
                           <div className="text-left">
-                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <div className="text-sm font-semibold text-foreground">
                               #{venda.numeroVenda}
                             </div>
                           </div>
 
                           <div className="text-left overflow-hidden">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={venda.socio.nome}>
+                            <div className="text-sm font-medium text-foreground truncate" title={venda.socio.nome}>
                               {venda.socio.nome}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-muted-foreground">
                               {venda.socio.matricula || 'S/Mat'}
                             </div>
                           </div>
 
                           <div className="text-left overflow-hidden">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
+                            <div className="text-sm font-medium text-foreground truncate" title={venda.convenio?.razao_soc || venda.observacoes || 'Sem convênio'}>
                               {venda.convenio?.razao_soc || venda.observacoes || 'S/Conv'}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate" title={venda.convenio?.fantasia || ''}>
+                            <div className="text-xs text-muted-foreground truncate" title={venda.convenio?.fantasia || ''}>
                               {venda.convenio?.fantasia || ''}
                             </div>
                           </div>
 
-                          <div className="text-sm text-gray-900 dark:text-white text-left">
+                          <div className="text-sm text-foreground text-left">
                             {format(new Date(venda.dataEmissao), 'dd/MM/yy')}
                           </div>
 
                           <div className="text-center">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-sm font-medium text-foreground">
                               {venda.quantidadeParcelas}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-muted-foreground">
                               R$ {parseFloat(venda.valorParcela.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
 
-                          <div className="text-sm font-semibold text-gray-900 dark:text-white text-right">
+                          <div className="text-sm font-semibold text-foreground text-right">
                             R$ {parseFloat(venda.valorTotal.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
 
@@ -634,7 +634,7 @@ export default function VendasPage() {
                                 Ativo
                               </span>
                             ) : (
-                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300 whitespace-nowrap">
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-muted text-muted-foreground whitespace-nowrap">
                                 Inativo
                               </span>
                             )}
@@ -644,7 +644,7 @@ export default function VendasPage() {
                             {canEdit && (
                               <Link
                                 href={`/cliente/vendas/editar/${venda.id}`}
-                                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground"
                                 title={venda.ativo && !venda.cancelado ? 'Editar venda' : 'Ver detalhes'}
                               >
                                 {venda.ativo && !venda.cancelado ? <Pencil size={16} /> : <Eye size={16} />}
@@ -670,9 +670,9 @@ export default function VendasPage() {
           </div>
 
           {/* Paginação */}
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+          <div className="px-4 py-3 bg-muted/50 border-t border-border">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-muted-foreground">
                 Mostrando <strong>{vendas.length}</strong> de <strong>{pagination?.total || 0}</strong> vendas
               </p>
 
@@ -681,17 +681,17 @@ export default function VendasPage() {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-200"
+                    className="px-3 py-1.5 text-sm border border-border rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-foreground"
                   >
                     Anterior
                   </button>
-                  <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
+                  <span className="text-sm text-muted-foreground px-2">
                     {currentPage} / {pagination.totalPages}
                   </span>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-200"
+                    className="px-3 py-1.5 text-sm border border-border rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-foreground"
                   >
                     Próxima
                   </button>
@@ -699,12 +699,12 @@ export default function VendasPage() {
               )}
 
               {pagination && pagination.totalParcelas > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-sm text-muted-foreground">
                   Total:{' '}
                   <strong>
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(pagination.valorTotalParcelas || 0))}
                   </strong>
-                  <span className="text-xs ml-2 text-gray-500 dark:text-gray-400">
+                  <span className="text-xs ml-2 text-muted-foreground">
                     ({pagination.totalParcelas} parcela{pagination.totalParcelas !== 1 ? 's' : ''})
                   </span>
                 </p>

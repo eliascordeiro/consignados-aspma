@@ -146,16 +146,16 @@ export default function EditarConvenioPage() {
   };
 
   const inputCls = (disabled?: boolean) =>
-    `w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+    `w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
       disabled
-        ? 'bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-        : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+        ? 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+        : 'bg-background text-foreground'
     }`;
 
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
+        <div className="text-center py-12 text-muted-foreground">Carregando...</div>
       </div>
     );
   }
@@ -163,11 +163,11 @@ export default function EditarConvenioPage() {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <Link href="/cliente/locais" className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+        <Link href="/cliente/locais" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
           <ChevronLeft className="h-4 w-4" />
           Voltar para Convênios
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">Editar Convênio</h1>
+        <h1 className="text-2xl font-bold text-foreground mt-2">Editar Convênio</h1>
       </div>
 
       {!canEdit && (
@@ -179,83 +179,83 @@ export default function EditarConvenioPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dados Principais */}
         <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Dados Principais</h2>
+          <div className="px-6 py-4 border-b border-border">
+            <h2 className="text-base font-semibold text-foreground">Dados Principais</h2>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Código</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Código</label>
               <input type="text" value={formData.codigo} onChange={(e) => set('codigo', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Razão Social <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Razão Social <span className="text-red-500">*</span></label>
               <input type="text" required value={formData.razao_soc} onChange={(e) => set('razao_soc', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nome / Fantasia</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Nome / Fantasia</label>
               <input type="text" value={formData.fantasia} onChange={(e) => set('fantasia', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Tipo</label>
               <select value={formData.libera} onChange={(e) => set('libera', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)}>
                 {LIBERA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">CNPJ</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">CNPJ</label>
               <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">% Desconto</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">% Desconto</label>
               <input type="number" step="0.01" value={formData.desconto} onChange={(e) => set('desconto', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Parcelas máx.</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Parcelas máx.</label>
               <input type="number" min="1" value={formData.parcelas} onChange={(e) => set('parcelas', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div className="flex items-center gap-2 pt-5">
               <input type="checkbox" id="ativo-edit" checked={formData.ativo} onChange={(e) => set('ativo', e.target.checked)} disabled={!canEdit}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed" />
-              <label htmlFor="ativo-edit" className="text-sm text-gray-700 dark:text-gray-300">Ativo</label>
+              <label htmlFor="ativo-edit" className="text-sm text-muted-foreground">Ativo</label>
             </div>
           </div>
         </div>
 
         {/* Endereço */}
         <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Endereço</h2>
+          <div className="px-6 py-4 border-b border-border">
+            <h2 className="text-base font-semibold text-foreground">Endereço</h2>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Endereço</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Endereço</label>
               <input type="text" value={formData.endereco} onChange={(e) => set('endereco', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Bairro</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Bairro</label>
               <input type="text" value={formData.bairro} onChange={(e) => set('bairro', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">CEP</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">CEP</label>
               <input type="text" value={formData.cep} onChange={(e) => set('cep', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Cidade</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Cidade</label>
               <input type="text" value={formData.cidade} onChange={(e) => set('cidade', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">UF</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">UF</label>
               <select value={formData.estado} onChange={(e) => set('estado', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)}>
                 {UF_OPTIONS.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
@@ -266,22 +266,22 @@ export default function EditarConvenioPage() {
 
         {/* Dados Bancários */}
         <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Dados Bancários</h2>
+          <div className="px-6 py-4 border-b border-border">
+            <h2 className="text-base font-semibold text-foreground">Dados Bancários</h2>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Banco</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Banco</label>
               <input type="text" value={formData.banco} onChange={(e) => set('banco', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Agência</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Agência</label>
               <input type="text" value={formData.agencia} onChange={(e) => set('agencia', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Conta</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Conta</label>
               <input type="text" value={formData.conta} onChange={(e) => set('conta', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
@@ -290,27 +290,27 @@ export default function EditarConvenioPage() {
 
         {/* Contato */}
         <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Informações de Contato</h2>
+          <div className="px-6 py-4 border-b border-border">
+            <h2 className="text-base font-semibold text-foreground">Informações de Contato</h2>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Telefone</label>
               <input type="text" value={formData.telefone} onChange={(e) => set('telefone', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fax</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Fax</label>
               <input type="text" value={formData.fax} onChange={(e) => set('fax', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Contato</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Contato</label>
               <input type="text" value={formData.contato} onChange={(e) => set('contato', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">E-mail</label>
               <input type="email" value={formData.email} onChange={(e) => set('email', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
@@ -324,7 +324,7 @@ export default function EditarConvenioPage() {
           </div>
         )}
         <div className="flex justify-end gap-3">
-          <Link href="/cliente/locais" className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <Link href="/cliente/locais" className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
             {canEdit ? 'Cancelar' : 'Voltar'}
           </Link>
           {canEdit && (
