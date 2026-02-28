@@ -145,16 +145,16 @@ export default function ClienteLayout({
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between border-b border-border px-4">
+          <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
             <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "lg:justify-center")}>
               <div className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
                 <CreditCard className="h-5 w-5 text-white" />
               </div>
               <div className={cn("transition-all duration-300 overflow-hidden", collapsed ? "lg:w-0 lg:opacity-0" : "w-auto opacity-100")}>
-                <h1 className="text-lg font-bold text-foreground whitespace-nowrap">
+                <h1 className="text-lg font-bold text-sidebar-foreground whitespace-nowrap">
                   A.S.P.M.A
                 </h1>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Portal do Cliente</span>
+                <span className="text-xs text-sidebar-foreground/60 whitespace-nowrap">Portal do Cliente</span>
               </div>
             </div>
             <Button
@@ -177,15 +177,15 @@ export default function ClienteLayout({
                 const linkContent = (
                   <Link key={item.name} href={item.href} onClick={() => setSidebarOpen(false)}>
                     <Button
-                      variant={isActive ? "secondary" : "ghost"}
+                      variant="ghost"
                       className={cn(
-                        "w-full transition-all duration-200 group",
+                        "w-full transition-all duration-200 group text-sidebar-foreground/80 hover:text-sidebar-foreground",
                         collapsed ? "lg:justify-center lg:px-2" : "justify-start gap-3",
-                        isActive && "bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 dark:text-green-400 border-l-4 border-green-500",
+                        isActive && "bg-sidebar-primary/15 text-sidebar-foreground border-l-4 border-sidebar-primary",
                         !isActive && "hover:bg-sidebar-accent"
                       )}
                     >
-                      <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-green-600 dark:text-green-400")} />
+                      <Icon className={cn("h-4 w-4 shrink-0 text-sidebar-foreground/60", isActive && "text-sidebar-primary")} />
                       <span className={cn(
                         "font-medium whitespace-nowrap transition-all duration-300 overflow-hidden",
                         collapsed ? "lg:w-0 lg:opacity-0 lg:hidden" : "w-auto opacity-100"
@@ -216,7 +216,7 @@ export default function ClienteLayout({
           </TooltipProvider>
 
           {/* Collapse toggle button - desktop only */}
-          <div className="hidden lg:flex justify-center border-t border-border py-2">
+          <div className="hidden lg:flex justify-center border-t border-sidebar-border py-2">
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -237,14 +237,14 @@ export default function ClienteLayout({
           </div>
 
           {/* User menu */}
-          <div className="border-t border-border p-3">
+          <div className="border-t border-sidebar-border p-3">
             <TooltipProvider delayDuration={0}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   {collapsed ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-center h-auto p-2 lg:p-2">
+                    <Button variant="ghost" className="w-full justify-center h-auto p-2 lg:p-2 hover:bg-sidebar-accent">
                           <Avatar className="h-9 w-9 border-2 border-green-500 shrink-0">
                             <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold text-xs">
                               {session?.user?.name
@@ -263,7 +263,7 @@ export default function ClienteLayout({
                       </TooltipContent>
                     </Tooltip>
                   ) : (
-                    <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3">
+                    <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground">
                       <Avatar className="h-10 w-10 border-2 border-green-500 shrink-0">
                         <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
                           {session?.user?.name
@@ -277,7 +277,7 @@ export default function ClienteLayout({
                       <div className="flex flex-col items-start text-sm overflow-hidden flex-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="font-semibold truncate w-full text-left">
+                            <span className="font-semibold truncate w-full text-left text-sidebar-foreground">
                               {session?.user?.name || 'Cliente'}
                             </span>
                           </TooltipTrigger>
@@ -289,7 +289,7 @@ export default function ClienteLayout({
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="text-xs text-muted-foreground truncate w-full text-left">
+                            <span className="text-xs text-sidebar-foreground/60 truncate w-full text-left">
                               {session?.user?.email || 'cliente@example.com'}
                             </span>
                           </TooltipTrigger>
