@@ -129,44 +129,43 @@
 /* ═══════════════════════════════════════════════ */
 .railway {
   /* ════════════════════════════════════════════════════ */
-  /* 🚂 RAILWAY — Escuro profundo + tons de roxo        */
-  /*    Inspirado em railway.com — com fundo estrelado   */
+  /* 🌙 DARK — Escuro médio com tom suave de roxo       */
   /* ════════════════════════════════════════════════════ */
-  --background: oklch(0.06 0.012 290);        /* ~#0B0A10 — preto profundo c/ tom roxo */
-  --foreground: oklch(0.88 0.006 290);        /* ~#D4D2DC — branco levemente roxo */
-  --card: oklch(0.10 0.015 290);              /* ~#141220 — cartão c/ tom roxo */
-  --card-foreground: oklch(0.88 0.006 290);
-  --popover: oklch(0.09 0.014 290);
-  --popover-foreground: oklch(0.88 0.006 290);
-  /* Primary: Violeta Railway */
-  --primary: oklch(0.62 0.24 289);
+  --background: oklch(0.15 0.012 290);        /* cinza-roxo escuro médio */
+  --foreground: oklch(0.92 0.006 290);        /* branco levemente lavanda */
+  --card: oklch(0.20 0.015 290);              /* cartão um tom acima do fundo */
+  --card-foreground: oklch(0.92 0.006 290);
+  --popover: oklch(0.20 0.015 290);
+  --popover-foreground: oklch(0.92 0.006 290);
+  /* Primary: Violeta médio */
+  --primary: oklch(0.65 0.22 289);
   --primary-foreground: oklch(0.98 0 0);
-  /* Secondary: Superfície roxo-escura */
-  --secondary: oklch(0.13 0.018 290);
-  --secondary-foreground: oklch(0.82 0.006 290);
-  --muted: oklch(0.13 0.018 290);
-  --muted-foreground: oklch(0.50 0.012 290);  /* texto apagado roxo */
-  /* Accent: Hover roxo escuro */
-  --accent: oklch(0.16 0.025 289);
-  --accent-foreground: oklch(0.88 0.006 290);
-  --destructive: oklch(0.60 0.22 25);
-  --border: oklch(0.20 0.025 290);            /* borda roxa sutil */
-  --input: oklch(0.16 0.020 290);
-  --ring: oklch(0.62 0.24 289);
-  --chart-1: oklch(0.62 0.24 289);           /* violeta */
-  --chart-2: oklch(0.68 0.18 200);           /* teal */
-  --chart-3: oklch(0.72 0.16 145);           /* verde */
-  --chart-4: oklch(0.70 0.18 55);            /* laranja */
-  --chart-5: oklch(0.65 0.20 25);            /* vermelho coral */
-  /* Sidebar: Mais escuro ainda */
-  --sidebar: oklch(0.04 0.010 290);          /* ~#06050C — quase preto roxo */
-  --sidebar-foreground: oklch(0.80 0.008 290);
-  --sidebar-primary: oklch(0.62 0.24 289);
+  /* Secondary */
+  --secondary: oklch(0.26 0.016 290);
+  --secondary-foreground: oklch(0.90 0.006 290);
+  --muted: oklch(0.26 0.016 290);
+  --muted-foreground: oklch(0.58 0.012 290);
+  /* Accent: Hover */
+  --accent: oklch(0.28 0.020 289);
+  --accent-foreground: oklch(0.92 0.006 290);
+  --destructive: oklch(0.62 0.22 25);
+  --border: oklch(0.30 0.020 290 / 60%);
+  --input: oklch(0.26 0.016 290);
+  --ring: oklch(0.65 0.22 289);
+  --chart-1: oklch(0.62 0.22 289);
+  --chart-2: oklch(0.68 0.17 200);
+  --chart-3: oklch(0.72 0.16 145);
+  --chart-4: oklch(0.70 0.18 55);
+  --chart-5: oklch(0.65 0.20 25);
+  /* Sidebar: ligeiramente mais escuro que o fundo */
+  --sidebar: oklch(0.11 0.012 290);
+  --sidebar-foreground: oklch(0.88 0.007 290);
+  --sidebar-primary: oklch(0.65 0.22 289);
   --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.12 0.020 289);
-  --sidebar-accent-foreground: oklch(0.85 0.006 290);
-  --sidebar-border: oklch(0.18 0.022 290);
-  --sidebar-ring: oklch(0.62 0.24 289);
+  --sidebar-accent: oklch(0.20 0.018 289);
+  --sidebar-accent-foreground: oklch(0.88 0.006 290);
+  --sidebar-border: oklch(0.25 0.018 290 / 50%);
+  --sidebar-ring: oklch(0.65 0.22 289);
 }
 
 .categoria-banco {
@@ -242,22 +241,4 @@
   }
 }
 
-/* ═══════════════════════════════════════════════ */
-/* ✨ Fundo estrelado (pontilhado) para Railway   */
-/* ═══════════════════════════════════════════════ */
-.railway body,
-body:is(.railway) {
-  background-color: var(--background);
-  background-image:
-    radial-gradient(circle, rgba(168, 140, 220, 0.08) 1px, transparent 1px),
-    radial-gradient(circle, rgba(168, 140, 220, 0.05) 1px, transparent 1px),
-    radial-gradient(circle, rgba(200, 180, 255, 0.03) 1px, transparent 1px);
-  background-size:
-    40px 40px,
-    90px 90px,
-    17px 17px;
-  background-position:
-    0 0,
-    20px 30px,
-    8px 12px;
-}
+
