@@ -4,45 +4,42 @@ import * as React from "react"
 import { Moon, Sun, Briefcase, Zap } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
+const themes = ["light", "consignado", "railway", "dark"] as const
+const themeLabels: Record<string, string> = {
+  light: "White",
+  consignado: "White Light",
+  railway: "Dark",
+  dark: "Dark Light",
+}
+const themeIcons: Record<string, React.ElementType> = {
+  light: Sun,
+  consignado: Briefcase,
+  railway: Zap,
+  dark: Moon,
+}
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
 
+  const cycleTheme = () => {
+    const currentIndex = themes.indexOf(theme as typeof themes[number])
+    const nextIndex = (currentIndex + 1) % themes.length
+    setTheme(themes[nextIndex])
+  }
+
+  const currentLabel = themeLabels[theme ?? "light"] ?? "White"
+  const Icon = themeIcons[theme ?? "light"] ?? Sun
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 consignado:-rotate-90 consignado:scale-0 railway:-rotate-90 railway:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 consignado:rotate-90 consignado:scale-0 railway:rotate-90 railway:scale-0" />
-          <Briefcase className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all consignado:rotate-0 consignado:scale-100" />
-          <Zap className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all railway:rotate-0 railway:scale-100" />
-          <span className="sr-only">Alternar tema</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="mr-2 h-4 w-4" />
-          <span>Claro</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="mr-2 h-4 w-4" />
-          <span>Escuro</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("consignado")}>
-          <Briefcase className="mr-2 h-4 w-4" />
-          <span>Consignado</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("railway")}>
-          <Zap className="mr-2 h-4 w-4" />
-          <span>Railway</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={cycleTheme}
+      className="gap-2 min-w-[120px]"
+    >
+      <Icon className="h-4 w-4" />
+      <span className="text-xs font-medium">{currentLabel}</span>
+    </Button>
   )
 }
