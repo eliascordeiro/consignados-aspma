@@ -163,44 +163,44 @@
 /* ═══════════════════════════════════════════════ */
 .railway {
   /* ════════════════════════════════════════════════════ */
-  /* 🚂 RAILWAY — Ultra-escuro + Violeta               */
-  /*    Inspirado em railway.com — minimalista e limpo  */
+  /* 🚂 RAILWAY — Escuro profundo + tons de roxo        */
+  /*    Inspirado em railway.com — com fundo estrelado   */
   /* ════════════════════════════════════════════════════ */
-  --background: oklch(0.10 0.003 285);        /* #111114 — quase preto c/ toque violeta */
-  --foreground: oklch(0.93 0.003 285);        /* #EBEBEF — branco suave */
-  --card: oklch(0.14 0.004 285);              /* #191921 — superfície de cartão */
-  --card-foreground: oklch(0.93 0.003 285);
-  --popover: oklch(0.13 0.004 285);
-  --popover-foreground: oklch(0.93 0.003 285);
-  /* Primary: Violeta Railway #8B5CF6 */
-  --primary: oklch(0.62 0.21 289);
+  --background: oklch(0.06 0.012 290);        /* ~#0B0A10 — preto profundo c/ tom roxo */
+  --foreground: oklch(0.88 0.006 290);        /* ~#D4D2DC — branco levemente roxo */
+  --card: oklch(0.10 0.015 290);              /* ~#141220 — cartão c/ tom roxo */
+  --card-foreground: oklch(0.88 0.006 290);
+  --popover: oklch(0.09 0.014 290);
+  --popover-foreground: oklch(0.88 0.006 290);
+  /* Primary: Violeta Railway */
+  --primary: oklch(0.62 0.24 289);
   --primary-foreground: oklch(0.98 0 0);
-  /* Secondary: Superfície elevada */
-  --secondary: oklch(0.18 0.004 285);
-  --secondary-foreground: oklch(0.85 0.002 285);
-  --muted: oklch(0.18 0.004 285);
-  --muted-foreground: oklch(0.57 0.003 285);  /* #888892 — texto apagado */
-  /* Accent: Hover violeta escuro */
-  --accent: oklch(0.22 0.008 289);
-  --accent-foreground: oklch(0.93 0.003 285);
+  /* Secondary: Superfície roxo-escura */
+  --secondary: oklch(0.13 0.018 290);
+  --secondary-foreground: oklch(0.82 0.006 290);
+  --muted: oklch(0.13 0.018 290);
+  --muted-foreground: oklch(0.50 0.012 290);  /* texto apagado roxo */
+  /* Accent: Hover roxo escuro */
+  --accent: oklch(0.16 0.025 289);
+  --accent-foreground: oklch(0.88 0.006 290);
   --destructive: oklch(0.60 0.22 25);
-  --border: oklch(1 0 0 / 7%);               /* rgba(255,255,255,0.07) — borda sutil */
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.62 0.21 289);
-  --chart-1: oklch(0.62 0.21 289);           /* violeta */
+  --border: oklch(0.20 0.025 290);            /* borda roxa sutil */
+  --input: oklch(0.16 0.020 290);
+  --ring: oklch(0.62 0.24 289);
+  --chart-1: oklch(0.62 0.24 289);           /* violeta */
   --chart-2: oklch(0.68 0.18 200);           /* teal */
   --chart-3: oklch(0.72 0.16 145);           /* verde */
   --chart-4: oklch(0.70 0.18 55);            /* laranja */
   --chart-5: oklch(0.65 0.20 25);            /* vermelho coral */
-  /* Sidebar: Ultra-escuro como o app Railway */
-  --sidebar: oklch(0.08 0.003 285);          /* #0C0C11 — mais escuro que o fundo */
-  --sidebar-foreground: oklch(0.85 0.002 285);
-  --sidebar-primary: oklch(0.62 0.21 289);
+  /* Sidebar: Mais escuro ainda */
+  --sidebar: oklch(0.04 0.010 290);          /* ~#06050C — quase preto roxo */
+  --sidebar-foreground: oklch(0.80 0.008 290);
+  --sidebar-primary: oklch(0.62 0.24 289);
   --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.16 0.005 289);
-  --sidebar-accent-foreground: oklch(0.90 0.002 285);
-  --sidebar-border: oklch(1 0 0 / 6%);
-  --sidebar-ring: oklch(0.62 0.21 289);
+  --sidebar-accent: oklch(0.12 0.020 289);
+  --sidebar-accent-foreground: oklch(0.85 0.006 290);
+  --sidebar-border: oklch(0.18 0.022 290);
+  --sidebar-ring: oklch(0.62 0.24 289);
 }
 
 .categoria-banco {
@@ -274,4 +274,24 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ═══════════════════════════════════════════════ */
+/* ✨ Fundo estrelado (pontilhado) para Railway   */
+/* ═══════════════════════════════════════════════ */
+.railway body,
+body:is(.railway) {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle, rgba(168, 140, 220, 0.08) 1px, transparent 1px),
+    radial-gradient(circle, rgba(168, 140, 220, 0.05) 1px, transparent 1px),
+    radial-gradient(circle, rgba(200, 180, 255, 0.03) 1px, transparent 1px);
+  background-size:
+    40px 40px,
+    90px 90px,
+    17px 17px;
+  background-position:
+    0 0,
+    20px 30px,
+    8px 12px;
 }
