@@ -126,7 +126,7 @@ export default function ClienteLayout({
     : session?.user?.name || "Cliente"
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 consignado:from-blue-50 consignado:to-slate-100">
+    <div className="min-h-screen bg-background">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -182,7 +182,7 @@ export default function ClienteLayout({
                         "w-full transition-all duration-200 group",
                         collapsed ? "lg:justify-center lg:px-2" : "justify-start gap-3",
                         isActive && "bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 dark:text-green-400 border-l-4 border-green-500",
-                        !isActive && "hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                        !isActive && "hover:bg-sidebar-accent"
                       )}
                     >
                       <Icon className={cn("h-4 w-4 shrink-0", isActive && "text-green-600 dark:text-green-400")} />
@@ -224,7 +224,7 @@ export default function ClienteLayout({
                     variant="ghost"
                     size="sm"
                     onClick={toggleCollapsed}
-                    className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="h-8 w-8 p-0 text-sidebar-foreground/50 hover:text-sidebar-foreground"
                   >
                     {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
                   </Button>
