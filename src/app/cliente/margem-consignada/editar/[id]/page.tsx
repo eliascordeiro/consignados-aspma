@@ -129,7 +129,7 @@ export default function EditarMargemPage() {
         Voltar para Margem Consignada
       </Link>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
           <Wallet className="h-5 w-5 text-amber-600" />
           <div>

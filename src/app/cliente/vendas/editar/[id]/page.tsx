@@ -180,7 +180,7 @@ export default function EditarVendaPage() {
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md space-y-6">
+      <form onSubmit={handleSubmit} className="bg-card text-card-foreground p-6 rounded-lg shadow-md space-y-6">
         {/* Sócio/Associado */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
@@ -281,7 +281,7 @@ export default function EditarVendaPage() {
         <div className="mt-6">
           <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Parcelas</h3>
           <div className="overflow-x-auto">
-            <table className="min-w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600">
+            <table className="min-w-full bg-card text-card-foreground border border-gray-300 dark:border-gray-600">
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
                   <th className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-left text-gray-900 dark:text-white">#</th>

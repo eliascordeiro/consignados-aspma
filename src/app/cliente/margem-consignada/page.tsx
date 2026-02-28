@@ -99,7 +99,7 @@ export default function MargemConsignadaPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
@@ -126,7 +126,7 @@ export default function MargemConsignadaPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {isLoading ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
         ) : isError ? (
@@ -246,7 +246,7 @@ export default function MargemConsignadaPage() {
             </span>
             <div className="flex gap-2">
               <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">Anterior</button>
-              <span className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">{currentPage} / {totalPages}</span>
+              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">{currentPage} / {totalPages}</span>
               <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">Próxima</button>
             </div>
           </div>

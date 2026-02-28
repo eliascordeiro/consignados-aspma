@@ -81,7 +81,7 @@ export default function NovaConsignatariaPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-6">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md p-6 space-y-6">
 
           {/* Nome + CNPJ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

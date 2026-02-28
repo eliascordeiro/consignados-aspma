@@ -208,7 +208,7 @@ export default function LogsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="sm:col-span-2">
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
@@ -246,7 +246,7 @@ export default function LogsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {loading ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
         ) : logs.length === 0 ? (
@@ -342,7 +342,7 @@ export default function LogsPage() {
                 className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors">
                 Anterior
               </button>
-              <span className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">
+              <span className="px-3 py-1 text-sm bg-card text-card-foreground border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300">
                 {page} / {totalPages}
               </span>
               <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}

@@ -238,7 +238,7 @@ export default function ComparacaoRelatoriosPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Filtros */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md lg:col-span-2">
+        <div className="bg-card text-card-foreground p-6 rounded-lg shadow-md lg:col-span-2">
           <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Convênio */}
@@ -392,7 +392,7 @@ export default function ComparacaoRelatoriosPage() {
       {/* Modal de Configuração CSV */}
       {showCSVModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-card text-card-foreground rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
               ⚙️ Configuração CSV - {csvSource === 'postgres' ? 'PostgreSQL' : 'MySQL'}
             </h2>
@@ -490,7 +490,7 @@ export default function ComparacaoRelatoriosPage() {
       {/* Modal de Resultado da Sincronização */}
       {showSyncModal && syncResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
+          <div className="bg-card text-card-foreground rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
               {syncResult.success ? '✅' : '⚠️'}
               Resultado da Sincronização

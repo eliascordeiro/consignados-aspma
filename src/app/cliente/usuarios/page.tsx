@@ -109,7 +109,7 @@ export default function UsuariosPage() {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
@@ -132,7 +132,7 @@ export default function UsuariosPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {isLoading ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">Carregando...</div>
         ) : isError ? (

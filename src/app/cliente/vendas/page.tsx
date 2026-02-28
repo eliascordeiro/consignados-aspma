@@ -323,7 +323,7 @@ export default function VendasPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+      <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -411,7 +411,7 @@ export default function VendasPage() {
       </div>
 
       {/* Lista de Vendas */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>

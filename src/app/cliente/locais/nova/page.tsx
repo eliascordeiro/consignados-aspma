@@ -112,7 +112,7 @@ export default function NovoConvenioPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dados Principais */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Dados Principais</h2>
           </div>
@@ -163,7 +163,7 @@ export default function NovoConvenioPage() {
         </div>
 
         {/* Endereço */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Endereço</h2>
           </div>
@@ -199,7 +199,7 @@ export default function NovoConvenioPage() {
         </div>
 
         {/* Dados Bancários */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Dados Bancários</h2>
           </div>
@@ -223,7 +223,7 @@ export default function NovoConvenioPage() {
         </div>
 
         {/* Contato */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Informações de Contato</h2>
           </div>

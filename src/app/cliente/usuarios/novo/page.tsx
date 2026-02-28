@@ -97,7 +97,7 @@ export default function NovoUsuarioPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dados do usuário */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Dados do Usuário</h2>
           </div>
@@ -138,7 +138,7 @@ export default function NovoUsuarioPage() {
         </div>
 
         {/* Permissões */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Permissões de Acesso</h2>
