@@ -114,14 +114,16 @@ export async function GET(request: NextRequest) {
     };
 
     // Filtro de parcelas em aberto (sem baixa) - AS302.PRG: TRIM(parcelas.baixa) = ''
-    // IMPORTANTE: No MySQL, parcelas sem baixa têm baixa = '' (string vazia)
-    // No PostgreSQL, parcelas sem baixa têm baixa = null (padrão do Prisma)
-    // Por isso aceitamos OR: null, '', ou ' ' (espaço)
+    // IMPORTANTE: No PostgreSQL migrado, o campo baixa pode ter:
+    // - 'N' = Não baixada (parcela em aberto)
+    // - 'S' = Sim baixada (parcela quitada)
+    // - null, '' ou ' ' = Também considerados não baixados
     if (apenasEmAberto === 'true') {
       where.OR = [
         { baixa: null },
         { baixa: '' },
         { baixa: ' ' },
+        { baixa: 'N' }, // Migração MySQL->PG: 'N' = não baixada
       ];
     }
 
