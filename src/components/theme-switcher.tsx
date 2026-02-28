@@ -11,6 +11,11 @@ const themeIcons: Record<string, React.ElementType> = {
   consignado: Briefcase,
   railway: Moon,
 }
+const themeLabels: Record<string, string> = {
+  light: "Claro",
+  railway: "Escuro",
+  consignado: "Consignado",
+}
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme()
@@ -22,13 +27,14 @@ export function ThemeSwitcher() {
   }
 
   const Icon = themeIcons[theme ?? "light"] ?? Sun
+  const label = themeLabels[theme ?? "light"] ?? "Claro"
 
   return (
     <Button
       variant="outline"
       size="sm"
       onClick={cycleTheme}
-      title={theme ?? "light"}
+      title={label}
     >
       <Icon className="h-4 w-4" />
     </Button>
