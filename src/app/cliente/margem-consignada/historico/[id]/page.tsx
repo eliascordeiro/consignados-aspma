@@ -121,7 +121,7 @@ export default function HistoricoMargemPage() {
 
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {socio.margemHistoricos.map((h) => (
-                <div key={h.id} className="grid grid-cols-[150px_140px_160px_160px_1fr] gap-3 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-750">
+                <div key={h.id} className="grid grid-cols-[150px_140px_160px_160px_1fr] gap-3 px-4 py-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(h.createdAt)}</div>
                   <div className="text-gray-700 dark:text-gray-300 text-xs truncate">{h.usuario.name}</div>
                   <div className="text-right">
