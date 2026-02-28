@@ -1,23 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun, Briefcase, Zap } from "lucide-react"
+import { Sun, Briefcase, Zap } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 
-const themes = ["light", "consignado", "railway", "dark"] as const
-const themeLabels: Record<string, string> = {
-  light: "White",
-  consignado: "White Light",
-  railway: "Dark",
-  dark: "Dark Light",
-}
+const themes = ["light", "consignado", "railway"] as const
 const themeIcons: Record<string, React.ElementType> = {
   light: Sun,
   consignado: Briefcase,
   railway: Zap,
-  dark: Moon,
 }
 
 export function ThemeToggle() {
@@ -38,7 +31,6 @@ export function ThemeToggle() {
     setTheme(themes[nextIndex])
   }
 
-  const currentLabel = themeLabels[theme ?? "light"] ?? "White"
   const Icon = themeIcons[theme ?? "light"] ?? Sun
 
   return (
@@ -46,10 +38,9 @@ export function ThemeToggle() {
       variant="ghost"
       size="sm"
       onClick={cycleTheme}
-      className="gap-2"
+      title={theme ?? "light"}
     >
       <Icon className="h-[1.2rem] w-[1.2rem]" />
-      <span className="text-xs font-medium">{currentLabel}</span>
     </Button>
   )
 }
