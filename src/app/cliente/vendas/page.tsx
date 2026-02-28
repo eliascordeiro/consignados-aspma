@@ -492,7 +492,7 @@ export default function VendasPage() {
                     >
                       {isMobile ? (
                         // Layout Mobile (Card)
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700">
                           <div className="space-y-2">
                             <div className="flex justify-between items-start">
                               <div>
@@ -582,7 +582,7 @@ export default function VendasPage() {
                         </div>
                       ) : (
                         // Layout Desktop (Grid)
-                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 items-center transition-colors duration-150">
+                        <div className="grid grid-cols-[70px_1.8fr_1.5fr_90px_80px_100px_80px_100px] gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700 items-center transition-colors duration-150">
                           <div className="text-left">
                             <div className="text-sm font-semibold text-gray-900 dark:text-white">
                               #{venda.numeroVenda}

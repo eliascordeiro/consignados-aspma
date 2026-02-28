@@ -28,7 +28,7 @@ export default function RootLayout({
           defaultTheme="consignado"
           enableSystem
           disableTransitionOnChange
-          themes={["light", "dark", "consignado"]}
+          themes={["light", "dark", "consignado", "railway"]}
         >
           <ReactQueryProvider>
             <SessionProvider>{children}</SessionProvider>

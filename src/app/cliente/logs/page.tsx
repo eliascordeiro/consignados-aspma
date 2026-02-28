@@ -275,7 +275,7 @@ export default function LogsPage() {
                     <div
                       key={log.id}
                       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: virtualRow.size, transform: `translateY(${virtualRow.start}px)` }}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 railway:hover:bg-gray-700"
                     >
                       {/* Mobile card */}
                       <div className="md:hidden p-3 space-y-1">
