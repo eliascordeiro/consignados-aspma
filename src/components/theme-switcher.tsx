@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Sun, Briefcase, Zap } from "lucide-react"
+import { Sun, Briefcase, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 
@@ -9,7 +9,7 @@ const themes = ["light", "railway", "consignado"] as const
 const themeIcons: Record<string, React.ElementType> = {
   light: Sun,
   consignado: Briefcase,
-  railway: Zap,
+  railway: Moon,
 }
 
 export function ThemeSwitcher() {
