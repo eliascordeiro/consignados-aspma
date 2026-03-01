@@ -407,6 +407,58 @@ export default function RelatoriosPage() {
     }
   };
 
+  const gerarRelatorioSociosMySQL = async () => {
+    if (!filtros.mesAno) {
+      alert('Selecione o período (Mês-Ano)');
+      return;
+    }
+
+    setLoading(true);
+    setProgress(10);
+
+    try {
+      const queryParams = new URLSearchParams({
+        mesAno: filtros.mesAno,
+        ...(filtros.convenioId && { convenioId: filtros.convenioId }),
+        formato: 'pdf',
+      });
+
+      setProgress(30);
+
+      const response = await fetch(`/api/relatorios/debitos-mysql?${queryParams}`);
+
+      setProgress(60);
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `debitos-socios-mysql-${filtros.mesAno}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setProgress(100);
+
+        setTimeout(() => {
+          setProgress(0);
+          alert('Relatório MySQL (BD Legado) gerado com sucesso!');
+        }, 500);
+      } else {
+        const error = await response.json();
+        alert(`Erro ao gerar relatório: ${error.error || 'Erro desconhecido'}`);
+        setProgress(0);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório MySQL:', error);
+      alert('Erro ao gerar relatório MySQL. Tente novamente.');
+      setProgress(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       {/* Header */}
@@ -771,6 +823,43 @@ export default function RelatoriosPage() {
                     <div className="text-xs text-muted-foreground">Dados delimitados (configurável)</div>
                   </div>
                 </button>
+
+                {/* Botão MySQL - Apenas para Sócios */}
+                {tipoRelatorio === 'socios' && (
+                  <>
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-border"></div>
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="px-2 bg-card text-card-foreground text-muted-foreground font-medium">
+                          Banco Legado (MySQL)
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={gerarRelatorioSociosMySQL}
+                      disabled={loading || !canExport}
+                      className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
+                      title={!canExport ? 'Sem permissão para exportar' : 'Gerar relatório do MySQL (BD Legado)'}
+                    >
+                      <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors">
+                        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                        </svg>
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                          PDF MySQL
+                          <span className="text-[10px] px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 rounded font-semibold">AS200</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">Dados do banco legado</div>
+                      </div>
+                    </button>
+                  </>
+                )}
 
                 {/* Botão MySQL - Apenas para Pensionistas */}
                 {tipoRelatorio === 'pensionistas' && (
