@@ -377,13 +377,8 @@ export default function EditarVendaPage() {
                   return (
                     <tr key={originalIndex} className="hover:bg-muted/50">
                       <td className="px-4 py-2 border border-border text-foreground">{parcela.numeroParcela}</td>
-                      <td className="px-4 py-2 border border-border">
-                        <input
-                          type="date"
-                          value={parcela.dataVencimento}
-                          onChange={(e) => atualizarParcela(originalIndex, 'dataVencimento', e.target.value)}
-                          className="w-full px-2 py-1 border border-border rounded bg-background text-foreground"
-                        />
+                      <td className="px-4 py-2 border border-border text-foreground text-sm">
+                        {new Date(parcela.dataVencimento + 'T12:00:00').toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-2 border border-border text-right">
                         <input
@@ -533,31 +528,18 @@ export default function EditarVendaPage() {
               </div>
             </div>
 
-            {/* Seção Vencimento */}
-            <div className="border border-border rounded-lg p-4 mb-4">
-              <label className="flex items-center gap-2 cursor-pointer mb-3">
+            {/* Seção Vencimento — desabilitada */}
+            <div className="border border-border rounded-lg p-4 mb-4 opacity-40 cursor-not-allowed select-none" title="Alteração de vencimentos desabilitada">
+              <label className="flex items-center gap-2 mb-3">
                 <input
                   type="checkbox"
-                  checked={massaForm.alterarVencimento}
-                  onChange={(e) => setMassaForm(f => ({ ...f, alterarVencimento: e.target.checked }))}
-                  className="w-4 h-4 accent-amber-500"
+                  checked={false}
+                  disabled
+                  className="w-4 h-4"
                 />
                 <span className="text-sm font-semibold text-foreground">Alterar Vencimentos</span>
+                <span className="text-xs text-muted-foreground ml-1">(desabilitado)</span>
               </label>
-              {massaForm.alterarVencimento && (
-                <div>
-                  <label className="block text-xs text-muted-foreground mb-1">
-                    Vencimento da 1ª parcela selecionada
-                    <span className="ml-1 text-muted-foreground/60">(as demais incrementam +1 mês)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={massaForm.novoVencimento}
-                    onChange={(e) => setMassaForm(f => ({ ...f, novoVencimento: e.target.value }))}
-                    className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm"
-                  />
-                </div>
-              )}
             </div>
 
             {/* Seção Valor */}
