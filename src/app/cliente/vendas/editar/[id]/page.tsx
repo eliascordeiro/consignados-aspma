@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -45,6 +45,74 @@ export default function EditarVendaPage() {
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
+
+  // ── Modal de alteração em massa ──────────────────────────────────────────────
+  const [modalAberto, setModalAberto] = useState(false);
+  const [massaForm, setMassaForm] = useState({
+    daParcela: 1,
+    ateParcela: 1,
+    alterarVencimento: true,
+    novoVencimento: '',
+    alterarValor: false,
+    novoValor: '',
+  });
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const abrirModalMassa = () => {
+    setMassaForm(prev => ({
+      ...prev,
+      daParcela: 1,
+      ateParcela: parcelas.length,
+      novoVencimento: parcelas.length > 0 ? parcelas[0].dataVencimento : '',
+      novoValor: '',
+      alterarVencimento: true,
+      alterarValor: false,
+    }));
+    setModalAberto(true);
+  };
+
+  const aplicarAlteracaoEmMassa = () => {
+    const de = Math.max(1, Math.min(massaForm.daParcela, parcelas.length));
+    const ate = Math.max(de, Math.min(massaForm.ateParcela, parcelas.length));
+
+    if (!massaForm.alterarVencimento && !massaForm.alterarValor) {
+      alert('Selecione ao menos uma opção para alterar.');
+      return;
+    }
+
+    if (massaForm.alterarVencimento && !massaForm.novoVencimento) {
+      alert('Informe o vencimento inicial.');
+      return;
+    }
+
+    const novoValorNum = massaForm.alterarValor ? parseFloat(massaForm.novoValor) : 0;
+    if (massaForm.alterarValor && (isNaN(novoValorNum) || novoValorNum <= 0)) {
+      alert('Informe um valor válido maior que zero.');
+      return;
+    }
+
+    const novasParcelas = [...parcelas];
+
+    for (let i = de - 1; i <= ate - 1; i++) {
+      if (massaForm.alterarVencimento) {
+        // Incrementa mês a mês a partir do novoVencimento
+        const base = new Date(massaForm.novoVencimento + 'T12:00:00');
+        const mesesOffset = i - (de - 1);
+        const novaData = new Date(base);
+        novaData.setMonth(novaData.getMonth() + mesesOffset);
+        novasParcelas[i] = {
+          ...novasParcelas[i],
+          dataVencimento: novaData.toISOString().split('T')[0],
+        };
+      }
+      if (massaForm.alterarValor) {
+        novasParcelas[i] = { ...novasParcelas[i], valor: novoValorNum };
+      }
+    }
+
+    setParcelas(novasParcelas);
+    setModalAberto(false);
+  };
 
   useEffect(() => {
     if (vendaId) {
@@ -279,7 +347,20 @@ export default function EditarVendaPage() {
 
         {/* Tabela de Parcelas */}
         <div className="mt-6">
-          <h3 className="text-lg font-bold mb-3 text-foreground">Parcelas</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold text-foreground">Parcelas</h3>
+            <button
+              type="button"
+              onClick={abrirModalMassa}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded font-medium transition-colors"
+              title="Alterar vencimento e/ou valor em sequência para um intervalo de parcelas"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              Alterar em Massa
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-card text-card-foreground border border-border">
               <thead className="bg-muted">
@@ -395,6 +476,145 @@ export default function EditarVendaPage() {
           </button>
         </div>
       </form>
+
+      {/* ── Modal Alterar em Massa ─────────────────────────────────────────── */}
+      {modalAberto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setModalAberto(false); }}
+        >
+          <div
+            ref={modalRef}
+            className="bg-card text-card-foreground rounded-xl shadow-2xl border border-border w-full max-w-md mx-4 p-6"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Alterar em Massa</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Aplica alterações em sequência a um intervalo de parcelas
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalAberto(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none"
+                title="Fechar"
+              >✕</button>
+            </div>
+
+            {/* Intervalo de parcelas */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                  Da Parcela <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={parcelas.length}
+                  value={massaForm.daParcela}
+                  onChange={(e) => setMassaForm(f => ({ ...f, daParcela: Math.max(1, parseInt(e.target.value) || 1) }))}
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                  Até Parcela <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={parcelas.length}
+                  value={massaForm.ateParcela}
+                  onChange={(e) => setMassaForm(f => ({ ...f, ateParcela: Math.max(1, parseInt(e.target.value) || 1) }))}
+                  className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Seção Vencimento */}
+            <div className="border border-border rounded-lg p-4 mb-4">
+              <label className="flex items-center gap-2 cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={massaForm.alterarVencimento}
+                  onChange={(e) => setMassaForm(f => ({ ...f, alterarVencimento: e.target.checked }))}
+                  className="w-4 h-4 accent-amber-500"
+                />
+                <span className="text-sm font-semibold text-foreground">Alterar Vencimentos</span>
+              </label>
+              {massaForm.alterarVencimento && (
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Vencimento da 1ª parcela selecionada
+                    <span className="ml-1 text-muted-foreground/60">(as demais incrementam +1 mês)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={massaForm.novoVencimento}
+                    onChange={(e) => setMassaForm(f => ({ ...f, novoVencimento: e.target.value }))}
+                    className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Seção Valor */}
+            <div className="border border-border rounded-lg p-4 mb-6">
+              <label className="flex items-center gap-2 cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={massaForm.alterarValor}
+                  onChange={(e) => setMassaForm(f => ({ ...f, alterarValor: e.target.checked }))}
+                  className="w-4 h-4 accent-amber-500"
+                />
+                <span className="text-sm font-semibold text-foreground">Alterar Valor</span>
+              </label>
+              {massaForm.alterarValor && (
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Novo valor para todas as parcelas no intervalo
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0,00"
+                    value={massaForm.novoValor}
+                    onChange={(e) => setMassaForm(f => ({ ...f, novoValor: e.target.value }))}
+                    className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm text-right"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Resumo */}
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-2 mb-5 text-xs text-amber-800 dark:text-amber-300">
+              Afetará <strong>{Math.max(0, Math.min(massaForm.ateParcela, parcelas.length) - Math.max(1, massaForm.daParcela) + 1)}</strong> parcela(s)
+              {' '}({massaForm.daParcela} a {Math.min(massaForm.ateParcela, parcelas.length)})
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setModalAberto(false)}
+                className="px-5 py-2 text-sm rounded border border-border bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={aplicarAlteracaoEmMassa}
+                className="px-5 py-2 text-sm rounded bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
