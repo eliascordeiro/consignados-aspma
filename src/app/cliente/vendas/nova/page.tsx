@@ -517,27 +517,6 @@ export default function NovaVendaPage() {
           </div>
         </div>
 
-        {/* Informações de Limite Disponível */}
-        {limiteInfo && limiteInfo.tipoDescricao === 'Local' && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-2">📊 Informações de Limite (Sistema Local)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Limite Total:</span>
-                <p className="font-bold text-foreground">R$ {limiteInfo.limiteTotal.toFixed(2)}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Total em Aberto:</span>
-                <p className="font-bold text-orange-600 dark:text-orange-400">R$ {limiteInfo.totalEmAberto.toFixed(2)}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Limite Disponível:</span>
-                <p className="font-bold text-green-600 dark:text-green-400">R$ {limiteInfo.limiteDisponivel.toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Limite, Data, Parcelas e Valor */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
