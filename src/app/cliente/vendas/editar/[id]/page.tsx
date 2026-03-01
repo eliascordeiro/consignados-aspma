@@ -341,6 +341,7 @@ export default function EditarVendaPage() {
           {parcelas.length > ITEMS_PER_PAGE && (
             <div className="flex flex-wrap justify-center items-center gap-1 mt-4">
               <button
+                type="button"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -360,13 +361,14 @@ export default function EditarVendaPage() {
                 return pages.map((p, i) => p === '...' ? (
                   <span key={`e${i}`} className="px-2 py-1 text-sm text-gray-500">…</span>
                 ) : (
-                  <button key={p} onClick={() => setCurrentPage(p as number)}
+                  <button type="button" key={p} onClick={() => setCurrentPage(p as number)}
                     className={`px-3 py-1 text-sm rounded ${
                       currentPage === p ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}>{p}</button>
                 ));
               })()}
               <button
+                type="button"
                 onClick={() => setCurrentPage(p => Math.min(Math.ceil(parcelas.length / ITEMS_PER_PAGE), p + 1))}
                 disabled={currentPage === Math.ceil(parcelas.length / ITEMS_PER_PAGE)}
                 className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
