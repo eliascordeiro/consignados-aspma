@@ -99,8 +99,8 @@
   /* Secondary: Esmeralda vivo */
   --secondary: oklch(0.78 0.14 160);
   --secondary-foreground: oklch(0.15 0.06 160);
-  --muted: oklch(0.93 0.02 250);
-  --muted-foreground: oklch(0.48 0.04 250);
+  --muted: oklch(0.85 0.05 250);
+  --muted-foreground: oklch(0.40 0.06 250);
   /* Accent: Dourado quente */
   --accent: oklch(0.85 0.16 85);
   --accent-foreground: oklch(0.25 0.06 85);
