@@ -2,21 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-
-function formatarIdentificador(valor: string) {
-  // Remove tudo que não seja letra, número ou @/.
-  const soNumeros = valor.replace(/\D/g, '')
-
-  // Se parecer com CPF (11 dígitos) — aplica máscara
-  if (/^\d{11}$/.test(soNumeros)) {
-    return soNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-  }
-  return valor
-}
+import { formatarCelular } from '@/lib/utils'
 
 export default function PortalLoginPage() {
   const router = useRouter()
-  const [identificador, setIdentificador] = useState('')
+  const [celular, setCelular] = useState('')
   const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
@@ -38,7 +28,7 @@ export default function PortalLoginPage() {
       const res = await fetch('/api/portal/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identificador: identificador.trim(), senha }),
+        body: JSON.stringify({ celular: celular.trim(), senha }),
       })
 
       const data = await res.json()
@@ -78,7 +68,7 @@ export default function PortalLoginPage() {
       {/* Card de Login */}
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-1">Bem-vindo!</h2>
-        <p className="text-gray-500 text-sm mb-4">Use sua matrícula, CPF ou celular</p>
+        <p className="text-gray-500 text-sm mb-4">Informe seu celular e senha</p>
 
         {sucesso && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-emerald-700 text-sm mb-4">
@@ -87,19 +77,17 @@ export default function PortalLoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Identificador */}
+          {/* Celular */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              CPF, E-mail ou Celular
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Celular</label>
             <input
-              type="text"
-              inputMode="text"
+              type="tel"
+              inputMode="numeric"
               autoComplete="username"
-              value={identificador}
-              onChange={e => setIdentificador(e.target.value)}
-              onBlur={e => setIdentificador(formatarIdentificador(e.target.value))}
-              placeholder="Matrícula, CPF ou celular"
+              maxLength={15}
+              value={celular}
+              onChange={e => setCelular(formatarCelular(e.target.value))}
+              placeholder="(41) 99999-9999"
               required
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900
                          focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent

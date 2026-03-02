@@ -14,25 +14,21 @@ function normalizar(valor: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { identificador, senha } = await request.json()
+    const { celular, senha } = await request.json()
 
-    if (!identificador || !senha) {
-      return NextResponse.json({ error: 'Identificador e senha são obrigatórios' }, { status: 400 })
+    if (!celular || !senha) {
+      return NextResponse.json({ error: 'Celular e senha são obrigatórios' }, { status: 400 })
     }
 
-    const id = identificador.trim()
-    const idLimpo = normalizar(id)
+    const celularLimpo = normalizar(celular.trim())
 
-    // Busca por matrícula, CPF ou celular
+    // Busca somente por celular
     const socio = await prisma.socio.findFirst({
       where: {
         ativo: true,
         OR: [
-          { matricula: id },
-          { cpf: idLimpo },
-          { cpf: id },
-          { celular: idLimpo },
-          { celular: id },
+          { celular: celularLimpo },
+          { celular: celular.trim() },
         ],
       },
       select: {
@@ -50,7 +46,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!socio) {
-      return NextResponse.json({ error: 'Dados não encontrados. Verifique matrícula, CPF ou celular.' }, { status: 401 })
+      return NextResponse.json({ error: 'Celular não encontrado ou não cadastrado.' }, { status: 401 })
     }
 
     if (socio.bloqueio === 'S') {
