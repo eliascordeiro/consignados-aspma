@@ -6,10 +6,7 @@ import { useRouter } from 'next/navigation'
 type Passo = 'identificar' | 'codigo' | 'senha'
 
 interface Canais {
-  whatsapp: boolean
-  email: boolean
   celularMask: string | null
-  emailMask: string | null
 }
 
 // Componente de entrada OTP com 6 caixas individuais
@@ -100,7 +97,7 @@ function StepIndicator({ atual }: { atual: number }) {
 export default function RedefinirSenhaPage() {
   const router = useRouter()
   const [passo, setPasso] = useState<Passo>('identificar')
-  const [identificador, setIdentificador] = useState('')
+  const [celular, setCelular] = useState('')
   const [sessionToken, setSessionToken] = useState('')
   const [confirmedToken, setConfirmedToken] = useState('')
   const [canais, setCanais] = useState<Canais | null>(null)
@@ -132,14 +129,14 @@ export default function RedefinirSenhaPage() {
       const res = await fetch('/api/portal/redefinir-senha/solicitar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identificador: identificador.trim() }),
+        body: JSON.stringify({ celular: celular.trim() }),
       })
       const data = await res.json()
 
       if (!res.ok) { setErro(data.error || 'Erro ao solicitar'); return }
 
       setSessionToken(data.sessionToken)
-      setCanais(data.canais)
+      setCanais({ celularMask: data.celularMask })
       setPasso('codigo')
       iniciarTimer()
     } catch {
@@ -157,10 +154,10 @@ export default function RedefinirSenhaPage() {
       const res = await fetch('/api/portal/redefinir-senha/solicitar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identificador: identificador.trim() }),
+        body: JSON.stringify({ celular: celular.trim() }),
       })
       const data = await res.json()
-      if (res.ok) { setSessionToken(data.sessionToken); setCanais(data.canais); iniciarTimer() }
+      if (res.ok) { setSessionToken(data.sessionToken); setCanais({ celularMask: data.celularMask }); iniciarTimer() }
       else setErro(data.error || 'Erro ao reenviar')
     } catch {
       setErro('Erro de conexão')
@@ -244,15 +241,16 @@ export default function RedefinirSenhaPage() {
         {/* ── PASSO 1 ── */}
         {passo === 'identificar' && (
           <>
-            <h2 className="text-base font-semibold text-gray-800 mb-1">Quem é você?</h2>
-            <p className="text-gray-500 text-sm mb-5">Informe seu CPF, e-mail ou celular cadastrado na ASPMA.</p>
+            <h2 className="text-base font-semibold text-gray-800 mb-1">Celular cadastrado</h2>
+            <p className="text-gray-500 text-sm mb-5">Informe o celular cadastrado na ASPMA. Enviaremos um código de verificação via WhatsApp.</p>
 
             <form onSubmit={handleSolicitar} className="space-y-4">
               <input
-                type="text"
-                value={identificador}
-                onChange={e => setIdentificador(e.target.value)}
-                placeholder="CPF, e-mail ou celular"
+                type="tel"
+                inputMode="numeric"
+                value={celular}
+                onChange={e => setCelular(e.target.value)}
+                placeholder="Ex: (41) 99999-9999"
                 required autoFocus
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-base
                            focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
@@ -277,11 +275,8 @@ export default function RedefinirSenhaPage() {
             <h2 className="text-base font-semibold text-gray-800 mb-1">Código de verificação</h2>
             {canais && (
               <p className="text-gray-500 text-sm mb-5">
-                Código enviado
-                {canais.whatsapp && canais.celularMask && <> via <span className="font-medium text-emerald-700">WhatsApp</span> para {canais.celularMask}</>}
-                {canais.whatsapp && canais.email && ' e '}
-                {canais.email && canais.emailMask && <> via <span className="font-medium text-blue-600">e-mail</span> para {canais.emailMask}</>}
-                .
+                Código enviado via <span className="font-medium text-emerald-700">WhatsApp</span>
+                {canais.celularMask && <> para {canais.celularMask}</>}.
               </p>
             )}
 

@@ -23,12 +23,12 @@ export async function POST(request: NextRequest) {
     const id = identificador.trim()
     const idLimpo = normalizar(id)
 
-    // Busca por email, CPF ou celular
+    // Busca por matrícula, CPF ou celular
     const socio = await prisma.socio.findFirst({
       where: {
         ativo: true,
         OR: [
-          { email: id },
+          { matricula: id },
           { cpf: idLimpo },
           { cpf: id },
           { celular: idLimpo },
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!socio) {
-      return NextResponse.json({ error: 'Dados não encontrados. Verifique CPF, email ou celular.' }, { status: 401 })
+      return NextResponse.json({ error: 'Dados não encontrados. Verifique matrícula, CPF ou celular.' }, { status: 401 })
     }
 
     if (socio.bloqueio === 'S') {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Verificar senha — suporta bcrypt e texto puro (legado)
     if (!socio.senha) {
       return NextResponse.json({
-        error: 'Você ainda não definiu uma senha. Use "Primeiro Acesso" para cadastrar.',
+        error: 'Você ainda não definiu uma senha. Use "Criar / Redefinir Senha" para cadastrar.',
         semSenha: true,
       }, { status: 401 })
     }

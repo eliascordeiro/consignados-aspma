@@ -78,7 +78,7 @@ export default function PortalLoginPage() {
       {/* Card de Login */}
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-1">Bem-vindo!</h2>
-        <p className="text-gray-500 text-sm mb-4">Use seu CPF, e-mail ou celular</p>
+        <p className="text-gray-500 text-sm mb-4">Use sua matrícula, CPF ou celular</p>
 
         {sucesso && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-emerald-700 text-sm mb-4">
@@ -99,7 +99,7 @@ export default function PortalLoginPage() {
               value={identificador}
               onChange={e => setIdentificador(e.target.value)}
               onBlur={e => setIdentificador(formatarIdentificador(e.target.value))}
-              placeholder="Ex: 123.456.789-00"
+              placeholder="Matrícula, CPF ou celular"
               required
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900
                          focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent
