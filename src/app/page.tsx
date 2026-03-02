@@ -61,7 +61,7 @@ export default function HomePage() {
               </Button>
             </Link>
             
-            <Link href="/login">
+            <Link href="/portal/login">
               <Button 
                 size="lg" 
                 variant="outline"
