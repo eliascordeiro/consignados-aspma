@@ -1,15 +1,28 @@
-Sim! Processamento paralelo com Promise.all() vai acelerar muito! Vou criar um script com workers paralelos:
+passo 1 (classes, setores, consignatarias, convenios, socios):
+npx tsx app/scripts/migrate-all-to-railway.ts
 
-migrou parcelas
-migrate-parcelas-only-parallel.ts
+migrar vendas e parcelas
+npx tsx app/scripts/migrate-vendas-parcelas-v2.ts
+
+colocar "41 9" nos celulares dos sócios (atencao de nao vai quebar nova migração) 
+scripts/fix-celular-socios.ts
 
 
-seguir este padrao nas demais migracoes...
+╔══════════════════════════════════════════════════════════════════════╗
+║               ✅ MIGRAÇÃO v2 CONCLUÍDA                               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  📊 Vendas:       81.757 / 82.190                         ║
+║  📊 Parcelas:    758.929 / 761.309                        ║
+║  ⏱️  Tempo total: 16m36s                                           ║
+║  💡 Script idempotente: pode re-executar para completar             ║
+╚══════════════════════════════════════════════════════════════════════╝
 
-Valor total: R$ 1.058.477,12
+╔══════════════════════════════════════════════════════════════════════╗
+║               ✅ MIGRAÇÃO v2 CONCLUÍDA                               ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  📊 Vendas:       81.758 / 82.191                         ║
+║  📊 Parcelas:    758.932 / 761.312                        ║
+║  ⏱️  Tempo total: 16m36s                                           ║
+║  💡 Script idempotente: pode re-executar para completar             ║
+╚══════════════════════════════════════════════════════════════════════╝
 
-analise o ltimo processamento do script no terminal ao lado
-
-FAZ SINCRONIZAÇAO DOS DASDOS DO MYSQL PARA RAILWAY POSTGRESQL:
-
-npx tsx /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app/scripts/sync-mysql-railway-v3.ts

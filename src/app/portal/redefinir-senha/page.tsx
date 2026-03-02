@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatarCelular } from '@/lib/utils'
 
 type Passo = 'identificar' | 'codigo' | 'senha'
 
@@ -248,9 +249,10 @@ export default function RedefinirSenhaPage() {
               <input
                 type="tel"
                 inputMode="numeric"
+                maxLength={15}
                 value={celular}
-                onChange={e => setCelular(e.target.value)}
-                placeholder="Ex: (41) 99999-9999"
+                onChange={e => setCelular(formatarCelular(e.target.value))}
+                placeholder="(41) 99999-9999"
                 required autoFocus
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-base
                            focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"

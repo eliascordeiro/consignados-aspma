@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
+import { formatarCelular } from '@/lib/utils';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
@@ -189,7 +190,15 @@ export default function NovoFuncionarioPage() {
                   </div>
                   <div>
                     <label className={labelCls}>Celular</label>
-                    <input value={formData.celular} onChange={(e) => set('celular', e.target.value)} className={inputCls} />
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={15}
+                      placeholder="(41) 99999-9999"
+                      value={formData.celular}
+                      onChange={(e) => set('celular', formatarCelular(e.target.value))}
+                      className={inputCls}
+                    />
                   </div>
                 </div>
 

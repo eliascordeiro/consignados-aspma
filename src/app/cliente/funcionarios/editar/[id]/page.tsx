@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
+import { formatarCelular } from '@/lib/utils';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
@@ -96,7 +97,7 @@ export default function EditarFuncionarioPage() {
           cidade: data.cidade || '',
           uf: data.uf || '',
           telefone: data.telefone || '',
-          celular: data.celular || '',
+          celular: formatarCelular(data.celular || ''),  // formata ao carregar
           email: data.email || '',
           contato: data.contato || '',
           dataCadastro: formatDate(data.dataCadastro),
@@ -283,7 +284,16 @@ export default function EditarFuncionarioPage() {
                   </div>
                   <div>
                     <label className={labelCls}>Celular</label>
-                    <input value={formData.celular} onChange={(e) => set('celular', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={15}
+                      placeholder="(41) 99999-9999"
+                      value={formData.celular}
+                      onChange={(e) => set('celular', formatarCelular(e.target.value))}
+                      disabled={!canEdit}
+                      className={canEdit ? inputCls : disabledCls}
+                    />
                   </div>
                 </div>
 
