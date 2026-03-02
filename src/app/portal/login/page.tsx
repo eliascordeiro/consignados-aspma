@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 
 function formatarIdentificador(valor: string) {
   // Remove tudo que não seja letra, número ou @/.
@@ -22,6 +21,13 @@ export default function PortalLoginPage() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [sucesso, setSucesso] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('senha') === 'criada') setSucesso('Senha criada com sucesso! Faça login.')
+    if (params.get('created') === '1') setSucesso('Senha criada! Faça login.')
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -39,7 +45,7 @@ export default function PortalLoginPage() {
 
       if (!res.ok) {
         if (data.semSenha) {
-          router.push('/portal/primeiro-acesso')
+          router.push('/portal/redefinir-senha')
           return
         }
         setErro(data.error || 'Erro ao entrar')
@@ -72,7 +78,13 @@ export default function PortalLoginPage() {
       {/* Card de Login */}
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-1">Bem-vindo!</h2>
-        <p className="text-gray-500 text-sm mb-6">Use seu CPF, e-mail ou celular</p>
+        <p className="text-gray-500 text-sm mb-4">Use seu CPF, e-mail ou celular</p>
+
+        {sucesso && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-emerald-700 text-sm mb-4">
+            ✓ {sucesso}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Identificador */}
@@ -166,8 +178,8 @@ export default function PortalLoginPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
             Primeiro acesso?{' '}
-            <a href="/portal/primeiro-acesso" className="text-emerald-600 font-semibold hover:underline">
-              Criar senha
+            <a href="/portal/redefinir-senha" className="text-emerald-600 font-semibold hover:underline">
+              Criar / redefinir senha
             </a>
           </p>
         </div>

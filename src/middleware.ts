@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   // ── Portal do Sócio ──────────────────────────────────────────────────────
   if (pathname.startsWith('/portal')) {
     // Rotas públicas do portal
-    const publicPortalRoutes = ['/portal/login', '/portal/primeiro-acesso']
+    const publicPortalRoutes = ['/portal/login', '/portal/primeiro-acesso', '/portal/redefinir-senha']
     if (publicPortalRoutes.some(r => pathname.startsWith(r))) {
       return NextResponse.next()
     }

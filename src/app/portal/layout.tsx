@@ -58,7 +58,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     router.refresh()
   }
 
-  if (pathname === '/portal/login' || pathname?.startsWith('/portal/primeiro-acesso')) {
+  if (pathname === '/portal/login' || pathname?.startsWith('/portal/primeiro-acesso') || pathname?.startsWith('/portal/redefinir-senha')) {
     return <>{children}</>
   }
 
