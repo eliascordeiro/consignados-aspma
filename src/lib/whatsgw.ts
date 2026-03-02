@@ -9,12 +9,13 @@ interface SendResult {
 }
 
 export async function sendWhatsApp(celular: string, message: string): Promise<SendResult> {
-  const baseUrl = process.env.WHATSGW_BASE_URL
+  // Aceita WHATSGW_URL ou WHATSGW_BASE_URL (compatibilidade)
+  const baseUrl = process.env.WHATSGW_URL || process.env.WHATSGW_BASE_URL || 'https://app.whatsgw.com.br'
   const apiKey = process.env.WHATSGW_API_KEY
-  const phoneNumber = process.env.WHATSGW_PHONE_NUMBER
+  const phoneNumber = process.env.WHATSGW_PHONE_NUMBER || '5541988318343'
 
-  if (!baseUrl || !apiKey || !phoneNumber) {
-    console.warn('[WhatGW] Variáveis de ambiente não configuradas — WhatsApp desabilitado')
+  if (!apiKey) {
+    console.warn('[WhatGW] WHATSGW_API_KEY não configurada — WhatsApp desabilitado')
     return { success: false, error: 'WhatGW não configurado' }
   }
 
