@@ -54,10 +54,13 @@ export async function POST(request: NextRequest) {
       console.error('[solicitar-otp] Falha WhatsApp:', whatsOk.error)
     }
 
-    const celularNum = socio.celular.replace(/\D/g, '')
-    const celularMask = celularNum.length >= 8
-      ? `(${celularNum.slice(-10, -8) || '??'}) ****-${celularNum.slice(-4)}`
-      : '****'
+    // Formata número para exibição: (41) 99612-3839
+    const d = socio.celular.replace(/\D/g, '').slice(0, 11)
+    const celularMask = d.length === 11
+      ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+      : d.length === 10
+      ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+      : socio.celular
 
     return NextResponse.json({
       sessionToken,
