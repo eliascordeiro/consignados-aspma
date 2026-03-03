@@ -38,7 +38,6 @@ interface FormState {
   libera: string;
   desconto: string;
   parcelas: string;
-  diaCorte: string;
   endereco: string;
   bairro: string;
   cep: string;
@@ -56,7 +55,7 @@ interface FormState {
 
 const INITIAL: FormState = {
   codigo: '', razao_soc: '', fantasia: '', nome: '', cnpj: '', cgc: '',
-  libera: 'C', desconto: '', parcelas: '', diaCorte: '9',
+  libera: 'C', desconto: '', parcelas: '',
   endereco: '', bairro: '', cep: '', cidade: '', estado: 'PR',
   telefone: '', fax: '', contato: '', email: '',
   banco: '', agencia: '', conta: '', ativo: true,
@@ -95,7 +94,6 @@ export default function EditarConvenioPage() {
           libera: normalizeLiberaValue(data.libera, data.tipo),
           desconto: data.desconto != null ? String(data.desconto) : '',
           parcelas: data.parcelas != null ? String(data.parcelas) : '',
-          diaCorte: data.diaCorte != null ? String(data.diaCorte) : '9',
           endereco: data.endereco ?? '',
           bairro: data.bairro ?? '',
           cep: data.cep ?? '',
@@ -127,7 +125,6 @@ export default function EditarConvenioPage() {
         ...formData,
         desconto: formData.desconto ? parseFloat(formData.desconto) : null,
         parcelas: formData.parcelas ? parseInt(formData.parcelas) : null,
-        diaCorte: formData.diaCorte ? parseInt(formData.diaCorte) : 9,
         tipo: LIBERA_OPTIONS.find((o) => o.value === formData.libera)?.label ?? 'COMÉRCIO',
       };
       const res = await fetch(`/api/convenios/${id}`, {
@@ -222,20 +219,6 @@ export default function EditarConvenioPage() {
               <label className="block text-xs font-medium text-muted-foreground mb-1">Parcelas máx.</label>
               <input type="number" min="1" value={formData.parcelas} onChange={(e) => set('parcelas', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Dia de corte
-                <span className="ml-1 text-muted-foreground/60 font-normal">(1–31)</span>
-              </label>
-              <input
-                type="number" min="1" max="31"
-                value={formData.diaCorte}
-                onChange={(e) => set('diaCorte', e.target.value)}
-                disabled={!canEdit}
-                title="Dia do mês a partir do qual o cálculo avança para o mês seguinte"
-                className={inputCls(!canEdit)}
-              />
             </div>
             <div className="flex items-center gap-2 pt-5">
               <input type="checkbox" id="ativo-edit" checked={formData.ativo} onChange={(e) => set('ativo', e.target.checked)} disabled={!canEdit}

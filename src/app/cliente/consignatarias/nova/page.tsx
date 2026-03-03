@@ -27,6 +27,7 @@ export default function NovaConsignatariaPage() {
     bairro: '',
     cidade: '',
     uf: '',
+    diaCorte: '9',
     ativo: true,
   });
 
@@ -223,6 +224,26 @@ export default function NovaConsignatariaPage() {
                 onChange={(e) => set('uf', e.target.value.toUpperCase())}
                 className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+          </div>
+
+          {/* Dia de Corte */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-muted-foreground">
+                Dia de Corte
+                <span className="ml-1 text-xs text-muted-foreground/60">(1–31)</span>
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="31"
+                disabled
+                value={formData.diaCorte}
+                title="Em breve: configurável por consignatária"
+                className="w-full px-3 py-2 border border-border rounded bg-muted/50 text-muted-foreground cursor-not-allowed opacity-70 focus:outline-none"
+              />
+              <p className="text-xs text-muted-foreground/60 mt-1">Configuração em breve disponível</p>
             </div>
           </div>
 

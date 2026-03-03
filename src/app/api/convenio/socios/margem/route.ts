@@ -254,13 +254,6 @@ export async function GET(request: NextRequest) {
     const session = await requireConvenioSession(request)
     const requestInfo = getRequestInfo(request)
 
-    // Busca o diaCorte configurado neste convênio
-    const convenioConf = await prisma.convenio.findUnique({
-      where: { id: session.convenioId },
-      select: { diaCorte: true },
-    })
-    const dataCorte = calcularDataCorte(convenioConf?.diaCorte ?? 9)
-
     const { searchParams } = new URL(request.url)
     const socioId = searchParams.get('socioId')
     const valorParcelaParam = searchParams.get('valorParcela') || '0.1'
@@ -279,12 +272,16 @@ export async function GET(request: NextRequest) {
         tipo: true,
         limite: true,
         margemConsig: true,
+        empresa: { select: { diaCorte: true } },
       },
     })
 
     if (!socio) {
       return NextResponse.json({ error: 'Sócio não encontrado' }, { status: 404 })
     }
+
+    // Calcula data de corte usando o diaCorte da consignatária (empresa) do sócio
+    const dataCorte = calcularDataCorte(socio.empresa?.diaCorte ?? 9)
 
     // REGRA AS200.PRG: TIPO 3 ou 4 = Cálculo local (limite - descontos)
     if (socio.tipo === '3' || socio.tipo === '4') {

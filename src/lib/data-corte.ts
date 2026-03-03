@@ -2,7 +2,7 @@
  * Calcula o mês/ano de referência para cálculo de margem.
  *
  * Regra (AS200.PRG): se dia atual > diaCorte, avança para o próximo mês.
- * O diaCorte vem do campo `diaCorte` da tabela `convenio`.
+ * O diaCorte vem do campo `diaCorte` da tabela `empresas` (consignatária do sócio).
  * Valor padrão: 9 (original hardcoded no sistema legado).
  */
 export function calcularDataCorte(diaCorte = 9): { mes: number; ano: number } {

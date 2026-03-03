@@ -246,6 +246,7 @@ export async function GET(
         margemConsig: true,
         cpf: true,
         limite: true, // NOVO: campo limite para tipos 3 e 4
+        empresa: { select: { diaCorte: true } },
       },
     });
 
@@ -270,7 +271,7 @@ export async function GET(
     if (socio.tipo === '3' || socio.tipo === '4') {
       console.log('🧮 [API] Tipo 3 ou 4, calculando margem local (limite - descontos)');
       
-      const dataCorte = calcularDataCorte(); // admin: usa default 9 (sem convenio específico)
+      const dataCorte = calcularDataCorte(socio.empresa?.diaCorte ?? 9); // diaCorte da consignatária (empresa) do sócio
       console.log(`📅 [API] Data de corte: ${dataCorte.mes}/${dataCorte.ano}`);
       
       const descontos = await calcularDescontosDoMes(socio.id, socio.matricula || '', dataCorte);

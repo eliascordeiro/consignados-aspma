@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
           { bloqueio: 'N' },
         ],
       },
+      include: { empresa: { select: { diaCorte: true } } },
     })
 
     if (!socio) {
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
     // Isso é necessário para que o MANAGER veja as vendas feitas pelo convênio
     const convenioData = await prisma.convenio.findUnique({
       where: { id: session.convenioId },
-      select: { userId: true, razao_soc: true, fantasia: true, diaCorte: true },
+      select: { userId: true, razao_soc: true, fantasia: true },
     })
 
     // Se o convênio tem userId (MANAGER dono), usa esse ID para que o MANAGER veja a venda
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     // Atualizar margemConsig do sócio (apenas para tipo 3 e 4 - cálculo local)
     if (socio.tipo === '3' || socio.tipo === '4') {
-      const dataCorte = calcularDataCorte(convenioData?.diaCorte ?? 9)
+      const dataCorte = calcularDataCorte(socio.empresa?.diaCorte ?? 9)
       const descontos = await calcularDescontosDoMes(socio.id, dataCorte)
       const limite = Number(socio.limite || 0)
       const novaMargemConsig = limite - descontos
