@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       agencia: true,
       conta: true,
       banco: true,
-      empresa: { select: { nome: true } },
+      empresa: { select: { nome: true, diaCorte: true } },
       vendas: {
         where: { ativo: true, cancelado: false },
         select: {
