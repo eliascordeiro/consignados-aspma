@@ -270,14 +270,16 @@ export default function NovaVendaPage() {
       return;
     }
     
-    const dataBase = new Date(formData.dataEmissao);
+    // Usa T12:00:00 para evitar interpretação UTC que desloca o dia no fuso UTC-3
+    const dataBase = new Date(formData.dataEmissao.slice(0, 10) + 'T12:00:00');
 
-    // Se a data de emissão for depois do dia 9, começa no próximo mês
+    // Regra AS200: se dia de emissão > 9, começa no próximo mês (igual a AS200 linha 712)
     const diaEmissao = dataBase.getDate();
-    let mesInicial = dataBase.getMonth();
+    const diaCorte = 9;
+    let mesInicial = dataBase.getMonth(); // 0-indexed
     let anoInicial = dataBase.getFullYear();
 
-    if (diaEmissao > 9) {
+    if (diaEmissao > diaCorte) {
       mesInicial++;
       if (mesInicial > 11) {
         mesInicial = 0;
@@ -290,12 +292,13 @@ export default function NovaVendaPage() {
       const mes = (mesInicial + i) % 12;
       const ano = anoInicial + Math.floor((mesInicial + i) / 12);
       
-      // Sempre vence no dia 1 do mês
-      const dataVencimento = new Date(ano, mes, 1);
+      // Formata manualmente para evitar conversão UTC que deslocaria o dia
+      const mesStr = String(mes + 1).padStart(2, '0');
+      const anoStr = String(ano);
       
       novasParcelas.push({
         numeroParcela: i + 1,
-        dataVencimento: dataVencimento.toISOString().split('T')[0],
+        dataVencimento: `${anoStr}-${mesStr}-01`,
         valor,
         baixa: null,
       });
@@ -652,7 +655,7 @@ export default function NovaVendaPage() {
                       <td className="px-4 py-2 border border-border">
                         <input
                           type="text"
-                          value={new Date(parcela.dataVencimento).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}
+                          value={new Date(parcela.dataVencimento + 'T12:00:00').toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}
                           readOnly
                           className="w-full px-2 py-1 border border-border rounded bg-muted text-foreground cursor-not-allowed"
                         />
