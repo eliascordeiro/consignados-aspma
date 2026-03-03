@@ -2,28 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
-
-/**
- * Calcula o mês/ano de referência para cálculo de margem
- * Regra do AS200.PRG: se dia > 9, considera o mês seguinte
- */
-function calcularDataCorte(): { mes: number; ano: number } {
-  const hoje = new Date()
-  const dia = hoje.getDate()
-  let mes = hoje.getMonth() + 1 // getMonth() retorna 0-11, precisamos 1-12
-  let ano = hoje.getFullYear()
-
-  if (dia > 9) {
-    if (mes === 12) {
-      mes = 1
-      ano = ano + 1
-    } else {
-      mes = mes + 1
-    }
-  }
-
-  return { mes, ano }
-}
+import { calcularDataCorte } from '@/lib/data-corte'
 
 /**
  * Calcula o total de descontos (parcelas ativas) no mês de referência
@@ -141,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Isso é necessário para que o MANAGER veja as vendas feitas pelo convênio
     const convenioData = await prisma.convenio.findUnique({
       where: { id: session.convenioId },
-      select: { userId: true, razao_soc: true, fantasia: true },
+      select: { userId: true, razao_soc: true, fantasia: true, diaCorte: true },
     })
 
     // Se o convênio tem userId (MANAGER dono), usa esse ID para que o MANAGER veja a venda
@@ -193,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     // Atualizar margemConsig do sócio (apenas para tipo 3 e 4 - cálculo local)
     if (socio.tipo === '3' || socio.tipo === '4') {
-      const dataCorte = calcularDataCorte()
+      const dataCorte = calcularDataCorte(convenioData?.diaCorte ?? 9)
       const descontos = await calcularDescontosDoMes(socio.id, dataCorte)
       const limite = Number(socio.limite || 0)
       const novaMargemConsig = limite - descontos

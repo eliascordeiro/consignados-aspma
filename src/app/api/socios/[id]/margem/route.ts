@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { calcularDataCorte } from '@/lib/data-corte';
 import { getDataUserId } from '@/lib/get-data-user-id';
 import { hasPermission } from '@/lib/permissions';
 
@@ -130,26 +131,6 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
 
 // Função para calcular data de corte (Regra AS200.PRG)
 // Se dia > 09: próximo mês, senão: mês atual
-function calcularDataCorte(): { mes: number; ano: number } {
-  const hoje = new Date();
-  const dia = hoje.getDate();
-  let mes = hoje.getMonth() + 1; // getMonth() retorna 0-11
-  let ano = hoje.getFullYear();
-
-  if (dia > 9) {
-    // Próximo mês
-    if (mes === 12) {
-      mes = 1;
-      ano = ano + 1;
-    } else {
-      mes = mes + 1;
-    }
-  }
-  // Senão, usa mês/ano atual
-
-  return { mes, ano };
-}
-
 // Função para calcular descontos do mês (parcelas não pagas)
 // Regra AS200.PRG: SELECT sum(valor) FROM parcelas WHERE month(vencimento) = lMes AND year(vencimento) = lAno AND baixa = '' AND matricula = X
 async function calcularDescontosDoMes(socioId: string, matricula: string, dataCorte: { mes: number; ano: number }): Promise<number> {
@@ -289,7 +270,7 @@ export async function GET(
     if (socio.tipo === '3' || socio.tipo === '4') {
       console.log('🧮 [API] Tipo 3 ou 4, calculando margem local (limite - descontos)');
       
-      const dataCorte = calcularDataCorte();
+      const dataCorte = calcularDataCorte(); // admin: usa default 9 (sem convenio específico)
       console.log(`📅 [API] Data de corte: ${dataCorte.mes}/${dataCorte.ano}`);
       
       const descontos = await calcularDescontosDoMes(socio.id, socio.matricula || '', dataCorte);

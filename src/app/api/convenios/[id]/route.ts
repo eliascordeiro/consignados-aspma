@@ -31,6 +31,11 @@ const convenioSchema = z.object({
     const num = typeof val === 'string' ? parseInt(val) : val
     return isNaN(num) ? null : num
   }),
+  diaCorte: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (val === undefined || val === null || val === '') return 9
+    const num = typeof val === 'string' ? parseInt(val) : val
+    return isNaN(num) ? 9 : Math.min(31, Math.max(1, num))
+  }),
   endereco: z.string().optional(),
   bairro: z.string().optional(),
   cep: z.string().optional(),

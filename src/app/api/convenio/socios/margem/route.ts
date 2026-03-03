@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
+import { calcularDataCorte } from '@/lib/data-corte'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 
 /**
@@ -77,25 +78,6 @@ async function consultarMargemZetra(params: {
     console.error('[ZETRA CONVENIADO] Erro:', error)
     return null
   }
-}
-
-// Data de corte: dia > 9 = próximo mês, senão mês atual
-function calcularDataCorte(): { mes: number; ano: number } {
-  const hoje = new Date()
-  const dia = hoje.getDate()
-  let mes = hoje.getMonth() + 1
-  let ano = hoje.getFullYear()
-
-  if (dia > 9) {
-    if (mes === 12) {
-      mes = 1
-      ano = ano + 1
-    } else {
-      mes = mes + 1
-    }
-  }
-
-  return { mes, ano }
 }
 
 // Descontos do mês: soma de parcelas não pagas de vendas ativas
@@ -272,6 +254,13 @@ export async function GET(request: NextRequest) {
     const session = await requireConvenioSession(request)
     const requestInfo = getRequestInfo(request)
 
+    // Busca o diaCorte configurado neste convênio
+    const convenioConf = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { diaCorte: true },
+    })
+    const dataCorte = calcularDataCorte(convenioConf?.diaCorte ?? 9)
+
     const { searchParams } = new URL(request.url)
     const socioId = searchParams.get('socioId')
     const valorParcelaParam = searchParams.get('valorParcela') || '0.1'
@@ -299,7 +288,6 @@ export async function GET(request: NextRequest) {
 
     // REGRA AS200.PRG: TIPO 3 ou 4 = Cálculo local (limite - descontos)
     if (socio.tipo === '3' || socio.tipo === '4') {
-      const dataCorte = calcularDataCorte()
       const descontos = await calcularDescontosDoMes(socio.id, dataCorte)
       const limite = Number(socio.limite || 0)
       const margem = limite - descontos

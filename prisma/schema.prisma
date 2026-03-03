@@ -109,6 +109,7 @@ model convenio {
   tipo       String?
   estado     String?
   telefone   String?
+  diaCorte   Int       @default(9)   // Dia de corte para cálculo de margem (padrão AS200: 9)
   ativo      Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
