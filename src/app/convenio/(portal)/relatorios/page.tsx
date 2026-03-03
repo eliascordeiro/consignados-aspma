@@ -169,7 +169,7 @@ export default function RelatoriosPage() {
         ...vendasData.vendas.map(v =>
           [
             v.numeroVenda,
-            format(new Date(v.dataEmissao), 'dd/MM/yyyy'),
+            format(new Date(v.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy'),
             v.socio,
             v.matricula || '',
             v.valorTotal.toFixed(2).replace('.', ','),
@@ -365,7 +365,7 @@ export default function RelatoriosPage() {
                           <div>
                             <div className="font-semibold text-foreground">Venda #{venda.numeroVenda}</div>
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })}
+                              {format(new Date(venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
                             </div>
                           </div>
                           {venda.status === 'cancelada' && (
@@ -417,7 +417,7 @@ export default function RelatoriosPage() {
                           <TableRow key={venda.id}>
                             <TableCell className="font-medium">#{venda.numeroVenda}</TableCell>
                             <TableCell>
-                              {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', { locale: ptBR })}
+                              {format(new Date(venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
                             </TableCell>
                             <TableCell>{venda.socio}</TableCell>
                             <TableCell>{venda.matricula || '-'}</TableCell>

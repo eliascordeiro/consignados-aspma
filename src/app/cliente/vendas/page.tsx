@@ -540,7 +540,7 @@ export default function VendasPage() {
                                   Data Emissão
                                 </div>
                                 <div className="text-foreground">
-                                  {format(new Date(venda.dataEmissao), 'dd/MM/yyyy')}
+                                  {format(new Date(venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy')}
                                 </div>
                               </div>
                               <div>
@@ -608,7 +608,7 @@ export default function VendasPage() {
                           </div>
 
                           <div className="text-sm text-foreground text-left">
-                            {format(new Date(venda.dataEmissao), 'dd/MM/yy')}
+                            {format(new Date(venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yy')}
                           </div>
 
                           <div className="text-center">

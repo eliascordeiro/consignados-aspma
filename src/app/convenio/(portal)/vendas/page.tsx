@@ -487,7 +487,7 @@ export default function VendasPage() {
                                   <Calendar className="h-4 w-4" />
                                   <div>
                                     <div className="font-medium text-foreground">
-                                      {format(new Date(venda.dataEmissao), 'dd/MM/yyyy', {
+                                      {format(new Date(venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', {
                                         locale: ptBR,
                                       })}
                                     </div>
