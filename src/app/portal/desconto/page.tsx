@@ -52,7 +52,7 @@ function keyToShort(key: number) {
   return `${String(key % 100).padStart(2,'0')}/${Math.floor(key / 100)}`
 }
 
-export default function FaturaPage() {
+export default function DescontoPage() {
   const [socio, setSocio] = useState<Socio | null>(null)
   const [loading, setLoading] = useState(true)
   const [mesIdx, setMesIdx] = useState(0)
@@ -110,8 +110,7 @@ export default function FaturaPage() {
 
   if (meses.length === 0) return (
     <div className="px-4 py-5">
-      <p className="text-gray-500 text-sm">Cobranças</p>
-      <h1 className="text-xl font-bold text-gray-800 mb-5">Fatura</h1>
+        <p className="text-gray-500 text-sm">Descontos mensais</p>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
         <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
           <svg className="w-7 h-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,8 +130,7 @@ export default function FaturaPage() {
   return (
     <div className="px-4 py-5 space-y-4">
       <div>
-        <p className="text-gray-500 text-sm">Cobranças</p>
-        <h1 className="text-xl font-bold text-gray-800">Fatura</h1>
+        <h1 className="text-xl font-bold text-gray-800">Descontos mensais</h1>
       </div>
 
       {/* Navegação mês a mês */}
@@ -212,9 +210,6 @@ export default function FaturaPage() {
         </div>
       )}
 
-      <Link href="/portal/extrato" className="block text-center text-emerald-600 text-sm font-medium py-1">
-        Ver extrato completo →
-      </Link>
     </div>
   )
 }

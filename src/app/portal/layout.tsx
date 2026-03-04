@@ -19,8 +19,8 @@ const navItems = [
     ),
   },
   {
-    href: '/portal/fatura',
-    label: 'Fatura',
+    href: '/portal/desconto',
+    label: 'Descontos',
     icon: (active: boolean) => (
       <svg className={`w-6 h-6 ${active ? 'text-emerald-600' : 'text-gray-400'}`} fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2}
