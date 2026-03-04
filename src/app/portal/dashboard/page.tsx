@@ -70,14 +70,11 @@ export default function PortalDashboardPage() {
 
   const mesesKeys = useMemo(() => [...mesesMap.keys()].sort((a, b) => a - b), [mesesMap])
 
-  // Mês inicial = mês atual + 1
+  // Mês inicial = mês atual
   useEffect(() => {
     if (mesesKeys.length === 0) return
     const now = new Date()
-    let tMes = now.getMonth() + 2   // getMonth() 0-based → +1 p/1-based → +1 próximo
-    let tAno = now.getFullYear()
-    if (tMes > 12) { tMes = 1; tAno++ }
-    const targetKey = tAno * 100 + tMes
+    const targetKey = now.getFullYear() * 100 + (now.getMonth() + 1)
     let idx = mesesKeys.findIndex(k => k >= targetKey)
     if (idx === -1) idx = mesesKeys.length - 1
     setMesNavIdx(idx)
@@ -122,11 +119,7 @@ export default function PortalDashboardPage() {
   const parcelasAberto = todasParcelas.filter(p => p.baixa !== 'S')
   const totalAberto = parcelasAberto.reduce((sum, p) => sum + Number(p.valor), 0)
 
-  // Parcelas vencidas
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  const vencidas = parcelasAberto.filter(p => p.dataVencimento && new Date(p.dataVencimento) < hoje)
-  const totalVencido = vencidas.reduce((sum, p) => sum + Number(p.valor), 0)
+
 
   // Mês de referência — mesma lógica do AS200.PRG IniciaDados()
   // se dia atual > diaCorte → referência é o próximo mês
@@ -191,12 +184,13 @@ export default function PortalDashboardPage() {
         {/* Vencimentos por mês — mini navegador */}
         {(() => {
           const navKey = mesesKeys[mesNavIdx] ?? 0
+          // col-span-2 pois é o único card pequeno
           const navParcelas = mesesMap.get(navKey) ?? []
           const navTotal = navParcelas.reduce((s, p) => s + Number(p.valor), 0)
           const navMes = navKey % 100
           const navAno = Math.floor(navKey / 100)
           return (
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="col-span-2 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Vencimentos</p>
               {mesesKeys.length > 0 && mesNavIdx >= 0 ? (
                 <>
@@ -225,32 +219,7 @@ export default function PortalDashboardPage() {
           )
         })()}
 
-        {/* Total em aberto */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Em Aberto</p>
-          <p className="text-lg font-bold text-gray-800 mt-1">{formatBRL(totalAberto)}</p>
-          <p className="text-gray-400 text-xs">{parcelasAberto.length} parcela{parcelasAberto.length !== 1 ? 's' : ''}</p>
-        </div>
       </div>
-
-      {/* Alerta de parcelas vencidas */}
-      {vencidas.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <div>
-              <p className="text-red-800 text-sm font-semibold">
-                {vencidas.length} parcela{vencidas.length !== 1 ? 's' : ''} vencida{vencidas.length !== 1 ? 's' : ''}
-              </p>
-              <p className="text-red-600 text-xs">{formatBRL(totalVencido)} em atraso</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Empréstimos ativos */}
       <div>
