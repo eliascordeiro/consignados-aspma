@@ -31,6 +31,7 @@ interface Socio {
   limite: number | null
   margemConsig: number | null
   bloqueio: string | null
+  tipo: string | null
   codTipo: number | null
   empresa: { nome: string; diaCorte: number | null } | null
   vendas: Venda[]
@@ -90,8 +91,8 @@ export default function PortalDashboardPage() {
         if (data.error) setErro(data.error)
         else {
           setSocio(data)
-          // busca margem Zetra para tipos 1/2
-          const isZetra = data.codTipo === 1 || data.codTipo === 2
+          // busca margem Zetra — tipo != '3' e != '4' = ZETRA (campo tipo é String)
+          const isZetra = data.tipo !== '3' && data.tipo !== '4'
           if (isZetra) {
             setLoadingMargem(true)
             fetch('/api/portal/margem')
@@ -155,8 +156,8 @@ export default function PortalDashboardPage() {
 
   // Margem disponível — igual ao AS200.PRG
   // tipo 3/4 (local): limite − SUM(parcelas do mês de referência com baixa != 'S')
-  // tipo 1/2 (ZETRA): usa margemConsig armazenado
-  const isLocal = socio.codTipo === 3 || socio.codTipo === 4
+  // tipo != 3/4 (ZETRA): usa margem via API Zetra
+  const isLocal = socio.tipo === '3' || socio.tipo === '4'
   const refKey = refAno * 100 + refMes   // mesmo padrão de chave do fatura page
 
   // SUM parcelas do mês de referência (mesmo filtro do fatura page por key)

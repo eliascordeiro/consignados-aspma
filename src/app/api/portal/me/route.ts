@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       limite: true,
       margemConsig: true,
       bloqueio: true,
+      tipo: true,
       codTipo: true,
       agencia: true,
       conta: true,

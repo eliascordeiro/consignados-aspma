@@ -37,13 +37,13 @@ export async function GET(request: NextRequest) {
 
   const socio = await prisma.socio.findUnique({
     where: { id: socioId },
-    select: { codTipo: true, matricula: true, cpf: true, margemConsig: true },
+    select: { tipo: true, matricula: true, cpf: true, margemConsig: true },
   })
 
   if (!socio) return NextResponse.json({ error: 'Sócio não encontrado' }, { status: 404 })
 
-  // tipos 3/4 = cálculo local (não usa Zetra)
-  const isZetra = socio.codTipo === 1 || socio.codTipo === 2
+  // tipos 3/4 = cálculo local (não usa Zetra) — campo `tipo` (String), não codTipo
+  const isZetra = socio.tipo !== '3' && socio.tipo !== '4'
   if (!isZetra) return NextResponse.json({ fonte: 'local', margem: null })
 
   try {
