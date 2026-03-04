@@ -65,7 +65,7 @@ export default function ComprasPage() {
       {/* Cabeçalho */}
       <div>
         <h1 className="text-xl font-bold text-gray-800">Minhas Compras</h1>
-        <p className="text-gray-400 text-sm mt-0.5">{vendas.length} compra{vendas.length !== 1 ? 's' : ''} ativa{vendas.length !== 1 ? 's' : ''}</p>
+        <p className="text-gray-400 text-sm mt-0.5">{vendas.length} compra{vendas.length !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Card resumo */}
@@ -135,14 +135,7 @@ export default function ComprasPage() {
                       </p>
                       <p className="text-gray-400 text-xs mt-0.5">Compra em {emissao}</p>
                     </div>
-                    {/* Badge status */}
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-                      quitado
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-blue-50 text-blue-600'
-                    }`}>
-                      {quitado ? 'Quitado' : 'Ativo'}
-                    </span>
+
                   </div>
 
                   {/* Linha divisória */}
@@ -173,12 +166,7 @@ export default function ComprasPage() {
                         </svg>
                         <p className="text-gray-500 text-xs">{inicio} → {fim}</p>
                       </div>
-                      <div className="flex items-center gap-1 text-emerald-600">
-                        <p className="text-xs font-medium">Detalhes</p>
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
+
                     </div>
                   )}
                 </div>
