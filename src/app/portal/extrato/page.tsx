@@ -17,6 +17,7 @@ interface Venda {
   quantidadeParcelas: number
   valorTotal: number
   valorParcela: number
+  dataEmissao: string
   convenio: { razao_soc: string } | null
   parcelas: Parcela[]
 }
@@ -167,6 +168,9 @@ export default function ExtratoPage() {
                     </p>
                     <p className="text-gray-400 text-xs mt-0.5">
                       {total} parcela{total !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Compra: {new Date(venda.dataEmissao.slice(0,10) + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <div className="text-right ml-3 shrink-0">
