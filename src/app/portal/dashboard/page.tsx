@@ -101,6 +101,9 @@ export default function PortalDashboardPage() {
   const vencidas = parcelasAberto.filter(p => p.dataVencimento && new Date(p.dataVencimento) < hoje)
   const totalVencido = vencidas.reduce((sum, p) => sum + Number(p.valor), 0)
 
+  // Margem disponível = limite cadastrado − total em aberto das parcelas ativas
+  const margem = Math.max(0, Number(socio.limite || 0) - totalAberto)
+
   const primeiroNome = socio.nome.split(' ')[0]
 
   return (
@@ -116,12 +119,12 @@ export default function PortalDashboardPage() {
 
       {/* Cards principais */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Total em aberto */}
+        {/* Margem disponível */}
         <div className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md">
-          <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Total em Aberto</p>
-          <p className="text-3xl font-bold mt-1">{formatBRL(totalAberto)}</p>
+          <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Margem Disponível</p>
+          <p className="text-3xl font-bold mt-1">{formatBRL(margem)}</p>
           <p className="text-emerald-200 text-xs mt-1">
-            {parcelasAberto.length} parcela{parcelasAberto.length !== 1 ? 's' : ''} pendente{parcelasAberto.length !== 1 ? 's' : ''}
+            Limite: {formatBRL(socio.limite)} · Em aberto: {formatBRL(totalAberto)}
           </p>
         </div>
 
@@ -138,11 +141,11 @@ export default function PortalDashboardPage() {
           )}
         </div>
 
-        {/* Margem disponível */}
+        {/* Total em aberto */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Margem Dispon.</p>
-          <p className="text-lg font-bold text-gray-800 mt-1">{formatBRL(socio.margemConsig)}</p>
-          <p className="text-gray-400 text-xs">Consignável</p>
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Em Aberto</p>
+          <p className="text-lg font-bold text-gray-800 mt-1">{formatBRL(totalAberto)}</p>
+          <p className="text-gray-400 text-xs">{parcelasAberto.length} parcela{parcelasAberto.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
