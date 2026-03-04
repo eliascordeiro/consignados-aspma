@@ -51,6 +51,9 @@ export default function PortalDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
   const [mesNavIdx, setMesNavIdx] = useState(-1)
+  const [margemZetra, setMargemZetra] = useState<number | null>(null)
+  const [loadingMargem, setLoadingMargem] = useState(false)
+  const [fonteMargem, setFonteMargem] = useState<string>('')
 
   // Mapa mês → parcelas em aberto (mesmo padrão do fatura page)
   const mesesMap = useMemo(() => {
@@ -85,7 +88,22 @@ export default function PortalDashboardPage() {
       .then(r => r.json())
       .then(data => {
         if (data.error) setErro(data.error)
-        else setSocio(data)
+        else {
+          setSocio(data)
+          // busca margem Zetra para tipos 1/2
+          const isZetra = data.codTipo === 1 || data.codTipo === 2
+          if (isZetra) {
+            setLoadingMargem(true)
+            fetch('/api/portal/margem')
+              .then(r => r.json())
+              .then(m => {
+                if (m.margem != null) setMargemZetra(m.margem)
+                setFonteMargem(m.fonte || '')
+              })
+              .catch(() => {})
+              .finally(() => setLoadingMargem(false))
+          }
+        }
       })
       .catch(() => setErro('Erro ao carregar dados'))
       .finally(() => setLoading(false))
@@ -153,7 +171,7 @@ export default function PortalDashboardPage() {
 
   const margem = isLocal
     ? Math.max(0, Number(socio.limite || 0) - totalMesRef)
-    : Number(socio.margemConsig || 0)
+    : (margemZetra ?? Number(socio.margemConsig || 0))
 
   const primeiroNome = socio.nome.split(' ')[0]
 
@@ -173,11 +191,15 @@ export default function PortalDashboardPage() {
         {/* Margem disponível */}
         <div className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md">
           <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Margem Disponível</p>
-          <p className="text-3xl font-bold mt-1">{formatBRL(margem)}</p>
+          <p className="text-3xl font-bold mt-1">
+            {loadingMargem
+              ? <span className="inline-block w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin align-middle" />
+              : formatBRL(margem)}
+          </p>
           <p className="text-emerald-200 text-xs mt-1">
             {isLocal
               ? `${String(refMes).padStart(2,'0')}/${refAno} · Comprometido: ${formatBRL(totalMesRef)} de ${formatBRL(socio.limite)}`
-              : 'Margem via convênio (ZETRA)'}
+              : loadingMargem ? 'Consultando ZETRA...' : fonteMargem === 'zetra' ? 'Margem via ZETRA (tempo real)' : fonteMargem === 'fallback' ? 'Margem via ZETRA (fallback banco)' : fonteMargem === 'zetra_erro' ? 'Margem via ZETRA (erro — valor banco)' : 'Margem via convênio (ZETRA)'}
           </p>
         </div>
 
