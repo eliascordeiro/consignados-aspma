@@ -31,30 +31,20 @@ function formatBRL(v: number | null | undefined) {
 }
 function formatDate(d: string | null) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('pt-BR')
+  return new Date(d.slice(0, 10) + 'T12:00:00').toLocaleDateString('pt-BR')
 }
 
 function ParcelaStatus({ parcela }: { parcela: Parcela }) {
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-
   if (parcela.baixa === 'S') {
     return (
       <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full whitespace-nowrap">
-        Pago
-      </span>
-    )
-  }
-  if (parcela.dataVencimento && new Date(parcela.dataVencimento) < hoje) {
-    return (
-      <span className="text-xs font-medium bg-red-100 text-red-700 px-2 py-0.5 rounded-full whitespace-nowrap">
-        Vencida
+        Quitada
       </span>
     )
   }
   return (
-    <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">
-      A vencer
+    <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full whitespace-nowrap">
+      Em aberto
     </span>
   )
 }
@@ -98,11 +88,7 @@ export default function EmprestimoDetailPage() {
     )
   }
 
-  const pagas = venda.parcelas.filter(p => p.baixa === 'S').length
   const total = venda.parcelas.length || venda.quantidadeParcelas
-  const pct = total > 0 ? Math.round((pagas / total) * 100) : 0
-  const abertas = venda.parcelas.filter(p => p.baixa !== 'S')
-  const totalAberto = abertas.reduce((s, p) => s + Number(p.valor), 0)
 
   return (
     <div className="px-4 py-5 space-y-5">
@@ -119,34 +105,9 @@ export default function EmprestimoDetailPage() {
         <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider mb-1">
           {venda.convenio?.razao_soc || 'Contrato'}
         </p>
-        <p className="text-2xl font-bold">{formatBRL(venda.valorParcela)}<span className="text-emerald-200 text-base font-normal">/mês</span></p>
+        <p className="text-2xl font-bold">{formatBRL(venda.valorTotal)}</p>
         <p className="text-emerald-100 text-sm mt-1">{venda.quantidadeParcelas}x de {formatBRL(venda.valorParcela)}</p>
         <p className="text-emerald-200 text-xs mt-1">Emitido em {formatDate(venda.dataEmissao)}</p>
-      </div>
-
-      {/* Resumo */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Total', value: formatBRL(venda.valorTotal), color: 'text-gray-800' },
-          { label: 'Pagas', value: `${pagas}/${total}`, color: 'text-emerald-600' },
-          { label: 'Em aberto', value: formatBRL(totalAberto), color: totalAberto > 0 ? 'text-orange-600' : 'text-emerald-600' },
-        ].map(item => (
-          <div key={item.label} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
-            <p className="text-gray-400 text-xs">{item.label}</p>
-            <p className={`font-bold text-sm mt-0.5 ${item.color}`}>{item.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Barra de progresso */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-gray-600 font-medium">Progresso</span>
-          <span className="text-emerald-600 font-bold">{pct}% quitado</span>
-        </div>
-        <div className="w-full bg-gray-100 rounded-full h-2.5">
-          <div className="bg-emerald-500 h-2.5 rounded-full transition-all" style={{ width: `${pct}%` }} />
-        </div>
       </div>
 
       {/* Lista de parcelas */}
@@ -158,17 +119,14 @@ export default function EmprestimoDetailPage() {
               <div className="flex items-center gap-3">
                 {/* Ícone */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                  parcela.baixa === 'S' ? 'bg-emerald-100' :
-                  (parcela.dataVencimento && new Date(parcela.dataVencimento) < new Date()) ? 'bg-red-100' : 'bg-blue-50'
+                  parcela.baixa === 'S' ? 'bg-emerald-100' : 'bg-blue-50'
                 }`}>
                   {parcela.baixa === 'S' ? (
                     <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className={`text-xs font-bold ${
-                      parcela.dataVencimento && new Date(parcela.dataVencimento) < new Date() ? 'text-red-600' : 'text-blue-600'
-                    }`}>{parcela.numeroParcela}</span>
+                    <span className="text-xs font-bold text-blue-600">{parcela.numeroParcela}</span>
                   )}
                 </div>
 
