@@ -110,7 +110,7 @@ export default function DescontoPage() {
 
   if (meses.length === 0) return (
     <div className="px-4 py-5">
-        <p className="text-gray-500 text-sm">Descontos mensais</p>
+        <p className="text-gray-500 text-sm">Descontos</p>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
         <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
           <svg className="w-7 h-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,7 +130,7 @@ export default function DescontoPage() {
   return (
     <div className="px-4 py-5 space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-gray-800">Descontos mensais</h1>
+        <h1 className="text-xl font-bold text-gray-800">Descontos</h1>
       </div>
 
       {/* Navegação mês a mês */}
