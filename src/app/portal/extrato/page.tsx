@@ -82,7 +82,7 @@ export default function ExtratoPage() {
       }
     }
     return [...map.entries()]
-      .sort((a,b) => a[0] - b[0])
+      .sort((a,b) => b[0] - a[0])
       .map(([key, itens]) => {
         const mes = key % 100
         const ano = Math.floor(key / 100)
