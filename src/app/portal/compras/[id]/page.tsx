@@ -91,8 +91,8 @@ export default function EmprestimoDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center gap-4">
         <p className="text-gray-600 font-medium">Empréstimo não encontrado</p>
-        <Link href="/portal/emprestimos" className="text-emerald-600 text-sm font-medium">
-          ← Voltar para empréstimos
+        <Link href="/portal/compras" className="text-emerald-600 text-sm font-medium">
+          ← Voltar para compras
         </Link>
       </div>
     )

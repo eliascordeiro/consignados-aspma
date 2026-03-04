@@ -159,7 +159,7 @@ export default function ExtratoPage() {
                 ? new Date(item.dataVencimento.slice(0,10) + 'T12:00:00').toLocaleDateString('pt-BR')
                 : '\u2014'
               return (
-                <Link key={item.parcelaId} href={`/portal/emprestimos/${item.vendaId}`}>
+                <Link key={item.parcelaId} href={`/portal/compras/${item.vendaId}`}>
                   <div className="flex items-center justify-between px-4 py-3 active:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">

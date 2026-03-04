@@ -228,7 +228,7 @@ export default function PortalDashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wider">Últimas Compras</h2>
-          <Link href="/portal/emprestimos" className="text-emerald-600 text-sm font-medium">
+          <Link href="/portal/compras" className="text-emerald-600 text-sm font-medium">
             Ver todos
           </Link>
         </div>
@@ -254,7 +254,7 @@ export default function PortalDashboardPage() {
               const fim = datas.length > 0 ? fmtMesAno(datas[datas.length - 1]) : null
 
               return (
-                <Link key={venda.id} href={`/portal/emprestimos/${venda.id}`}>
+                <Link key={venda.id} href={`/portal/compras/${venda.id}`}>
                   <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm active:scale-[0.98] transition-transform">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">

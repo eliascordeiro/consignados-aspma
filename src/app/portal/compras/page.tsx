@@ -36,7 +36,7 @@ function fmtMesAno(iso: string) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
 
-export default function EmprestimosPage() {
+export default function ComprasPage() {
   const [socio, setSocio] = useState<Socio | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -121,7 +121,7 @@ export default function EmprestimosPage() {
             const inicial = (venda.convenio?.razao_soc || `V${venda.numeroVenda}`).charAt(0).toUpperCase()
 
             return (
-              <Link key={venda.id} href={`/portal/emprestimos/${venda.id}`}>
+              <Link key={venda.id} href={`/portal/compras/${venda.id}`}>
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.98] transition-transform">
                   {/* Topo colorido */}
                   <div className="flex items-center gap-3 px-4 pt-4 pb-3">
