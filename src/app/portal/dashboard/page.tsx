@@ -31,7 +31,8 @@ interface Socio {
   limite: number | null
   margemConsig: number | null
   bloqueio: string | null
-  empresa: { nome: string } | null
+  codTipo: number | null
+  empresa: { nome: string; diaCorte: number | null } | null
   vendas: Venda[]
 }
 
@@ -101,8 +102,38 @@ export default function PortalDashboardPage() {
   const vencidas = parcelasAberto.filter(p => p.dataVencimento && new Date(p.dataVencimento) < hoje)
   const totalVencido = vencidas.reduce((sum, p) => sum + Number(p.valor), 0)
 
-  // Margem disponível = limite cadastrado − total em aberto das parcelas ativas
-  const margem = Math.max(0, Number(socio.limite || 0) - totalAberto)
+  // Mês de referência — mesma lógica do AS200.PRG IniciaDados()
+  // se dia atual > diaCorte → referência é o próximo mês
+  const diaCorte = socio.empresa?.diaCorte ?? 9
+  const hojeRef = new Date()
+  let refMes: number
+  let refAno: number
+  if (hojeRef.getDate() > diaCorte) {
+    if (hojeRef.getMonth() === 11) { refMes = 1; refAno = hojeRef.getFullYear() + 1 }
+    else { refMes = hojeRef.getMonth() + 2; refAno = hojeRef.getFullYear() }
+  } else {
+    refMes = hojeRef.getMonth() + 1
+    refAno = hojeRef.getFullYear()
+  }
+
+  // Margem disponível — igual ao AS200.PRG
+  // tipo 3/4 (local): limite − SUM(parcelas do mês de referência com baixa != 'S')
+  // tipo 1/2 (ZETRA): usa margemConsig armazenado
+  const isLocal = socio.codTipo === 3 || socio.codTipo === 4
+  let margem: number
+  if (isLocal) {
+    const parcelasMesRef = todasParcelas.filter(p => {
+      if (p.baixa === 'S') return false
+      if (!p.dataVencimento) return false
+      const d = new Date(p.dataVencimento + 'T12:00:00')
+      return d.getMonth() + 1 === refMes && d.getFullYear() === refAno
+    })
+    const totalMesRef = parcelasMesRef.reduce((sum, p) => sum + Number(p.valor), 0)
+    margem = Math.max(0, Number(socio.limite || 0) - totalMesRef)
+  } else {
+    // ZETRA — margem já vem armazenada no campo margemConsig
+    margem = Number(socio.margemConsig || 0)
+  }
 
   const primeiroNome = socio.nome.split(' ')[0]
 
@@ -124,7 +155,9 @@ export default function PortalDashboardPage() {
           <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Margem Disponível</p>
           <p className="text-3xl font-bold mt-1">{formatBRL(margem)}</p>
           <p className="text-emerald-200 text-xs mt-1">
-            Limite: {formatBRL(socio.limite)} · Em aberto: {formatBRL(totalAberto)}
+            {isLocal
+              ? `Ref. ${String(refMes).padStart(2,'0')}/${refAno} · Limite: ${formatBRL(socio.limite)}`
+              : 'Margem via convênio (ZETRA)'}
           </p>
         </div>
 
