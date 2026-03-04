@@ -58,7 +58,6 @@ export default function ComprasPage() {
 
   const vendas = socio?.vendas ?? []
   const totalGeral = vendas.reduce((s, v) => s + Number(v.valorTotal), 0)
-  const totalParcela = vendas.reduce((s, v) => s + Number(v.valorParcela), 0)
 
   return (
     <div className="px-4 py-5 space-y-4">
@@ -71,15 +70,9 @@ export default function ComprasPage() {
       {/* Card resumo */}
       {vendas.length > 0 && (
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-[11px] font-semibold uppercase tracking-wider">Total em compras</p>
-              <p className="text-2xl font-bold mt-0.5">{formatBRL(totalGeral)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-emerald-100 text-xs">Desconto mensal</p>
-              <p className="text-white font-bold text-lg">{formatBRL(totalParcela)}</p>
-            </div>
+          <div>
+            <p className="text-emerald-100 text-[11px] font-semibold uppercase tracking-wider">Total em compras</p>
+            <p className="text-2xl font-bold mt-0.5">{formatBRL(totalGeral)}</p>
           </div>
         </div>
       )}
