@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 
 interface Parcela {
@@ -50,6 +50,38 @@ export default function PortalDashboardPage() {
   const [socio, setSocio] = useState<Socio | null>(null)
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
+  const [mesNavIdx, setMesNavIdx] = useState(-1)
+
+  // Mapa mês → parcelas em aberto (mesmo padrão do fatura page)
+  const mesesMap = useMemo(() => {
+    if (!socio) return new Map<number, Parcela[]>()
+    const map = new Map<number, Parcela[]>()
+    for (const venda of socio.vendas) {
+      for (const p of venda.parcelas) {
+        if (p.baixa === 'S' || !p.dataVencimento) continue
+        const d = new Date(p.dataVencimento.slice(0, 10) + 'T12:00:00')
+        const key = d.getFullYear() * 100 + (d.getMonth() + 1)
+        if (!map.has(key)) map.set(key, [])
+        map.get(key)!.push(p)
+      }
+    }
+    return map
+  }, [socio])
+
+  const mesesKeys = useMemo(() => [...mesesMap.keys()].sort((a, b) => a - b), [mesesMap])
+
+  // Mês inicial = mês atual + 1
+  useEffect(() => {
+    if (mesesKeys.length === 0) return
+    const now = new Date()
+    let tMes = now.getMonth() + 2   // getMonth() 0-based → +1 p/1-based → +1 próximo
+    let tAno = now.getFullYear()
+    if (tMes > 12) { tMes = 1; tAno++ }
+    const targetKey = tAno * 100 + tMes
+    let idx = mesesKeys.findIndex(k => k >= targetKey)
+    if (idx === -1) idx = mesesKeys.length - 1
+    setMesNavIdx(idx)
+  }, [mesesKeys])
 
   useEffect(() => {
     fetch('/api/portal/me')
@@ -90,15 +122,9 @@ export default function PortalDashboardPage() {
   const parcelasAberto = todasParcelas.filter(p => p.baixa !== 'S')
   const totalAberto = parcelasAberto.reduce((sum, p) => sum + Number(p.valor), 0)
 
-  // Próximo vencimento
+  // Parcelas vencidas
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
-  const proximasParcelas = parcelasAberto
-    .filter(p => p.dataVencimento)
-    .sort((a, b) => new Date(a.dataVencimento!).getTime() - new Date(b.dataVencimento!).getTime())
-  const proxParcela = proximasParcelas[0]
-
-  // Parcelas vencidas
   const vencidas = parcelasAberto.filter(p => p.dataVencimento && new Date(p.dataVencimento) < hoje)
   const totalVencido = vencidas.reduce((sum, p) => sum + Number(p.valor), 0)
 
@@ -162,18 +188,42 @@ export default function PortalDashboardPage() {
           </p>
         </div>
 
-        {/* Próximo vencimento */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Próx. Vencimento</p>
-          {proxParcela ? (
-            <>
-              <p className="text-lg font-bold text-gray-800 mt-1">{formatDate(proxParcela.dataVencimento)}</p>
-              <p className="text-emerald-600 text-sm font-semibold">{formatBRL(proxParcela.valor)}</p>
-            </>
-          ) : (
-            <p className="text-gray-500 text-sm mt-1">Nenhuma</p>
-          )}
-        </div>
+        {/* Vencimentos por mês — mini navegador */}
+        {(() => {
+          const navKey = mesesKeys[mesNavIdx] ?? 0
+          const navParcelas = mesesMap.get(navKey) ?? []
+          const navTotal = navParcelas.reduce((s, p) => s + Number(p.valor), 0)
+          const navMes = navKey % 100
+          const navAno = Math.floor(navKey / 100)
+          return (
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Vencimentos</p>
+              {mesesKeys.length > 0 && mesNavIdx >= 0 ? (
+                <>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <button
+                      onClick={() => setMesNavIdx(i => Math.max(0, i - 1))}
+                      disabled={mesNavIdx === 0}
+                      className="text-gray-400 disabled:opacity-25 text-xl leading-none px-0.5 active:scale-90"
+                    >&#8249;</button>
+                    <p className="text-xs font-semibold text-gray-700">
+                      {String(navMes).padStart(2, '0')}/{navAno}
+                    </p>
+                    <button
+                      onClick={() => setMesNavIdx(i => Math.min(mesesKeys.length - 1, i + 1))}
+                      disabled={mesNavIdx === mesesKeys.length - 1}
+                      className="text-gray-400 disabled:opacity-25 text-xl leading-none px-0.5 active:scale-90"
+                    >&#8250;</button>
+                  </div>
+                  <p className="text-lg font-bold text-gray-800 mt-0.5">{formatBRL(navTotal)}</p>
+                  <p className="text-gray-400 text-xs">{navParcelas.length} parcela{navParcelas.length !== 1 ? 's' : ''}</p>
+                </>
+              ) : (
+                <p className="text-gray-500 text-sm mt-1">Nenhuma</p>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Total em aberto */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
