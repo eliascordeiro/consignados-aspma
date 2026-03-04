@@ -33,20 +33,6 @@ const navItems = [
     ),
   },
   {
-    href: '/portal/extrato',
-    label: 'Extrato',
-    icon: (active: boolean) => (
-      <svg className={`w-6 h-6 ${active ? 'text-emerald-600' : 'text-gray-400'}`} fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2}
-          d={active
-            ? 'M4 6h16M4 10h16M4 14h16M4 18h16'
-            : 'M4 6h16M4 10h16M4 14h16M4 18h16'
-          }
-        />
-      </svg>
-    ),
-  },
-  {
     href: '/portal/compras',
     label: 'Minhas Compras',
     icon: (active: boolean) => (
