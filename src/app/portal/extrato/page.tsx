@@ -114,7 +114,6 @@ export default function ExtratoPage() {
   return (
     <div className="px-4 py-5 space-y-4">
       <div>
-        <p className="text-gray-500 text-sm">Hist\u00f3rico</p>
         <h1 className="text-xl font-bold text-gray-800">Extrato</h1>
       </div>
 
@@ -122,7 +121,7 @@ export default function ExtratoPage() {
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-emerald-100 text-[11px] font-semibold uppercase tracking-wider">Total pendente</p>
+            <p className="text-emerald-100 text-[11px] font-semibold uppercase tracking-wider">Total em aberto</p>
             <p className="text-2xl font-bold mt-0.5">{formatBRL(totalGeral)}</p>
           </div>
           <div className="text-right">
@@ -137,7 +136,7 @@ export default function ExtratoPage() {
       {grupos.length === 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
           <p className="text-gray-700 font-semibold">Nenhum registro</p>
-          <p className="text-gray-400 text-sm mt-1">N\u00e3o h\u00e1 parcelas pendentes</p>
+          <p className="text-gray-400 text-sm mt-1">N\u00e3o h\u00e1 parcelas em aberto</p>
         </div>
       )}
 
