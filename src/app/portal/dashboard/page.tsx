@@ -211,6 +211,9 @@ export default function PortalDashboardPage() {
                   </div>
                   <p className="text-lg font-bold text-gray-800 mt-0.5">{formatBRL(navTotal)}</p>
                   <p className="text-gray-400 text-xs">{navParcelas.length} parcela{navParcelas.length !== 1 ? 's' : ''}</p>
+                  <Link href="/portal/fatura" className="text-emerald-600 text-xs font-medium mt-2 inline-block">
+                    Ver detalhes na Fatura →
+                  </Link>
                 </>
               ) : (
                 <p className="text-gray-500 text-sm mt-1">Nenhuma</p>
