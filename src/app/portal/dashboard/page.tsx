@@ -242,6 +242,17 @@ export default function PortalDashboardPage() {
             {socio.vendas.slice(0, 3).map(venda => {
               const total = venda.parcelas.length || venda.quantidadeParcelas
 
+              const datas = venda.parcelas
+                .filter(p => p.dataVencimento)
+                .map(p => p.dataVencimento!)
+                .sort()
+              const fmtMesAno = (iso: string) => {
+                const d = new Date(iso.slice(0, 10) + 'T12:00:00')
+                return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
+              }
+              const inicio = datas.length > 0 ? fmtMesAno(datas[0]) : null
+              const fim = datas.length > 0 ? fmtMesAno(datas[datas.length - 1]) : null
+
               return (
                 <Link key={venda.id} href={`/portal/emprestimos/${venda.id}`}>
                   <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm active:scale-[0.98] transition-transform">
@@ -257,6 +268,8 @@ export default function PortalDashboardPage() {
                       <div className="text-right ml-3 shrink-0">
                         <p className="text-gray-800 font-semibold text-sm">{formatBRL(venda.valorTotal)}</p>
                         <p className="text-gray-400 text-xs">{formatBRL(venda.valorParcela)}/parcela</p>
+                        {inicio && <p className="text-gray-400 text-xs mt-0.5">De {inicio}</p>}
+                        {fim && <p className="text-gray-400 text-xs">Até {fim}</p>}
                       </div>
                     </div>
                   </div>
