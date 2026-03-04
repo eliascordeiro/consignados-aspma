@@ -47,15 +47,23 @@ export async function GET(request: NextRequest) {
   if (!isZetra) return NextResponse.json({ fonte: 'local', margem: null })
 
   try {
-    const cpfNum = (socio.cpf || '').replace(/\D/g, '')
+    // CPF deve ser passado formatado (xxx.xxx.xxx-xx) — igual ao AS200.PRG que usa ALLTRIM(cpf)
+    // valorParcela mínimo 0.10 — AS200.PRG usa 0.1 quando nenhum valor está no formulário
+    const cpfFormatado = (socio.cpf || '').trim()
     const queryParams = new URLSearchParams({
       cliente: ZETRA_CONFIG.cliente,
       convenio: ZETRA_CONFIG.convenio,
       usuario: ZETRA_CONFIG.usuario,
       senha: ZETRA_CONFIG.senha,
-      matricula: socio.matricula || '',
-      cpf: cpfNum,
-      valorParcela: '0',
+      matricula: (socio.matricula || '').trim(),
+      cpf: cpfFormatado,
+      valorParcela: '0.10',
+    })
+
+    console.log('[PORTAL MARGEM ZETRA] params:', {
+      matricula: (socio.matricula || '').trim(),
+      cpf: cpfFormatado,
+      valorParcela: '0.10',
     })
 
     const url = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`
@@ -69,10 +77,13 @@ export async function GET(request: NextRequest) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
     const xml = await res.text()
+    console.log('[PORTAL MARGEM ZETRA] xml (primeiros 500):', xml.slice(0, 500))
+
     const sucesso = extractXmlValue('<ns13:sucesso>', '</ns13:sucesso>', xml)
     const mensagem = extractXmlValue('<ns13:mensagem>', '</ns13:mensagem>', xml)
 
     if (sucesso === 'false') {
+      console.error('[PORTAL MARGEM ZETRA] sucesso=false, mensagem:', mensagem)
       return NextResponse.json({
         fonte: 'zetra_erro',
         margem: Number(socio.margemConsig || 0),
