@@ -120,20 +120,21 @@ export default function PortalDashboardPage() {
   // tipo 3/4 (local): limite − SUM(parcelas do mês de referência com baixa != 'S')
   // tipo 1/2 (ZETRA): usa margemConsig armazenado
   const isLocal = socio.codTipo === 3 || socio.codTipo === 4
-  let margem: number
-  if (isLocal) {
-    const parcelasMesRef = todasParcelas.filter(p => {
-      if (p.baixa === 'S') return false
-      if (!p.dataVencimento) return false
-      const d = new Date(p.dataVencimento + 'T12:00:00')
-      return d.getMonth() + 1 === refMes && d.getFullYear() === refAno
-    })
-    const totalMesRef = parcelasMesRef.reduce((sum, p) => sum + Number(p.valor), 0)
-    margem = Math.max(0, Number(socio.limite || 0) - totalMesRef)
-  } else {
-    // ZETRA — margem já vem armazenada no campo margemConsig
-    margem = Number(socio.margemConsig || 0)
-  }
+  const refKey = refAno * 100 + refMes   // mesmo padrão de chave do fatura page
+
+  // SUM parcelas do mês de referência (mesmo filtro do fatura page por key)
+  const parcelasMesRef = isLocal ? todasParcelas.filter(p => {
+    if (p.baixa === 'S') return false
+    if (!p.dataVencimento) return false
+    const d = new Date(p.dataVencimento.slice(0, 10) + 'T12:00:00')
+    const key = d.getFullYear() * 100 + (d.getMonth() + 1)
+    return key === refKey
+  }) : []
+  const totalMesRef = parcelasMesRef.reduce((sum, p) => sum + Number(p.valor), 0)
+
+  const margem = isLocal
+    ? Math.max(0, Number(socio.limite || 0) - totalMesRef)
+    : Number(socio.margemConsig || 0)
 
   const primeiroNome = socio.nome.split(' ')[0]
 
@@ -156,7 +157,7 @@ export default function PortalDashboardPage() {
           <p className="text-3xl font-bold mt-1">{formatBRL(margem)}</p>
           <p className="text-emerald-200 text-xs mt-1">
             {isLocal
-              ? `Ref. ${String(refMes).padStart(2,'0')}/${refAno} · Limite: ${formatBRL(socio.limite)}`
+              ? `${String(refMes).padStart(2,'0')}/${refAno} · Comprometido: ${formatBRL(totalMesRef)} de ${formatBRL(socio.limite)}`
               : 'Margem via convênio (ZETRA)'}
           </p>
         </div>
