@@ -65,8 +65,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-emerald-600 text-white px-4 pt-safe-top pb-3 shadow-md">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
+      <header className="bg-emerald-600 text-white shadow-md">
+        <div className="pt-safe-top" />
+        <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
