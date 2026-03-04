@@ -23,6 +23,17 @@ function extractXmlValue(startTag: string, endTag: string, xml: string): string 
   return xml.substring(valueStart, endIndex).trim()
 }
 
+function formatCpf(cpf: string): string {
+  // Remove tudo que não é dígito
+  const digits = cpf.replace(/\D/g, '')
+  // Se já tem 11 dígitos, formata xxx.xxx.xxx-xx
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+  }
+  // Retorna original se não tiver 11 dígitos
+  return cpf
+}
+
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('portal_token')?.value
   if (!token) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
@@ -49,7 +60,7 @@ export async function GET(request: NextRequest) {
   try {
     // CPF deve ser passado formatado (xxx.xxx.xxx-xx) — igual ao AS200.PRG que usa ALLTRIM(cpf)
     // valorParcela mínimo 0.10 — AS200.PRG usa 0.1 quando nenhum valor está no formulário
-    const cpfFormatado = (socio.cpf || '').trim()
+    const cpfFormatado = formatCpf(socio.cpf || '')
     const queryParams = new URLSearchParams({
       cliente: ZETRA_CONFIG.cliente,
       convenio: ZETRA_CONFIG.convenio,
