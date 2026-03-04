@@ -224,10 +224,10 @@ export default function PortalDashboardPage() {
 
       </div>
 
-      {/* Empréstimos ativos */}
+      {/* Últimas Compras */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wider">Meus Empréstimos</h2>
+          <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wider">Últimas Compras</h2>
           <Link href="/portal/emprestimos" className="text-emerald-600 text-sm font-medium">
             Ver todos
           </Link>
@@ -235,14 +235,12 @@ export default function PortalDashboardPage() {
 
         {socio.vendas.length === 0 ? (
           <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
-            <p className="text-gray-400 text-sm">Nenhum empréstimo ativo</p>
+            <p className="text-gray-400 text-sm">Nenhuma compra ativa</p>
           </div>
         ) : (
           <div className="space-y-3">
             {socio.vendas.slice(0, 3).map(venda => {
-              const pagas = venda.parcelas.filter(p => p.baixa === 'S').length
               const total = venda.parcelas.length || venda.quantidadeParcelas
-              const pct = total > 0 ? Math.round((pagas / total) * 100) : 0
 
               return (
                 <Link key={venda.id} href={`/portal/emprestimos/${venda.id}`}>
@@ -253,25 +251,12 @@ export default function PortalDashboardPage() {
                           {venda.convenio?.razao_soc || `Venda #${venda.numeroVenda}`}
                         </p>
                         <p className="text-gray-400 text-xs mt-0.5">
-                          {pagas}/{total} parcelas pagas
+                          {total} parcela{total !== 1 ? 's' : ''}
                         </p>
                       </div>
                       <div className="text-right ml-3 shrink-0">
-                        <p className="text-gray-800 font-semibold text-sm">{formatBRL(venda.valorParcela)}<span className="text-gray-400 font-normal">/mês</span></p>
-                        <p className="text-gray-400 text-xs">{formatBRL(venda.valorTotal)} total</p>
-                      </div>
-                    </div>
-                    {/* Barra de progresso */}
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-                        <span>Progresso</span>
-                        <span className="text-emerald-600 font-medium">{pct}%</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-1.5">
-                        <div
-                          className="bg-emerald-500 h-1.5 rounded-full transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
+                        <p className="text-gray-800 font-semibold text-sm">{formatBRL(venda.valorTotal)}</p>
+                        <p className="text-gray-400 text-xs">{formatBRL(venda.valorParcela)}/parcela</p>
                       </div>
                     </div>
                   </div>
