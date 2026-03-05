@@ -71,17 +71,26 @@ export default function EditarFuncionarioPage() {
         const data = await response.json();
 
         // Buscar margem consignada
+        // IMPORTANTE: Para tipo 3/4 (local), limite é FIXO no banco
+        // Para outros tipos (ZETRA), busca margem calculada via API
         let limiteCalculado = data.limite?.toString() || '';
-        try {
-          const margemResponse = await fetch(`/api/socios/${id}/margem`);
-          if (margemResponse.ok) {
-            const margemData = await margemResponse.json();
-            const valorMargem = margemData.margem || margemData.limite || 0;
-            limiteCalculado = Number(valorMargem).toFixed(2);
+        
+        // Só busca margem via API se NÃO for tipo 3 ou 4
+        const isLocal = data.tipo === '3' || data.tipo === '4';
+        
+        if (!isLocal) {
+          try {
+            const margemResponse = await fetch(`/api/socios/${id}/margem`);
+            if (margemResponse.ok) {
+              const margemData = await margemResponse.json();
+              const valorMargem = margemData.margem || margemData.limite || 0;
+              limiteCalculado = Number(valorMargem).toFixed(2);
+            }
+          } catch {
+            // Usa o limite do banco se a API de margem falhar
           }
-        } catch {
-          // Usa o limite do banco se a API de margem falhar
         }
+        // Para tipo 3/4: mantém limiteCalculado = data.limite (não busca API)
 
         setFormData({
           nome: data.nome || '',
@@ -137,10 +146,14 @@ export default function EditarFuncionarioPage() {
     if (!canEdit) return;
     setSaving(true);
     try {
+      // Remove campo 'limite' antes de enviar — ele não deve ser editado aqui
+      // (apenas via /cliente/margem-consignada/editar/[id])
+      const { limite, ...dataToSave } = formData;
+      
       const response = await fetch(`/api/funcionarios/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSave),
       });
       if (!response.ok) {
         const error = await response.json();
