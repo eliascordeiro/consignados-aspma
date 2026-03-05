@@ -78,13 +78,16 @@ export async function GET(request: NextRequest) {
     })
 
     const url = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`
+    console.log('[PORTAL MARGEM ZETRA] Iniciando fetch com timeout 30s...')
+    
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: queryParams.toString(),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(30000), // 30 segundos
     })
 
+    console.log('[PORTAL MARGEM ZETRA] Resposta HTTP:', res.status)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
     const xml = await res.text()
@@ -110,10 +113,17 @@ export async function GET(request: NextRequest) {
     if (!margemStr) throw new Error('valorMargem ausente no XML')
 
     const margem = parseFloat(margemStr)
+    console.log('[PORTAL MARGEM ZETRA] Sucesso! margem:', margem)
     return NextResponse.json({ fonte: 'zetra', margem: isNaN(margem) ? 0 : margem })
-  } catch (err) {
-    console.error('[PORTAL MARGEM ZETRA]', err)
+  } catch (err: any) {
+    const isTimeout = err?.name === 'TimeoutError' || err?.code === 23 || err?.message?.includes('timeout')
+    const errorType = isTimeout ? 'TIMEOUT' : 'ERRO'
+    console.error(`[PORTAL MARGEM ZETRA] ${errorType}:`, err?.message || err)
+    
     // fallback: valor armazenado no banco
-    return NextResponse.json({ fonte: 'fallback', margem: Number(socio.margemConsig || 0) })
+    return NextResponse.json({ 
+      fonte: isTimeout ? 'timeout' : 'fallback', 
+      margem: Number(socio.margemConsig || 0) 
+    })
   }
 }

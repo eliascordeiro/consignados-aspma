@@ -69,7 +69,7 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
     });
 
     const urlWithParams = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`;
-    console.log('📤 [ZETRA] Fazendo POST...');
+    console.log('📤 [ZETRA] Fazendo POST com timeout 30s...');
 
     // Faz a requisição POST
     const response = await fetch(urlWithParams, {
@@ -78,6 +78,7 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: queryParams.toString(),
+      signal: AbortSignal.timeout(30000), // 30 segundos
     });
 
     if (!response.ok) {
@@ -132,8 +133,9 @@ async function consultarMargemZetra(params: MargemZetraParams): Promise<number |
 
     return isNaN(margem) ? null : margem;
 
-  } catch (error) {
-    console.error('❌ [ZETRA] Erro na consulta:', error);
+  } catch (err: any) {
+    const isTimeout = err?.name === 'TimeoutError' || err?.code === 23 || err?.message?.includes('timeout');
+    console.error(`❌ [ZETRA] ${isTimeout ? 'TIMEOUT (30s excedido)' : 'ERRO na consulta'}:`, err?.message || err);
     return null;
   }
 }
