@@ -11,9 +11,12 @@ import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
  *     description: Endpoints para consulta de margem consignável por matrícula ou CPF
  */
 
+// URL base do serviço PHP Zetra (Railway ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
 // Credenciais ZETRA
 const ZETRA_CONFIG = {
-  phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/consultaMargemZetra.php',
+  phpUrl: `${ZETRA_BASE_URL}/consultaMargemZetra.php`,
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',

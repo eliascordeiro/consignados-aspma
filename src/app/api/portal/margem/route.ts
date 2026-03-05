@@ -6,8 +6,11 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 )
 
+// URL base do serviço PHP Zetra (Railway ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
 const ZETRA_CONFIG = {
-  phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/consultaMargemZetra.php',
+  phpUrl: `${ZETRA_BASE_URL}/consultaMargemZetra.php`,
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',

@@ -5,9 +5,11 @@ import { calcularDataCorte } from '@/lib/data-corte';
 import { getDataUserId } from '@/lib/get-data-user-id';
 import { hasPermission } from '@/lib/permissions';
 
-// Credenciais ZETRA (considere mover para variáveis de ambiente)
+// URL base do serviço PHP Zetra (Railway ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
 const ZETRA_CONFIG = {
-  phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/consultaMargemZetra.php',
+  phpUrl: `${ZETRA_BASE_URL}/consultaMargemZetra.php`,
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',
