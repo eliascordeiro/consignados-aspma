@@ -36,6 +36,15 @@ function extractXmlValue(startTag: string, endTag: string, xml: string): string 
   return xml.substring(valueStart, endIndex).trim();
 }
 
+// Função para formatar CPF (xxx.xxx.xxx-xx)
+function formatCpf(cpf: string): string {
+  const digits = cpf.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  }
+  return cpf;
+}
+
 // Função auxiliar para chamar o PHP ZETRA
 async function consultarMargemZetra(params: MargemZetraParams): Promise<number | null | { margem: number; mensagem?: string; codRetorno?: string }> {
   console.log('🔵 [ZETRA] Iniciando consulta de margem via PHP...');
@@ -297,14 +306,15 @@ export async function GET(
     
     // Para consignatária (tipo = 1), consulta ZETRA via PHP
     const matriculaAtual = socio.matricula || '';
-    const cpf = socio.cpf || '';
+    const cpfOriginal = socio.cpf || '';
+    const cpfFormatado = formatCpf(cpfOriginal);
 
     console.log('📋 [API] Dados para consulta ZETRA:', {
       matriculaAtual,
-      cpf,
+      cpf: cpfFormatado,
     });
 
-    if (!cpf || !matriculaAtual) {
+    if (!cpfFormatado || !matriculaAtual) {
       console.log('⚠️  [API] CPF ou matrícula não encontrado');
       return NextResponse.json(
         { error: 'CPF e matrícula são obrigatórios para consulta ZETRA' },
@@ -319,7 +329,7 @@ export async function GET(
       usuario: ZETRA_CONFIG.usuario,
       senha: ZETRA_CONFIG.senha,
       matricula: matriculaAtual,
-      cpf: cpf,
+      cpf: cpfFormatado,
       valorParcela: valorParcela, // Usa valor da query ou 0.1 padrão
     });
 
