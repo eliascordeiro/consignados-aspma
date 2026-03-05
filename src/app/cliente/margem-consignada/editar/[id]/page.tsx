@@ -58,11 +58,14 @@ export default function EditarMargemPage() {
             if (margemData.fonte === 'tempo_real' || margemData.tipo === 'zetra') {
               readonly = true;
               fonteLabel = 'ZETRA';
+              // Para ZETRA, usa margem calculada (só consulta)
+              const valor = margemData.margem || margemData.limite || 0;
+              limiteCalc = Number(valor).toFixed(2);
             } else if (margemData.tipo === 'calculo_local' || margemData.fonte === 'local') {
               fonteLabel = 'Cálculo Local';
+              // Para local, mantém limite fixo do banco (não a margem descontada)
+              limiteCalc = Number(socioData.limite || 0).toFixed(2);
             }
-            const valor = margemData.margem || margemData.limite || 0;
-            limiteCalc = Number(valor).toFixed(2);
           }
         } catch { /* usa limite do banco */ }
 

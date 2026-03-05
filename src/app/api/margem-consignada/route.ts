@@ -96,8 +96,7 @@ export async function GET(request: NextRequest) {
         fonteLimite = 'Local'
       } else if (socio.tipo === '1' || socio.tipo === '2' || socio.tipo === '5') {
         fonteLimite = 'ZETRA'
-        // Para ZETRA, zeraremos o valor na listagem (será buscado apenas no form de edição)
-        limiteCalculado = 0
+        // Mantém valor do banco na listagem (não zera)
       }
       
       return {
