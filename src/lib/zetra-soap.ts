@@ -41,7 +41,7 @@ export interface ZetraAlterarConsignacaoParams {
 }
 
 export interface ZetraResponse {
-  sucesso: boolean;
+  sucesso: boolean | string;
   codRetorno: string;
   mensagem: string;
   [key: string]: any;
