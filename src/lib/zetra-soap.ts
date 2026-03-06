@@ -72,7 +72,7 @@ async function executarOperacaoSOAP<T>(
     const responseKey = `${operacao}Response`;
     const response: ZetraResponse = result?.[responseKey] || result;
 
-    const sucesso = response?.sucesso === 'true' || response?.sucesso === true;
+    const sucesso = String(response?.sucesso) === 'true' || response?.sucesso === true;
     const codRetorno = response?.codRetorno;
     const mensagem = response?.mensagem;
 
