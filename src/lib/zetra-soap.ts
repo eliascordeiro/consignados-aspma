@@ -52,17 +52,14 @@ export interface ZetraResponse {
  */
 async function executarOperacaoSOAP<T>(
   operacao: string,
-  params: any,
-  timeout: number = 30000
+  params: any
 ): Promise<{ success: boolean; data?: any; error?: any; rawRequest?: string; rawResponse?: string }> {
   console.log(`🔵 [ZETRA SOAP] Operação: ${operacao}`);
   console.log('📋 [ZETRA SOAP] Parâmetros:', JSON.stringify(params, null, 2));
 
   try {
-    // Criar cliente SOAP com timeout
-    const client = await soap.createClientAsync(ZETRA_WSDL, {
-      timeout,
-    });
+    // Criar cliente SOAP
+    const client = await soap.createClientAsync(ZETRA_WSDL);
 
     console.log('📤 [ZETRA SOAP] Enviando requisição...');
 
