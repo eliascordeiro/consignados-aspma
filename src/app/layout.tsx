@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import { SessionProvider } from "@/components/session-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ReactQueryProvider } from "@/components/providers/react-query-provider"
+import { CookieConsentBanner } from "@/components/cookie-consent-banner"
+import { CookieSettingsButton } from "@/components/cookie-settings-button"
 import { Toaster } from "sonner"
 import "./globals.css";
 
@@ -32,6 +34,8 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <SessionProvider>{children}</SessionProvider>
+            <CookieConsentBanner />
+            <CookieSettingsButton />
             <Toaster position="top-right" richColors />
           </ReactQueryProvider>
         </ThemeProvider>
