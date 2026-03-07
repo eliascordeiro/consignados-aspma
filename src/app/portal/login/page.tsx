@@ -230,7 +230,7 @@ export default function PortalLoginPage() {
           </div>
           
           <p className="text-emerald-100 text-xs text-center font-medium">
-            © {new Date().getFullYear()} ASPMA · Associação dos Servidores Públicos
+            © {new Date().getFullYear()} ASPMA · Associação dos Servidores Públicos de Araucária
           </p>
         </div>
       </div>
