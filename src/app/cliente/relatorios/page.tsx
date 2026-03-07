@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Convenio {
   id: number;
@@ -557,41 +558,25 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Card Comparação */}
-        <div
-          onClick={() => setTipoRelatorio('comparacao')}
-          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 ${
-            tipoRelatorio === 'comparacao'
-              ? 'bg-gradient-to-br from-purple-500 to-purple-700 dark:from-purple-600 dark:to-purple-800 text-white ring-2 ring-purple-400/50'
-              : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500'
-          }`}
-        >
-          {tipoRelatorio === 'comparacao' && (
-            <div className="absolute top-3 right-3">
-              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
+        <Link href="/cliente/relatorios/comparacao">
+          <div
+            className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg text-foreground">
+                Comparar Bases
+              </h3>
             </div>
-          )}
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2 rounded-lg ${
-              tipoRelatorio === 'comparacao'
-                ? 'bg-white/20'
-                : 'bg-purple-100 dark:bg-purple-900/50'
-            }`}>
-              <svg className={`w-6 h-6 ${tipoRelatorio === 'comparacao' ? 'text-white' : 'text-purple-600 dark:text-purple-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-            <h3 className={`font-bold text-lg ${tipoRelatorio === 'comparacao' ? 'text-white' : 'text-foreground'}`}>
-              Comparar Bases
-            </h3>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Compare dados entre PostgreSQL e MySQL para auditoria e validação.
+            </p>
           </div>
-          <p className={`text-sm leading-relaxed ${
-            tipoRelatorio === 'comparacao'
-              ? 'text-purple-100'
-              : 'text-muted-foreground'
-          }`}>
-            Compare dados entre PostgreSQL e MySQL para auditoria e validação.
-          </p>
-        </div>
+        </Link>
       </div>
 
       {/* Formulário Principal - Exibe apenas se um tipo de relatório for selecionado */}
@@ -982,22 +967,7 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      {/* Placeholder para comparação - a ser implementado */}
-      {tipoRelatorio === 'comparacao' && (
-        <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border overflow-hidden p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-4">
-            <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-bold text-foreground mb-2">
-            Comparação de Bases
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Funcionalidade em desenvolvimento. Em breve você poderá comparar dados entre PostgreSQL e MySQL.
-          </p>
-        </div>
-      )}
+
 
       {/* Modal de Configuração CSV */}
       {showCSVModal && (
