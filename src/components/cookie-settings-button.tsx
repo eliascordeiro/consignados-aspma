@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Settings } from 'lucide-react'
 import { useCookieConsent } from '@/hooks/use-cookie-consent'
@@ -12,7 +12,14 @@ import {
 } from '@/components/ui/tooltip'
 
 export function CookieSettingsButton() {
+  const pathname = usePathname()
   const { resetConsent } = useCookieConsent()
+
+  // Não mostrar em páginas de autenticação
+  const hideOnPages = ['/portal/login', '/portal/primeiro-acesso', '/portal/redefinir-senha']
+  if (pathname && hideOnPages.some(page => pathname.startsWith(page))) {
+    return null
+  }
 
   const handleClick = () => {
     resetConsent()
