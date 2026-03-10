@@ -69,10 +69,7 @@ export default function ComprasPage() {
       {/* Card resumo */}
       {vendas.length > 0 && (
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md">
-          <div className="flex items-center justify-between">
-            <p className="text-emerald-100 text-[11px] font-semibold uppercase tracking-wider">Total em compras</p>
-            <p className="text-emerald-100 text-[11px] font-semibold">{vendas.length} compra{vendas.length !== 1 ? 's' : ''}</p>
-          </div>
+          <p className="text-emerald-100 text-[11px] font-semibold uppercase tracking-wider">{vendas.length} compra{vendas.length !== 1 ? 's' : ''}</p>
           <p className="text-2xl font-bold mt-0.5">{formatBRL(totalGeral)}</p>
         </div>
       )}
