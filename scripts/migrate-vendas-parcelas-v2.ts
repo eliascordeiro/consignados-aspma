@@ -398,7 +398,7 @@ async function processParcelasBatch(rows: any[]): Promise<BatchResult> {
       numeroParcela,
       dataVencimento: parcela.vencimento,
       valor: parcela.valor || 0,
-      baixa: parcela.baixa?.trim() || null,
+      baixa: parcela.baixa != null ? parcela.baixa.trim() : null,
       dataBaixa: parcela.baixa === 'S' ? parcela.vencimento : null,
       valorPago: parcela.baixa === 'S' ? (parcela.valor || 0) : null,
       tipo: parcela.tipo?.trim() || null,
@@ -691,6 +691,51 @@ async function verifyIntegrity() {
     log('\n   ✅ INTEGRIDADE OK (>95% migrado)');
   } else {
     log('\n   ⚠️  INTEGRIDADE PARCIAL - Execute novamente para completar');
+  }
+
+  // Verificar codTipo divergente entre MySQL e Railway (pensionistas/aposentados)
+  log('\n   🔍 Verificando codTipo (pensionistas)...');
+  const connCodTipo = await mysqlPool.getConnection();
+  try {
+    // Buscar codtipo do MySQL com mapeamento de matrículas
+    const [mysqlSocios] = await connCodTipo.query('SELECT matricula, codtipo FROM socios');
+    const [matRows] = await connCodTipo.query('SELECT matricula_antiga, matricula_atual FROM matriculas');
+    const matMap = new Map<string, string>();
+    for (const row of matRows as any[]) {
+      matMap.set(String(row.matricula_antiga), String(row.matricula_atual));
+    }
+
+    const mysqlCodTipoMap = new Map<string, number>();
+    for (const s of mysqlSocios as any[]) {
+      let mat = String(s.matricula);
+      if (matMap.has(mat)) mat = matMap.get(mat)!;
+      const codTipo = parseInt(String(s.codtipo));
+      if (!isNaN(codTipo)) mysqlCodTipoMap.set(mat, codTipo);
+    }
+
+    // Comparar com Railway
+    const sociosRailway = await prisma.socio.findMany({
+      select: { matricula: true, codTipo: true, nome: true }
+    });
+
+    let codTipoDivergencias = 0;
+    for (const socio of sociosRailway) {
+      if (!socio.matricula) continue;
+      const mat = socio.matricula.trim();
+      const mysqlCodTipo = mysqlCodTipoMap.get(mat);
+      if (mysqlCodTipo !== undefined && socio.codTipo !== mysqlCodTipo) {
+        codTipoDivergencias++;
+        log(`      ⚠️  ${socio.nome || mat}: Railway codTipo=${socio.codTipo}, MySQL codTipo=${mysqlCodTipo}`);
+      }
+    }
+
+    if (codTipoDivergencias === 0) {
+      log('   ✅ codTipo: Nenhuma divergência encontrada');
+    } else {
+      log(`   ⚠️  codTipo: ${codTipoDivergencias} divergência(s) - execute migrate-all-to-railway.ts para corrigir`);
+    }
+  } finally {
+    connCodTipo.release();
   }
 
   return { mysqlVendas, mysqlParcelas, railwayVendas, railwayParcelas };

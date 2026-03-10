@@ -340,7 +340,8 @@ async function migrarConvenios(
 async function migrarSocios(
   local: PrismaClient,
   railway: PrismaClient,
-  userId: string
+  userId: string,
+  mysqlPool: mysql.Pool
 ): Promise<{ migrated: number; mapeados: number; semEmpresa: number }> {
   separator('📦 ETAPA 6: MIGRANDO SÓCIOS (Local → Railway)');
 
@@ -427,6 +428,78 @@ async function migrarSocios(
   console.log(`   📊 Mapeados por tipo: ${fmt(sociosComEmpresaMapeada)}`);
   console.log(`   ⚠️  Sem empresa: ${fmt(sociosSemEmpresaFinal)}`);
 
+  // ─────────────────────────────────────────────────────────────────
+  // SINCRONIZAR codTipo COM MySQL (fonte de verdade)
+  // O Local PG pode ter codTipo divergente do MySQL original.
+  // Exemplo real: NILVIA LOURENCO DA LUZ tinha codTipo=3 no MySQL
+  // mas codTipo=11 no Local PG, causando exclusão do relatório.
+  // ─────────────────────────────────────────────────────────────────
+  separator('🔄 ETAPA 6b: SINCRONIZANDO codTipo COM MySQL');
+
+  const conn = await mysqlPool.getConnection();
+  try {
+    // Buscar codtipo de todos os sócios no MySQL
+    const [mysqlSocios] = await conn.query(
+      'SELECT matricula, codtipo FROM socios'
+    );
+
+    // Buscar mapeamento de matrículas (matricula_antiga → matricula_atual)
+    const [matRows] = await conn.query(
+      'SELECT matricula_antiga, matricula_atual FROM matriculas'
+    );
+    const matMap = new Map<string, string>();
+    for (const row of matRows as any[]) {
+      matMap.set(String(row.matricula_antiga), String(row.matricula_atual));
+    }
+
+    // Construir mapa MySQL: matrícula (já mapeada) → codTipo
+    const mysqlCodTipoMap = new Map<string, number>();
+    for (const s of mysqlSocios as any[]) {
+      let mat = String(s.matricula);
+      // Aplicar mapeamento se existir
+      if (matMap.has(mat)) {
+        mat = matMap.get(mat)!;
+      }
+      const codTipo = parseInt(String(s.codtipo));
+      if (!isNaN(codTipo)) {
+        mysqlCodTipoMap.set(mat, codTipo);
+      }
+    }
+
+    console.log(`   📊 MySQL: ${fmt(mysqlCodTipoMap.size)} sócios com codTipo`);
+
+    // Buscar sócios do Railway e comparar
+    const sociosRailway = await railway.socio.findMany({
+      select: { id: true, matricula: true, codTipo: true }
+    });
+
+    let corrigidos = 0;
+    let divergencias = 0;
+
+    for (const socio of sociosRailway) {
+      if (!socio.matricula) continue;
+      const mat = socio.matricula.trim();
+      const mysqlCodTipo = mysqlCodTipoMap.get(mat);
+
+      if (mysqlCodTipo !== undefined && socio.codTipo !== mysqlCodTipo) {
+        divergencias++;
+        await railway.socio.update({
+          where: { id: socio.id },
+          data: { codTipo: mysqlCodTipo }
+        });
+        corrigidos++;
+        console.log(`   🔧 Matrícula ${mat}: codTipo ${socio.codTipo} → ${mysqlCodTipo}`);
+      }
+    }
+
+    if (corrigidos > 0) {
+      console.log(`\n   ✅ ${fmt(corrigidos)} sócios com codTipo corrigido (de ${fmt(divergencias)} divergências)`);
+    } else {
+      console.log(`\n   ✅ Nenhuma divergência de codTipo encontrada`);
+    }
+  } finally {
+    conn.release();
+  }
   return { migrated, mapeados: sociosComEmpresaMapeada, semEmpresa: sociosSemEmpresaFinal };
 }
 
@@ -520,7 +593,7 @@ async function main() {
     const conveniosCount = await migrarConvenios(mysqlPool, railway, defaultUser.id);
 
     // ETAPA 6: Sócios
-    const sociosResult = await migrarSocios(local, railway, defaultUser.id);
+    const sociosResult = await migrarSocios(local, railway, defaultUser.id, mysqlPool);
 
     // VERIFICAÇÃO
     await verificacaoFinal(railway);
