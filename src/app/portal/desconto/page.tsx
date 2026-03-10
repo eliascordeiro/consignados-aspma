@@ -174,7 +174,7 @@ export default function DescontoPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
         {itens.map(item => {
           const vencStr = item.dataVencimento
-            ? new Date(item.dataVencimento.slice(0,10) + 'T12:00:00').toLocaleDateString('pt-BR')
+            ? (() => { const d = new Date(item.dataVencimento.slice(0,10) + 'T12:00:00'); return `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` })()
             : '—'
           return (
             <Link key={item.parcelaId} href={`/portal/compras/${item.vendaId}`}>
