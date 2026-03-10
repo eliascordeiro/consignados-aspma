@@ -33,6 +33,11 @@ function formatDate(d: string | null) {
   if (!d) return '—'
   return new Date(d.slice(0, 10) + 'T12:00:00').toLocaleDateString('pt-BR')
 }
+function formatMonthYear(d: string | null) {
+  if (!d) return '—'
+  const date = new Date(d.slice(0, 10) + 'T12:00:00')
+  return `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
+}
 
 function ParcelaStatus({ parcela }: { parcela: Parcela }) {
   // Verifica apenas a data de vencimento (ignora o campo baixa)
@@ -44,18 +49,18 @@ function ParcelaStatus({ parcela }: { parcela: Parcela }) {
     vencimento.setHours(0, 0, 0, 0)
     
     if (vencimento < hoje) {
-      // Parcela vencida
+      // Parcela finalizada
       return (
-        <span className="text-xs font-medium bg-red-100 text-red-700 px-2 py-0.5 rounded-full whitespace-nowrap">
-          Finalizado
+        <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+          Finalizada
         </span>
       )
     }
   }
   
-  // Parcela a vencer
+  // Parcela a descontar
   return (
-    <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full whitespace-nowrap">
+    <span className="text-xs font-medium bg-red-50 text-red-600 px-2 py-0.5 rounded-full whitespace-nowrap">
       A descontar
     </span>
   )
@@ -141,9 +146,9 @@ export default function EmprestimoDetailPage() {
                 <div className="flex items-center gap-3">
                   {/* Ícone */}
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    isVencida ? 'bg-red-100' : 'bg-blue-50'
+                    isVencida ? 'bg-green-100' : 'bg-red-50'
                   }`}>
-                    <span className={`text-xs font-bold ${isVencida ? 'text-red-600' : 'text-blue-600'}`}>
+                    <span className={`text-xs font-bold ${isVencida ? 'text-green-600' : 'text-red-600'}`}>
                       {parcela.numeroParcela}
                     </span>
                   </div>
@@ -153,7 +158,7 @@ export default function EmprestimoDetailPage() {
                       Parcela {parcela.numeroParcela}/{total}
                     </p>
                     <p className="text-gray-400 text-xs">
-                      Vence em {formatDate(parcela.dataVencimento)}
+                      Desconto em {formatMonthYear(parcela.dataVencimento)}
                     </p>
                   </div>
                 </div>
