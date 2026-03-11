@@ -35,7 +35,7 @@ export default async function ClienteDashboard() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Portal do Cliente</h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Portal do Administrador</h1>
         <p className="text-muted-foreground text-sm md:text-base">
           Gerencie suas consignatárias, sócios e conveniados
         </p>

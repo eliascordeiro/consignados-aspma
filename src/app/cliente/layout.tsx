@@ -154,7 +154,7 @@ export default function ClienteLayout({
                 <h1 className="text-lg font-bold text-sidebar-foreground whitespace-nowrap">
                   A.S.P.M.A
                 </h1>
-                <span className="text-xs text-sidebar-foreground/60 whitespace-nowrap">Portal do Cliente</span>
+                <span className="text-xs text-sidebar-foreground/60 whitespace-nowrap">Portal do Administrador</span>
               </div>
             </div>
             <Button
