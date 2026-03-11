@@ -1,12 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { jwtVerify } from 'jose'
-import { consultarMargem, formatCpf } from '@/lib/zetra-soap'
-import { calcularDataCorte } from '@/lib/data-corte'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 )
+
+// URL base do serviço PHP Zetra (Railway ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
+const ZETRA_CONFIG = {
+  phpUrl: `${ZETRA_BASE_URL}/consultaMargemZetra.php`,
+  cliente: 'ASPMA',
+  convenio: 'ASPMA-ARAUCARIA',
+  usuario: 'aspma_xml',
+  senha: 'dcc0bd05',
+}
+
+function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
+  const startIndex = xml.indexOf(startTag)
+  if (startIndex === -1) return null
+  const valueStart = startIndex + startTag.length
+  const endIndex = xml.indexOf(endTag, valueStart)
+  if (endIndex === -1) return null
+  return xml.substring(valueStart, endIndex).trim()
+}
+
+function formatCpf(cpf: string): string {
+  // Remove tudo que não é dígito
+  const digits = cpf.replace(/\D/g, '')
+  // Se já tem 11 dígitos, formata xxx.xxx.xxx-xx
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+  }
+  // Retorna original se não tiver 11 dígitos
+  return cpf
+}
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get('portal_token')?.value
@@ -22,75 +51,82 @@ export async function GET(request: NextRequest) {
 
   const socio = await prisma.socio.findUnique({
     where: { id: socioId },
-    select: {
-      tipo: true,
-      matricula: true,
-      cpf: true,
-      margemConsig: true,
-      limite: true,
-      empresa: { select: { diaCorte: true } },
-    },
+    select: { tipo: true, matricula: true, cpf: true, margemConsig: true },
   })
 
   if (!socio) return NextResponse.json({ error: 'Sócio não encontrado' }, { status: 404 })
 
-  // tipos 3/4 = cálculo local (limite - descontos do mês)
-  if (socio.tipo === '3' || socio.tipo === '4') {
-    const dataCorte = calcularDataCorte(socio.empresa?.diaCorte ?? 9)
-    const descontos = await prisma.parcela.aggregate({
-      _sum: { valor: true },
-      where: {
-        venda: { socioId, ativo: true, cancelado: false },
-        OR: [{ baixa: '' }, { baixa: null }, { baixa: 'N' }],
-        dataVencimento: {
-          gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1),
-          lt: new Date(dataCorte.ano, dataCorte.mes, 1),
-        },
-      },
-    })
-    const limite = Number(socio.limite || 0)
-    const totalDescontos = Number(descontos._sum.valor || 0)
-    const margem = limite - totalDescontos
-    return NextResponse.json({ fonte: 'local', margem })
-  }
-
-  // tipos != 3/4 = consulta direta ao ZETRA via SOAP
-  const matricula = (socio.matricula || '').trim()
-  const cpf = formatCpf(socio.cpf || '')
-
-  if (!matricula || !cpf) {
-    return NextResponse.json({
-      fonte: 'banco',
-      margem: Number(socio.margemConsig || 0),
-    })
-  }
+  // tipos 3/4 = cálculo local (não usa Zetra) — campo `tipo` (String), não codTipo
+  const isZetra = socio.tipo !== '3' && socio.tipo !== '4'
+  if (!isZetra) return NextResponse.json({ fonte: 'local', margem: null })
 
   try {
-    console.log('[PORTAL MARGEM ZETRA] Consultando SOAP:', { matricula, cpf })
+    // CPF deve ser passado formatado (xxx.xxx.xxx-xx) — igual ao AS200.PRG que usa ALLTRIM(cpf)
+    // valorParcela mínimo 0.10 — AS200.PRG usa 0.1 quando nenhum valor está no formulário
+    const cpfFormatado = formatCpf(socio.cpf || '')
+    const queryParams = new URLSearchParams({
+      cliente: ZETRA_CONFIG.cliente,
+      convenio: ZETRA_CONFIG.convenio,
+      usuario: ZETRA_CONFIG.usuario,
+      senha: ZETRA_CONFIG.senha,
+      matricula: (socio.matricula || '').trim(),
+      cpf: cpfFormatado,
+      valorParcela: '0.10',
+    })
 
-    const result = await consultarMargem({ matricula, cpf, valorParcela: '0.10' })
+    console.log('[PORTAL MARGEM ZETRA] params:', {
+      matricula: (socio.matricula || '').trim(),
+      cpf: cpfFormatado,
+      valorParcela: '0.10',
+    })
 
-    console.log('[PORTAL MARGEM ZETRA] Resposta:', result)
+    const url = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`
+    console.log('[PORTAL MARGEM ZETRA] Iniciando fetch com timeout 30s...')
+    
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: queryParams.toString(),
+      signal: AbortSignal.timeout(30000), // 30 segundos
+    })
 
-    if (!result.success) {
-      console.error('[PORTAL MARGEM ZETRA] Erro na consulta:', result.error)
+    console.log('[PORTAL MARGEM ZETRA] Resposta HTTP:', res.status)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+    const xml = await res.text()
+    console.log('[PORTAL MARGEM ZETRA] xml (primeiros 500):', xml.slice(0, 500))
+
+    const sucesso = extractXmlValue('<ns13:sucesso>', '</ns13:sucesso>', xml)
+    const mensagem = extractXmlValue('<ns13:mensagem>', '</ns13:mensagem>', xml)
+
+    if (sucesso === 'false') {
+      console.error('[PORTAL MARGEM ZETRA] sucesso=false, mensagem:', mensagem)
       return NextResponse.json({
         fonte: 'zetra_erro',
         margem: Number(socio.margemConsig || 0),
-        mensagem: result.error?.message || 'Erro desconhecido',
+        mensagem,
       })
     }
 
-    const valorMargem = result.data?.valorMargem || result.data?.margem || '0'
-    const margem = parseFloat(String(valorMargem))
+    const margemStr = extractXmlValue(
+      '<ns6:valorMargem xmlns:ns6="InfoMargem">',
+      '</ns6:valorMargem>',
+      xml
+    )
+    if (!margemStr) throw new Error('valorMargem ausente no XML')
+
+    const margem = parseFloat(margemStr)
     console.log('[PORTAL MARGEM ZETRA] Sucesso! margem:', margem)
-    return NextResponse.json({ fonte: 'zetra', margem })
+    return NextResponse.json({ fonte: 'zetra', margem: isNaN(margem) ? 0 : margem })
   } catch (err: any) {
     const isTimeout = err?.name === 'TimeoutError' || err?.code === 23 || err?.message?.includes('timeout')
-    console.error(`[PORTAL MARGEM ZETRA] ${isTimeout ? 'TIMEOUT' : 'ERRO'}:`, err?.message || err)
-    return NextResponse.json({
-      fonte: isTimeout ? 'timeout' : 'fallback',
-      margem: Number(socio.margemConsig || 0),
+    const errorType = isTimeout ? 'TIMEOUT' : 'ERRO'
+    console.error(`[PORTAL MARGEM ZETRA] ${errorType}:`, err?.message || err)
+    
+    // fallback: valor armazenado no banco
+    return NextResponse.json({ 
+      fonte: isTimeout ? 'timeout' : 'fallback', 
+      margem: Number(socio.margemConsig || 0) 
     })
   }
 }
