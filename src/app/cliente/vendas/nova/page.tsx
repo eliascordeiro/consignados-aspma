@@ -48,6 +48,8 @@ export default function NovaVendaPage() {
   const [showSocioList, setShowSocioList] = useState(false);
   const [showConvenioList, setShowConvenioList] = useState(false);
 
+  const [parcelasInput, setParcelasInput] = useState('1')
+
   const [formData, setFormData] = useState({
     socioId: '',
     socioNome: '',
@@ -561,12 +563,18 @@ export default function NovaVendaPage() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              value={formData.quantidadeParcelas}
+              value={parcelasInput}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '')
-                setFormData({ ...formData, quantidadeParcelas: parseInt(val) || 1 })
+                setParcelasInput(val)
+                if (val) setFormData({ ...formData, quantidadeParcelas: parseInt(val) })
               }}
               onFocus={(e) => e.target.select()}
+              onBlur={() => {
+                const num = parseInt(parcelasInput) || 1
+                setParcelasInput(String(num))
+                setFormData({ ...formData, quantidadeParcelas: num })
+              }}
               className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
