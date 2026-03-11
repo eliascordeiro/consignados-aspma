@@ -23,6 +23,7 @@ export function CookieSettingsButton() {
 
   const handleClick = () => {
     resetConsent()
+    window.location.reload()
   }
 
   return (
