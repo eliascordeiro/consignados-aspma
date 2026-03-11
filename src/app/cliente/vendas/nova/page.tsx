@@ -563,6 +563,7 @@ export default function NovaVendaPage() {
               max="99"
               value={formData.quantidadeParcelas}
               onChange={(e) => setFormData({ ...formData, quantidadeParcelas: parseInt(e.target.value) || 1 })}
+              onFocus={(e) => e.target.select()}
               className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
