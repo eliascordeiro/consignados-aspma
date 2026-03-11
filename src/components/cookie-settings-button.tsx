@@ -15,9 +15,9 @@ export function CookieSettingsButton() {
   const pathname = usePathname()
   const { resetConsent } = useCookieConsent()
 
-  // Não mostrar em páginas de autenticação
-  const hideOnPages = ['/portal/login', '/portal/primeiro-acesso', '/portal/redefinir-senha']
-  if (pathname && hideOnPages.some(page => pathname.startsWith(page))) {
+  // Não mostrar em páginas de autenticação nem no portal do sócio
+  const hideOnPages = ['/portal/login', '/portal/primeiro-acesso', '/portal/redefinir-senha', '/portal/']
+  if (pathname && (hideOnPages.some(page => pathname.startsWith(page)) || pathname === '/portal' || pathname?.startsWith('/portal/'))) {
     return null
   }
 
