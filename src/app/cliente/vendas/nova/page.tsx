@@ -558,11 +558,14 @@ export default function NovaVendaPage() {
           <div>
             <label className="block text-sm font-bold mb-2 text-foreground">Nº de Parcelas *</label>
             <input
-              type="number"
-              min="1"
-              max="99"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={formData.quantidadeParcelas}
-              onChange={(e) => setFormData({ ...formData, quantidadeParcelas: parseInt(e.target.value) || 1 })}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '')
+                setFormData({ ...formData, quantidadeParcelas: parseInt(val) || 1 })
+              }}
               onFocus={(e) => e.target.select()}
               className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
