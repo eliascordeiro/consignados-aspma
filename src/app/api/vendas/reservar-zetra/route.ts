@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// URL base do serviço PHP Zetra (Railway ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
 const ZETRA_CONFIG = {
-  phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/reservarMargemZetra.php',
+  phpUrl: `${ZETRA_BASE_URL}/reservarMargemZetra.php`,
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',
@@ -12,11 +15,11 @@ const ZETRA_CONFIG = {
 function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
   const startIndex = xml.indexOf(startTag);
   if (startIndex === -1) return null;
-  
+
   const valueStart = startIndex + startTag.length;
   const endIndex = xml.indexOf(endTag, valueStart);
   if (endIndex === -1) return null;
-  
+
   return xml.substring(valueStart, endIndex).trim();
 }
 
