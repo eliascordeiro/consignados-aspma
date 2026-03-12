@@ -205,6 +205,42 @@ export default function RelatorioAtivosPage() {
     }
   };
 
+  const gerarRelatorioMySQLPDF = async () => {
+    if (!filtros.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    setLoading(true);
+    setProgress(10);
+    try {
+      const params = new URLSearchParams({ mesAno: filtros.mesAno, formato: 'pdf' });
+      if (filtros.convenioId) params.set('convenioId', filtros.convenioId);
+      setProgress(30);
+      const response = await fetch(`/api/relatorios/ativos-mysql?${params}`);
+      setProgress(70);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ativos-mysql-${filtros.mesAno}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setProgress(100);
+        setTimeout(() => { setProgress(0); alert('Relatório MySQL gerado com sucesso!'); }, 500);
+      } else {
+        const error = await response.json();
+        alert(`Erro ao gerar relatório MySQL: ${error.error || 'Erro desconhecido'}`);
+        setProgress(0);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório MySQL:', error);
+      alert('Erro ao gerar relatório MySQL. Tente novamente.');
+      setProgress(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -337,6 +373,27 @@ export default function RelatorioAtivosPage() {
               title={!canExport ? 'Sem permissão para exportar' : ''}
             >
               📋 CSV
+            </button>
+          </div>
+
+          {/* Botão MySQL - Banco Legado */}
+          <div className="pt-2">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="flex-1 border-t border-dashed border-gray-300 dark:border-gray-600" />
+              <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">Banco Legado (MySQL)</span>
+              <div className="flex-1 border-t border-dashed border-gray-300 dark:border-gray-600" />
+            </div>
+            <button
+              type="button"
+              onClick={gerarRelatorioMySQLPDF}
+              disabled={loading || !canExport}
+              className="w-full px-4 py-3 bg-purple-700 text-white rounded hover:bg-purple-800 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-bold flex items-center justify-center gap-2"
+              title={!canExport ? 'Sem permissão para exportar' : 'Gerar relatório direto do MySQL (BD Legado AS301)'}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M4 7c0-2 1-3 3-3h10c2 0 3 1 3 3M4 7h16M12 12v5m0 0l-2-2m2 2l2-2" />
+              </svg>
+              PDF MySQL (Legado)
             </button>
           </div>
         </div>
