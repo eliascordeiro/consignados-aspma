@@ -359,28 +359,15 @@ export async function DELETE(
         console.log('📊 [VENDA DELETE] Resultado ZETRA:', { sucesso, mensagem, codRetorno });
 
         if (sucesso === 'false' || mensagem?.includes('FALHA') || mensagem?.includes('Erro')) {
-          console.log('⚠️  [VENDA DELETE] ZETRA recusou a liquidação:', mensagem);
-          return NextResponse.json(
-            {
-              error: 'ZETRA recusou a liquidação', 
-              mensagem: mensagem || 'Erro desconhecido',
-              detalhes: 'A margem não pôde ser liberada na ZETRA. Venda não foi excluída.',
-            },
-            { status: 400 }
-          );
+          // AS200.PRG excluir_venda() não bloqueia por erro ZETRA - apenas loga a mensagem
+          // Se a reserva não existe na ZETRA (ex: venda criada antes da integração), prossegue com cancelamento local
+          console.log('⚠️  [VENDA DELETE] ZETRA retornou erro (prosseguindo com cancelamento local):', mensagem);
+        } else {
+          console.log('✅ [VENDA DELETE] Margem liquidada na ZETRA! Prosseguindo com exclusão no banco...');
         }
-
-        console.log('✅ [VENDA DELETE] Margem liquidada na ZETRA! Prosseguindo com exclusão no banco...');
       } catch (zetraError) {
-        console.error('❌ [VENDA DELETE] Erro ao liquidar margem na ZETRA:', zetraError);
-        return NextResponse.json(
-          {
-            error: 'Erro ao liquidar margem na ZETRA',
-            detalhes: zetraError instanceof Error ? zetraError.message : 'Erro desconhecido',
-            aviso: 'Venda não foi excluída para evitar inconsistência com ZETRA',
-          },
-          { status: 500 }
-        );
+        // AS200.PRG: não bloqueia exclusão se ZETRA está indisponível
+        console.error('⚠️  [VENDA DELETE] Erro ao comunicar com ZETRA (prosseguindo com cancelamento local):', zetraError);
       }
     } else {
       console.log(`ℹ️  [VENDA DELETE] Venda tipo ${tipoSocio} (local) - Não requer liquidação ZETRA`);
