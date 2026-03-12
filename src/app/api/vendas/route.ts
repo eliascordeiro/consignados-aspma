@@ -427,14 +427,15 @@ export async function POST(request: NextRequest) {
     const novoNumeroVenda = numeroVenda || (ultimaVenda?.numeroVenda || 0) + 1;
 
     // Regra AS200.PRG: Reserva margem no ZETRA ANTES de salvar no banco
-    if (socio.tipo === '1') { // Apenas para consignatária
-      console.log('🎯 [VENDA] Sócio tipo 1 (Consignatária) - Reservando margem no ZETRA...');
+    // AS200.PRG: prefeitura := if(codtipo != "3" .and. codtipo != "4", .t., .f.)
+    if (socio.tipo !== '3' && socio.tipo !== '4') {
+      console.log(`🎯 [VENDA] Sócio tipo ${socio.tipo} (não-pensionista) - Reservando margem no ZETRA...`);
       
       const adeIdentificador = `M${socio.matricula}S${novoNumeroVenda}`;
       
       try {
         // Chama ZETRA PHP diretamente (mesma URL da consulta de margem)
-        const queryParams = new URLSearchParams({
+        const params = {
           cliente: ZETRA_CONFIG.cliente,
           convenio: ZETRA_CONFIG.convenio,
           usuario: ZETRA_CONFIG.usuario,
@@ -447,7 +448,11 @@ export async function POST(request: NextRequest) {
           codVerba: '441',
           servicoCodigo: '018',
           adeIdentificador: adeIdentificador,
-        });
+        };
+
+        console.log('📋 [VENDA] Parâmetros ZETRA:', JSON.stringify(params, null, 2));
+
+        const queryParams = new URLSearchParams(params);
 
         const urlWithParams = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`;
         console.log('📤 [VENDA] Chamando ZETRA PHP diretamente:', ZETRA_CONFIG.phpUrl);
