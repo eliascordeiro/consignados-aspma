@@ -3,6 +3,27 @@ import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
 import { calcularDataCorte } from '@/lib/data-corte'
+import { formatCpf } from '@/lib/zetra-soap'
+
+// URL base do serviço PHP Zetra
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop'
+
+const ZETRA_CONFIG = {
+  phpUrl: `${ZETRA_BASE_URL}/reservarMargemZetra.php`,
+  cliente: 'ASPMA',
+  convenio: 'ASPMA-ARAUCARIA',
+  usuario: 'aspma_xml',
+  senha: 'dcc0bd05',
+}
+
+function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
+  const startIndex = xml.indexOf(startTag)
+  if (startIndex === -1) return null
+  const valueStart = startIndex + startTag.length
+  const endIndex = xml.indexOf(endTag, valueStart)
+  if (endIndex === -1) return null
+  return xml.substring(valueStart, endIndex).trim()
+}
 
 /**
  * Calcula o total de descontos (parcelas ativas) no mês de referência
@@ -44,14 +65,14 @@ async function calcularDescontosDoMes(
  * Evita problemas com meses de diferentes tamanhos (28, 29, 30, 31 dias).
  * Usa Date.UTC para evitar problemas de timezone.
  */
-function calcularPrimeiroVencimento(): Date {
+function calcularPrimeiroVencimento(diaCorte: number = 9): Date {
   const hoje = new Date()
   const dia = hoje.getDate()
   let mes = hoje.getMonth()
   let ano = hoje.getFullYear()
 
-  // Se passou do dia 9, primeira parcela vence no mês seguinte
-  if (dia > 9) {
+  // Se passou do dia de corte, primeira parcela vence no mês seguinte
+  if (dia > diaCorte) {
     if (mes === 11) { // dezembro (0-indexed)
       mes = 0 // janeiro
       ano = ano + 1
@@ -117,6 +138,77 @@ export async function POST(request: NextRequest) {
 
     const numeroVenda = (ultimaVenda?.numeroVenda || 0) + 1
 
+    // Regra AS200.PRG: Reserva margem no ZETRA ANTES de salvar no banco
+    // AS200.PRG: prefeitura := if(codtipo != "3" .and. codtipo != "4", .t., .f.)
+    if (socio.tipo !== '3' && socio.tipo !== '4') {
+      console.log(`🎯 [CONV VENDA] Sócio tipo ${socio.tipo} (não-pensionista) - Reservando margem no ZETRA...`)
+
+      const adeIdentificador = `M${socio.matricula}S${numeroVenda}`
+
+      try {
+        const params = {
+          cliente: ZETRA_CONFIG.cliente,
+          convenio: ZETRA_CONFIG.convenio,
+          usuario: ZETRA_CONFIG.usuario,
+          senha: ZETRA_CONFIG.senha,
+          matricula: socio.matricula || '',
+          cpf: formatCpf(socio.cpf || ''),
+          valorParcela: valorParcela.toString(),
+          valorLiberado: valorParcela.toString(),
+          prazo: quantidadeParcelas.toString(),
+          codVerba: '441',
+          servicoCodigo: '018',
+          adeIdentificador: adeIdentificador,
+        }
+
+        console.log('📋 [CONV VENDA] Parâmetros ZETRA:', JSON.stringify(params, null, 2))
+
+        const queryParams = new URLSearchParams(params)
+        const urlWithParams = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`
+        console.log('📤 [CONV VENDA] Chamando ZETRA PHP:', ZETRA_CONFIG.phpUrl)
+
+        const zetraResponse = await fetch(urlWithParams, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: queryParams.toString(),
+        })
+
+        const xmlResponse = await zetraResponse.text()
+        console.log('📥 [CONV VENDA] Resposta ZETRA (primeiros 500 chars):', xmlResponse.substring(0, 500))
+
+        const sucesso = extractXmlValue('<ns10:sucesso>', '</ns10:sucesso>', xmlResponse)
+        const mensagem = extractXmlValue('<ns10:mensagem>', '</ns10:mensagem>', xmlResponse)
+        const codRetorno = extractXmlValue('<ns10:codRetorno>', '</ns10:codRetorno>', xmlResponse)
+
+        console.log('📊 [CONV VENDA] Resultado ZETRA:', { sucesso, mensagem, codRetorno })
+
+        if (!zetraResponse.ok || sucesso === 'false' || mensagem?.includes('FALHA') || mensagem?.includes('Erro')) {
+          console.log('❌ [CONV VENDA] ZETRA recusou a reserva:', mensagem)
+          return NextResponse.json(
+            {
+              error: 'ZETRA recusou a operação',
+              mensagem: mensagem || 'Erro desconhecido',
+              detalhes: 'A margem não pôde ser reservada no ZETRA. Venda não foi criada.',
+            },
+            { status: 400 }
+          )
+        }
+
+        console.log('✅ [CONV VENDA] Margem reservada no ZETRA! Prosseguindo com salvamento...')
+      } catch (zetraError) {
+        console.error('❌ [CONV VENDA] Erro ao reservar margem no ZETRA:', zetraError)
+        return NextResponse.json(
+          {
+            error: 'Erro ao reservar margem no ZETRA',
+            detalhes: zetraError instanceof Error ? zetraError.message : 'Erro desconhecido',
+          },
+          { status: 500 }
+        )
+      }
+    } else {
+      console.log(`📝 [CONV VENDA] Sócio tipo ${socio.tipo} (pensionista) - Sem reserva ZETRA`)
+    }
+
     // Busca convênio para obter userId do MANAGER dono do convênio
     // Isso é necessário para que o MANAGER veja as vendas feitas pelo convênio
     const convenioData = await prisma.convenio.findUnique({
@@ -145,8 +237,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Cria as parcelas respeitando a data de corte do dia 9
-    const primeiroVencimento = calcularPrimeiroVencimento()
+    // Cria as parcelas respeitando a data de corte
+    const diaCorte = socio.empresa?.diaCorte ?? 9
+    const primeiroVencimento = calcularPrimeiroVencimento(diaCorte)
     const parcelas = []
 
     for (let i = 0; i < quantidadeParcelas; i++) {

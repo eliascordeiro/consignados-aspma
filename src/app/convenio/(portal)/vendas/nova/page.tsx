@@ -278,7 +278,8 @@ export default function NovaVendaPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar venda')
+        const msg = data.mensagem || data.detalhes || data.error || 'Erro ao criar venda'
+        throw new Error(msg)
       }
 
       // Enviar notificação de confirmação
@@ -759,6 +760,38 @@ export default function NovaVendaPage() {
                   />
                 </div>
               </div>
+
+              {/* Info 1º Desconto */}
+              {formData.quantidadeParcelas && Number(formData.quantidadeParcelas) > 0 && (() => {
+                const hoje = new Date()
+                const dia = hoje.getDate()
+                const diaCorte = 9
+                let mes = hoje.getMonth()
+                let ano = hoje.getFullYear()
+                if (dia > diaCorte) {
+                  if (mes === 11) { mes = 0; ano++ } else { mes++ }
+                }
+                const mesNome = new Date(ano, mes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+                const qtd = Number(formData.quantidadeParcelas)
+                const mesFinal = (mes + qtd - 1) % 12
+                const anoFinal = ano + Math.floor((mes + qtd - 1) / 12)
+                const mesUltimoNome = new Date(anoFinal, mesFinal, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+                return (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+                    <span className="font-medium text-blue-700 dark:text-blue-300">📅 1º Desconto: </span>
+                    <span className="text-blue-600 dark:text-blue-400 capitalize">{mesNome}</span>
+                    {qtd > 1 && (
+                      <>
+                        <span className="text-blue-600 dark:text-blue-400"> → Último: </span>
+                        <span className="text-blue-600 dark:text-blue-400 capitalize">{mesUltimoNome}</span>
+                      </>
+                    )}
+                    {dia > diaCorte && (
+                      <span className="text-xs text-blue-500 dark:text-blue-400 ml-2">(dia {dia} &gt; corte dia {diaCorte})</span>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Comparação com margem */}
               {valorParcela > 0 && margemInfo && (
