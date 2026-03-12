@@ -26,3 +26,15 @@ scripts/fix-celular-socios.ts
 ║  💡 Script idempotente: pode re-executar para completar             ║
 ╚══════════════════════════════════════════════════════════════════════╝
 
+# Passo 1: Migrar estrutura base
+
+s
+
+# Passo 2: Primeira migração de vendas/parcelas (com bug)
+npx tsx app/scripts/migrate-vendas-parcelas-v2.ts
+
+# Passo 3: Corrigir vendas e parcelas ⭐ NOVO
+npx tsx app/scripts/migrate-corrigir-vendas-parcelas.ts
+
+# Validação: Verificar pensionistas
+npx tsx app/scripts/calcular-diferenca-exata-pensionistas.ts

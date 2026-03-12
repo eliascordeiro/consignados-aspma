@@ -12,7 +12,6 @@ import {
   XCircle,
   Clock,
   TrendingDown,
-  Info,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -233,21 +232,6 @@ export default function ConvenioDashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Info Box */}
-      <Card className="bg-muted/50">
-        <CardContent className="flex gap-3 py-4">
-          <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-muted-foreground">
-            <strong className="text-foreground">Controle Mensal de Descontos:</strong> Este dashboard mostra os descontos 
-            organizados por mês de vencimento. Em <strong>{data.stats.mesReferencia}</strong> você receberá <strong className="text-primary">
-            {data.stats.parcelasMesAtual} parcelas</strong> no valor de <strong className="text-primary">
-            {formatCurrency(Number(data.stats.valorMesAtual))}</strong>. As parcelas são contabilizadas independente do status 
-            de baixa (que controla apenas o desconto em folha dos sócios). <strong className="text-destructive">Vendas canceladas</strong> nunca 
-            são incluídas nos valores a receber.
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Vendas Recentes */}
       <Card>

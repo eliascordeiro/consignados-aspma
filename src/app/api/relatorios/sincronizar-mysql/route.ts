@@ -89,12 +89,14 @@ export async function POST(request: NextRequest) {
     let mysqlQuery = `
       SELECT 
         TRIM(p.matricula) as matricula,
+        TRIM(p.sequencia) as sequencia,
         TRIM(p.associado) as associado,
         TRIM(p.codconven) as convenio_codigo,
         TRIM(p.conveniado) as convenio_nome,
         CAST(p.nrseq AS UNSIGNED) as num_parcela,
         p.parcelas as qtd_parcelas,
-        p.valor, p.baixa as status,
+        p.valor, 
+        TRIM(p.baixa) as status,
         p.vencimento
       FROM parcelas p
       WHERE YEAR(p.vencimento) = ? AND MONTH(p.vencimento) = ?
@@ -125,20 +127,12 @@ export async function POST(request: NextRequest) {
     const vendasMap = new Map<string, any>();
 
     parcelasArray.forEach((parcela) => {
-      // Gerar chave única: matricula-convenio
-      const key = `${parcela.matricula}-${parcela.convenio_codigo}`;
+      // Gerar chave única: matricula-convenio-sequencia
+      const key = `${parcela.matricula}-${parcela.convenio_codigo}-${parcela.sequencia}`;
       
       if (!vendasMap.has(key)) {
-        // Gerar número de venda único baseado em hash melhorado
-        // Usando módulos menores para garantir que caiba em INT4 (max: 2,147,483,647)
-        const matriculaHash = (parcela.matricula || '0').split('').reduce(
-          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 20000, 0
-        );
-        const convenioHash = (parcela.convenio_codigo || '0').split('').reduce(
-          (acc: number, char: string) => ((acc * 31) + char.charCodeAt(0)) % 100000, 0
-        );
-        // Resultado máximo: (19999 * 100000) + 99999 = 2,000,099,999 (dentro de INT4)
-        const numeroVenda = (matriculaHash * 100000) + convenioHash;
+        // Usar a sequência real do MySQL como numeroVenda
+        const numeroVenda = parseInt(parcela.sequencia) || 0;
         
         vendasMap.set(key, {
           matricula: (parcela.matricula || '').trim(),
@@ -266,7 +260,7 @@ export async function POST(request: NextRequest) {
           const numeroParcela = parseInt(parcelaData.num_parcela) || 1;
           const valor = parseFloat(parcelaData.valor || '0');
           const dataVencimento = new Date(parcelaData.vencimento);
-          const baixa = (parcelaData.status === 1 || parcelaData.status === '1') ? 'S' : null;
+          const baixa = (parcelaData.status && parcelaData.status.trim() !== '') ? parcelaData.status.trim() : '';
 
           // Verificar se parcela já existe
           let parcela = await prisma.parcela.findFirst({

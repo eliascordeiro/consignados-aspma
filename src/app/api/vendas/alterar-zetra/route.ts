@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// URL base do serviço PHP Zetra (Railway ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
 const ZETRA_CONFIG = {
-  phpUrl: 'http://200.98.112.240/aspma/php/zetra_desktop/alterarConsignacao.php',
+  phpUrl: `${ZETRA_BASE_URL}/alterarConsignacao.php`,
   cliente: 'ASPMA',
   convenio: 'ASPMA-ARAUCARIA',
   usuario: 'aspma_xml',
