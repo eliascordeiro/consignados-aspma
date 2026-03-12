@@ -143,6 +143,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Venda não encontrada' }, { status: 404 });
     }
 
+    if (vendaExistente.cancelado) {
+      return NextResponse.json({ error: 'Venda cancelada não pode ser alterada' }, { status: 400 });
+    }
+
     const body = await request.json();
     const { operador, observacoes, parcelas } = body;
 
