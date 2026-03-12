@@ -557,6 +557,27 @@ export default function RelatoriosPage() {
           </p>
         </div>
 
+        {/* Card Débitos de Ativos (AS301) */}
+        <Link href="/cliente/relatorios/ativos">
+          <div
+            className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-green-400 dark:hover:border-green-500"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg text-foreground">
+                Débitos de Associados
+              </h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Parcelas em aberto de sócios ativos/regulares (Tipo ≠ 3 e 4). Baseado no AS301.
+            </p>
+          </div>
+        </Link>
+
         {/* Card Comparação */}
         <Link href="/cliente/relatorios/comparacao">
           <div

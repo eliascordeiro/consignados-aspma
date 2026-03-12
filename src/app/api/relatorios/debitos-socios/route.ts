@@ -151,6 +151,12 @@ export async function GET(request: NextRequest) {
       hasVendaFilter = true;
     }
 
+    // AS301.PRG: socios.codtipo <> '3' AND socios.codtipo <> '4' (sócios ativos/regulares)
+    if (tipoSocio === 'ativos') {
+      vendaFilter.socio = { ...vendaFilter.socio, codTipo: { notIn: [3, 4] } };
+      hasVendaFilter = true;
+    }
+
     if (hasVendaFilter) {
       where.venda = vendaFilter;
     }
