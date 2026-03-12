@@ -294,14 +294,17 @@ export async function DELETE(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    const targetUserId = await getDataUserId(session as any);
+    // MANAGER/ADMIN pode cancelar qualquer venda; USER subordinado filtra pelo userId do MANAGER
+    const userRole = session.user.role;
+    let vendaWhere: any = { id: params.id };
+    if (userRole !== 'MANAGER' && userRole !== 'ADMIN') {
+      const targetUserId = await getDataUserId(session as any);
+      vendaWhere.userId = targetUserId;
+    }
 
-    // Verifica se a venda existe e pertence ao usuário
+    // Verifica se a venda existe
     const venda = await prisma.venda.findFirst({
-      where: {
-        id: params.id,
-        userId: targetUserId,
-      },
+      where: vendaWhere,
       include: {
         socio: true,
         parcelas: true,
