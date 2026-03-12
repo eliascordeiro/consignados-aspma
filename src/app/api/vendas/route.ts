@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 import { getDataUserId } from '@/lib/get-data-user-id';
+import { formatCpf } from '@/lib/zetra-soap';
 
 // URL base do serviço PHP Zetra - mesma usada pela consulta de margem
 const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
@@ -441,7 +442,7 @@ export async function POST(request: NextRequest) {
           usuario: ZETRA_CONFIG.usuario,
           senha: ZETRA_CONFIG.senha,
           matricula: socio.matricula || '',
-          cpf: socio.cpf || '',
+          cpf: formatCpf(socio.cpf || ''),
           valorParcela: valorParcela.toString(),
           valorLiberado: valorParcela.toString(),
           prazo: quantidadeParcelas.toString(),
