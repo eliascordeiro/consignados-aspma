@@ -75,11 +75,18 @@ export async function GET(request: NextRequest) {
     const valorMesesAnteriores = parcelasMesesAnteriores.reduce((sum, p) => sum + Number(p.valor), 0)
     const valorMesesFuturos = parcelasMesesFuturos.reduce((sum, p) => sum + Number(p.valor), 0)
 
-    // Total de vendas ativas (não canceladas)
-    const totalVendasAtivas = await prisma.venda.count({
+    // Total de vendas em andamento (com parcelas no mês atual ou futuro)
+    const totalVendasEmAndamento = await prisma.venda.count({
       where: {
         convenioId: session.convenioId,
         cancelado: false,
+        parcelas: {
+          some: {
+            dataVencimento: {
+              gte: inicioMesAtual,
+            },
+          },
+        },
       },
     })
 
@@ -132,7 +139,7 @@ export async function GET(request: NextRequest) {
         parcelasCanceladas,
 
         // Totais
-        totalVendasAtivas,
+        totalVendasEmAndamento,
         vendasRegistradasMes,
 
         // Referência do mês

@@ -38,7 +38,7 @@ interface DashboardStats {
   parcelasCanceladas: number
 
   // Totais
-  totalVendasAtivas: number
+  totalVendasEmAndamento: number
   vendasRegistradasMes: number
 
   // Referência do mês
@@ -204,22 +204,22 @@ export default function ConvenioDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Total de Vendas */}
+        {/* Vendas em Andamento */}
         <Card className="border-l-4 border-l-accent">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total de Vendas
+                Vendas em Andamento
               </CardTitle>
               <ShoppingCart className="h-4 w-4 text-accent-foreground" />
             </div>
             <CardDescription className="text-xs">
-              Vendas ativas no sistema
+              Com parcelas a vencer
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-2xl font-bold text-foreground">
-              {data.stats.totalVendasAtivas}
+              {data.stats.totalVendasEmAndamento}
             </div>
             <div className="text-sm text-muted-foreground space-y-0.5">
               <div>{data.stats.vendasRegistradasMes} registradas este mês</div>
