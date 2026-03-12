@@ -19,6 +19,7 @@ export default function EditarVendaPage() {
 
   const [loading, setLoading] = useState(false);
   const [loadingVenda, setLoadingVenda] = useState(true);
+  const [cancelando, setCancelando] = useState(false);
   const [formData, setFormData] = useState({
     socioId: '',
     socioNome: '',
@@ -174,6 +175,35 @@ export default function EditarVendaPage() {
     const novasParcelas = [...parcelas];
     (novasParcelas[index] as any)[campo] = valor;
     setParcelas(novasParcelas);
+  };
+
+  const handleCancelarVenda = async () => {
+    const confirmacao = window.confirm(
+      `Tem certeza que deseja CANCELAR a venda #${formData.numeroVenda} de ${formData.socioNome}?\n\nEsta ação irá:\n- Liberar a margem na ZETRA (se aplicável)\n- Marcar a venda como cancelada\n\nEsta ação NÃO pode ser desfeita.`
+    );
+
+    if (!confirmacao) return;
+
+    try {
+      setCancelando(true);
+      const response = await fetch(`/api/vendas/${vendaId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.mensagem || data.error || 'Erro ao cancelar venda');
+      }
+
+      alert('Venda cancelada com sucesso!');
+      router.push('/cliente/vendas');
+    } catch (error: any) {
+      console.error('Erro ao cancelar venda:', error);
+      alert(error.message || 'Erro ao cancelar venda. Tente novamente.');
+    } finally {
+      setCancelando(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -455,20 +485,30 @@ export default function EditarVendaPage() {
         </div>
 
         {/* Botões */}
-        <div className="flex gap-4 justify-end mt-6">
-          <Link
-            href="/cliente/vendas"
-            className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500"
-          >
-            Cancelar
-          </Link>
+        <div className="flex gap-4 justify-between mt-6">
           <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+            type="button"
+            onClick={handleCancelarVenda}
+            disabled={cancelando || loading}
+            className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed font-medium"
           >
-            {loading ? 'Salvando...' : 'Salvar Alterações'}
+            {cancelando ? 'Cancelando...' : 'Cancelar Venda'}
           </button>
+          <div className="flex gap-4">
+            <Link
+              href="/cliente/vendas"
+              className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500"
+            >
+              Voltar
+            </Link>
+            <button
+              type="submit"
+              disabled={loading || cancelando}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Salvando...' : 'Salvar Alterações'}
+            </button>
+          </div>
         </div>
       </form>
 

@@ -5,6 +5,26 @@ import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 import { getDataUserId } from '@/lib/get-data-user-id';
 
+// ZETRA config - mesma URL da consulta margem (conforme AS200.PRG excluir_venda)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
+const ZETRA_LIQUIDAR_CONFIG = {
+  phpUrl: `${ZETRA_BASE_URL}/reservarExluirZetra.php`,
+  cliente: 'ASPMA',
+  convenio: 'ASPMA-ARAUCARIA',
+  usuario: 'aspma_xml',
+  senha: 'dcc0bd05',
+};
+
+function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
+  const startIndex = xml.indexOf(startTag);
+  if (startIndex === -1) return null;
+  const valueStart = startIndex + startTag.length;
+  const endIndex = xml.indexOf(endTag, valueStart);
+  if (endIndex === -1) return null;
+  return xml.substring(valueStart, endIndex).trim();
+}
+
 type RouteParams = Promise<{
   id: string;
 }>;
@@ -300,29 +320,46 @@ export async function DELETE(
       console.log(`🔥 [VENDA DELETE] Venda tipo ${tipoSocio} - Liquidando na ZETRA antes de deletar...`);
       
       try {
-        // Monta identificador conforme AS200.PRG: "M" + matricula + "S" + sequencia
+        // Conforme AS200.PRG excluir_venda(): adeIdentificador = "M" + matricula + "S" + sequencia
         const adeIdentificador = `M${venda.socio.matricula}S${venda.numeroVenda}`;
         
-        const zetraResponse = await fetch(`${request.url.split('/api')[0]}/api/vendas/liquidar-zetra`, {
+        // Chama ZETRA PHP diretamente (mesma URL da consulta margem)
+        const params_zetra = {
+          cliente: ZETRA_LIQUIDAR_CONFIG.cliente,
+          convenio: ZETRA_LIQUIDAR_CONFIG.convenio,
+          usuario: ZETRA_LIQUIDAR_CONFIG.usuario,
+          senha: ZETRA_LIQUIDAR_CONFIG.senha,
+          adeIdentificador: adeIdentificador,
+          codigoMotivoOperacao: '99',
+          obsMotivoOperacao: 'aspma',
+        };
+
+        console.log('📋 [VENDA DELETE] Parâmetros ZETRA:', JSON.stringify(params_zetra));
+
+        const queryParams = new URLSearchParams(params_zetra);
+        const urlWithParams = `${ZETRA_LIQUIDAR_CONFIG.phpUrl}?${queryParams.toString()}`;
+
+        const zetraResponse = await fetch(urlWithParams, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            adeIdentificador,
-            motivoCancelamento: 'Venda excluída',
-          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: queryParams.toString(),
         });
 
-        const zetraData = await zetraResponse.json();
-        console.log('📥 [VENDA DELETE] Resposta ZETRA liquidação:', zetraData);
+        const xmlResponse = await zetraResponse.text();
+        console.log('📥 [VENDA DELETE] Resposta ZETRA (primeiros 500 chars):', xmlResponse.substring(0, 500));
 
-        if (!zetraData.sucesso) {
-          console.log('⚠️  [VENDA DELETE] ZETRA recusou a liquidação:', zetraData.mensagem);
+        const sucesso = extractXmlValue('<ns10:sucesso>', '</ns10:sucesso>', xmlResponse);
+        const mensagem = extractXmlValue('<ns10:mensagem>', '</ns10:mensagem>', xmlResponse);
+        const codRetorno = extractXmlValue('<ns10:codRetorno>', '</ns10:codRetorno>', xmlResponse);
+
+        console.log('📊 [VENDA DELETE] Resultado ZETRA:', { sucesso, mensagem, codRetorno });
+
+        if (sucesso === 'false' || mensagem?.includes('FALHA') || mensagem?.includes('Erro')) {
+          console.log('⚠️  [VENDA DELETE] ZETRA recusou a liquidação:', mensagem);
           return NextResponse.json(
             {
               error: 'ZETRA recusou a liquidação', 
-              mensagem: zetraData.mensagem,
+              mensagem: mensagem || 'Erro desconhecido',
               detalhes: 'A margem não pôde ser liberada na ZETRA. Venda não foi excluída.',
             },
             { status: 400 }
