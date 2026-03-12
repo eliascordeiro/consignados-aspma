@@ -439,7 +439,7 @@ export async function POST(request: NextRequest) {
           convenio: ZETRA_CONFIG.convenio,
           usuario: ZETRA_CONFIG.usuario,
           senha: ZETRA_CONFIG.senha,
-          matricula: socio.matricula,
+          matricula: socio.matricula || '',
           cpf: socio.cpf || '',
           valorParcela: valorParcela.toString(),
           valorLiberado: valorParcela.toString(),
