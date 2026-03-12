@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
         },
         venda: {
           convenioId: convenio.id,
+          ativo: true,
+          cancelado: false,
         },
       },
       include: {
