@@ -5,6 +5,26 @@ import { createAuditLog, getRequestInfo } from '@/lib/audit-log';
 import { hasPermission } from '@/lib/permissions';
 import { getDataUserId } from '@/lib/get-data-user-id';
 
+// URL base do serviço PHP Zetra - mesma usada pela consulta de margem
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
+const ZETRA_CONFIG = {
+  phpUrl: `${ZETRA_BASE_URL}/reservarMargemZetra.php`,
+  cliente: 'ASPMA',
+  convenio: 'ASPMA-ARAUCARIA',
+  usuario: 'aspma_xml',
+  senha: 'dcc0bd05',
+};
+
+function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
+  const startIndex = xml.indexOf(startTag);
+  if (startIndex === -1) return null;
+  const valueStart = startIndex + startTag.length;
+  const endIndex = xml.indexOf(endTag, valueStart);
+  if (endIndex === -1) return null;
+  return xml.substring(valueStart, endIndex).trim();
+}
+
 // GET /api/vendas - Lista vendas com paginação
 export async function GET(request: NextRequest) {
   try {
@@ -413,28 +433,46 @@ export async function POST(request: NextRequest) {
       const adeIdentificador = `M${socio.matricula}S${novoNumeroVenda}`;
       
       try {
-        const zetraResponse = await fetch(`${request.url.split('/api')[0]}/api/vendas/reservar-zetra`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            matricula: socio.matricula,
-            cpf: socio.cpf,
-            valorParcela: valorParcela,
-            valorLiberado: valorParcela,
-            prazo: quantidadeParcelas,
-            adeIdentificador: adeIdentificador,
-          }),
+        // Chama ZETRA PHP diretamente (mesma URL da consulta de margem)
+        const queryParams = new URLSearchParams({
+          cliente: ZETRA_CONFIG.cliente,
+          convenio: ZETRA_CONFIG.convenio,
+          usuario: ZETRA_CONFIG.usuario,
+          senha: ZETRA_CONFIG.senha,
+          matricula: socio.matricula,
+          cpf: socio.cpf || '',
+          valorParcela: valorParcela.toString(),
+          valorLiberado: valorParcela.toString(),
+          prazo: quantidadeParcelas.toString(),
+          codVerba: '441',
+          servicoCodigo: '018',
+          adeIdentificador: adeIdentificador,
         });
 
-        const zetraData = await zetraResponse.json();
-        console.log('📥 [VENDA] Resposta ZETRA:', zetraData);
+        const urlWithParams = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`;
+        console.log('📤 [VENDA] Chamando ZETRA PHP diretamente:', ZETRA_CONFIG.phpUrl);
 
-        if (!zetraData.sucesso) {
-          console.log('❌ [VENDA] ZETRA recusou a reserva:', zetraData.mensagem);
+        const zetraResponse = await fetch(urlWithParams, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: queryParams.toString(),
+        });
+
+        const xmlResponse = await zetraResponse.text();
+        console.log('📥 [VENDA] Resposta ZETRA (primeiros 500 chars):', xmlResponse.substring(0, 500));
+
+        const sucesso = extractXmlValue('<ns10:sucesso>', '</ns10:sucesso>', xmlResponse);
+        const mensagem = extractXmlValue('<ns10:mensagem>', '</ns10:mensagem>', xmlResponse);
+        const codRetorno = extractXmlValue('<ns10:codRetorno>', '</ns10:codRetorno>', xmlResponse);
+
+        console.log('📊 [VENDA] Resultado ZETRA:', { sucesso, mensagem, codRetorno });
+
+        if (!zetraResponse.ok || sucesso === 'false' || mensagem?.includes('FALHA') || mensagem?.includes('Erro')) {
+          console.log('❌ [VENDA] ZETRA recusou a reserva:', mensagem);
           return NextResponse.json(
             { 
               error: 'ZETRA recusou a operação', 
-              mensagem: zetraData.mensagem,
+              mensagem: mensagem || 'Erro desconhecido',
               detalhes: 'A margem não pôde ser reservada no ZETRA. Venda não foi criada.',
             },
             { status: 400 }
