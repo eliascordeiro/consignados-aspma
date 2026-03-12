@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireConvenioSession } from '@/lib/convenio-auth'
 import { calcularDataCorte } from '@/lib/data-corte'
 import { createAuditLog, getRequestInfo } from '@/lib/audit-log'
+import { formatCpf } from '@/lib/zetra-soap'
 
 /**
  * @swagger
@@ -307,7 +308,7 @@ export async function GET(request: NextRequest) {
 
     // REGRA AS200.PRG: Tipos != 3 e != 4 = Consulta ZETRA
     const matricula = socio.matricula || ''
-    const cpf = socio.cpf || ''
+    const cpf = formatCpf(socio.cpf || '')
 
     if (!cpf || !matricula) {
       // Sem CPF ou matrícula, usa margem do banco
