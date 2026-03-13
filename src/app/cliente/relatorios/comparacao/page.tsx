@@ -193,7 +193,7 @@ export default function ComparacaoRelatoriosPage() {
         }, 500);
       } else {
         const error = await response.json();
-        alert(`Erro ao gerar relatório: ${error.error || 'Erro desconhecido'}`);
+        alert(error.error || 'Erro desconhecido');
         setProgress(0);
       }
     } catch (error) {

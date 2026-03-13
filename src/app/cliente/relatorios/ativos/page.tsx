@@ -118,7 +118,7 @@ export default function RelatorioAtivosPage() {
         setTimeout(() => { setProgress(0); alert('Relatório PDF gerado com sucesso!'); }, 500);
       } else {
         const error = await response.json();
-        alert(`Erro ao gerar relatório: ${error.error || 'Erro desconhecido'}`);
+        alert(error.error || 'Erro desconhecido');
         setProgress(0);
       }
     } catch (error) {
@@ -153,7 +153,7 @@ export default function RelatorioAtivosPage() {
         setTimeout(() => { setProgress(0); alert('Relatório Excel gerado com sucesso!'); }, 500);
       } else {
         const error = await response.json();
-        alert(`Erro ao gerar relatório: ${error.error || 'Erro desconhecido'}`);
+        alert(error.error || 'Erro desconhecido');
         setProgress(0);
       }
     } catch (error) {
@@ -193,7 +193,7 @@ export default function RelatorioAtivosPage() {
         setTimeout(() => { setProgress(0); alert('Relatório CSV gerado com sucesso!'); }, 500);
       } else {
         const error = await response.json();
-        alert(`Erro ao gerar relatório: ${error.error || 'Erro desconhecido'}`);
+        alert(error.error || 'Erro desconhecido');
         setProgress(0);
       }
     } catch (error) {
