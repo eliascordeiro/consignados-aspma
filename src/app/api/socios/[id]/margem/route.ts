@@ -7,6 +7,76 @@ import { hasPermission } from '@/lib/permissions';
 
 import { formatCpf } from '@/lib/zetra-soap';
 
+// URL base do serviço PHP Zetra (Railway interno ou servidor externo)
+const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop';
+
+const ZETRA_CONFIG = {
+  phpUrl: `${ZETRA_BASE_URL}/consultaMargemZetra.php`,
+  cliente: 'ASPMA',
+  convenio: 'ASPMA-ARAUCARIA',
+  usuario: 'aspma_xml',
+  senha: 'dcc0bd05',
+};
+
+function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
+  const startIndex = xml.indexOf(startTag);
+  if (startIndex === -1) return null;
+  const valueStart = startIndex + startTag.length;
+  const endIndex = xml.indexOf(endTag, valueStart);
+  if (endIndex === -1) return null;
+  return xml.substring(valueStart, endIndex).trim();
+}
+
+async function consultarMargemZetra(params: {
+  matricula: string;
+  cpf: string;
+  valorParcela: string;
+}): Promise<{ sucesso: boolean; margem?: number; mensagem?: string; codRetorno?: string }> {
+  const queryParams = new URLSearchParams({
+    cliente: ZETRA_CONFIG.cliente,
+    convenio: ZETRA_CONFIG.convenio,
+    usuario: ZETRA_CONFIG.usuario,
+    senha: ZETRA_CONFIG.senha,
+    matricula: params.matricula,
+    cpf: params.cpf,
+    valorParcela: params.valorParcela,
+  });
+
+  const urlWithParams = `${ZETRA_CONFIG.phpUrl}?${queryParams.toString()}`;
+  const response = await fetch(urlWithParams, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: queryParams.toString(),
+  });
+
+  if (!response.ok) {
+    return { sucesso: false, mensagem: `HTTP ${response.status}` };
+  }
+
+  const xmlResponse = await response.text();
+  if (!xmlResponse || xmlResponse.trim() === '') {
+    return { sucesso: false, mensagem: 'Resposta vazia' };
+  }
+
+  const sucesso = extractXmlValue('<ns13:sucesso>', '</ns13:sucesso>', xmlResponse);
+  const codRetorno = extractXmlValue('<ns13:codRetorno>', '</ns13:codRetorno>', xmlResponse);
+  const mensagem = extractXmlValue('<ns13:mensagem>', '</ns13:mensagem>', xmlResponse);
+
+  if (sucesso === 'false') {
+    return { sucesso: false, mensagem: mensagem || undefined, codRetorno: codRetorno || undefined };
+  }
+
+  const margemStr = extractXmlValue(
+    '<ns6:valorMargem xmlns:ns6="InfoMargem">',
+    '</ns6:valorMargem>',
+    xmlResponse
+  );
+
+  if (!margemStr) return { sucesso: false, mensagem: 'Margem não encontrada na resposta' };
+  const margem = parseFloat(margemStr);
+  return isNaN(margem) ? { sucesso: false, mensagem: 'Valor de margem inválido' } : { sucesso: true, margem };
+}
+
 // Função para calcular data de corte (Regra AS200.PRG)
 // Se dia > 09: próximo mês, senão: mês atual
 // Função para calcular descontos do mês (parcelas não pagas)
@@ -191,31 +261,24 @@ export async function GET(
       );
     }
 
-    // Faz a consulta ZETRA via endpoint Node.js interno
+    // Faz a consulta ZETRA diretamente via PHP (sem self-fetch)
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-      const zetraResponse = await fetch(`${baseUrl}/api/zetra/consultar-margem`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          matricula: matriculaAtual,
-          cpf: cpfFormatado,
-          valorParcela: valorParcela,
-        }),
+      const zetraResult = await consultarMargemZetra({
+        matricula: matriculaAtual,
+        cpf: cpfFormatado,
+        valorParcela: valorParcela,
       });
 
-      const zetraResult = await zetraResponse.json();
-
-      if (!zetraResult.success) {
-        console.log('⚠️  [API] ZETRA retornou erro:', zetraResult.error);
+      if (!zetraResult.sucesso) {
+        console.log('⚠️  [API] ZETRA retornou erro:', zetraResult.mensagem);
         return NextResponse.json({
           matricula: socio.matricula,
           nome: socio.nome,
           margem: 0,
           tipo: 'zetra_erro',
           fonte: 'tempo_real',
-          mensagem: zetraResult.error?.message || 'Erro desconhecido',
-          codRetorno: zetraResult.error?.code,
+          mensagem: zetraResult.mensagem || 'Erro desconhecido',
+          codRetorno: zetraResult.codRetorno,
         });
       }
 
