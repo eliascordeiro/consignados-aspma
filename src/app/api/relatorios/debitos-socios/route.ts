@@ -129,8 +129,9 @@ export async function GET(request: NextRequest) {
 
     // Monta filtros de venda (convênio, sócio, tipoSocio)
     // IMPORTANTE: SEM filtro de userId - AS302.PRG traz TODOS os pensionistas do sistema
-    const vendaFilter: any = {};
-    let hasVendaFilter = false;
+    // Sempre excluir vendas canceladas
+    const vendaFilter: any = { cancelado: false };
+    let hasVendaFilter = true;
 
     if (convenioId) {
       vendaFilter.convenio = { id: parseInt(convenioId) };
