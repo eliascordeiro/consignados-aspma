@@ -92,6 +92,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
                 razao_soc: true,
                 fantasia: true,
                 tipo: true,
+                userId: true,
               },
             })
           }
@@ -99,12 +100,25 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           if (convenioVinculado) {
             console.log("   🏢 User auto-criado de convênio:", convenioVinculado.razao_soc)
 
-            // Re-vincular se necessário
+            // Re-vincular se necessário, mas NUNCA sobrescrever userId de ADMIN/MANAGER
             if (!await prisma.convenio.findFirst({ where: { userId: user.id } })) {
-              await prisma.convenio.update({
-                where: { id: convenioVinculado.id },
-                data: { userId: user.id },
-              })
+              // Verificar se o userId atual aponta para ADMIN/MANAGER - se sim, não sobrescrever
+              let podeAtualizar = true
+              if ((convenioVinculado as any).userId) {
+                const dono = await prisma.users.findUnique({
+                  where: { id: (convenioVinculado as any).userId },
+                  select: { role: true },
+                })
+                if (dono?.role === 'ADMIN' || dono?.role === 'MANAGER') {
+                  podeAtualizar = false
+                }
+              }
+              if (podeAtualizar) {
+                await prisma.convenio.update({
+                  where: { id: convenioVinculado.id },
+                  data: { userId: user.id },
+                })
+              }
             }
 
             // Setar cookie convenio_session
@@ -263,11 +277,25 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           return null
         }
 
+        // Atualizar userId APENAS se ainda não foi atribuído a um ADMIN/MANAGER
+        // Nunca sobrescrever ownership de admin/manager com um auto-user convenio
         if (!convenio.userId || convenio.userId !== convenioUser.id) {
-          await prisma.convenio.update({
-            where: { id: convenio.id },
-            data: { userId: convenioUser.id },
-          })
+          let podeAtualizarUserId = true
+          if (convenio.userId) {
+            const donoAtual = await prisma.users.findUnique({
+              where: { id: convenio.userId },
+              select: { role: true },
+            })
+            if (donoAtual?.role === 'ADMIN' || donoAtual?.role === 'MANAGER') {
+              podeAtualizarUserId = false
+            }
+          }
+          if (podeAtualizarUserId) {
+            await prisma.convenio.update({
+              where: { id: convenio.id },
+              data: { userId: convenioUser.id },
+            })
+          }
         }
 
         const token = await new SignJWT({

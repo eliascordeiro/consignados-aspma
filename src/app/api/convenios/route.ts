@@ -87,7 +87,9 @@ export async function GET(req: NextRequest) {
       statusFilter = false
     }
 
-    const where: any = { userId: dataUserId }
+    // ADMIN vê TODOS os convênios (não filtra por userId)
+    // MANAGER/USER vê apenas os convênios do seu userId
+    const where: any = session.user?.role === 'ADMIN' ? {} : { userId: dataUserId }
 
     if (statusFilter !== null) {
       where.ativo = statusFilter
