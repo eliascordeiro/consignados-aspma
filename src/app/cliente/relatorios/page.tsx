@@ -648,6 +648,7 @@ export default function RelatoriosPage() {
                   >
                     <option value="socio">Sócio</option>
                     <option value="convenio">Convênio</option>
+                    <option value="consignataria">Consignatária</option>
                   </select>
                 </div>
               </div>

@@ -127,6 +127,15 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Consignatária: excluir parcelas com baixa 'S' (quitada) ou 'X' (cancelada)
+    // Não considera vendas canceladas (cancelado: false já está no vendaFilter)
+    if (agrupaPor === 'consignataria') {
+      where.OR = [
+        { baixa: null },
+        { baixa: { notIn: ['S', 'X'] } },
+      ];
+    }
+
     // Monta filtros de venda (convênio, sócio, tipoSocio)
     // IMPORTANTE: SEM filtro de userId - AS302.PRG traz TODOS os pensionistas do sistema
     // Sempre excluir vendas canceladas
@@ -247,6 +256,48 @@ export async function GET(request: NextRequest) {
           headers: {
             'Content-Type': 'text/csv; charset=' + encoding,
             'Content-Disposition': `attachment; filename="debitos-convenios-${mesAno}.csv"`,
+          },
+        });
+      }
+    } else if (agrupaPor === 'consignataria') {
+      const gruposConsignataria = agruparPorConvenio(parcelas);
+
+      if (formato === 'pdf') {
+        const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano);
+        return new NextResponse(pdfBuffer, {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="debitos-consignatarias-${mesAno}.pdf"`,
+          },
+        });
+      } else if (formato === 'excel') {
+        const excelBuffer = await gerarExcelConsignataria(gruposConsignataria, mes, ano);
+        return new NextResponse(excelBuffer, {
+          headers: {
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition': `attachment; filename="debitos-consignatarias-${mesAno}.xlsx"`,
+          },
+        });
+      } else if (formato === 'csv') {
+        const delimiter = searchParams.get('delimiter') || ';';
+        const encoding = searchParams.get('encoding') || 'utf-8';
+        const includeHeader = searchParams.get('includeHeader') !== 'false';
+        const decimalSeparator = searchParams.get('decimalSeparator') || ',';
+
+        const csvContent = gerarCSVConsignataria(gruposConsignataria, mes, ano, {
+          delimiter,
+          includeHeader,
+          decimalSeparator,
+        });
+
+        const buffer = encoding === 'iso-8859-1'
+          ? iconv.encode(csvContent, 'iso-8859-1')
+          : Buffer.from(csvContent, 'utf-8');
+
+        return new NextResponse(buffer as unknown as BodyInit, {
+          headers: {
+            'Content-Type': 'text/csv; charset=' + encoding,
+            'Content-Disposition': `attachment; filename="debitos-consignatarias-${mesAno}.csv"`,
           },
         });
       }
@@ -1501,5 +1552,404 @@ function gerarCSVConvenio(
     ''
   ].join(delimiter));
   
+  return lines.join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GERADORES DE RELATÓRIO POR CONSIGNATÁRIA
+// ═══════════════════════════════════════════════════════════════════
+
+async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: number): Promise<ArrayBuffer> {
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const mesNomes = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  const colors = {
+    primary: [41, 128, 185],
+    secondary: [52, 73, 94],
+    accent: [231, 76, 60],
+    success: [39, 174, 96],
+    lightGray: [236, 240, 241],
+    darkGray: [127, 140, 141],
+    white: [255, 255, 255],
+    tableHeader: [52, 152, 219],
+    tableAlt: [245, 247, 250],
+  };
+
+  let y = 15;
+  const pageHeight = doc.internal.pageSize.height;
+  const pageWidth = doc.internal.pageSize.width;
+  const margin = 10;
+  let pageNumber = 1;
+
+  const addFooter = () => {
+    doc.setFontSize(8);
+    doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+    doc.setFont('helvetica', 'normal');
+    const footerText = `Página ${pageNumber} • Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`;
+    doc.text(footerText, pageWidth / 2, pageHeight - 8, { align: 'center' });
+    doc.setDrawColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+    doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+    pageNumber++;
+  };
+
+  const addHeader = (isFirstPage = false) => {
+    if (isFirstPage) {
+      y = 15;
+      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text('RELATÓRIO DE DÉBITOS', pageWidth / 2, 12, { align: 'center' });
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Agrupamento por Consignatária', pageWidth / 2, 18, { align: 'center' });
+      y = 30;
+      doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      doc.roundedRect(pageWidth / 2 - 35, y - 5, 70, 10, 2, 2, 'F');
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(`PERÍODO: ${mesNomes[mes - 1].toUpperCase()}/${ano}`, pageWidth / 2, y, { align: 'center' });
+      y += 12;
+    } else {
+      y = 8;
+      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.rect(0, 0, pageWidth, 12, 'F');
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`Débitos - ${mesNomes[mes - 1]}/${ano} - Agrupamento por Consignatária`, pageWidth / 2, 7, { align: 'center' });
+      y += 7;
+    }
+  };
+
+  addHeader(true);
+  let totalGeral = 0;
+  let isFirstGroup = true;
+
+  grupos.forEach((grupo) => {
+    if (y > pageHeight - 40) {
+      addFooter();
+      doc.addPage();
+      addHeader(false);
+      isFirstGroup = true;
+    }
+
+    if (!isFirstGroup) {
+      y += 3;
+      doc.setDrawColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 5;
+    }
+    isFirstGroup = false;
+
+    // ═══ CARD DA CONSIGNATÁRIA ═══
+    doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
+
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('CONSIGNATÁRIA:', margin + 3, y + 5);
+
+    doc.setFontSize(10);
+    const nomeText = grupo.convenioNome.length > 80 ? grupo.convenioNome.substring(0, 77) + '...' : grupo.convenioNome;
+    doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
+
+    y += 15;
+
+    // ═══ CABEÇALHO DA TABELA ═══
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+
+    const col1 = margin + 3;
+    const col2 = pageWidth - 100;
+    const col3 = pageWidth - 85;
+    const col4 = pageWidth - 55;
+    const col5 = pageWidth - 15;
+
+    doc.text('SÓCIO', col1, y + 1.5);
+    doc.text('PARC.', col2, y + 1.5);
+    doc.text('DE', col3, y + 1.5);
+    doc.text('VALOR', col4, y + 1.5, { align: 'right' });
+    doc.text('ST', col5, y + 1.5);
+
+    y += 7;
+
+    doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+
+    let isAlternate = false;
+
+    grupo.parcelas.forEach((parcela) => {
+      if (y > pageHeight - 30) {
+        addFooter();
+        doc.addPage();
+        addHeader(false);
+
+        // Repetir card da consignatária na continuação
+        doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
+        doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('CONSIGNATÁRIA:', margin + 3, y + 5);
+        doc.setFontSize(10);
+        doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
+        y += 15;
+
+        doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
+        doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text('SÓCIO', col1, y + 1.5);
+        doc.text('PARC.', col2, y + 1.5);
+        doc.text('DE', col3, y + 1.5);
+        doc.text('VALOR', col4, y + 1.5, { align: 'right' });
+        doc.text('ST', col5, y + 1.5);
+        y += 7;
+
+        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        isAlternate = false;
+      }
+
+      if (isAlternate) {
+        doc.setFillColor(colors.tableAlt[0], colors.tableAlt[1], colors.tableAlt[2]);
+        doc.rect(margin, y - 3, pageWidth - 2 * margin, 6, 'F');
+      }
+
+      const socioText = parcela.socio.length > 100 ? parcela.socio.substring(0, 97) + '...' : parcela.socio;
+      doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      doc.setFont('helvetica', 'normal');
+      doc.text(socioText, col1, y + 1);
+      doc.text(parcela.pc.toString().padStart(2, '0'), col2, y + 1);
+      doc.text(parcela.de.toString().padStart(2, '0'), col3, y + 1);
+
+      const valorFormatado = parcela.valor.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      doc.setFont('helvetica', 'bold');
+      doc.text(`R$ ${valorFormatado}`, col4, y + 1, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+
+      if (parcela.st === 'OK') {
+        doc.setTextColor(colors.success[0], colors.success[1], colors.success[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text('✓', col5, y + 1);
+        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+        doc.setFont('helvetica', 'normal');
+      }
+
+      y += 6;
+      isAlternate = !isAlternate;
+    });
+
+    // ═══ TOTAL DA CONSIGNATÁRIA ═══
+    y += 2;
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.rect(pageWidth - margin - 95, y - 3, 95, 8, 'F');
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('TOTAL DA CONSIGNATÁRIA:', pageWidth - margin - 92, y + 2);
+    const totalFormatado = grupo.total.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    doc.setFontSize(10);
+    doc.text(`R$ ${totalFormatado}`, pageWidth - margin - 3, y + 2, { align: 'right' });
+
+    y += 10;
+    totalGeral += grupo.total;
+  });
+
+  // ═══ TOTAL GERAL ═══
+  if (y > pageHeight - 35) {
+    addFooter();
+    doc.addPage();
+    addHeader(false);
+  }
+
+  y += 5;
+  doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+  doc.roundedRect(pageWidth / 2 - 60, y - 4, 120, 12, 2, 2, 'F');
+  doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('TOTAL GERAL:', pageWidth / 2 - 52, y + 3);
+  const totalGeralFormatado = totalGeral.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  doc.setFontSize(13);
+  doc.text(`R$ ${totalGeralFormatado}`, pageWidth / 2 + 52, y + 3, { align: 'right' });
+
+  y += 18;
+  doc.setFontSize(7);
+  doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+  doc.setFont('helvetica', 'italic');
+  const totalConsignatarias = grupos.length;
+  const totalParcelas = grupos.reduce((sum, g) => sum + g.parcelas.length, 0);
+  doc.text(
+    `Total de Consignatárias: ${totalConsignatarias} • Total de Parcelas: ${totalParcelas}`,
+    pageWidth / 2, y, { align: 'center' }
+  );
+
+  addFooter();
+  return doc.output('arraybuffer') as ArrayBuffer;
+}
+
+async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano: number): Promise<ArrayBuffer> {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Débitos por Consignatária');
+
+  const mesNomes = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  worksheet.mergeCells('A1:G1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'DÉBITOS POR CONSIGNATÁRIA';
+  titleCell.font = { bold: true, size: 14 };
+  titleCell.alignment = { horizontal: 'center' };
+
+  worksheet.mergeCells('A2:G2');
+  const periodoCell = worksheet.getCell('A2');
+  periodoCell.value = `Período: ${mesNomes[mes - 1]}/${ano}`;
+  periodoCell.font = { bold: true, size: 11 };
+  periodoCell.alignment = { horizontal: 'center' };
+
+  const headerRow = worksheet.addRow([
+    'Consignatária',
+    'Sócio',
+    'Pc',
+    'De',
+    'Valor',
+    'Total',
+    'St',
+  ]);
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFD3D3D3' },
+  };
+
+  let totalGeral = 0;
+
+  grupos.forEach((grupo) => {
+    grupo.parcelas.forEach((parcela, index) => {
+      const row = worksheet.addRow([
+        index === 0 ? grupo.convenioNome : '',
+        parcela.socio,
+        parcela.pc,
+        parcela.de,
+        parcela.valor,
+        index === grupo.parcelas.length - 1 ? grupo.total : '',
+        parcela.st,
+      ]);
+      row.getCell(5).numFmt = '#,##0.00';
+      if (index === grupo.parcelas.length - 1) {
+        row.getCell(6).numFmt = '#,##0.00';
+        row.getCell(6).font = { bold: true };
+      }
+    });
+    totalGeral += grupo.total;
+  });
+
+  const totalRow = worksheet.addRow(['', '', '', '', 'TOTAL GERAL:', totalGeral, '']);
+  totalRow.font = { bold: true };
+  totalRow.getCell(6).numFmt = '#,##0.00';
+
+  worksheet.columns = [
+    { width: 40 }, // Consignatária
+    { width: 50 }, // Sócio
+    { width: 5 },  // Pc
+    { width: 5 },  // De
+    { width: 15 }, // Valor
+    { width: 15 }, // Total
+    { width: 5 },  // St
+  ];
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const uint8Array = new Uint8Array(buffer);
+  return uint8Array.buffer.slice(uint8Array.byteOffset, uint8Array.byteOffset + uint8Array.byteLength);
+}
+
+function gerarCSVConsignataria(
+  grupos: GrupoConvenio[],
+  mes: number,
+  ano: number,
+  options: {
+    delimiter: string;
+    includeHeader: boolean;
+    decimalSeparator: string;
+  }
+): string {
+  const { delimiter, includeHeader, decimalSeparator } = options;
+  const lines: string[] = [];
+
+  if (includeHeader) {
+    lines.push([
+      'Consignataria',
+      'Socio',
+      'Parcela',
+      'Total_Parcelas',
+      'Valor',
+      'Total_Consignataria',
+      'Status',
+    ].join(delimiter));
+  }
+
+  let totalGeral = 0;
+
+  grupos.forEach((grupo) => {
+    grupo.parcelas.forEach((parcela, index) => {
+      const valorFormatado = decimalSeparator === ','
+        ? parcela.valor.toFixed(2).replace('.', ',')
+        : parcela.valor.toFixed(2);
+
+      const totalFormatado = index === grupo.parcelas.length - 1
+        ? (decimalSeparator === ',' ? grupo.total.toFixed(2).replace('.', ',') : grupo.total.toFixed(2))
+        : '';
+
+      lines.push([
+        `"${grupo.convenioNome}"`,
+        `"${parcela.socio}"`,
+        parcela.pc.toString(),
+        parcela.de.toString(),
+        valorFormatado,
+        totalFormatado,
+        parcela.st,
+      ].join(delimiter));
+    });
+    totalGeral += grupo.total;
+  });
+
+  const totalGeralFormatado = decimalSeparator === ','
+    ? totalGeral.toFixed(2).replace('.', ',')
+    : totalGeral.toFixed(2);
+
+  lines.push(['', '', '', '', 'TOTAL GERAL:', totalGeralFormatado, ''].join(delimiter));
+
   return lines.join('\n');
 }
