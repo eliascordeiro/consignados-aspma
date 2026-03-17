@@ -34,7 +34,7 @@ const navItems = [
   },
   {
     href: '/portal/compras',
-    label: 'Minhas Compras',
+    label: 'Compras',
     icon: (active: boolean) => (
       <svg className={`w-6 h-6 ${active ? 'text-emerald-600' : 'text-gray-400'}`} fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2}
@@ -130,7 +130,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 }`}
               >
                 {item.icon(active)}
-                <span className={`text-xs font-medium ${active ? 'text-emerald-600' : 'text-gray-400'}`}>
+                <span className={`text-[10px] font-medium whitespace-nowrap ${active ? 'text-emerald-600' : 'text-gray-400'}`}>
                   {item.label}
                 </span>
               </Link>
