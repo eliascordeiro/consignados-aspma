@@ -128,14 +128,9 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Consignatária: excluir parcelas com baixa 'S' (quitada) ou 'X' (cancelada)
-    // Não considera vendas canceladas (cancelado: false já está no vendaFilter)
-    if (agrupaPor === 'consignataria') {
-      where.OR = [
-        { baixa: null },
-        { baixa: { notIn: ['S', 'X'] } },
-      ];
-    }
+    // Consignatária: inclui TODAS as parcelas (inclusive baixa 'S'/'X')
+    // Parcelas com baixa 'S' ou 'X' aparecem no relatório com ST = 'BX'
+    // Sem filtro adicional de baixa para agrupamento por consignatária
 
     // Monta filtros de venda (convênio, sócio, tipoSocio)
     // IMPORTANTE: SEM filtro de userId - AS302.PRG traz TODOS os pensionistas do sistema
@@ -267,7 +262,7 @@ export async function GET(request: NextRequest) {
         });
       }
     } else if (agrupaPor === 'consignataria') {
-      const gruposConsignataria = agruparPorConvenio(parcelas);
+      const gruposConsignataria = agruparPorConsignataria(parcelas);
 
       if (formato === 'pdf') {
         const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano);
@@ -934,6 +929,48 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
 
   // Ordenar por razão social (ordem alfabética)
   return Array.from(grupos.values()).sort((a, b) => 
+    a.convenioNome.localeCompare(b.convenioNome, 'pt-BR', { sensitivity: 'base' })
+  );
+}
+
+// Agrupamento por Consignatária: inclui parcelas com baixa 'S'/'X' marcando ST = 'BX'
+function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
+  const grupos: Map<number, GrupoConvenio> = new Map();
+
+  parcelas.forEach((parcela) => {
+    if (!parcela.venda.convenio) return;
+
+    const convenioId = parcela.venda.convenio.id;
+
+    if (!grupos.has(convenioId)) {
+      grupos.set(convenioId, {
+        convenioId,
+        convenioNome: parcela.venda.convenio.razao_soc,
+        cnpj: parcela.venda.convenio.cnpj,
+        agencia: parcela.venda.convenio.agencia,
+        conta: parcela.venda.convenio.conta,
+        banco: parcela.venda.convenio.banco,
+        parcelas: [],
+        total: 0,
+      });
+    }
+
+    const grupo = grupos.get(convenioId)!;
+    const socioTexto = `${parcela.venda.socio.matricula || ''} - ${parcela.venda.socio.nome}`;
+    const baixaVal = (parcela.baixa || '').toString().trim().toUpperCase();
+    const st = (baixaVal === 'S' || baixaVal === 'X') ? 'BX' : '';
+
+    grupo.parcelas.push({
+      socio: socioTexto,
+      pc: parcela.numeroParcela,
+      de: parcela.venda.quantidadeParcelas,
+      valor: Number(parcela.valor),
+      st,
+    });
+    grupo.total += Number(parcela.valor);
+  });
+
+  return Array.from(grupos.values()).sort((a, b) =>
     a.convenioNome.localeCompare(b.convenioNome, 'pt-BR', { sensitivity: 'base' })
   );
 }
@@ -1757,10 +1794,10 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
       doc.text(`R$ ${valorFormatado}`, col4, y + 1, { align: 'right' });
       doc.setFont('helvetica', 'normal');
 
-      if (parcela.st === 'OK') {
-        doc.setTextColor(colors.success[0], colors.success[1], colors.success[2]);
+      if (parcela.st === 'BX') {
+        doc.setTextColor(231, 76, 60); // laranja/vermelho = baixado
         doc.setFont('helvetica', 'bold');
-        doc.text('✓', col5, y + 1);
+        doc.text('BX', col5, y + 1);
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
         doc.setFont('helvetica', 'normal');
       }
