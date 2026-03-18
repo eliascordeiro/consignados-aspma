@@ -214,8 +214,8 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'pdf',
-        // Filtra por empresa (consignatária) quando selecionada
-        ...(consignatariaId && { empresaId: consignatariaId }),
+        // Filtra por empresa (consignatária) quando selecionada (exceto 'todas')
+        ...(consignatariaId && consignatariaId !== 'todas' && { empresaId: consignatariaId }),
       });
 
       setProgress(30);
@@ -273,8 +273,8 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'excel',
-        // Filtra por empresa (consignatária) quando selecionada
-        ...(consignatariaId && { empresaId: consignatariaId }),
+        // Filtra por empresa (consignatária) quando selecionada (exceto 'todas')
+        ...(consignatariaId && consignatariaId !== 'todas' && { empresaId: consignatariaId }),
       });
 
       setProgress(30);
@@ -337,8 +337,8 @@ export default function RelatoriosPage() {
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
         decimalSeparator: csvOptions.decimalSeparator,
-        // Filtra por empresa (consignatária) quando selecionada
-        ...(consignatariaId && { empresaId: consignatariaId }),
+        // Filtra por empresa (consignatária) quando selecionada (exceto 'todas')
+        ...(consignatariaId && consignatariaId !== 'todas' && { empresaId: consignatariaId }),
       });
 
       setProgress(30);
@@ -600,6 +600,7 @@ export default function RelatoriosPage() {
                   className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow text-sm"
                 >
                   <option value="">— Selecione uma consignatária —</option>
+                  <option value="todas">Todas</option>
                   {consignatarias.map((c) => (
                     <option key={c.id} value={c.id.toString()}>
                       {c.nome}
@@ -609,7 +610,9 @@ export default function RelatoriosPage() {
               )}
               {consignatariaId && (
                 <p className={`mt-1.5 text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
-                  → Filtrado por empresa: {consignatarias.find(c => c.id.toString() === consignatariaId)?.nome}
+                  {consignatariaId === 'todas'
+                    ? '→ Todas as consignatárias (sem filtro por empresa)'
+                    : `→ Filtrado por empresa: ${consignatarias.find(c => c.id.toString() === consignatariaId)?.nome}`}
                 </p>
               )}
             </div>
@@ -648,7 +651,7 @@ export default function RelatoriosPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               Filtros do Relatório {consignatariaId
-                ? `— ${consignatarias.find(c => c.id.toString() === consignatariaId)?.nome || 'Consignatária'}`
+                ? `— ${consignatariaId === 'todas' ? 'Todas as Consignatárias' : (consignatarias.find(c => c.id.toString() === consignatariaId)?.nome || 'Consignatária')}`
                 : '— Débitos de Sócios'}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
