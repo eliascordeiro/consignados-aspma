@@ -957,8 +957,8 @@ function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
 
     const grupo = grupos.get(convenioId)!;
     const socioTexto = `${parcela.venda.socio.matricula || ''} - ${parcela.venda.socio.nome}`;
-    const baixaVal = (parcela.baixa || '').toString().trim().toUpperCase();
-    const st = (baixaVal === 'S' || baixaVal === 'X') ? 'BX' : '';
+    const baixaVal = (parcela.baixa || '').toString().trim();
+    const st = baixaVal !== '' ? 'BX' : '';
 
     grupo.parcelas.push({
       socio: socioTexto,
