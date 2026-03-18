@@ -18,6 +18,12 @@ interface Socio {
   nome: string;
 }
 
+interface Consignataria {
+  id: number;
+  nome: string;
+  tipo: string | null;
+}
+
 type TipoRelatorio = 'socios' | 'pensionistas' | 'comparacao' | null;
 
 export default function RelatoriosPage() {
@@ -50,6 +56,38 @@ export default function RelatoriosPage() {
     includeHeader: true,
     decimalSeparator: ',',
   });
+  const [consignatarias, setConsignatarias] = useState<Consignataria[]>([]);
+  const [consignatariaId, setConsignatariaId] = useState<string>('');
+  const [loadingConsignatarias, setLoadingConsignatarias] = useState(false);
+
+  // Carrega consignatárias ao montar o componente
+  useEffect(() => {
+    carregarConsignatarias();
+  }, []);
+
+  const carregarConsignatarias = async () => {
+    setLoadingConsignatarias(true);
+    try {
+      const response = await fetch('/api/relatorios/consignatarias');
+      if (response.ok) {
+        const data = await response.json();
+        setConsignatarias(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar consignatárias:', error);
+    } finally {
+      setLoadingConsignatarias(false);
+    }
+  };
+
+  const selecionarConsignataria = (id: string) => {
+    setConsignatariaId(id);
+    if (!id) {
+      setTipoRelatorio(null);
+      return;
+    }
+    setTipoRelatorio('socios');
+  };
 
   // Busca convênios ao digitar
   useEffect(() => {
@@ -176,11 +214,8 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'pdf',
-        // Adiciona parâmetros específicos para pensionistas
-        ...(tipoRelatorio === 'pensionistas' && { 
-          tipoSocio: 'pensionistas',
-          apenasEmAberto: 'true' 
-        }),
+        // Filtra por empresa (consignatária) quando selecionada
+        ...(consignatariaId && { empresaId: consignatariaId }),
       });
 
       setProgress(30);
@@ -194,8 +229,8 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const nomeArquivo = tipoRelatorio === 'pensionistas' 
-          ? `debitos-pensionistas-${filtros.mesAno}.pdf`
+        const nomeArquivo = consignatariaId
+          ? `debitos-consignataria-${filtros.mesAno}.pdf`
           : `debitos-socios-${filtros.mesAno}.pdf`;
         a.download = nomeArquivo;
         document.body.appendChild(a);
@@ -238,11 +273,8 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'excel',
-        // Adiciona parâmetros específicos para pensionistas
-        ...(tipoRelatorio === 'pensionistas' && { 
-          tipoSocio: 'pensionistas',
-          apenasEmAberto: 'true' 
-        }),
+        // Filtra por empresa (consignatária) quando selecionada
+        ...(consignatariaId && { empresaId: consignatariaId }),
       });
 
       setProgress(30);
@@ -256,8 +288,8 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const nomeArquivo = tipoRelatorio === 'pensionistas' 
-          ? `debitos-pensionistas-${filtros.mesAno}.xlsx`
+        const nomeArquivo = consignatariaId
+          ? `debitos-consignataria-${filtros.mesAno}.xlsx`
           : `debitos-socios-${filtros.mesAno}.xlsx`;
         a.download = nomeArquivo;
         document.body.appendChild(a);
@@ -305,11 +337,8 @@ export default function RelatoriosPage() {
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
         decimalSeparator: csvOptions.decimalSeparator,
-        // Adiciona parâmetros específicos para pensionistas
-        ...(tipoRelatorio === 'pensionistas' && { 
-          tipoSocio: 'pensionistas',
-          apenasEmAberto: 'true' 
-        }),
+        // Filtra por empresa (consignatária) quando selecionada
+        ...(consignatariaId && { empresaId: consignatariaId }),
       });
 
       setProgress(30);
@@ -323,8 +352,8 @@ export default function RelatoriosPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const nomeArquivo = tipoRelatorio === 'pensionistas' 
-          ? `debitos-pensionistas-${filtros.mesAno}.csv`
+        const nomeArquivo = consignatariaId
+          ? `debitos-consignataria-${filtros.mesAno}.csv`
           : `debitos-socios-${filtros.mesAno}.csv`;
         a.download = nomeArquivo;
         document.body.appendChild(a);
@@ -482,37 +511,37 @@ export default function RelatoriosPage() {
       </div>
 
       {/* Cards de Relatórios Disponíveis */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Card Débitos de Sócios */}
         <div 
-          onClick={() => setTipoRelatorio('socios')}
-          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 ${
-            tipoRelatorio === 'socios'
+          onClick={() => { setTipoRelatorio('socios'); setConsignatariaId(''); }}
+          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 order-1 ${
+            tipoRelatorio === 'socios' && !consignatariaId
               ? 'bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 text-white ring-2 ring-blue-400/50'
               : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500'
           }`}
         >
-          {tipoRelatorio === 'socios' && (
+          {tipoRelatorio === 'socios' && !consignatariaId && (
             <div className="absolute top-3 right-3">
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
             </div>
           )}
           <div className="flex items-center gap-3 mb-3">
             <div className={`p-2 rounded-lg ${
-              tipoRelatorio === 'socios'
+              tipoRelatorio === 'socios' && !consignatariaId
                 ? 'bg-white/20'
                 : 'bg-blue-100 dark:bg-blue-900/50'
             }`}>
-              <svg className={`w-6 h-6 ${tipoRelatorio === 'socios' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className={`w-6 h-6 ${tipoRelatorio === 'socios' && !consignatariaId ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <h3 className={`font-bold text-lg ${tipoRelatorio === 'socios' ? 'text-white' : 'text-foreground'}`}>
+            <h3 className={`font-bold text-lg ${tipoRelatorio === 'socios' && !consignatariaId ? 'text-white' : 'text-foreground'}`}>
               Débitos de Sócios
             </h3>
           </div>
           <p className={`text-sm leading-relaxed ${
-            tipoRelatorio === 'socios'
+            tipoRelatorio === 'socios' && !consignatariaId
               ? 'text-blue-100'
               : 'text-muted-foreground'
           }`}>
@@ -520,66 +549,75 @@ export default function RelatoriosPage() {
           </p>
         </div>
 
-        {/* Card Débitos Pensionistas */}
-        <div
-          onClick={() => setTipoRelatorio('pensionistas')}
-          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 ${
-            tipoRelatorio === 'pensionistas'
-              ? 'bg-gradient-to-br from-amber-500 to-amber-700 dark:from-amber-600 dark:to-amber-800 text-white ring-2 ring-amber-400/50'
-              : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-amber-400 dark:hover:border-amber-500'
-          }`}
-        >
-          {tipoRelatorio === 'pensionistas' && (
+        {/* Grupo Consignatárias - ocupa linha inteira */}
+        <div className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 order-3 ${
+          (tipoRelatorio === 'socios' && consignatariaId)
+            ? 'bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800 text-white ring-2 ring-teal-400/50'
+            : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500'
+        }`}>
+          {(tipoRelatorio === 'socios' && consignatariaId) && (
             <div className="absolute top-3 right-3">
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
             </div>
           )}
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2 rounded-lg ${
-              tipoRelatorio === 'pensionistas'
-                ? 'bg-white/20'
-                : 'bg-amber-100 dark:bg-amber-900/50'
-            }`}>
-              <svg className={`w-6 h-6 ${tipoRelatorio === 'pensionistas' ? 'text-white' : 'text-amber-600 dark:text-amber-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-            </div>
-            <h3 className={`font-bold text-lg ${tipoRelatorio === 'pensionistas' ? 'text-white' : 'text-foreground'}`}>
-              Débitos Pensionistas
-            </h3>
-          </div>
-          <p className={`text-sm leading-relaxed ${
-            tipoRelatorio === 'pensionistas'
-              ? 'text-amber-100'
-              : 'text-muted-foreground'
-          }`}>
-            Parcelas em aberto de sócios tipo Pensionista/Local (Tipo 3 e 4). Baseado no AS302.
-          </p>
-        </div>
-
-        {/* Card Débitos de Ativos (AS301) */}
-        <Link href="/cliente/relatorios/ativos">
-          <div
-            className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-green-400 dark:hover:border-green-500"
-          >
+          <div className="p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className={`p-2 rounded-lg ${
+                (tipoRelatorio === 'socios' && consignatariaId)
+                  ? 'bg-white/20'
+                  : 'bg-teal-100 dark:bg-teal-900/50'
+              }`}>
+                <svg className={`w-6 h-6 ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-white' : 'text-teal-600 dark:text-teal-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="font-bold text-lg text-foreground">
-                Débitos de Associados
-              </h3>
+              <div>
+                <h3 className={`font-bold text-lg ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-white' : 'text-foreground'}`}>
+                  Consignatárias
+                </h3>
+                <p className={`text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
+                  Empresas onde os sócios são lotados
+                </p>
+              </div>
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Parcelas em aberto de sócios ativos/regulares (Tipo ≠ 3 e 4). Baseado no AS301.
-            </p>
+
+            <div className="mt-2">
+              <label className={`block text-xs font-semibold mb-1.5 ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
+                Selecione a Consignatária
+              </label>
+              {loadingConsignatarias ? (
+                <div className="flex items-center gap-2 py-2.5">
+                  <svg className="w-4 h-4 animate-spin text-teal-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <select
+                  value={consignatariaId}
+                  onChange={(e) => selecionarConsignataria(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow text-sm"
+                >
+                  <option value="">— Selecione uma consignatária —</option>
+                  {consignatarias.map((c) => (
+                    <option key={c.id} value={c.id.toString()}>
+                      {c.nome}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {consignatariaId && (
+                <p className={`mt-1.5 text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
+                  → Filtrado por empresa: {consignatarias.find(c => c.id.toString() === consignatariaId)?.nome}
+                </p>
+              )}
+            </div>
           </div>
-        </Link>
+        </div>
 
         {/* Card Comparação */}
-        <Link href="/cliente/relatorios/comparacao">
+        <Link href="/cliente/relatorios/comparacao" className="order-2">
           <div
             className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500"
           >
@@ -609,13 +647,12 @@ export default function RelatoriosPage() {
               <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
-              Filtros do Relatório {tipoRelatorio === 'pensionistas' && '- Pensionistas'}
+              Filtros do Relatório {consignatariaId
+                ? `— ${consignatarias.find(c => c.id.toString() === consignatariaId)?.nome || 'Consignatária'}`
+                : '— Débitos de Sócios'}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {tipoRelatorio === 'pensionistas' 
-                ? 'Filtros para parcelas em aberto de pensionistas (Tipo 3 e 4)'
-                : 'Configure os filtros e escolha o formato de exportação'
-              }
+              Configure os filtros e escolha o formato de exportação
             </p>
           </div>
 
@@ -653,9 +690,8 @@ export default function RelatoriosPage() {
                 </div>
               </div>
 
-              {/* Sócio - Não exibe para relatório de pensionistas */}
-              {tipoRelatorio !== 'pensionistas' && (
-                <div className="relative">
+              {/* Sócio */}
+              <div className="relative">
                   <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
                     Sócio
                     <span className="ml-1 text-xs font-normal text-gray-400">(opcional)</span>
@@ -706,8 +742,7 @@ export default function RelatoriosPage() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
+              </div>
 
               {/* Convênio */}
               <div className="relative">
@@ -868,42 +903,7 @@ export default function RelatoriosPage() {
                   </>
                 )}
 
-                {/* Botão MySQL - Apenas para Pensionistas */}
-                {tipoRelatorio === 'pensionistas' && (
-                  <>
-                    <div className="relative my-4">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-border"></div>
-                      </div>
-                      <div className="relative flex justify-center text-xs">
-                        <span className="px-2 bg-card text-card-foreground text-muted-foreground font-medium">
-                          Banco Legado (MySQL)
-                        </span>
-                      </div>
-                    </div>
 
-                    <button
-                      type="button"
-                      onClick={gerarRelatorioPensionistaMySQL}
-                      disabled={loading || !canExport}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group"
-                      title={!canExport ? 'Sem permissão para exportar' : 'Gerar relatório do MySQL (AS302.PRG)'}
-                    >
-                      <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/40 transition-colors">
-                        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                        </svg>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-bold text-foreground text-sm flex items-center gap-1.5">
-                          PDF MySQL
-                          <span className="text-[10px] px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 rounded font-semibold">AS302</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">Dados do banco legado</div>
-                      </div>
-                    </button>
-                  </>
-                )}
               </div>
 
               {/* Barra de Progresso */}
@@ -927,35 +927,7 @@ export default function RelatoriosPage() {
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                   O que o relatório inclui
                 </h4>
-                {tipoRelatorio === 'pensionistas' ? (
-                  <ul className="text-xs text-muted-foreground space-y-1.5">
-                    <li className="flex items-start gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Apenas sócios Tipo 3 e 4 (Pensionistas/Locais)
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Somente parcelas em aberto (sem baixa)
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Agrupamento por sócio ou convênio
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Baseado no relatório AS302 (Harbour)
-                    </li>
-                  </ul>
-                ) : (
-                  <ul className="text-xs text-muted-foreground space-y-1.5">
+                <ul className="text-xs text-muted-foreground space-y-1.5">
                     <li className="flex items-start gap-1.5">
                       <svg className="w-3.5 h-3.5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -981,7 +953,6 @@ export default function RelatoriosPage() {
                       Indicação de parcelas pagas (OK)
                     </li>
                   </ul>
-                )}
               </div>
             </div>
           </div>

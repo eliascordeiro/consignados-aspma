@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
     const formato = searchParams.get('formato') || 'pdf'; // 'pdf' ou 'excel'
     const tipoSocio = searchParams.get('tipoSocio'); // 'pensionistas' = codTipo 3 e 4
     const apenasEmAberto = searchParams.get('apenasEmAberto'); // 'true' = somente parcelas sem baixa
+    const empresaId = searchParams.get('empresaId'); // filtra sócios pela empresa consignatária (novo sistema)
 
     if (!mesAno) {
       return NextResponse.json(
@@ -164,6 +165,12 @@ export async function GET(request: NextRequest) {
     // AS301.PRG: socios.codtipo <> '3' AND socios.codtipo <> '4' (sócios ativos/regulares)
     if (tipoSocio === 'ativos') {
       vendaFilter.socio = { ...vendaFilter.socio, codTipo: { notIn: [3, 4] } };
+      hasVendaFilter = true;
+    }
+
+    // Filtro por empresa (consignatária) - novo sistema: empresaId substitui codTipo legado
+    if (empresaId) {
+      vendaFilter.socio = { ...vendaFilter.socio, empresaId: parseInt(empresaId) };
       hasVendaFilter = true;
     }
 
