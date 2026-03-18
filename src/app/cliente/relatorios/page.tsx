@@ -512,45 +512,8 @@ export default function RelatoriosPage() {
 
       {/* Cards de Relatórios Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {/* Card Débitos de Sócios */}
-        <div 
-          onClick={() => { setTipoRelatorio('socios'); setConsignatariaId(''); }}
-          className={`relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 order-1 ${
-            tipoRelatorio === 'socios' && !consignatariaId
-              ? 'bg-gradient-to-br from-blue-500 to-blue-700 dark:from-blue-600 dark:to-blue-800 text-white ring-2 ring-blue-400/50'
-              : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500'
-          }`}
-        >
-          {tipoRelatorio === 'socios' && !consignatariaId && (
-            <div className="absolute top-3 right-3">
-              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
-            </div>
-          )}
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2 rounded-lg ${
-              tipoRelatorio === 'socios' && !consignatariaId
-                ? 'bg-white/20'
-                : 'bg-blue-100 dark:bg-blue-900/50'
-            }`}>
-              <svg className={`w-6 h-6 ${tipoRelatorio === 'socios' && !consignatariaId ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <h3 className={`font-bold text-lg ${tipoRelatorio === 'socios' && !consignatariaId ? 'text-white' : 'text-foreground'}`}>
-              Débitos de Sócios
-            </h3>
-          </div>
-          <p className={`text-sm leading-relaxed ${
-            tipoRelatorio === 'socios' && !consignatariaId
-              ? 'text-blue-100'
-              : 'text-muted-foreground'
-          }`}>
-            Parcelas por período com agrupamento por sócio ou convênio. PDF, Excel e CSV.
-          </p>
-        </div>
-
         {/* Grupo Consignatárias - ocupa linha inteira */}
-        <div className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 order-3 ${
+        <div className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 ${
           (tipoRelatorio === 'socios' && consignatariaId)
             ? 'bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800 text-white ring-2 ring-teal-400/50'
             : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500'
@@ -620,7 +583,7 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Card Comparação */}
-        <Link href="/cliente/relatorios/comparacao" className="order-2">
+        <Link href="/cliente/relatorios/comparacao">
           <div
             className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500"
           >
