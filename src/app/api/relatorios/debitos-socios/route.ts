@@ -598,10 +598,10 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
       doc.setFont('helvetica', 'normal');
       
       // Status
-      if (parcela.st === 'OK') {
-        doc.setTextColor(colors.success[0], colors.success[1], colors.success[2]);
+      if (parcela.st === 'BX') {
+        doc.setTextColor(231, 76, 60);
         doc.setFont('helvetica', 'bold');
-        doc.text('✓', col5, y + 1);
+        doc.text('BX', col5, y + 1);
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
         doc.setFont('helvetica', 'normal');
       }
@@ -880,12 +880,13 @@ function agruparPorSocio(parcelas: any[]): GrupoSocio[] {
       ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`
       : 'Sem convênio';
     
+    const baixaSocio = (parcela.baixa || '').toString().trim();
     grupo.parcelas.push({
       convenio: convenioTexto,
       pc: parcela.numeroParcela,
       de: parcela.venda.quantidadeParcelas,
       valor: Number(parcela.valor),
-      st: parcela.baixa ? 'OK' : '',
+      st: baixaSocio !== '' ? 'BX' : '',
     });
     grupo.total += Number(parcela.valor);
   });
@@ -916,13 +917,13 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
 
     const grupo = grupos.get(convenioId)!;
     const socioTexto = `${parcela.venda.socio.matricula || ''} - ${parcela.venda.socio.nome}`;
-    
+    const baixaConv = (parcela.baixa || '').toString().trim();
     grupo.parcelas.push({
       socio: socioTexto,
       pc: parcela.numeroParcela,
       de: parcela.venda.quantidadeParcelas,
       valor: Number(parcela.valor),
-      st: parcela.baixa ? 'OK' : '',
+      st: baixaConv !== '' ? 'BX' : '',
     });
     grupo.total += Number(parcela.valor);
   });
@@ -1302,10 +1303,10 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
       doc.setFont('helvetica', 'normal');
       
       // Status
-      if (parcela.st === 'OK') {
-        doc.setTextColor(colors.success[0], colors.success[1], colors.success[2]);
+      if (parcela.st === 'BX') {
+        doc.setTextColor(231, 76, 60);
         doc.setFont('helvetica', 'bold');
-        doc.text('✓', col5, y + 1);
+        doc.text('BX', col5, y + 1);
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
         doc.setFont('helvetica', 'normal');
       }

@@ -650,8 +650,8 @@ export default function RelatoriosPage() {
                     className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   >
                     <option value="socio">Sócio</option>
-                    <option value="convenio">Convênio</option>
-                    <option value="consignataria">Consignatária</option>
+                    <option value="convenio">Resumido</option>
+                    <option value="consignataria">Extrato</option>
                   </select>
                 </div>
               </div>
