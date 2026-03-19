@@ -563,7 +563,7 @@ export default function RelatoriosPage() {
                   className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow text-sm"
                 >
                   <option value="">— Selecione uma consignatária —</option>
-                  <option value="todas">Todas</option>
+                  <option value="todas">TODAS</option>
                   {consignatarias.map((c) => (
                     <option key={c.id} value={c.id.toString()}>
                       {c.nome}
