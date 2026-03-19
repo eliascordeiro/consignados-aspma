@@ -59,10 +59,12 @@ export default function RelatoriosPage() {
   const [consignatarias, setConsignatarias] = useState<Consignataria[]>([]);
   const [consignatariaId, setConsignatariaId] = useState<string>('');
   const [loadingConsignatarias, setLoadingConsignatarias] = useState(false);
+  const [showConsigModal, setShowConsigModal] = useState(false);
 
   // ── Estado para relatórios "Para Consignatárias" (apenas débitos em aberto) ──
   const [consigRelId, setConsigRelId] = useState<string>('');
   const [showConsigRelForm, setShowConsigRelForm] = useState(false);
+  const [showConsigRelModal, setShowConsigRelModal] = useState(false);
   const [filtrosConsigRel, setFiltrosConsigRel] = useState({
     mesAno: new Date().toISOString().slice(0, 7),
     agrupaPor: 'socio',
@@ -102,6 +104,22 @@ export default function RelatoriosPage() {
   const selecionarConsigRel = (id: string) => {
     setConsigRelId(id);
     setShowConsigRelForm(!!id);
+  };
+
+  const abrirModalConsig = () => {
+    setShowConsigModal(true);
+  };
+
+  const fecharModalConsig = () => {
+    setShowConsigModal(false);
+  };
+
+  const abrirModalConsigRel = () => {
+    setShowConsigRelModal(true);
+  };
+
+  const fecharModalConsigRel = () => {
+    setShowConsigRelModal(false);
   };
 
   // Busca convênios ao digitar
@@ -645,74 +663,47 @@ export default function RelatoriosPage() {
       {/* Cards de Relatórios Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Grupo Consignatárias - ocupa linha inteira */}
-        <div className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 ${
-          (tipoRelatorio === 'socios' && consignatariaId)
-            ? 'bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800 text-white ring-2 ring-teal-400/50'
-            : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500'
-        }`}>
+        <button
+          type="button"
+          onClick={abrirModalConsig}
+          className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 text-left w-full cursor-pointer ${
+            (tipoRelatorio === 'socios' && consignatariaId)
+              ? 'bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800 text-white ring-2 ring-teal-400/50'
+              : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500'
+          }`}
+        >
           {(tipoRelatorio === 'socios' && consignatariaId) && (
             <div className="absolute top-3 right-3">
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
             </div>
           )}
           <div className="p-5">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${
-                (tipoRelatorio === 'socios' && consignatariaId)
-                  ? 'bg-white/20'
-                  : 'bg-teal-100 dark:bg-teal-900/50'
+                (tipoRelatorio === 'socios' && consignatariaId) ? 'bg-white/20' : 'bg-teal-100 dark:bg-teal-900/50'
               }`}>
                 <svg className={`w-6 h-6 ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-white' : 'text-teal-600 dark:text-teal-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className={`font-bold text-lg ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-white' : 'text-foreground'}`}>
                   Consignatárias
                 </h3>
                 <p className={`text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
-                  Empresas onde os sócios são lotados
+                  {consignatariaId
+                    ? (consignatariaId === 'todas' ? 'Todas as consignatárias selecionadas' : `${consignatarias.find(c => c.id.toString() === consignatariaId)?.nome || 'Consignatária selecionada'}`)
+                    : 'Empresas onde os sócios são lotados — clique para configurar'}
                 </p>
               </div>
-            </div>
-
-            <div className="mt-2">
-              <label className={`block text-xs font-semibold mb-1.5 ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
-                Selecione a Consignatária
-              </label>
-              {loadingConsignatarias ? (
-                <div className="flex items-center gap-2 py-2.5">
-                  <svg className="w-4 h-4 animate-spin text-teal-400" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  <span className="text-sm text-muted-foreground">Carregando...</span>
-                </div>
-              ) : (
-                <select
-                  value={consignatariaId}
-                  onChange={(e) => selecionarConsignataria(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow text-sm"
-                >
-                  <option value="">— Selecione uma consignatária —</option>
-                  <option value="todas">TODAS</option>
-                  {consignatarias.map((c) => (
-                    <option key={c.id} value={c.id.toString()}>
-                      {c.nome}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {consignatariaId && (
-                <p className={`mt-1.5 text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
-                  {consignatariaId === 'todas'
-                    ? '→ Todas as consignatárias (sem filtro por empresa)'
-                    : `→ Filtrado por empresa: ${consignatarias.find(c => c.id.toString() === consignatariaId)?.nome}`}
-                </p>
-              )}
+              <div className={`flex-shrink-0 ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Card Comparação */}
         <Link href="/cliente/relatorios/comparacao">
@@ -736,85 +727,52 @@ export default function RelatoriosPage() {
         </Link>
 
         {/* Card Para Consignatárias - Débitos em Aberto */}
-        <div className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 ${
-          showConsigRelForm
-            ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-emerald-600 dark:to-emerald-800 text-white ring-2 ring-emerald-400/50'
-            : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-emerald-400 dark:hover:border-emerald-500'
-        }`}>
+        <button
+          type="button"
+          onClick={abrirModalConsigRel}
+          className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 text-left w-full cursor-pointer ${
+            showConsigRelForm
+              ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-emerald-600 dark:to-emerald-800 text-white ring-2 ring-emerald-400/50'
+              : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-emerald-400 dark:hover:border-emerald-500'
+          }`}
+        >
           {showConsigRelForm && (
             <div className="absolute top-3 right-3">
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
             </div>
           )}
           <div className="p-5">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${showConsigRelForm ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-900/50'}`}>
                 <svg className={`w-6 h-6 ${showConsigRelForm ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className={`font-bold text-lg ${showConsigRelForm ? 'text-white' : 'text-foreground'}`}>
                   Para Consignatárias
                 </h3>
                 <p className={`text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
-                  Débitos em aberto — apenas parcelas sem baixa
+                  {consigRelId
+                    ? (consigRelId === 'todas' ? 'Todas as consignatárias · débitos em aberto' : `${consignatarias.find(c => c.id.toString() === consigRelId)?.nome || 'Selecionada'} · débitos em aberto`)
+                    : 'Débitos em aberto — apenas parcelas sem baixa — clique para configurar'}
                 </p>
               </div>
-            </div>
-            <div className="mt-2">
-              <label className={`block text-xs font-semibold mb-1.5 ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
-                Selecione a Consignatária
-              </label>
-              {loadingConsignatarias ? (
-                <div className="flex items-center gap-2 py-2.5">
-                  <svg className="w-4 h-4 animate-spin text-emerald-400" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  <span className="text-sm text-muted-foreground">Carregando...</span>
-                </div>
-              ) : (
-                <select
-                  value={consigRelId}
-                  onChange={(e) => selecionarConsigRel(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow text-sm"
-                >
-                  <option value="">— Selecione uma consignatária —</option>
-                  <option value="todas">TODAS</option>
-                  {consignatarias.map((c) => (
-                    <option key={c.id} value={c.id.toString()}>{c.nome}</option>
-                  ))}
-                </select>
-              )}
-              {consigRelId && (
-                <p className={`mt-1.5 text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
-                  {consigRelId === 'todas'
-                    ? '→ Todas as consignatárias (sem filtro por empresa)'
-                    : `→ Filtrado por empresa: ${consignatarias.find(c => c.id.toString() === consigRelId)?.nome}`}
-                </p>
-              )}
+              <div className={`flex-shrink-0 ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
-      {/* Formulário Principal - Exibe apenas se um tipo de relatório for selecionado */}
-      {tipoRelatorio && tipoRelatorio !== 'comparacao' && (
+      {/* [inline form removed — filters now live inside the Consignatárias modal] */}
+      {false && tipoRelatorio && tipoRelatorio !== 'comparacao' && (
         <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border overflow-hidden">
-          {/* Header do formulário */}
           <div className="px-6 py-4 bg-muted/30/80 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              Filtros do Relatório {consignatariaId
-                ? `— ${consignatariaId === 'todas' ? 'Todas as Consignatárias' : (consignatarias.find(c => c.id.toString() === consignatariaId)?.nome || 'Consignatária')}`
-                : '— Débitos de Sócios'}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Configure os filtros e escolha o formato de exportação
-            </p>
+            <h2 className="text-lg font-bold text-foreground"></h2>
           </div>
 
         <div className="p-6">
@@ -1121,29 +1079,246 @@ export default function RelatoriosPage() {
         </div>
       )}
 
-      {/* Formulário Para Consignatárias — Débitos em Aberto */}
-      {showConsigRelForm && (
-        <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border overflow-hidden mt-6">
-          <div className="px-6 py-4 bg-muted/30/80 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Débitos em Aberto — Para Consignatária
-              {consigRelId === 'todas'
-                ? ' — Todas'
-                : consigRelId
-                  ? ` — ${consignatarias.find(c => c.id.toString() === consigRelId)?.nome || ''}`
-                  : ''}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Somente parcelas sem baixa (débitos ativos para desconto em folha)
-            </p>
+      {/* Modal Consignatárias (Débitos de Sócios) */}
+      {showConsigModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) fecharModalConsig(); }}>
+          <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-4 bg-teal-50 dark:bg-teal-900/20 border-b border-teal-200 dark:border-teal-800 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-teal-100 dark:bg-teal-900/50 rounded-lg">
+                  <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Relatório por Consignatária</h2>
+                  <p className="text-xs text-muted-foreground">Configure os filtros e exporte</p>
+                </div>
+              </div>
+              <button onClick={fecharModalConsig} className="p-2 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-800/50 text-muted-foreground hover:text-foreground transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {/* Body */}
+            <div className="overflow-y-auto flex-1">
+              <div className="p-6 space-y-5">
+                {/* Consignatária */}
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Consignatária *</label>
+                  {loadingConsignatarias ? (
+                    <div className="flex items-center gap-2 py-2.5">
+                      <svg className="w-4 h-4 animate-spin text-teal-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span className="text-sm text-muted-foreground">Carregando...</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={consignatariaId}
+                      onChange={(e) => selecionarConsignataria(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    >
+                      <option value="">— Selecione uma consignatária —</option>
+                      <option value="todas">TODAS</option>
+                      {consignatarias.map((c) => (
+                        <option key={c.id} value={c.id.toString()}>{c.nome}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                {/* Período e Agrupamento */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Período *</label>
+                    <input
+                      type="month"
+                      value={filtros.mesAno}
+                      onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Agrupar por *</label>
+                    <select
+                      value={filtros.agrupaPor}
+                      onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    >
+                      <option value="socio">Sócio</option>
+                      <option value="convenio">Resumido</option>
+                      <option value="consignataria">Extrato</option>
+                    </select>
+                  </div>
+                </div>
+                {/* Sócio */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                    Sócio <span className="text-xs font-normal text-gray-400">(opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchSocio}
+                      onChange={(e) => { setSearchSocio(e.target.value); if (!e.target.value) limparSocio(); }}
+                      placeholder="Buscar por matrícula ou nome..."
+                      className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    />
+                    {filtros.socioMatricula ? (
+                      <button type="button" onClick={limparSocio} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    ) : (
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    )}
+                  </div>
+                  {showSocioList && socios.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                      {socios.map((socio) => (
+                        <div key={socio.id} onClick={() => selecionarSocio(socio)} className="px-4 py-3 hover:bg-teal-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border last:border-b-0 transition-colors">
+                          <div className="font-semibold text-foreground text-sm">{socio.nome}</div>
+                          {socio.matricula && <div className="text-xs text-muted-foreground mt-0.5">Matrícula: {socio.matricula}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Convênio */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                    Convênio <span className="text-xs font-normal text-gray-400">(opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchConvenio}
+                      onChange={(e) => { setSearchConvenio(e.target.value); if (!e.target.value) limparConvenio(); }}
+                      placeholder="Buscar por código ou razão social..."
+                      className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    />
+                    {filtros.convenioId ? (
+                      <button type="button" onClick={limparConvenio} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    ) : (
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    )}
+                  </div>
+                  {showConvenioList && convenios.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                      {convenios.map((convenio) => (
+                        <div key={convenio.id} onClick={() => selecionarConvenio(convenio)} className="px-4 py-3 hover:bg-teal-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border last:border-b-0 transition-colors">
+                          <div className="font-semibold text-foreground text-sm">{convenio.razao_soc}</div>
+                          {convenio.codigo && <div className="text-xs text-muted-foreground mt-0.5">Código: {convenio.codigo}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* Footer - Botões de exportação */}
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex-shrink-0">
+              {loading && (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-muted-foreground">Gerando relatório...</span>
+                    <span className="text-xs font-bold text-teal-600 dark:text-teal-400">{progress}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-gradient-to-r from-teal-500 to-teal-600 h-1.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" onClick={gerarRelatorioPDF} disabled={loading || !canExport}
+                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                  PDF
+                </button>
+                <button type="button" onClick={gerarRelatorioExcel} disabled={loading || !canExport}
+                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Excel
+                </button>
+                <button type="button" onClick={() => setShowCSVModal(true)} disabled={loading || !canExport}
+                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  CSV
+                </button>
+                {tipoRelatorio === 'socios' && (
+                  <button type="button" onClick={gerarRelatorioSociosMySQL} disabled={loading || !canExport}
+                    className="flex-1 min-w-[100px] flex items-center justify-center gap-2 px-3 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                    PDF MySQL
+                  </button>
+                )}
+                <button type="button" onClick={fecharModalConsig}
+                  className="px-4 py-2.5 bg-background border border-border text-foreground rounded-lg hover:bg-muted transition-colors font-semibold text-sm">
+                  Fechar
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Filtros */}
-              <div className="space-y-5">
+        </div>
+      )}
+
+      {/* Modal Para Consignatárias — Débitos em Aberto */}
+      {showConsigRelModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) fecharModalConsigRel(); }}>
+          <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-4 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-200 dark:border-emerald-800 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
+                  <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Para Consignatárias</h2>
+                  <p className="text-xs text-muted-foreground">Débitos em aberto · apenas parcelas sem baixa</p>
+                </div>
+              </div>
+              <button onClick={fecharModalConsigRel} className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-muted-foreground hover:text-foreground transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {/* Body */}
+            <div className="overflow-y-auto flex-1">
+              <div className="p-6 space-y-5">
+                {/* Consignatária */}
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Consignatária *</label>
+                  {loadingConsignatarias ? (
+                    <div className="flex items-center gap-2 py-2.5">
+                      <svg className="w-4 h-4 animate-spin text-emerald-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      <span className="text-sm text-muted-foreground">Carregando...</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={consigRelId}
+                      onChange={(e) => selecionarConsigRel(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
+                    >
+                      <option value="">— Selecione uma consignatária —</option>
+                      <option value="todas">TODAS</option>
+                      {consignatarias.map((c) => (
+                        <option key={c.id} value={c.id.toString()}>{c.nome}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                {/* Período e Agrupamento */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Período *</label>
@@ -1169,79 +1344,52 @@ export default function RelatoriosPage() {
                 </div>
                 <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                   <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium flex items-start gap-1.5">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
+                    <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                     {filtrosConsigRel.agrupaPor === 'socio'
                       ? 'Sócios: lista cada parcela ativa agrupada por sócio (sem parcelas com baixa)'
                       : 'Resumido: uma linha por sócio com total acumulado das parcelas em aberto'}
                   </p>
                 </div>
               </div>
-              {/* Exportação */}
-              <div className="lg:border-l lg:border-gray-200 dark:lg:border-gray-700 lg:pl-6">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Exportar Relatório
-                </h3>
-                <div className="space-y-3">
-                  <button type="button" onClick={gerarRelatorioPDFConsig} disabled={loadingConsigRel || !canExport}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group">
-                    <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-lg group-hover:bg-red-200 dark:group-hover:bg-red-800/40 transition-colors">
-                      <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-foreground text-sm">PDF</div>
-                      <div className="text-xs text-muted-foreground">Documento para impressão</div>
-                    </div>
-                  </button>
-                  <button type="button" onClick={gerarRelatorioExcelConsig} disabled={loadingConsigRel || !canExport}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-green-400 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors">
-                      <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-foreground text-sm">Excel</div>
-                      <div className="text-xs text-muted-foreground">Planilha editável (.xlsx)</div>
-                    </div>
-                  </button>
-                  <button type="button" onClick={gerarRelatorioCSVConsig} disabled={loadingConsigRel || !canExport}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group">
-                    <div className="p-2 bg-orange-100 dark:bg-orange-900/40 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800/40 transition-colors">
-                      <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-foreground text-sm">CSV</div>
-                      <div className="text-xs text-muted-foreground">Dados delimitados</div>
-                    </div>
-                  </button>
-                </div>
-                {loadingConsigRel && (
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-medium text-muted-foreground">Gerando relatório...</span>
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{progressConsigRel}%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                      <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressConsigRel}%` }} />
-                    </div>
+            </div>
+            {/* Footer */}
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex-shrink-0">
+              {loadingConsigRel && (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-muted-foreground">Gerando relatório...</span>
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{progressConsigRel}%</span>
                   </div>
-                )}
+                  <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-1.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressConsigRel}%` }} />
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" onClick={gerarRelatorioPDFConsig} disabled={loadingConsigRel || !canExport}
+                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                  PDF
+                </button>
+                <button type="button" onClick={gerarRelatorioExcelConsig} disabled={loadingConsigRel || !canExport}
+                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Excel
+                </button>
+                <button type="button" onClick={gerarRelatorioCSVConsig} disabled={loadingConsigRel || !canExport}
+                  className="flex-1 min-w-[80px] flex items-center justify-center gap-2 px-3 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  CSV
+                </button>
+                <button type="button" onClick={fecharModalConsigRel}
+                  className="px-4 py-2.5 bg-background border border-border text-foreground rounded-lg hover:bg-muted transition-colors font-semibold text-sm">
+                  Fechar
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-
 
       {/* Modal de Configuração CSV */}
       {showCSVModal && (
