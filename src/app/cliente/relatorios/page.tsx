@@ -60,6 +60,16 @@ export default function RelatoriosPage() {
   const [consignatariaId, setConsignatariaId] = useState<string>('');
   const [loadingConsignatarias, setLoadingConsignatarias] = useState(false);
 
+  // ── Estado para relatórios "Para Consignatárias" (apenas débitos em aberto) ──
+  const [consigRelId, setConsigRelId] = useState<string>('');
+  const [showConsigRelForm, setShowConsigRelForm] = useState(false);
+  const [filtrosConsigRel, setFiltrosConsigRel] = useState({
+    mesAno: new Date().toISOString().slice(0, 7),
+    agrupaPor: 'socio',
+  });
+  const [loadingConsigRel, setLoadingConsigRel] = useState(false);
+  const [progressConsigRel, setProgressConsigRel] = useState(0);
+
   // Carrega consignatárias ao montar o componente
   useEffect(() => {
     carregarConsignatarias();
@@ -87,6 +97,11 @@ export default function RelatoriosPage() {
       return;
     }
     setTipoRelatorio('socios');
+  };
+
+  const selecionarConsigRel = (id: string) => {
+    setConsigRelId(id);
+    setShowConsigRelForm(!!id);
   };
 
   // Busca convênios ao digitar
@@ -380,6 +395,123 @@ export default function RelatoriosPage() {
     }
   };
 
+  // ── Exportações para Consignatárias (débitos em aberto) ──────────────────
+
+  const gerarRelatorioPDFConsig = async () => {
+    if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    setLoadingConsigRel(true);
+    setProgressConsigRel(10);
+    try {
+      const queryParams = new URLSearchParams({
+        mesAno: filtrosConsigRel.mesAno,
+        agrupaPor: filtrosConsigRel.agrupaPor,
+        formato: 'pdf',
+        apenasEmAberto: 'true',
+        ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
+      });
+      setProgressConsigRel(30);
+      const response = await fetch(`/api/relatorios/debitos-socios?${queryParams}`);
+      setProgressConsigRel(60);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `debitos-abertos-${filtrosConsigRel.mesAno}.pdf`;
+        document.body.appendChild(a); a.click();
+        window.URL.revokeObjectURL(url); document.body.removeChild(a);
+        setProgressConsigRel(100);
+        setTimeout(() => { setProgressConsigRel(0); alert('Relatório PDF gerado com sucesso!'); }, 500);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erro desconhecido');
+        setProgressConsigRel(0);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      alert('Erro ao gerar relatório. Tente novamente.');
+      setProgressConsigRel(0);
+    } finally { setLoadingConsigRel(false); }
+  };
+
+  const gerarRelatorioExcelConsig = async () => {
+    if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    setLoadingConsigRel(true);
+    setProgressConsigRel(10);
+    try {
+      const queryParams = new URLSearchParams({
+        mesAno: filtrosConsigRel.mesAno,
+        agrupaPor: filtrosConsigRel.agrupaPor,
+        formato: 'excel',
+        apenasEmAberto: 'true',
+        ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
+      });
+      setProgressConsigRel(30);
+      const response = await fetch(`/api/relatorios/debitos-socios?${queryParams}`);
+      setProgressConsigRel(60);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `debitos-abertos-${filtrosConsigRel.mesAno}.xlsx`;
+        document.body.appendChild(a); a.click();
+        window.URL.revokeObjectURL(url); document.body.removeChild(a);
+        setProgressConsigRel(100);
+        setTimeout(() => { setProgressConsigRel(0); alert('Relatório Excel gerado com sucesso!'); }, 500);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erro desconhecido');
+        setProgressConsigRel(0);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      alert('Erro ao gerar relatório. Tente novamente.');
+      setProgressConsigRel(0);
+    } finally { setLoadingConsigRel(false); }
+  };
+
+  const gerarRelatorioCSVConsig = async () => {
+    if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    setLoadingConsigRel(true);
+    setProgressConsigRel(10);
+    try {
+      const queryParams = new URLSearchParams({
+        mesAno: filtrosConsigRel.mesAno,
+        agrupaPor: filtrosConsigRel.agrupaPor,
+        formato: 'csv',
+        apenasEmAberto: 'true',
+        delimiter: csvOptions.delimiter,
+        encoding: csvOptions.encoding,
+        includeHeader: csvOptions.includeHeader.toString(),
+        decimalSeparator: csvOptions.decimalSeparator,
+        ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
+      });
+      setProgressConsigRel(30);
+      const response = await fetch(`/api/relatorios/debitos-socios?${queryParams}`);
+      setProgressConsigRel(60);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `debitos-abertos-${filtrosConsigRel.mesAno}.csv`;
+        document.body.appendChild(a); a.click();
+        window.URL.revokeObjectURL(url); document.body.removeChild(a);
+        setProgressConsigRel(100);
+        setTimeout(() => { setProgressConsigRel(0); alert('Relatório CSV gerado com sucesso!'); }, 500);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Erro desconhecido');
+        setProgressConsigRel(0);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      alert('Erro ao gerar relatório. Tente novamente.');
+      setProgressConsigRel(0);
+    } finally { setLoadingConsigRel(false); }
+  };
+
   const gerarRelatorioPensionistaMySQL = async () => {
     if (!filtros.mesAno) {
       alert('Selecione o período (Mês-Ano)');
@@ -602,6 +734,69 @@ export default function RelatoriosPage() {
             </p>
           </div>
         </Link>
+
+        {/* Card Para Consignatárias - Débitos em Aberto */}
+        <div className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 ${
+          showConsigRelForm
+            ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-emerald-600 dark:to-emerald-800 text-white ring-2 ring-emerald-400/50'
+            : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-emerald-400 dark:hover:border-emerald-500'
+        }`}>
+          {showConsigRelForm && (
+            <div className="absolute top-3 right-3">
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">Ativo</span>
+            </div>
+          )}
+          <div className="p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`p-2 rounded-lg ${showConsigRelForm ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-900/50'}`}>
+                <svg className={`w-6 h-6 ${showConsigRelForm ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className={`font-bold text-lg ${showConsigRelForm ? 'text-white' : 'text-foreground'}`}>
+                  Para Consignatárias
+                </h3>
+                <p className={`text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                  Débitos em aberto — apenas parcelas sem baixa
+                </p>
+              </div>
+            </div>
+            <div className="mt-2">
+              <label className={`block text-xs font-semibold mb-1.5 ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                Selecione a Consignatária
+              </label>
+              {loadingConsignatarias ? (
+                <div className="flex items-center gap-2 py-2.5">
+                  <svg className="w-4 h-4 animate-spin text-emerald-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                </div>
+              ) : (
+                <select
+                  value={consigRelId}
+                  onChange={(e) => selecionarConsigRel(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow text-sm"
+                >
+                  <option value="">— Selecione uma consignatária —</option>
+                  <option value="todas">TODAS</option>
+                  {consignatarias.map((c) => (
+                    <option key={c.id} value={c.id.toString()}>{c.nome}</option>
+                  ))}
+                </select>
+              )}
+              {consigRelId && (
+                <p className={`mt-1.5 text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
+                  {consigRelId === 'todas'
+                    ? '→ Todas as consignatárias (sem filtro por empresa)'
+                    : `→ Filtrado por empresa: ${consignatarias.find(c => c.id.toString() === consigRelId)?.nome}`}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Formulário Principal - Exibe apenas se um tipo de relatório for selecionado */}
@@ -923,6 +1118,126 @@ export default function RelatoriosPage() {
             </div>
           </div>
         </div>
+        </div>
+      )}
+
+      {/* Formulário Para Consignatárias — Débitos em Aberto */}
+      {showConsigRelForm && (
+        <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border overflow-hidden mt-6">
+          <div className="px-6 py-4 bg-muted/30/80 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Débitos em Aberto — Para Consignatária
+              {consigRelId === 'todas'
+                ? ' — Todas'
+                : consigRelId
+                  ? ` — ${consignatarias.find(c => c.id.toString() === consigRelId)?.nome || ''}`
+                  : ''}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Somente parcelas sem baixa (débitos ativos para desconto em folha)
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Filtros */}
+              <div className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Período *</label>
+                    <input
+                      type="month"
+                      value={filtrosConsigRel.mesAno}
+                      onChange={(e) => setFiltrosConsigRel({ ...filtrosConsigRel, mesAno: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Agrupar por *</label>
+                    <select
+                      value={filtrosConsigRel.agrupaPor}
+                      onChange={(e) => setFiltrosConsigRel({ ...filtrosConsigRel, agrupaPor: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
+                    >
+                      <option value="socio">Sócios</option>
+                      <option value="resumido-consignataria">Resumido</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium flex items-start gap-1.5">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    {filtrosConsigRel.agrupaPor === 'socio'
+                      ? 'Sócios: lista cada parcela ativa agrupada por sócio (sem parcelas com baixa)'
+                      : 'Resumido: uma linha por sócio com total acumulado das parcelas em aberto'}
+                  </p>
+                </div>
+              </div>
+              {/* Exportação */}
+              <div className="lg:border-l lg:border-gray-200 dark:lg:border-gray-700 lg:pl-6">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Exportar Relatório
+                </h3>
+                <div className="space-y-3">
+                  <button type="button" onClick={gerarRelatorioPDFConsig} disabled={loadingConsigRel || !canExport}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-red-400 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group">
+                    <div className="p-2 bg-red-100 dark:bg-red-900/40 rounded-lg group-hover:bg-red-200 dark:group-hover:bg-red-800/40 transition-colors">
+                      <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-foreground text-sm">PDF</div>
+                      <div className="text-xs text-muted-foreground">Documento para impressão</div>
+                    </div>
+                  </button>
+                  <button type="button" onClick={gerarRelatorioExcelConsig} disabled={loadingConsigRel || !canExport}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-green-400 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/40 transition-colors">
+                      <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-foreground text-sm">Excel</div>
+                      <div className="text-xs text-muted-foreground">Planilha editável (.xlsx)</div>
+                    </div>
+                  </button>
+                  <button type="button" onClick={gerarRelatorioCSVConsig} disabled={loadingConsigRel || !canExport}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 bg-background border-2 border-border rounded-lg hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all group">
+                    <div className="p-2 bg-orange-100 dark:bg-orange-900/40 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800/40 transition-colors">
+                      <svg className="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-foreground text-sm">CSV</div>
+                      <div className="text-xs text-muted-foreground">Dados delimitados</div>
+                    </div>
+                  </button>
+                </div>
+                {loadingConsigRel && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-medium text-muted-foreground">Gerando relatório...</span>
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{progressConsigRel}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                      <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressConsigRel}%` }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
