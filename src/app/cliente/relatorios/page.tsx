@@ -688,7 +688,7 @@ export default function RelatoriosPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-bold text-lg ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-white' : 'text-foreground'}`}>
-                  Pagamento à Convênio
+                  Pagamento à Convêniados
                 </h3>
                 <p className={`text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
                   {consignatariaId
@@ -1092,7 +1092,7 @@ export default function RelatoriosPage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Relatório por Consignatária</h2>
+                  <h2 className="text-lg font-bold text-foreground">Pagamento para Convênios</h2>
                   <p className="text-xs text-muted-foreground">Configure os filtros e exporte</p>
                 </div>
               </div>
