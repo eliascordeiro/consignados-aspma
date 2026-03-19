@@ -461,7 +461,6 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioPDFConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
-    if (!filtrosConsigRel.socioMatricula) { alert('Selecione um sócio para o extrato individual'); return; }
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -500,7 +499,6 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioExcelConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
-    if (!filtrosConsigRel.socioMatricula) { alert('Selecione um sócio para o extrato individual'); return; }
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -539,7 +537,6 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioCSVConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
-    if (!filtrosConsigRel.socioMatricula) { alert('Selecione um sócio para o extrato individual'); return; }
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -1331,7 +1328,7 @@ export default function RelatoriosPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-foreground">Descontos de Sócios</h2>
-                  <p className="text-xs text-muted-foreground">Extrato individual · sem cancelados · sem baixa</p>
+                  <p className="text-xs text-muted-foreground">Sócio opcional · sem cancelados · sem baixa</p>
                 </div>
               </div>
               <button onClick={fecharModalConsigRel} className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-muted-foreground hover:text-foreground transition-colors">
@@ -1346,8 +1343,8 @@ export default function RelatoriosPage() {
                 {/* Sócio — busca por matrícula ou nome (obrigatório) */}
                 <div className="relative">
                   <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
-                    Sócio *
-                    <span className="ml-1 text-xs font-normal text-gray-400">(matrícula ou nome)</span>
+                    Sócio
+                    <span className="ml-1 text-xs font-normal text-gray-400">(matrícula ou nome — opcional)</span>
                   </label>
                   <div className="relative">
                     <input
