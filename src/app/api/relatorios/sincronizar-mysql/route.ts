@@ -248,6 +248,7 @@ export async function POST(request: NextRequest) {
                 0
               ),
               quantidadeParcelas: parseInt(vendaData.qtd_parcelas) || vendaData.parcelas.length,
+              empresaId: socio.empresaId ?? null,
             },
           });
           result.vendasMigradas++;

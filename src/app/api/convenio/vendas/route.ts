@@ -234,6 +234,7 @@ export async function POST(request: NextRequest) {
         operador: session.usuario,
         ativo: true,
         cancelado: false,
+        empresaId: socio.empresaId ?? null,
       },
     })
 

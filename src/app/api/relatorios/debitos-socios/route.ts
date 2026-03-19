@@ -163,9 +163,9 @@ export async function GET(request: NextRequest) {
       hasVendaFilter = true;
     }
 
-    // Filtro por empresa (consignatária) - novo sistema: empresaId substitui codTipo legado
+    // Filtro por empresa (consignatária) - usa empresaId snapshot da venda (não do sócio)
     if (empresaId) {
-      vendaFilter.socio = { ...vendaFilter.socio, empresaId: parseInt(empresaId) };
+      vendaFilter.empresaId = parseInt(empresaId);
       hasVendaFilter = true;
     }
 

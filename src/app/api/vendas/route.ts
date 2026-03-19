@@ -372,6 +372,7 @@ export async function POST(request: NextRequest) {
         cpf: true,
         tipo: true,
         numCompras: true,
+        empresaId: true,
       },
     });
 
@@ -505,6 +506,7 @@ export async function POST(request: NextRequest) {
           userId: targetUserId,
           socioId,
           convenioId,
+          empresaId: socio.empresaId ?? null,
           numeroVenda: novoNumeroVenda,
           dataEmissao: dataEmissao ? new Date(dataEmissao) : new Date(),
           operador: operador || session.user.name,

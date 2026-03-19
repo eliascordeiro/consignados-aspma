@@ -135,6 +135,7 @@ model Empresa {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   socios    Socio[]
+  vendas    Venda[]
 
   @@map("empresas")
 }
@@ -218,6 +219,7 @@ model Venda {
   userId          String
   socioId         String
   convenioId      Int?
+  empresaId       Int?      // snapshot da empresa do sócio no momento da venda
   numeroVenda     Int
   dataEmissao     DateTime  @default(now())
   operador        String?
@@ -234,6 +236,7 @@ model Venda {
   updatedAt       DateTime  @updatedAt
   socio           Socio     @relation(fields: [socioId], references: [id])
   convenio        convenio? @relation(fields: [convenioId], references: [id])
+  empresa         Empresa?  @relation(fields: [empresaId], references: [id])
   createdBy       users?    @relation("VendaCreatedBy", fields: [createdById], references: [id])
   updatedBy       users?    @relation("VendaUpdatedBy", fields: [updatedById], references: [id])
   parcelas        Parcela[]
@@ -242,6 +245,7 @@ model Venda {
   @@index([userId])
   @@index([socioId])
   @@index([convenioId])
+  @@index([empresaId])
   @@index([dataEmissao])
   @@index([ativo])
   @@index([createdById])
