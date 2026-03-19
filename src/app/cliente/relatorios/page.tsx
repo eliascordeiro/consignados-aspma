@@ -68,7 +68,12 @@ export default function RelatoriosPage() {
   const [filtrosConsigRel, setFiltrosConsigRel] = useState({
     mesAno: new Date().toISOString().slice(0, 7),
     agrupaPor: 'socio',
+    socioMatricula: '',
+    socioNome: '',
   });
+  const [searchSocioConsigRel, setSearchSocioConsigRel] = useState('');
+  const [showSocioListConsigRel, setShowSocioListConsigRel] = useState(false);
+  const [sociosConsigRel, setSociosConsigRel] = useState<Socio[]>([]);
   const [loadingConsigRel, setLoadingConsigRel] = useState(false);
   const [progressConsigRel, setProgressConsigRel] = useState(0);
 
@@ -139,6 +144,15 @@ export default function RelatoriosPage() {
       setShowSocioList(false);
     }
   }, [searchSocio]);
+
+  // Busca sócios no modal Descontos de Sócios
+  useEffect(() => {
+    if (searchSocioConsigRel.length >= 2 && !filtrosConsigRel.socioMatricula) {
+      carregarSociosConsigRel();
+    } else if (searchSocioConsigRel.length < 2) {
+      setShowSocioListConsigRel(false);
+    }
+  }, [searchSocioConsigRel]);
 
   const carregarConvenios = async () => {
     try {
@@ -229,6 +243,36 @@ export default function RelatoriosPage() {
     setSearchSocio('');
     setShowSocioList(false);
     setSocios([]);
+  };
+
+  const carregarSociosConsigRel = async () => {
+    try {
+      const response = await fetch(`/api/socios?search=${searchSocioConsigRel}`);
+      if (response.ok) {
+        const data = await response.json();
+        const sociosData = data.data || data;
+        if (Array.isArray(sociosData)) {
+          setSociosConsigRel(sociosData);
+          setShowSocioListConsigRel(true);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar sócios:', error);
+    }
+  };
+
+  const selecionarSocioConsigRel = (socio: Socio) => {
+    setFiltrosConsigRel({ ...filtrosConsigRel, socioMatricula: socio.matricula, socioNome: socio.nome });
+    setSearchSocioConsigRel(`${socio.matricula} - ${socio.nome}`);
+    setShowSocioListConsigRel(false);
+    setSociosConsigRel([]);
+  };
+
+  const limparSocioConsigRel = () => {
+    setFiltrosConsigRel({ ...filtrosConsigRel, socioMatricula: '', socioNome: '' });
+    setSearchSocioConsigRel('');
+    setShowSocioListConsigRel(false);
+    setSociosConsigRel([]);
   };
 
   const gerarRelatorioPDF = async () => {
@@ -417,6 +461,7 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioPDFConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    if (!filtrosConsigRel.socioMatricula) { alert('Selecione um sócio para o extrato individual'); return; }
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -425,6 +470,7 @@ export default function RelatoriosPage() {
         agrupaPor: filtrosConsigRel.agrupaPor,
         formato: 'pdf',
         apenasEmAberto: 'true',
+        socioMatricula: filtrosConsigRel.socioMatricula,
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
       setProgressConsigRel(30);
@@ -454,6 +500,7 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioExcelConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    if (!filtrosConsigRel.socioMatricula) { alert('Selecione um sócio para o extrato individual'); return; }
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -462,6 +509,7 @@ export default function RelatoriosPage() {
         agrupaPor: filtrosConsigRel.agrupaPor,
         formato: 'excel',
         apenasEmAberto: 'true',
+        socioMatricula: filtrosConsigRel.socioMatricula,
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
       setProgressConsigRel(30);
@@ -491,6 +539,7 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioCSVConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    if (!filtrosConsigRel.socioMatricula) { alert('Selecione um sócio para o extrato individual'); return; }
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -499,6 +548,7 @@ export default function RelatoriosPage() {
         agrupaPor: filtrosConsigRel.agrupaPor,
         formato: 'csv',
         apenasEmAberto: 'true',
+        socioMatricula: filtrosConsigRel.socioMatricula,
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
@@ -732,8 +782,8 @@ export default function RelatoriosPage() {
                   Descontos de Sócios
                 </h3>
                 <p className={`text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
-                  {consigRelId
-                    ? (consigRelId === 'todas' ? 'Todas as consignatárias · débitos em aberto' : `${consignatarias.find(c => c.id.toString() === consigRelId)?.nome || 'Selecionada'} · débitos em aberto`)
+                  {filtrosConsigRel.socioMatricula
+                    ? `${filtrosConsigRel.socioNome} — mat. ${filtrosConsigRel.socioMatricula}`
                     : 'Descontos de sócios — clique para configurar'}
                 </p>
               </div>
@@ -1280,8 +1330,8 @@ export default function RelatoriosPage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Para Consignatárias</h2>
-                  <p className="text-xs text-muted-foreground">Débitos em aberto · apenas parcelas sem baixa</p>
+                  <h2 className="text-lg font-bold text-foreground">Descontos de Sócios</h2>
+                  <p className="text-xs text-muted-foreground">Extrato individual · sem cancelados · sem baixa</p>
                 </div>
               </div>
               <button onClick={fecharModalConsigRel} className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-800/50 text-muted-foreground hover:text-foreground transition-colors">
@@ -1293,9 +1343,51 @@ export default function RelatoriosPage() {
             {/* Body */}
             <div className="overflow-y-auto flex-1">
               <div className="p-6 space-y-5">
+                {/* Sócio — busca por matrícula ou nome (obrigatório) */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                    Sócio *
+                    <span className="ml-1 text-xs font-normal text-gray-400">(matrícula ou nome)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchSocioConsigRel}
+                      onChange={(e) => {
+                        setSearchSocioConsigRel(e.target.value);
+                        if (!e.target.value) limparSocioConsigRel();
+                      }}
+                      placeholder="Digite a matrícula ou nome do sócio..."
+                      className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
+                    />
+                    {filtrosConsigRel.socioMatricula ? (
+                      <button type="button" onClick={limparSocioConsigRel} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors" title="Limpar seleção">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    ) : (
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    )}
+                  </div>
+                  {showSocioListConsigRel && sociosConsigRel.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                      {sociosConsigRel.map((socio) => (
+                        <div key={socio.id} onClick={() => selecionarSocioConsigRel(socio)} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border last:border-b-0 transition-colors">
+                          <div className="font-semibold text-foreground text-sm">{socio.nome}</div>
+                          {socio.matricula && <div className="text-xs text-muted-foreground mt-0.5">Matrícula: {socio.matricula}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {filtrosConsigRel.socioMatricula && (
+                    <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                      ✓ {filtrosConsigRel.socioNome} — mat. {filtrosConsigRel.socioMatricula}
+                    </p>
+                  )}
+                </div>
+
                 {/* Consignatária */}
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Consignatária *</label>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Consignatária <span className="text-xs font-normal text-gray-400">(opcional)</span></label>
                   {loadingConsignatarias ? (
                     <div className="flex items-center gap-2 py-2.5">
                       <svg className="w-4 h-4 animate-spin text-emerald-400" fill="none" viewBox="0 0 24 24">
@@ -1310,7 +1402,7 @@ export default function RelatoriosPage() {
                       onChange={(e) => selecionarConsigRel(e.target.value)}
                       className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
                     >
-                      <option value="">— Selecione uma consignatária —</option>
+                      <option value="">— Todas as consignatárias —</option>
                       <option value="todas">TODAS</option>
                       {consignatarias.map((c) => (
                         <option key={c.id} value={c.id.toString()}>{c.nome}</option>
