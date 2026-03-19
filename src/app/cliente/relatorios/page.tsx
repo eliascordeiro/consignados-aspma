@@ -662,11 +662,11 @@ export default function RelatoriosPage() {
 
       {/* Cards de Relatórios Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {/* Grupo Consignatárias - ocupa linha inteira */}
+        {/* Card Pagamento à Convênio */}
         <button
           type="button"
           onClick={abrirModalConsig}
-          className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 text-left w-full cursor-pointer ${
+          className={`relative rounded-xl shadow-lg transition-all duration-200 text-left w-full cursor-pointer ${
             (tipoRelatorio === 'socios' && consignatariaId)
               ? 'bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800 text-white ring-2 ring-teal-400/50'
               : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-teal-400 dark:hover:border-teal-500'
@@ -688,12 +688,12 @@ export default function RelatoriosPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-bold text-lg ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-white' : 'text-foreground'}`}>
-                  Consignatárias
+                  Pagamento à Convênio
                 </h3>
                 <p className={`text-xs ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
                   {consignatariaId
                     ? (consignatariaId === 'todas' ? 'Todas as consignatárias selecionadas' : `${consignatarias.find(c => c.id.toString() === consignatariaId)?.nome || 'Consignatária selecionada'}`)
-                    : 'Empresas onde os sócios são lotados — clique para configurar'}
+                    : 'Relatório de pagamentos à convênio — clique para configurar'}
                 </p>
               </div>
               <div className={`flex-shrink-0 ${(tipoRelatorio === 'socios' && consignatariaId) ? 'text-teal-100' : 'text-muted-foreground'}`}>
@@ -705,32 +705,11 @@ export default function RelatoriosPage() {
           </div>
         </button>
 
-        {/* Card Comparação */}
-        <Link href="/cliente/relatorios/comparacao">
-          <div
-            className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
-                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg text-foreground">
-                Comparar Bases
-              </h3>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Compare dados entre PostgreSQL e MySQL para auditoria e validação.
-            </p>
-          </div>
-        </Link>
-
-        {/* Card Para Consignatárias - Débitos em Aberto */}
+        {/* Card Descontos de Sócios */}
         <button
           type="button"
           onClick={abrirModalConsigRel}
-          className={`relative rounded-xl shadow-lg transition-all duration-200 md:col-span-2 text-left w-full cursor-pointer ${
+          className={`relative rounded-xl shadow-lg transition-all duration-200 text-left w-full cursor-pointer ${
             showConsigRelForm
               ? 'bg-gradient-to-br from-emerald-500 to-emerald-700 dark:from-emerald-600 dark:to-emerald-800 text-white ring-2 ring-emerald-400/50'
               : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-emerald-400 dark:hover:border-emerald-500'
@@ -750,12 +729,12 @@ export default function RelatoriosPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-bold text-lg ${showConsigRelForm ? 'text-white' : 'text-foreground'}`}>
-                  Para Consignatárias
+                  Descontos de Sócios
                 </h3>
                 <p className={`text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
                   {consigRelId
                     ? (consigRelId === 'todas' ? 'Todas as consignatárias · débitos em aberto' : `${consignatarias.find(c => c.id.toString() === consigRelId)?.nome || 'Selecionada'} · débitos em aberto`)
-                    : 'Débitos em aberto — apenas parcelas sem baixa — clique para configurar'}
+                    : 'Descontos de sócios — clique para configurar'}
                 </p>
               </div>
               <div className={`flex-shrink-0 ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
@@ -766,9 +745,30 @@ export default function RelatoriosPage() {
             </div>
           </div>
         </button>
+
+        {/* Card Comparação */}
+        <Link href="/cliente/relatorios/comparacao" className="md:col-span-2">
+          <div
+            className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg text-foreground">
+                Comparar Bases
+              </h3>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Compare dados entre PostgreSQL e MySQL para auditoria e validação.
+            </p>
+          </div>
+        </Link>
       </div>
 
-      {/* [inline form removed — filters now live inside the Consignatárias modal] */}
+      {/* [inline form removed — filters now live inside a Consignatárias modal] */}
       {false && tipoRelatorio && tipoRelatorio !== 'comparacao' && (
         <div className="bg-card text-card-foreground rounded-xl shadow-md border border-border overflow-hidden">
           <div className="px-6 py-4 bg-muted/30/80 border-b border-border">
