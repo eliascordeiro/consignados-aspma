@@ -372,12 +372,36 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Início do mês atual (UTC) — parcelas com vencimento anterior a isso são tratadas como pagas
+    const agora = new Date()
+    const inicioMesAtual = new Date(Date.UTC(agora.getFullYear(), agora.getMonth(), 1))
+
     // Filtro por status
     if (status === 'ativa') {
       where.ativo = true
       where.cancelado = false
+      // Exclui vendas finalizadas (todas parcelas pagas ou vencidas no passado)
+      where.parcelas = {
+        some: {
+          baixa: { not: 'S' },
+          dataVencimento: { gte: inicioMesAtual },
+        },
+      }
     } else if (status === 'cancelada') {
       where.cancelado = true
+    } else if (status === 'finalizada' || status === 'quitada') {
+      where.ativo = true
+      where.cancelado = false
+      // Todas as parcelas pagas ou com vencimento em mês anterior
+      where.parcelas = {
+        every: {
+          OR: [
+            { baixa: 'S' },
+            { dataVencimento: { lt: inicioMesAtual } },
+          ],
+        },
+        some: {}, // garante que a venda tem pelo menos uma parcela
+      }
     }
 
     // Filtro por data
@@ -407,6 +431,7 @@ export async function GET(request: NextRequest) {
             select: {
               baixa: true,
               valor: true,
+              dataVencimento: true,
             },
           },
         },
@@ -421,7 +446,14 @@ export async function GET(request: NextRequest) {
 
     // Formatar resultado
     const resultado = vendas.map(venda => {
-      const parcelasPagas = venda.parcelas.filter(p => p.baixa === 'S').length
+      // Conta parcelas pagas: baixa='S' OU vencimento em mês anterior ao atual
+      // (em consignado, o desconto já foi feito no mês do vencimento)
+      const parcelasPagas = venda.parcelas.filter(
+        p => p.baixa === 'S' || new Date(p.dataVencimento) < inicioMesAtual
+      ).length
+
+      // Venda finalizada: não cancelada e todas as parcelas já pagas/vencidas
+      const finalizada = !venda.cancelado && parcelasPagas >= venda.quantidadeParcelas
 
       return {
         id: venda.id,
@@ -433,6 +465,7 @@ export async function GET(request: NextRequest) {
         observacoes: venda.observacoes,
         ativo: venda.ativo,
         cancelado: venda.cancelado,
+        finalizada,
         socio: venda.socio,
         parcelasPagas,
         parcelas: venda.parcelas,

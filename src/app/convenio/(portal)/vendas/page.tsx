@@ -54,6 +54,7 @@ interface Venda {
   observacoes: string | null
   ativo: boolean
   cancelado: boolean
+  finalizada: boolean
   socio: {
     nome: string
     matricula: string | null
@@ -236,6 +237,7 @@ export default function VendasPage() {
 
   const getStatusBadge = (venda: Venda) => {
     if (venda.cancelado) return <Badge variant="destructive">Cancelada</Badge>
+    if (venda.finalizada) return <Badge variant="outline" className="border-green-500/50 text-green-700 dark:text-green-400">Finalizada</Badge>
     if (venda.ativo) return <Badge variant="default">Ativa</Badge>
     return <Badge variant="secondary">Inativa</Badge>
   }
@@ -332,7 +334,7 @@ export default function VendasPage() {
                 >
                   <option value="">Todos</option>
                   <option value="ativa">Ativa</option>
-                  <option value="quitada">Quitada</option>
+                  <option value="finalizada">Finalizada</option>
                   <option value="cancelada">Cancelada</option>
                 </select>
               </div>
@@ -556,13 +558,16 @@ export default function VendasPage() {
                               <>
                                 {/* Mobile: Cards */}
                                 <div className="md:hidden space-y-2">
-                                  {parcelas.map(parcela => (
+                                  {parcelas.map(parcela => {
+                                    const vencPast = new Date(parcela.dataVencimento) < new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1))
+                                    const estaPaga = parcela.baixa === 'S' || vencPast
+                                    return (
                                     <div key={parcela.id} className="p-3 bg-muted rounded-lg border border-border">
                                       <div className="flex justify-between items-center mb-2">
                                         <span className="font-medium text-sm text-foreground">
                                           Parcela #{parcela.numeroParcela}
                                         </span>
-                                        {parcela.baixa === 'S' ? (
+                                        {estaPaga ? (
                                           <Badge variant="default" className="gap-1 text-xs">
                                             <CheckCircle2 className="h-3 w-3" />
                                             Paga
@@ -582,7 +587,8 @@ export default function VendasPage() {
                                         )}
                                       </div>
                                     </div>
-                                  ))}
+                                    )
+                                  })}
                                 </div>
 
                                 {/* Desktop: Tabela */}
@@ -597,36 +603,40 @@ export default function VendasPage() {
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                      {parcelas.map(parcela => (
-                                        <TableRow key={parcela.id}>
-                                          <TableCell className="font-medium">
-                                            {parcela.numeroParcela}
-                                          </TableCell>
-                                          <TableCell>
-                                            {format(
-                                              new Date(parcela.dataVencimento),
-                                              'MM/yyyy',
-                                              { locale: ptBR }
-                                            )}
-                                          </TableCell>
-                                          <TableCell>
-                                            {formatCurrency(Number(parcela.valor))}
-                                          </TableCell>
-                                          <TableCell>
-                                            {parcela.baixa === 'S' ? (
-                                              <Badge variant="default" className="gap-1">
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                Paga
-                                              </Badge>
-                                            ) : (
-                                              <Badge variant="secondary" className="gap-1">
-                                                <XCircle className="h-3 w-3" />
-                                                Confirmada
-                                              </Badge>
-                                            )}
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
+                                      {parcelas.map(parcela => {
+                                          const vencPast = new Date(parcela.dataVencimento) < new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1))
+                                          const estaPaga = parcela.baixa === 'S' || vencPast
+                                          return (
+                                          <TableRow key={parcela.id}>
+                                            <TableCell className="font-medium">
+                                              {parcela.numeroParcela}
+                                            </TableCell>
+                                            <TableCell>
+                                              {format(
+                                                new Date(parcela.dataVencimento),
+                                                'MM/yyyy',
+                                                { locale: ptBR }
+                                              )}
+                                            </TableCell>
+                                            <TableCell>
+                                              {formatCurrency(Number(parcela.valor))}
+                                            </TableCell>
+                                            <TableCell>
+                                              {estaPaga ? (
+                                                <Badge variant="default" className="gap-1">
+                                                  <CheckCircle2 className="h-3 w-3" />
+                                                  Paga
+                                                </Badge>
+                                              ) : (
+                                                <Badge variant="secondary" className="gap-1">
+                                                  <XCircle className="h-3 w-3" />
+                                                  Confirmada
+                                                </Badge>
+                                              )}
+                                            </TableCell>
+                                          </TableRow>
+                                          )
+                                      })}
                                     </TableBody>
                                   </Table>
                                 </div>

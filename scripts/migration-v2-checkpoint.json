@@ -1,9 +1,9 @@
 {
   "vendasDone": true,
   "parcelasDone": true,
-  "vendasMigradas": 82073,
-  "parcelasMigradas": 764453,
+  "vendasMigradas": 82087,
+  "parcelasMigradas": 764693,
   "lastVendaId": 0,
   "lastParcelaId": 0,
-  "startedAt": "2026-03-19T13:16:58.704Z"
+  "startedAt": "2026-03-20T14:43:39.554Z"
 }

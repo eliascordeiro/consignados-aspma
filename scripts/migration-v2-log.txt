@@ -1639,3 +1639,50 @@
 [2026-03-19T13:40:04.024Z] 
    🔍 Verificando codTipo (pensionistas)...
 [2026-03-19T13:40:07.563Z]    ✅ codTipo: Nenhuma divergência encontrada
+[2026-03-20T14:43:39.556Z] Inicializando conexões...
+[2026-03-20T14:43:39.564Z] 📊 Carregando dados de referência...
+[2026-03-20T14:43:40.455Z]    ✅ 4.849 mapeamentos de matrícula
+[2026-03-20T14:43:42.353Z]    ✅ 4.214 sócios
+[2026-03-20T14:43:42.659Z]    ✅ 230 convênios
+[2026-03-20T14:43:42.978Z]    ✅ Admin: ASPMA  Associação dos Servidores Públicos de Araucária. (MANAGER)
+[2026-03-20T14:43:42.978Z] 📦 Carregando vendas já existentes no Railway...
+[2026-03-20T14:43:43.538Z]    ✅ 0 vendas já no Railway
+[2026-03-20T14:43:43.539Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-03-20T14:43:43.540Z] 📦 FASE 1: MIGRAR VENDAS
+[2026-03-20T14:43:43.540Z] ══════════════════════════════════════════════════════════════════════
+[2026-03-20T14:43:43.586Z]    MySQL: 82.521 vendas (IDs 1 - 89620)
+[2026-03-20T14:43:43.587Z]    Railway: 0 já migradas
+[2026-03-20T14:45:39.425Z]    ✅ Inseridas: 82.087 | Duplicadas: 35 | Erros: 0 | Sem sócio: 399
+[2026-03-20T14:45:39.425Z]    ⏱️  Tempo: 1m55s
+[2026-03-20T14:45:39.425Z] 
+📦 Atualizando mapa de vendas...
+[2026-03-20T14:45:42.317Z]    ✅ Mapa de vendas: 82.091 entradas
+[2026-03-20T14:45:42.430Z] 📦 Carregando parcelas já existentes no Railway...
+[2026-03-20T14:45:42.729Z]    ✅ 0 parcelas já no Railway
+[2026-03-20T14:45:42.730Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-03-20T14:45:42.730Z] 📦 FASE 2: MIGRAR PARCELAS
+[2026-03-20T14:45:42.731Z] ══════════════════════════════════════════════════════════════════════
+[2026-03-20T14:45:42.770Z]    MySQL: 767.133 parcelas (IDs 1 - 1616338)
+[2026-03-20T14:45:42.770Z]    Railway: 0 já migradas
+[2026-03-20T15:02:23.565Z]    ✅ Inseridas: 764.693 | Duplicadas: 48 | Erros: 0 | Sem venda: 2.392
+[2026-03-20T15:02:23.566Z]    ⏱️  Tempo: 16m40s
+[2026-03-20T15:02:23.566Z] 
+══════════════════════════════════════════════════════════════════════
+[2026-03-20T15:02:23.566Z] 🔍 VERIFICAÇÃO DE INTEGRIDADE
+[2026-03-20T15:02:23.567Z] ══════════════════════════════════════════════════════════════════════
+[2026-03-20T15:02:24.456Z]    📊 VENDAS:
+[2026-03-20T15:02:24.456Z]       MySQL:   82.522
+[2026-03-20T15:02:24.456Z]       Railway: 82.087 (99.5%)
+[2026-03-20T15:02:24.457Z]       Diff:    435
+[2026-03-20T15:02:24.457Z] 
+[2026-03-20T15:02:24.457Z]    📊 PARCELAS:
+[2026-03-20T15:02:24.457Z]       MySQL:   767.134
+[2026-03-20T15:02:24.457Z]       Railway: 764.693 (99.7%)
+[2026-03-20T15:02:24.458Z]       Diff:    2.441
+[2026-03-20T15:02:24.458Z] 
+   ✅ INTEGRIDADE OK (>95% migrado)
+[2026-03-20T15:02:24.458Z] 
+   🔍 Verificando codTipo (pensionistas)...
+[2026-03-20T15:02:28.386Z]    ✅ codTipo: Nenhuma divergência encontrada
