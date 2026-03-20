@@ -192,7 +192,7 @@ export default function NovaVendaPage() {
       return
     }
     if (margemInfo?.maxParcelas && Number(formData.quantidadeParcelas) > margemInfo.maxParcelas) {
-      alert(`\u26a0\ufe0f O n\u00famero de parcelas (${formData.quantidadeParcelas}) excede o m\u00e1ximo permitido para este conv\u00eanio (${margemInfo.maxParcelas}x).\n\nReduz o n\u00famero de parcelas antes de prosseguir.`)
+      alert(`⚠️ O número de parcelas (${formData.quantidadeParcelas}) excede o máximo permitido para este convênio (${margemInfo.maxParcelas}x).\n\nReduz o número de parcelas antes de prosseguir.`)
       return
     }
     if (margemInfo && valorParcela > margemInfo.margem) {
@@ -740,9 +740,9 @@ export default function NovaVendaPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="quantidadeParcelas">
-                    N\u00ba de Parcelas *
+                    Nº de Parcelas *
                     {margemInfo?.maxParcelas && (
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">(m\u00e1x. {margemInfo.maxParcelas}x)</span>
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">(máx. {margemInfo.maxParcelas}x)</span>
                     )}
                   </Label>
                   <Input
@@ -759,7 +759,7 @@ export default function NovaVendaPage() {
                   />
                   {margemInfo?.maxParcelas && Number(formData.quantidadeParcelas) > margemInfo.maxParcelas && (
                     <p className="text-xs text-red-600">
-                      \u274c M\u00e1ximo permitido: {margemInfo.maxParcelas} parcelas
+                      ❌ Máximo permitido: {margemInfo.maxParcelas} parcelas
                     </p>
                   )}
                 </div>
