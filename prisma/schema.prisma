@@ -57,6 +57,7 @@ model users {
   permissions       String[]      @default([])
   resetToken        String?
   resetTokenExpiry  DateTime?
+  passwordChangedAt DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   createdById       String?

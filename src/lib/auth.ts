@@ -50,6 +50,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             active: true,
             permissions: true,
             createdById: true,
+            passwordChangedAt: true,
           }
         })
 
@@ -165,6 +166,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
               permissions: user.permissions || [],
               createdById: user.createdById,
               isConvenio: true,
+              passwordChangedAt: user.passwordChangedAt?.toISOString() || null,
             }
           }
 
@@ -192,6 +194,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             permissions: user.permissions || [],
             createdById: user.createdById,
             isConvenio: false,
+            passwordChangedAt: user.passwordChangedAt?.toISOString() || null,
           }
         }
 
@@ -359,6 +362,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         token.permissions = (user as any).permissions || []
         token.createdById = (user as any).createdById
         token.isConvenio = (user as any).isConvenio || false
+        token.passwordChangedAt = (user as any).passwordChangedAt || null
       }
       
       // Suporte para atualização de sessão via update()
@@ -379,6 +383,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         session.user.email = token.email as string
         ;(session.user as any).permissions = token.permissions || []
         ;(session.user as any).isConvenio = token.isConvenio || false
+        ;(session.user as any).passwordChangedAt = token.passwordChangedAt || null
         
         console.log("   Role na sessão:", session.user.role)
         console.log("   Permissions na sessão:", (session.user as any).permissions?.length || 0)

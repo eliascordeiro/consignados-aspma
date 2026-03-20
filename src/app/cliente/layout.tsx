@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -52,6 +52,7 @@ export default function ClienteLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
@@ -93,6 +94,19 @@ export default function ClienteLayout({
       })
       .catch(() => {})
   }, [])
+
+  // Verificar renovação obrigatória de senha (mensal)
+  useEffect(() => {
+    if (!session) return
+    const user = session.user as any
+    if (user?.isConvenio) return
+    if (pathname.startsWith('/cliente/alterar-senha')) return
+    const changedAt = user?.passwordChangedAt ? new Date(user.passwordChangedAt) : null
+    const expired = !changedAt || (Date.now() - changedAt.getTime() > 30 * 24 * 60 * 60 * 1000)
+    if (expired) {
+      router.push('/cliente/alterar-senha')
+    }
+  }, [session, pathname, router])
 
   // Buscar nome do MANAGER se for usuário subordinado
   useEffect(() => {
