@@ -52,7 +52,7 @@ export default function AlterarSenhaPage() {
       }
 
       // Atualizar a sessão para refletir passwordChangedAt
-      await update()
+      await update({ passwordChangedAt: new Date().toISOString() })
       router.push("/cliente/dashboard")
     } catch {
       setError("Erro de conexão. Tente novamente.")

@@ -366,8 +366,9 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
       }
       
       // Suporte para atualização de sessão via update()
-      if (trigger === "update" && session?.name) {
-        token.name = session.name
+      if (trigger === "update") {
+        if (session?.name) token.name = session.name
+        if (session?.passwordChangedAt !== undefined) token.passwordChangedAt = session.passwordChangedAt
       }
       
       return token

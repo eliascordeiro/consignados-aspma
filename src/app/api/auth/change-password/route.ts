@@ -9,7 +9,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  const { currentPassword, newPassword } = await req.json()
+  let body: { currentPassword?: string; newPassword?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Corpo da requisição inválido.' }, { status: 400 })
+  }
+
+  const { currentPassword, newPassword } = body
+
+  if (!currentPassword) {
+    return NextResponse.json({ error: 'Senha atual é obrigatória.' }, { status: 400 })
+  }
 
   if (!newPassword || newPassword.length < 6) {
     return NextResponse.json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' }, { status: 400 })
