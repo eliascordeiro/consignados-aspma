@@ -262,8 +262,11 @@ export default function VendasPage() {
             Tabela de Vendas
           </h1>
           <p className="text-muted-foreground mt-1">
-            {vendas.length}{' '}
-            {vendas.length === 1 ? 'venda encontrada' : 'vendas encontradas'}
+            {pagination?.total ?? vendas.length}{' '}
+            {(pagination?.total ?? vendas.length) === 1 ? 'venda encontrada' : 'vendas encontradas'}
+            {pagination && pagination.totalPages > 1 && (
+              <span className="text-xs ml-1">(página {pagination.page} de {pagination.totalPages})</span>
+            )}
           </p>
         </div>
         <Link href="/convenio/vendas/nova">
