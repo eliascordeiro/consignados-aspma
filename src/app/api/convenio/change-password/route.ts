@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { SignJWT } from 'jose'
+import bcrypt from 'bcryptjs'
 import { getConvenioSession } from '@/lib/convenio-auth'
 import { prisma } from '@/lib/prisma'
 
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
       razao_soc: true,
       fantasia: true,
       tipo: true,
+      userId: true,
     },
   })
   if (!convenio) {
@@ -47,8 +49,25 @@ export async function POST(req: Request) {
     }
   }
 
-  if (convenio.senha !== currentSenha) {
-    return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
+  // Validate current password.
+  // Path 1: convenio is linked to a users account — password is bcrypt-hashed in users.password.
+  // Path 2: standalone convenio — password is stored plaintext in convenio.senha.
+  if (convenio.userId) {
+    const linkedUser = await prisma.users.findUnique({
+      where: { id: convenio.userId },
+      select: { password: true },
+    })
+    if (!linkedUser) {
+      return NextResponse.json({ error: 'Usuário vinculado não encontrado.' }, { status: 404 })
+    }
+    const valid = await bcrypt.compare(currentSenha, linkedUser.password)
+    if (!valid) {
+      return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
+    }
+  } else {
+    if (convenio.senha !== currentSenha) {
+      return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
+    }
   }
 
   const now = new Date()
@@ -56,6 +75,15 @@ export async function POST(req: Request) {
     where: { id: convenio.id },
     data: { senha: newSenha, senhaChangedAt: now },
   })
+
+  // For Path 1: also update users.password with bcrypt so NextAuth login works with the new password
+  if (convenio.userId) {
+    const hashedNewSenha = await bcrypt.hash(newSenha, 10)
+    await prisma.users.update({
+      where: { id: convenio.userId },
+      data: { password: hashedNewSenha },
+    })
+  }
 
   // Issue a fresh JWT cookie so the new senhaChangedAt is reflected immediately
   const newToken = await new SignJWT({
