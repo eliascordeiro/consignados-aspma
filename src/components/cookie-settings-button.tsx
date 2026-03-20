@@ -15,9 +15,14 @@ export function CookieSettingsButton() {
   const pathname = usePathname()
   const { resetConsent } = useCookieConsent()
 
-  // Não mostrar em páginas de autenticação nem no portal do sócio
+  // Não mostrar em páginas de autenticação nem no portal do sócio, convênio ou cliente
   const hideOnPages = ['/portal/login', '/portal/primeiro-acesso', '/portal/redefinir-senha', '/portal/']
-  if (pathname && (hideOnPages.some(page => pathname.startsWith(page)) || pathname === '/portal' || pathname?.startsWith('/portal/'))) {
+  if (pathname && (
+    hideOnPages.some(page => pathname.startsWith(page)) ||
+    pathname === '/portal' || pathname?.startsWith('/portal/') ||
+    pathname === '/convenio' || pathname?.startsWith('/convenio/') ||
+    pathname === '/cliente' || pathname?.startsWith('/cliente/')
+  )) {
     return null
   }
 
