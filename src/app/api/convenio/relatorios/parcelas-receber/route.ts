@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
           select: {
             numeroVenda: true,
             quantidadeParcelas: true,
+            dataEmissao: true,
             socio: {
               select: {
                 nome: true,
@@ -141,6 +142,7 @@ export async function GET(request: NextRequest) {
         venda: {
           numeroVenda: p.venda.numeroVenda,
           quantidadeParcelas: p.venda.quantidadeParcelas,
+          dataEmissao: p.venda.dataEmissao,
           socio: p.venda.socio.nome,
           matricula: p.venda.socio.matricula,
           cpf: p.venda.socio.cpf,

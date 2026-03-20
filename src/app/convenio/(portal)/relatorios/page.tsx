@@ -83,6 +83,7 @@ interface ParcelasReceberData {
     venda: {
       numeroVenda: number
       quantidadeParcelas: number
+      dataEmissao: string
       socio: string
       matricula: string | null
       cpf: string | null
@@ -187,10 +188,11 @@ export default function RelatoriosPage() {
       link.click()
     } else if (tipo === 'parcelas' && parcelasData) {
       const csv = [
-        ['Nº Venda', 'Parcela', 'Vencimento', 'Valor', 'Sócio', 'Matrícula'].join(';'),
+        ['Nº Venda', 'Data Compra', 'Parcela', 'Vencimento', 'Valor', 'Sócio', 'Matrícula'].join(';'),
         ...parcelasData.parcelas.map(p =>
           [
             p.venda.numeroVenda,
+            format(new Date(p.venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy'),
             `${p.numeroParcela}/${p.venda.quantidadeParcelas}`,
             format(new Date(p.dataVencimento), 'MM/yyyy'),
             p.valor.toFixed(2).replace('.', ','),
@@ -544,7 +546,7 @@ export default function RelatoriosPage() {
                               Venda #{parcela.venda.numeroVenda} — Parcela {parcela.numeroParcela}/{parcela.venda.quantidadeParcelas}
                             </div>
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              Venc: {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
+                              Compra: {format(new Date(parcela.venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })} | Venc: {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
                             </div>
                           </div>
                           {parcela.baixa === 'S' ? (
@@ -591,6 +593,7 @@ export default function RelatoriosPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Venda</TableHead>
+                          <TableHead>Data Compra</TableHead>
                           <TableHead>Parcela</TableHead>
                           <TableHead>Vencimento</TableHead>
                           <TableHead>Sócio</TableHead>
@@ -602,6 +605,9 @@ export default function RelatoriosPage() {
                         {parcelasData.parcelas.map((parcela) => (
                           <TableRow key={parcela.id}>
                             <TableCell className="font-medium">#{parcela.venda.numeroVenda}</TableCell>
+                            <TableCell>
+                              {format(new Date(parcela.venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
+                            </TableCell>
                             <TableCell>{parcela.numeroParcela}/{parcela.venda.quantidadeParcelas}</TableCell>
                             <TableCell>
                               {format(new Date(parcela.dataVencimento), 'MM/yyyy', { locale: ptBR })}
