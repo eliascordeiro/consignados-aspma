@@ -33,7 +33,6 @@ export async function POST(req: Request) {
       razao_soc: true,
       fantasia: true,
       tipo: true,
-      userId: true,
     },
   })
   if (!convenio) {
@@ -50,16 +49,18 @@ export async function POST(req: Request) {
   }
 
   // Validate current password.
-  // Path 1: convenio is linked to a users account — password is bcrypt-hashed in users.password.
-  // Path 2: standalone convenio — password is stored plaintext in convenio.senha.
-  if (convenio.userId) {
-    const linkedUser = await prisma.users.findUnique({
-      where: { id: convenio.userId },
-      select: { password: true },
-    })
-    if (!linkedUser) {
-      return NextResponse.json({ error: 'Usuário vinculado não encontrado.' }, { status: 404 })
-    }
+  // Look up user by username (convenio.usuario) — more reliable than convenio.userId
+  // which can be set to an org/admin account instead of the actual person's account.
+  // Path 1: a users account exists with matching name → bcrypt comparison.
+  // Path 2: no matching users account → standalone convenio, plaintext comparison.
+  const linkedUser = convenio.usuario
+    ? await prisma.users.findFirst({
+        where: { name: { equals: convenio.usuario, mode: 'insensitive' } },
+        select: { id: true, password: true, role: true },
+      })
+    : null
+
+  if (linkedUser) {
     const valid = await bcrypt.compare(currentSenha, linkedUser.password)
     if (!valid) {
       return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
@@ -76,11 +77,12 @@ export async function POST(req: Request) {
     data: { senha: newSenha, senhaChangedAt: now },
   })
 
-  // For Path 1: also update users.password with bcrypt so NextAuth login works with the new password
-  if (convenio.userId) {
+  // For Path 1: also update users.password so NextAuth login accepts the new password.
+  // Never update ADMIN/MANAGER passwords this way.
+  if (linkedUser && linkedUser.role !== 'ADMIN' && linkedUser.role !== 'MANAGER') {
     const hashedNewSenha = await bcrypt.hash(newSenha, 10)
     await prisma.users.update({
-      where: { id: convenio.userId },
+      where: { id: linkedUser.id },
       data: { password: hashedNewSenha },
     })
   }

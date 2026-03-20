@@ -1,0 +1,5 @@
+  id   | usuario | senha |          userId           | senhaChangedAt |                          name                           | pass_prefix 
+-------+---------+-------+---------------------------+----------------+---------------------------------------------------------+-------------
+ 16599 | FIALLA3 | 3002  | cmkeaodeq00007zofci9t08yw |                | ASPMA  Associação dos Servidores Públicos de Araucária. | $2b$10$tmQ
+(1 row)
+
