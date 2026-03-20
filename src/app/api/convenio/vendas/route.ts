@@ -108,6 +108,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Valida limite máximo de parcelas configurado no convênio
+    const convenioLimite = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { parcelas: true },
+    })
+    if (convenioLimite?.parcelas && quantidadeParcelas > convenioLimite.parcelas) {
+      return NextResponse.json(
+        {
+          error: 'Número de parcelas excede o máximo permitido',
+          detalhes: `Este convênio permite no máximo ${convenioLimite.parcelas} parcelas. Solicitado: ${quantidadeParcelas}.`,
+        },
+        { status: 400 }
+      )
+    }
+
     // Verifica se o sócio existe, está ativo e sem bloqueio
     const socio = await prisma.socio.findFirst({
       where: {

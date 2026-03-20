@@ -287,6 +287,13 @@ export async function GET(request: NextRequest) {
     // Calcula data de corte usando o diaCorte da consignatária (empresa) do sócio
     const dataCorte = calcularDataCorte(socio.empresa?.diaCorte ?? 9)
 
+    // Busca limite máximo de parcelas configurado no convênio
+    const convenioConfig = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { parcelas: true },
+    })
+    const maxParcelas = convenioConfig?.parcelas ?? null
+
     // REGRA AS200.PRG: TIPO 3 ou 4 = Cálculo local (limite - descontos)
     if (socio.tipo === '3' || socio.tipo === '4') {
       const descontos = await calcularDescontosDoMes(socio.id, dataCorte)
@@ -303,6 +310,7 @@ export async function GET(request: NextRequest) {
         mesReferencia: `${dataCorte.mes}/${dataCorte.ano}`,
         fonte: 'local',
         tipo: socio.tipo,
+        maxParcelas,
       })
     }
 
@@ -320,6 +328,7 @@ export async function GET(request: NextRequest) {
         fonte: 'banco',
         tipo: socio.tipo,
         aviso: 'CPF ou matrícula não disponível para consulta ZETRA',
+        maxParcelas,
       })
     }
 
@@ -338,6 +347,7 @@ export async function GET(request: NextRequest) {
         margem: Number(socio.margemConsig || 0),
         fonte: 'fallback',
         tipo: socio.tipo,
+        maxParcelas,
         aviso: 'ZETRA indisponível, usando valor do banco',
       })
     }
@@ -352,6 +362,7 @@ export async function GET(request: NextRequest) {
         tipo: socio.tipo,
         mensagem: margemZetra.mensagem,
         codRetorno: margemZetra.codRetorno,
+        maxParcelas,
       })
     }
     // Busca convênio para o log
@@ -391,6 +402,7 @@ export async function GET(request: NextRequest) {
       margem: margemZetra || 0,
       fonte: 'tempo_real',
       tipo: socio.tipo,
+      maxParcelas,
     })
   } catch (error) {
     console.error('[CONVENIADO] Erro ao buscar margem:', error)

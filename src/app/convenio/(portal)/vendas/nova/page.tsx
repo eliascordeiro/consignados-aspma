@@ -32,6 +32,7 @@ interface MargemInfo {
   mesReferencia?: string
   aviso?: string
   mensagem?: string
+  maxParcelas?: number | null
 }
 
 interface LimiteInfo {
@@ -154,6 +155,7 @@ export default function NovaVendaPage() {
           mesReferencia: data.mesReferencia,
           aviso: data.aviso,
           mensagem: data.mensagem,
+          maxParcelas: data.maxParcelas ?? null,
         })
       } else {
         setMargemInfo(null)
@@ -189,7 +191,10 @@ export default function NovaVendaPage() {
       alert('Preencha o valor total e número de parcelas')
       return
     }
-
+    if (margemInfo?.maxParcelas && Number(formData.quantidadeParcelas) > margemInfo.maxParcelas) {
+      alert(`\u26a0\ufe0f O n\u00famero de parcelas (${formData.quantidadeParcelas}) excede o m\u00e1ximo permitido para este conv\u00eanio (${margemInfo.maxParcelas}x).\n\nReduz o n\u00famero de parcelas antes de prosseguir.`)
+      return
+    }
     if (margemInfo && valorParcela > margemInfo.margem) {
       alert('⚠️ O valor da parcela (' + formatCurrency(valorParcela) + ') excede a margem disponível (' + formatCurrency(margemInfo.margem) + ').\n\nAjuste os valores antes de enviar o código.')
       return
@@ -734,12 +739,17 @@ export default function NovaVendaPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="quantidadeParcelas">Nº de Parcelas *</Label>
+                  <Label htmlFor="quantidadeParcelas">
+                    N\u00ba de Parcelas *
+                    {margemInfo?.maxParcelas && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">(m\u00e1x. {margemInfo.maxParcelas}x)</span>
+                    )}
+                  </Label>
                   <Input
                     id="quantidadeParcelas"
                     type="number"
                     min="1"
-                    max="60"
+                    max={margemInfo?.maxParcelas ?? 60}
                     placeholder="12"
                     value={formData.quantidadeParcelas}
                     onChange={(e) =>
@@ -747,6 +757,11 @@ export default function NovaVendaPage() {
                     }
                     required
                   />
+                  {margemInfo?.maxParcelas && Number(formData.quantidadeParcelas) > margemInfo.maxParcelas && (
+                    <p className="text-xs text-red-600">
+                      \u274c M\u00e1ximo permitido: {margemInfo.maxParcelas} parcelas
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -856,7 +871,7 @@ export default function NovaVendaPage() {
             <Button
               type="button"
               onClick={enviarCodigoWhatsApp}
-              disabled={enviandoCodigo || !formData.valorTotal || !formData.quantidadeParcelas || (margemInfo !== null && valorParcela > margemInfo.margem)}
+              disabled={enviandoCodigo || !formData.valorTotal || !formData.quantidadeParcelas || (margemInfo !== null && valorParcela > margemInfo.margem) || (margemInfo?.maxParcelas != null && Number(formData.quantidadeParcelas) > margemInfo.maxParcelas)}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             >
               {enviandoCodigo ? (
