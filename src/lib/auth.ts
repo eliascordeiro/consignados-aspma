@@ -94,6 +94,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
                 fantasia: true,
                 tipo: true,
                 userId: true,
+                senhaChangedAt: true,
               },
             })
           }
@@ -129,6 +130,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
               razaoSocial: convenioVinculado.razao_soc,
               fantasia: convenioVinculado.fantasia,
               tipo: convenioVinculado.tipo || null,
+              senhaChangedAt: (convenioVinculado as any).senhaChangedAt?.toISOString() || null,
             })
               .setProtectedHeader({ alg: "HS256" })
               .setIssuedAt()
@@ -216,6 +218,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             email: true,
             userId: true,
             tipo: true,
+            senhaChangedAt: true,
           },
         })
 
@@ -307,6 +310,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           razaoSocial: convenio.razao_soc,
           fantasia: convenio.fantasia,
           tipo: convenio.tipo || null,
+          senhaChangedAt: convenio.senhaChangedAt?.toISOString() || null,
         })
           .setProtectedHeader({ alg: "HS256" })
           .setIssuedAt()

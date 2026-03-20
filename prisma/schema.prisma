@@ -111,6 +111,7 @@ model convenio {
   estado     String?
   telefone   String?
   ativo      Boolean   @default(true)
+  senhaChangedAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   vendas     Venda[]

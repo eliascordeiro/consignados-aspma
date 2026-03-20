@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import ConvenioNav from './ConvenioNav'
-import { Building2, Landmark, Store, FlaskConical, LogOut } from 'lucide-react'
+import { Building2, Landmark, Store, FlaskConical, LogOut, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitcher } from '@/components/theme-switcher'
 import ChatWidget from '@/components/chat-widget'
@@ -13,6 +13,7 @@ interface ConvenioLayoutClientProps {
   fantasia: string | null
   razaoSocial: string | null
   tipo: string | null
+  passwordDaysLeft?: number | null
 }
 
 // Mapeia o tipo do convênio para a classe CSS de categoria
@@ -58,6 +59,7 @@ export default function ConvenioLayoutClient({
   fantasia,
   razaoSocial,
   tipo,
+  passwordDaysLeft,
 }: ConvenioLayoutClientProps) {
   const [queryClient] = useState(
     () =>
@@ -120,6 +122,27 @@ export default function ConvenioLayoutClient({
 
         {/* Navigation */}
         <ConvenioNav />
+
+        {/* Password expiry warning banner */}
+        {passwordDaysLeft !== null && passwordDaysLeft !== undefined && passwordDaysLeft <= 5 && (
+          <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 text-sm">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>
+                {passwordDaysLeft <= 1
+                  ? 'Sua senha expira amanhã!'
+                  : `Sua senha expira em ${passwordDaysLeft} dia${passwordDaysLeft !== 1 ? 's' : ''}.`}{' '}
+                Renove agora para não perder o acesso.
+              </span>
+            </div>
+            <a
+              href="/convenio/alterar-senha"
+              className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline shrink-0"
+            >
+              Renovar agora
+            </a>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
