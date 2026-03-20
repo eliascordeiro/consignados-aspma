@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
         permissions: true,
         createdAt: true,
         role: true,
+        passwordChangedAt: true,
       },
       orderBy: {
         name: "asc",

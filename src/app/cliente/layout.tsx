@@ -32,6 +32,7 @@ import {
   UserCog,
   PanelLeftClose,
   PanelLeftOpen,
+  AlertTriangle,
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserModules, PERMISSION_MODULES } from "@/config/permissions"
@@ -58,6 +59,7 @@ export default function ClienteLayout({
   const [isDesktop, setIsDesktop] = useState(false)
   const [perfilModalOpen, setPerfilModalOpen] = useState(false)
   const [managerName, setManagerName] = useState<string | null>(null)
+  const [passwordDaysLeft, setPasswordDaysLeft] = useState<number | null>(null)
   const { data: session } = useSession()
 
   // Detectar desktop para aplicar padding inline
@@ -102,10 +104,18 @@ export default function ClienteLayout({
     if (user?.isConvenio) return
     if (pathname.startsWith('/cliente/alterar-senha')) return
     const changedAt = user?.passwordChangedAt ? new Date(user.passwordChangedAt) : null
-    const expired = !changedAt || (Date.now() - changedAt.getTime() > 30 * 24 * 60 * 60 * 1000)
-    if (expired) {
+    if (!changedAt) {
       router.push('/cliente/alterar-senha')
+      return
     }
+    const daysElapsed = (Date.now() - changedAt.getTime()) / (1000 * 60 * 60 * 24)
+    if (daysElapsed >= 30) {
+      router.push('/cliente/alterar-senha')
+      return
+    }
+    const daysLeft = Math.ceil(30 - daysElapsed)
+    if (daysLeft <= 5) setPasswordDaysLeft(daysLeft)
+    else setPasswordDaysLeft(null)
   }, [session, pathname, router])
 
   // Buscar nome do MANAGER se for usuário subordinado
@@ -365,6 +375,23 @@ export default function ClienteLayout({
           
           <ThemeSwitcher />
         </header>
+
+        {/* Aviso de expiração de senha */}
+        {passwordDaysLeft !== null && (
+          <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 md:px-6 py-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 text-sm">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>
+                {passwordDaysLeft <= 1
+                  ? 'Sua senha expira amanhã! Renove agora para não perder o acesso.'
+                  : `Sua senha expira em ${passwordDaysLeft} dia${passwordDaysLeft > 1 ? 's' : ''}. Renove antes de ser bloqueado.`}
+              </span>
+            </div>
+            <Link href="/cliente/alterar-senha" className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline shrink-0">
+              Renovar agora
+            </Link>
+          </div>
+        )}
 
         {/* Page content */}
         <main className="p-6 md:p-8">

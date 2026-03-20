@@ -6,7 +6,7 @@ import { hasPermission } from '@/config/permissions';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, KeyRound } from 'lucide-react';
 
 interface User {
   id: string;
@@ -18,6 +18,16 @@ interface User {
   active: boolean;
   createdAt: string;
   permissions?: string[];
+  passwordChangedAt?: string | null;
+}
+
+function getPasswordStatus(passwordChangedAt: string | null | undefined) {
+  if (!passwordChangedAt) return { label: 'Pendente', cls: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', hardLocked: false }
+  const daysElapsed = (Date.now() - new Date(passwordChangedAt).getTime()) / (1000 * 60 * 60 * 24)
+  if (daysElapsed >= 60) return { label: 'Travada', cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', hardLocked: true }
+  if (daysElapsed >= 30) return { label: 'Bloqueada', cls: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', hardLocked: false }
+  if (daysElapsed >= 25) return { label: 'Expirando', cls: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', hardLocked: false }
+  return { label: 'OK', cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', hardLocked: false }
 }
 
 async function fetchUsers(searchTerm: string): Promise<User[]> {
@@ -64,6 +74,25 @@ export default function UsuariosPage() {
     estimateSize: () => (isMobile ? 100 : 56),
     overscan: 10,
   });
+
+  const handleUnlock = async (user: User) => {
+    if (!confirm(`Desbloquear a conta de "${user.name}"? Isso concederá mais 30 dias para renovação de senha.`)) return
+    try {
+      const res = await fetch('/api/auth/unlock-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      })
+      if (res.ok) {
+        refetch()
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Erro ao desbloquear conta')
+      }
+    } catch {
+      alert('Erro ao desbloquear conta')
+    }
+  }
 
   const handleDelete = async (user: User) => {
     if (!confirm(`Tem certeza que deseja excluir "${user.name}"?`)) return;
@@ -142,12 +171,12 @@ export default function UsuariosPage() {
         ) : (
           <>
             {!isMobile && (
-              <div className="grid grid-cols-[2fr_2fr_130px_130px_100px_90px] gap-3 px-4 py-3 bg-muted/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="grid grid-cols-[2fr_2fr_100px_90px_110px_110px] gap-3 px-4 py-3 bg-muted/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <div>Nome</div>
                 <div>E-mail</div>
                 <div>CPF</div>
-                <div>Telefone</div>
                 <div>Status</div>
+                <div>Senha</div>
                 <div className="text-right">Ações</div>
               </div>
             )}
@@ -171,6 +200,7 @@ export default function UsuariosPage() {
                             <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${user.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                               {user.active ? 'Ativo' : 'Inativo'}
                             </span>
+                            {(() => { const ps = getPasswordStatus(user.passwordChangedAt); return <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${ps.cls}`}>{ps.label}</span> })()}
                             {user.cpf && <span className="text-xs text-gray-400">{user.cpf}</span>}
                           </div>
                         </div>
@@ -180,6 +210,11 @@ export default function UsuariosPage() {
                               <Pencil className="h-4 w-4" />
                             </Link>
                           )}
+                          {getPasswordStatus(user.passwordChangedAt).hardLocked && (
+                            <button onClick={() => handleUnlock(user)} title="Desbloquear conta" className="p-1.5 rounded hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-600 transition-colors">
+                              <KeyRound className="h-4 w-4" />
+                            </button>
+                          )}
                           {canDelete && (
                             <button onClick={() => handleDelete(user)} className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors">
                               <Trash2 className="h-4 w-4" />
@@ -188,21 +223,28 @@ export default function UsuariosPage() {
                         </div>
                       </div>
 
-                      <div className="hidden md:grid md:grid-cols-[2fr_2fr_130px_130px_100px_90px] gap-3 px-4 items-center h-full text-sm">
+                      <div className="hidden md:grid md:grid-cols-[2fr_2fr_100px_90px_110px_110px] gap-3 px-4 items-center h-full text-sm">
                         <div className="font-medium text-foreground truncate">{user.name}</div>
                         <div className="text-muted-foreground truncate">{user.email}</div>
                         <div className="text-muted-foreground text-xs">{user.cpf || '—'}</div>
-                        <div className="text-muted-foreground text-xs">{user.phone || '—'}</div>
                         <div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${user.active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                             {user.active ? 'Ativo' : 'Inativo'}
                           </span>
+                        </div>
+                        <div>
+                          {(() => { const ps = getPasswordStatus(user.passwordChangedAt); return <span className={`text-xs px-2 py-1 rounded-full font-medium ${ps.cls}`}>{ps.label}</span> })()}
                         </div>
                         <div className="flex justify-end gap-1">
                           {canEdit && (
                             <Link href={`/cliente/usuarios/editar/${user.id}`} title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
                             </Link>
+                          )}
+                          {getPasswordStatus(user.passwordChangedAt).hardLocked && (
+                            <button onClick={() => handleUnlock(user)} title="Desbloquear conta (senha travada)" className="p-1.5 rounded hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-600 transition-colors">
+                              <KeyRound className="h-4 w-4" />
+                            </button>
                           )}
                           {canDelete && (
                             <button onClick={() => handleDelete(user)} title="Excluir" className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors">

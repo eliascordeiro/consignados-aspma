@@ -17,11 +17,22 @@ export async function POST(req: Request) {
 
   const user = await prisma.users.findUnique({
     where: { id: session.user.id },
-    select: { password: true },
+    select: { password: true, passwordChangedAt: true },
   })
 
   if (!user) {
     return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 })
+  }
+
+  // Hard lock: not null + more than 60 days without renewal
+  if (user.passwordChangedAt) {
+    const daysElapsed = (Date.now() - user.passwordChangedAt.getTime()) / (1000 * 60 * 60 * 24)
+    if (daysElapsed >= 60) {
+      return NextResponse.json(
+        { error: 'conta_bloqueada', message: 'Conta bloqueada por inatividade de senha. Contate o administrador.' },
+        { status: 403 }
+      )
+    }
   }
 
   const valid = await bcrypt.compare(currentPassword, user.password)

@@ -43,7 +43,11 @@ export default function AlterarSenhaPage() {
 
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "Erro ao alterar a senha.")
+        if (data.error === 'conta_bloqueada') {
+          setError('HARD_LOCK')
+        } else {
+          setError(data.error || 'Erro ao alterar a senha.')
+        }
         return
       }
 
@@ -112,11 +116,16 @@ export default function AlterarSenhaPage() {
               />
             </div>
 
-            {error && (
+            {error === 'HARD_LOCK' ? (
+              <div className="rounded-md border border-red-500/50 bg-red-500/10 p-4 text-sm">
+                <p className="font-semibold text-red-700 dark:text-red-400 mb-1">Conta bloqueada por inatividade.</p>
+                <p className="text-red-600 dark:text-red-300">A senha não foi renovada por mais de 60 dias. Somente um administrador ou gerente pode reativar esta conta.</p>
+              </div>
+            ) : error ? (
               <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
-            )}
+            ) : null}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Alterando..." : "Alterar senha"}
