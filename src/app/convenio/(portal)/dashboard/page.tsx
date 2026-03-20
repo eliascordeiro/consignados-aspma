@@ -16,9 +16,7 @@ import {
   Phone,
   Mail,
   MapPin,
-  Landmark,
   Percent,
-  CreditCard,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -340,34 +338,7 @@ export default function ConvenioDashboardPage() {
               </div>
             )}
 
-            {/* Banco */}
-            {(data.perfil.banco || data.perfil.agencia || data.perfil.conta) && (
-              <div className="space-y-0.5 flex gap-3 items-start">
-                <Landmark className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Dados Bancários</p>
-                  {data.perfil.banco && <p className="font-medium text-sm">Banco: {data.perfil.banco}</p>}
-                  {data.perfil.agencia && <p className="text-sm text-muted-foreground">Agência: {data.perfil.agencia}</p>}
-                  {data.perfil.conta && <p className="text-sm text-muted-foreground">Conta: {data.perfil.conta}</p>}
-                </div>
-              </div>
-            )}
 
-            {/* Desconto e Parcelas */}
-            {(data.perfil.desconto != null || data.perfil.parcelas != null) && (
-              <div className="space-y-0.5 flex gap-3 items-start">
-                <CreditCard className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Condições Comerciais</p>
-                  {data.perfil.desconto != null && (
-                    <p className="font-medium text-sm">Desconto: {data.perfil.desconto}%</p>
-                  )}
-                  {data.perfil.parcelas != null && (
-                    <p className="text-sm text-muted-foreground">Máx. parcelas: {data.perfil.parcelas}x</p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
