@@ -12,6 +12,13 @@ import {
   XCircle,
   Clock,
   TrendingDown,
+  Building2,
+  Phone,
+  Mail,
+  MapPin,
+  Landmark,
+  Percent,
+  CreditCard,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -56,8 +63,30 @@ interface VendaRecente {
   cancelado: boolean
 }
 
+interface ConvenioPerfil {
+  razaoSocial: string | null
+  fantasia: string | null
+  nome: string | null
+  cnpj: string | null
+  desconto: number | null
+  parcelas: number | null
+  endereco: string | null
+  bairro: string | null
+  cep: string | null
+  cidade: string | null
+  estado: string | null
+  telefone: string | null
+  fax: string | null
+  contato: string | null
+  email: string | null
+  banco: string | null
+  agencia: string | null
+  conta: string | null
+}
+
 interface DashboardData {
   stats: DashboardStats
+  perfil: ConvenioPerfil
   vendasRecentes: VendaRecente[]
 }
 
@@ -232,6 +261,116 @@ export default function ConvenioDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Perfil do Convênio */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            <CardTitle>Dados do Convênio</CardTitle>
+          </div>
+          <CardDescription>Informações cadastrais do seu convênio</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Razão Social / Fantasia */}
+            {(data.perfil.razaoSocial || data.perfil.fantasia) && (
+              <div className="space-y-0.5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Razão Social / Fantasia</p>
+                <p className="font-medium text-sm">{data.perfil.razaoSocial || '-'}</p>
+                {data.perfil.fantasia && (
+                  <p className="text-sm text-muted-foreground">{data.perfil.fantasia}</p>
+                )}
+              </div>
+            )}
+
+            {/* CNPJ */}
+            {data.perfil.cnpj && (
+              <div className="space-y-0.5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">CNPJ / CGC</p>
+                <p className="font-medium text-sm">{data.perfil.cnpj}</p>
+              </div>
+            )}
+
+            {/* Contato */}
+            {data.perfil.contato && (
+              <div className="space-y-0.5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Contato</p>
+                <p className="font-medium text-sm">{data.perfil.contato}</p>
+              </div>
+            )}
+
+            {/* Telefone / Fax */}
+            {(data.perfil.telefone || data.perfil.fax) && (
+              <div className="space-y-0.5 flex gap-3 items-start">
+                <Phone className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Telefone{data.perfil.fax ? ' / Fax' : ''}</p>
+                  {data.perfil.telefone && <p className="font-medium text-sm">{data.perfil.telefone}</p>}
+                  {data.perfil.fax && <p className="text-sm text-muted-foreground">{data.perfil.fax}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* E-mail */}
+            {data.perfil.email && (
+              <div className="space-y-0.5 flex gap-3 items-start">
+                <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">E-mail</p>
+                  <p className="font-medium text-sm break-all">{data.perfil.email}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Endereço */}
+            {(data.perfil.endereco || data.perfil.cidade) && (
+              <div className="space-y-0.5 flex gap-3 items-start">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Endereço</p>
+                  {data.perfil.endereco && <p className="font-medium text-sm">{data.perfil.endereco}{data.perfil.bairro ? ` - ${data.perfil.bairro}` : ''}</p>}
+                  {(data.perfil.cidade || data.perfil.estado) && (
+                    <p className="text-sm text-muted-foreground">
+                      {[data.perfil.cidade, data.perfil.estado].filter(Boolean).join(' - ')}
+                      {data.perfil.cep ? ` | CEP: ${data.perfil.cep}` : ''}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Banco */}
+            {(data.perfil.banco || data.perfil.agencia || data.perfil.conta) && (
+              <div className="space-y-0.5 flex gap-3 items-start">
+                <Landmark className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Dados Bancários</p>
+                  {data.perfil.banco && <p className="font-medium text-sm">Banco: {data.perfil.banco}</p>}
+                  {data.perfil.agencia && <p className="text-sm text-muted-foreground">Agência: {data.perfil.agencia}</p>}
+                  {data.perfil.conta && <p className="text-sm text-muted-foreground">Conta: {data.perfil.conta}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* Desconto e Parcelas */}
+            {(data.perfil.desconto != null || data.perfil.parcelas != null) && (
+              <div className="space-y-0.5 flex gap-3 items-start">
+                <CreditCard className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Condições Comerciais</p>
+                  {data.perfil.desconto != null && (
+                    <p className="font-medium text-sm">Desconto: {data.perfil.desconto}%</p>
+                  )}
+                  {data.perfil.parcelas != null && (
+                    <p className="text-sm text-muted-foreground">Máx. parcelas: {data.perfil.parcelas}x</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Vendas Recentes */}
       <Card>

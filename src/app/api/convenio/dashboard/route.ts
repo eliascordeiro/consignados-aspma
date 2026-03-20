@@ -120,6 +120,36 @@ export async function GET(request: NextRequest) {
       take: 10,
     })
 
+    // Dados do perfil do convênio
+    const convenio = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: {
+        razao_soc: true,
+        fantasia: true,
+        nome: true,
+        cnpj: true,
+        cgc: true,
+        desconto: true,
+        parcelas: true,
+        endereco: true,
+        bairro: true,
+        cep: true,
+        cidade: true,
+        estado: true,
+        uf: true,
+        telefone: true,
+        fone: true,
+        fax: true,
+        contato: true,
+        email: true,
+        banco: true,
+        agencia: true,
+        conta: true,
+        libera: true,
+        tipo: true,
+      },
+    })
+
     return NextResponse.json({
       stats: {
         // Descontos do mês atual
@@ -144,6 +174,26 @@ export async function GET(request: NextRequest) {
 
         // Referência do mês
         mesReferencia: `${mesAtual.toString().padStart(2, '0')}/${anoAtual}`,
+      },
+      perfil: {
+        razaoSocial: convenio?.razao_soc ?? null,
+        fantasia: convenio?.fantasia ?? null,
+        nome: convenio?.nome ?? null,
+        cnpj: convenio?.cnpj ?? convenio?.cgc ?? null,
+        desconto: convenio?.desconto != null ? Number(convenio.desconto) : null,
+        parcelas: convenio?.parcelas ?? null,
+        endereco: convenio?.endereco ?? null,
+        bairro: convenio?.bairro ?? null,
+        cep: convenio?.cep ?? null,
+        cidade: convenio?.cidade ?? null,
+        estado: convenio?.estado ?? convenio?.uf ?? null,
+        telefone: convenio?.telefone ?? convenio?.fone ?? null,
+        fax: convenio?.fax ?? null,
+        contato: convenio?.contato ?? null,
+        email: convenio?.email ?? null,
+        banco: convenio?.banco ?? null,
+        agencia: convenio?.agencia ?? null,
+        conta: convenio?.conta ?? null,
       },
       vendasRecentes: vendasRecentes.map((venda) => ({
         id: venda.id,
