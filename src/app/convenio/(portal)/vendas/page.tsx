@@ -201,7 +201,7 @@ export default function VendasPage() {
     retry: 2,
   })
 
-  const vendas = data?.vendas ?? []
+  const vendas = (data?.vendas ?? []).filter(v => Number(v.valorTotal) > 0)
   const pagination = data?.pagination
 
   console.log('Query state:', { isLoading, error, vendasCount: vendas.length })

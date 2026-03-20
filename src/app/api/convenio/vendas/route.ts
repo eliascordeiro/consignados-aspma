@@ -359,6 +359,7 @@ export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       convenioId: session.convenioId,
+      valorTotal: { gt: 0 },
     }
 
     // Filtro por nome ou matrícula do sócio
