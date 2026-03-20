@@ -81,6 +81,21 @@ export default function NovaVendaPage() {
     observacoes: '',
   })
 
+  // Estado em centavos para a máscara BRL
+  const [valorTotalCentavos, setValorTotalCentavos] = useState(0)
+
+  const valorTotalDisplay = (valorTotalCentavos / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  const handleValorTotalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '')
+    const centavos = parseInt(digits || '0', 10)
+    setValorTotalCentavos(centavos)
+    setFormData(prev => ({ ...prev, valorTotal: (centavos / 100).toString() }))
+  }
+
   const valorParcela = formData.valorTotal && formData.quantidadeParcelas
     ? Number(formData.valorTotal) / Number(formData.quantidadeParcelas)
     : 0
@@ -172,6 +187,7 @@ export default function NovaVendaPage() {
     setSocioSelecionado(null)
     setMargemInfo(null)
     setFormData({ valorTotal: '', quantidadeParcelas: '', observacoes: '' })
+    setValorTotalCentavos(0)
     setBuscaMatriculaCelular('')
     setSocios([])
     // Resetar fluxo WhatsApp
@@ -726,14 +742,11 @@ export default function NovaVendaPage() {
                   <Label htmlFor="valorTotal">Valor Total *</Label>
                   <Input
                     id="valorTotal"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="0.00"
-                    value={formData.valorTotal}
-                    onChange={(e) =>
-                      setFormData({ ...formData, valorTotal: e.target.value })
-                    }
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0,00"
+                    value={valorTotalDisplay}
+                    onChange={handleValorTotalChange}
                     required
                   />
                 </div>
