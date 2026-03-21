@@ -173,9 +173,10 @@ export async function DELETE(
       )
     }
 
-    await prisma.users.delete({
-      where: { id },
-    })
+    await prisma.$transaction([
+      prisma.auditLog.deleteMany({ where: { userId: id } }),
+      prisma.users.delete({ where: { id } }),
+    ])
 
     return NextResponse.json({ message: "Usuário deletado com sucesso" })
   } catch (error) {
