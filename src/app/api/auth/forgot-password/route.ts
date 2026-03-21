@@ -40,7 +40,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Enviar email
-    await sendPasswordResetEmail(email, resetToken)
+    try {
+      await sendPasswordResetEmail(email, resetToken)
+    } catch (emailError) {
+      console.error('❌ Falha ao enviar email de reset para', email, emailError)
+      // Retorna sucesso mesmo assim para não revelar se o email existe (segurança)
+      // Verificar Railway logs para diagnosticar o problema de envio
+    }
 
     return NextResponse.json({
       message: "Se o email existir, você receberá um link de redefinição",

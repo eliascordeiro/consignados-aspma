@@ -6,7 +6,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
   const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: process.env.SMTP_FROM || 'aspma@aspma-consignados.com.br',
       to: email,
       subject: 'Redefinição de Senha - A.S.P.M.A',
@@ -49,10 +49,11 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
         </html>
       `,
     })
+    console.log(`✅ Email de reset de senha enviado para ${email}`, result)
     return { success: true }
   } catch (error) {
-    console.error('Erro ao enviar email:', error)
-    return { success: false, error }
+    console.error('❌ Erro ao enviar email de reset de senha:', error)
+    throw error
   }
 }
 
