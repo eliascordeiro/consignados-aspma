@@ -124,23 +124,27 @@ export async function GET(request: NextRequest) {
       ? `${buscaLimpa.slice(0,3)}.${buscaLimpa.slice(3,6)}.${buscaLimpa.slice(6,9)}-${buscaLimpa.slice(9,11)}`
       : null
 
+    // Filtro de busca por matrícula/CPF
+    const buscaFilter = buscaLimpa ? {
+      OR: [
+        { matricula: { equals: buscaLimpa } },
+        { matricula: { equals: buscaTrimmed } },
+        { cpf: { equals: buscaLimpa } },
+        { cpf: { equals: buscaTrimmed } },
+        ...(cpfFormatado ? [{ cpf: { equals: cpfFormatado } }] : []),
+      ],
+    } : undefined
+
+    // Busca apenas sócios com Status="Ativo" (bloqueio diferente de 'X')
+    // Alinhado com a definição usada na tabela de sócios: isAtivo = bloqueio !== 'X'
     const socios = await prisma.socio.findMany({
       where: {
         ativo: true,
         OR: [
           { bloqueio: null },
-          { bloqueio: '' },
-          { bloqueio: 'N' },
+          { bloqueio: { not: 'X' } },
         ],
-        AND: buscaLimpa ? {
-          OR: [
-            { matricula: { equals: buscaLimpa } },
-            { matricula: { equals: buscaTrimmed } },
-            { cpf: { equals: buscaLimpa } },
-            { cpf: { equals: buscaTrimmed } },
-            ...(cpfFormatado ? [{ cpf: { equals: cpfFormatado } }] : []),
-          ],
-        } : undefined,
+        AND: buscaFilter,
       },
       select: {
         id: true,
@@ -152,6 +156,7 @@ export async function GET(request: NextRequest) {
         margemConsig: true,
         limite: true,
         tipo: true,
+        bloqueio: true,
         empresa: {
           select: {
             nome: true,
@@ -163,6 +168,27 @@ export async function GET(request: NextRequest) {
       },
       take: 50, // Limita a 50 resultados
     })
+
+    // Se não encontrou sócios ativos, verifica se existe sócio inativo com essa matrícula/CPF
+    if (socios.length === 0 && buscaFilter) {
+      const socioInativo = await prisma.socio.findFirst({
+        where: {
+          AND: buscaFilter,
+          OR: [
+            { ativo: false },
+            { bloqueio: 'X' },
+          ],
+        },
+        select: { id: true, nome: true },
+      })
+
+      if (socioInativo) {
+        return NextResponse.json(
+          { error: 'Sócio com status Inativo não pode realizar vendas consignadas.', inativo: true },
+          { status: 422 }
+        )
+      }
+    }
 
     return NextResponse.json({
       socios: socios.map((socio) => ({
@@ -176,6 +202,7 @@ export async function GET(request: NextRequest) {
         limite: socio.limite,
         tipo: socio.tipo,
         empresaNome: socio.empresa?.nome,
+        bloqueio: socio.bloqueio,
       })),
     })
   } catch (error) {

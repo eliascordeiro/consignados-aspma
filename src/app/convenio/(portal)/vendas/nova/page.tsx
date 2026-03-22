@@ -21,6 +21,7 @@ interface Socio {
   limite: number | null
   tipo: string | null
   empresaNome: string | null
+  bloqueio?: string | null
 }
 
 interface MargemInfo {
@@ -65,6 +66,7 @@ export default function NovaVendaPage() {
   const [margemInfo, setMargemInfo] = useState<MargemInfo | null>(null)
   const [consultandoMargem, setConsultandoMargem] = useState(false)
   const [limiteInfo, setLimiteInfo] = useState<LimiteInfo | null>(null)
+  const [socioInativoMsg, setSocioInativoMsg] = useState<string | null>(null)
 
   const [vendaConfirmada, setVendaConfirmada] = useState<VendaConfirmada | null>(null)
 
@@ -111,10 +113,16 @@ export default function NovaVendaPage() {
     setSocios([])
     setSocioSelecionado(null)
     setMargemInfo(null)
+    setSocioInativoMsg(null)
 
     try {
       const response = await fetch('/api/convenio/socios?busca=' + encodeURIComponent(busca))
       const data = await response.json()
+
+      if (response.status === 422 && data.inativo) {
+        setSocioInativoMsg(data.error || 'Sócio com status Inativo não pode realizar vendas consignadas.')
+        return
+      }
 
       if (data.socios && data.socios.length > 0) {
         if (data.socios.length === 1) {
@@ -190,6 +198,7 @@ export default function NovaVendaPage() {
     setValorTotalCentavos(0)
     setBuscaMatriculaCelular('')
     setSocios([])
+    setSocioInativoMsg(null)
     // Resetar fluxo WhatsApp
     setCodigoEnviado(false)
     setCodigoDigitado('')
@@ -615,6 +624,17 @@ export default function NovaVendaPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Sócio inativo */}
+              {socioInativoMsg && (
+                <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-red-700 dark:text-red-400">Sócio Inativo</p>
+                    <p className="text-sm text-red-600 dark:text-red-300 mt-0.5">{socioInativoMsg}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Lista de resultados */}
               {socios.length > 0 && (
