@@ -124,23 +124,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifica se o sócio existe e tem Status="Ativo" (bloqueio !== 'X')
-    // Alinhado com a definição da tabela de sócios: isAtivo = bloqueio !== 'X'
+    // Usa AND:[...] explícito para evitar ambiguidade no Prisma
     const socio = await prisma.socio.findFirst({
       where: {
-        id: socioId,
-        ativo: true,
-        OR: [
-          { bloqueio: null },
-          { bloqueio: { not: 'X' } },
+        AND: [
+          { id: socioId },
+          {
+            OR: [
+              { bloqueio: null },
+              { bloqueio: '' },
+              { bloqueio: { notIn: ['X'] } },
+            ],
+          },
         ],
       },
       include: { empresa: { select: { diaCorte: true } } },
     })
 
     if (!socio) {
-      // Distingue se o sócio existe mas está inativo
-      const socioExiste = await prisma.socio.findUnique({ where: { id: socioId }, select: { id: true, bloqueio: true, ativo: true } })
-      if (socioExiste && (!socioExiste.ativo || socioExiste.bloqueio === 'X')) {
+      // Distingue se o sócio existe mas está inativo (bloqueio='X')
+      const socioExiste = await prisma.socio.findUnique({ where: { id: socioId }, select: { id: true, bloqueio: true } })
+      if (socioExiste && socioExiste.bloqueio === 'X') {
         return NextResponse.json(
           { error: 'Sócio com status Inativo não pode realizar vendas consignadas.' },
           { status: 422 }

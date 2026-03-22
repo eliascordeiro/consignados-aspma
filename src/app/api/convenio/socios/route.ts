@@ -125,26 +125,35 @@ export async function GET(request: NextRequest) {
       : null
 
     // Filtro de busca por matrícula/CPF
-    const buscaFilter = buscaLimpa ? {
-      OR: [
-        { matricula: { equals: buscaLimpa } },
-        { matricula: { equals: buscaTrimmed } },
-        { cpf: { equals: buscaLimpa } },
-        { cpf: { equals: buscaTrimmed } },
-        ...(cpfFormatado ? [{ cpf: { equals: cpfFormatado } }] : []),
-      ],
-    } : undefined
+    const buscaFilter = buscaLimpa
+      ? {
+          OR: [
+            { matricula: { equals: buscaLimpa } },
+            { matricula: { equals: buscaTrimmed } },
+            { cpf: { equals: buscaLimpa } },
+            { cpf: { equals: buscaTrimmed } },
+            ...(cpfFormatado ? [{ cpf: { equals: cpfFormatado } }] : []),
+          ],
+        }
+      : undefined
 
-    // Busca apenas sócios com Status="Ativo" (bloqueio diferente de 'X')
-    // Alinhado com a definição usada na tabela de sócios: isAtivo = bloqueio !== 'X'
+    // Busca apenas sócios com Status="Ativo"
+    // Definição de Status conforme tabela de funcionários: isAtivo = bloqueio !== 'X'
+    // Usa AND:[...] explícito (forma canônica no Prisma) para evitar ambiguidade
+    const statusAtivoFiltro = {
+      OR: [
+        { bloqueio: null },
+        { bloqueio: '' },
+        { bloqueio: { notIn: ['X'] } },
+      ],
+    }
+
     const socios = await prisma.socio.findMany({
       where: {
-        ativo: true,
-        OR: [
-          { bloqueio: null },
-          { bloqueio: { not: 'X' } },
+        AND: [
+          statusAtivoFiltro,
+          ...(buscaFilter ? [buscaFilter] : []),
         ],
-        AND: buscaFilter,
       },
       select: {
         id: true,
@@ -169,13 +178,12 @@ export async function GET(request: NextRequest) {
       take: 50, // Limita a 50 resultados
     })
 
-    // Se não encontrou sócios ativos, verifica se existe sócio inativo com essa matrícula/CPF
+    // Se não encontrou sócios ativos, verifica se existe sócio inativo (bloqueio='X') com essa matrícula/CPF
     if (socios.length === 0 && buscaFilter) {
       const socioInativo = await prisma.socio.findFirst({
         where: {
-          AND: buscaFilter,
-          OR: [
-            { ativo: false },
+          AND: [
+            buscaFilter,
             { bloqueio: 'X' },
           ],
         },
