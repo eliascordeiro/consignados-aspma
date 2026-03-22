@@ -598,20 +598,25 @@ export default function NovaVendaPage() {
                     <Input
                       placeholder="Digite a matrícula ou CPF (número exato)"
                       value={buscaMatriculaCelular}
-                      onChange={(e) => setBuscaMatriculaCelular(e.target.value)}
+                      onChange={(e) => {
+                        setBuscaMatriculaCelular(e.target.value)
+                        if (socioInativoMsg) setSocioInativoMsg(null)
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
-                          buscarPorMatriculaCelular()
+                          if (!socioInativoMsg) buscarPorMatriculaCelular()
                         }
                       }}
+                      className={socioInativoMsg ? 'border-red-500 focus-visible:ring-red-500' : ''}
                       autoFocus
                     />
                   </div>
                   <Button
                     type="button"
                     onClick={buscarPorMatriculaCelular}
-                    disabled={buscandoPorMatricula}
+                    disabled={buscandoPorMatricula || !!socioInativoMsg}
+                    variant={socioInativoMsg ? 'outline' : 'default'}
                   >
                     {buscandoPorMatricula ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -623,18 +628,19 @@ export default function NovaVendaPage() {
                     )}
                   </Button>
                 </div>
-              </div>
 
-              {/* Sócio inativo */}
-              {socioInativoMsg && (
-                <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-red-700 dark:text-red-400">Sócio Inativo</p>
-                    <p className="text-sm text-red-600 dark:text-red-300 mt-0.5">{socioInativoMsg}</p>
+                {/* Aviso sócio inativo — logo abaixo do input */}
+                {socioInativoMsg && (
+                  <div className="flex items-start gap-2 mt-1.5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg">
+                    <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400">Sócio Inativo</p>
+                      <p className="text-xs text-red-600 dark:text-red-300 mt-0.5">{socioInativoMsg}</p>
+                      <p className="text-xs text-red-500 dark:text-red-400 mt-1">Digite uma nova matrícula ou CPF para continuar.</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Lista de resultados */}
               {socios.length > 0 && (
