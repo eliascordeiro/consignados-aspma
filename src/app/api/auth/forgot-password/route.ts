@@ -26,11 +26,12 @@ export async function POST(request: NextRequest) {
         })
       : null
 
-    // Por segurança, sempre retorna sucesso mesmo se o email não existir
+    // Se não encontrou em nenhuma tabela, informa ao usuário para entrar em contato
     if (!user && !convenio) {
-      return NextResponse.json({
-        message: "Se o email existir, você receberá um link de redefinição",
-      })
+      return NextResponse.json(
+        { error: "email_nao_encontrado" },
+        { status: 404 }
+      )
     }
 
     // Gerar token único
