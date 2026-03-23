@@ -167,6 +167,9 @@ export default function VendasPage() {
   const parentRef = useRef<HTMLDivElement>(null)
   const isMobile = useMobile()
 
+  // Data mínima para filtros: 3 anos atrás
+  const minDate = new Date(new Date().setFullYear(new Date().getFullYear() - 3)).toISOString().split('T')[0]
+
   // Filtros
   const [busca, setBusca] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
@@ -348,6 +351,7 @@ export default function VendasPage() {
                 <Input
                   id="dataInicio"
                   type="date"
+                  min={minDate}
                   value={dataInicio}
                   onChange={e => setDataInicio(e.target.value)}
                 />
@@ -359,6 +363,7 @@ export default function VendasPage() {
                 <Input
                   id="dataFim"
                   type="date"
+                  min={minDate}
                   value={dataFim}
                   onChange={e => setDataFim(e.target.value)}
                 />

@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
     const dataFim = new Date(ano, mes, 0)
     dataFim.setHours(23, 59, 59, 999)
 
+    // Limite de 3 anos: apenas parcelas de vendas dos últimos 3 anos
+    const tresAnosAtras = new Date()
+    tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+    tresAnosAtras.setHours(0, 0, 0, 0)
+
     // Buscar parcelas do período
     const parcelas = await prisma.parcela.findMany({
       where: {
@@ -41,6 +46,7 @@ export async function GET(request: NextRequest) {
           convenioId: convenio.id,
           ativo: true,
           cancelado: false,
+          dataEmissao: { gte: tresAnosAtras },
         },
       },
       include: {

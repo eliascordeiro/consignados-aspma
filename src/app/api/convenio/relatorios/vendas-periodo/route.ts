@@ -30,6 +30,14 @@ export async function GET(request: NextRequest) {
     const fim = new Date(dataFim)
     fim.setHours(23, 59, 59, 999)
 
+    // Limite de 3 anos: nunca retornar vendas com mais de 3 anos
+    const tresAnosAtras = new Date()
+    tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+    tresAnosAtras.setHours(0, 0, 0, 0)
+    if (inicio < tresAnosAtras) {
+      inicio.setTime(tresAnosAtras.getTime())
+    }
+
     // Buscar vendas do período
     const vendas = await prisma.venda.findMany({
       where: {

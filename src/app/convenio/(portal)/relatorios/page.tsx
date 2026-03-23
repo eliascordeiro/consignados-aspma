@@ -95,6 +95,10 @@ export default function RelatoriosPage() {
   const [tipoRelatorio, setTipoRelatorio] = useState<'vendas' | 'parcelas'>('vendas')
   const isMobile = useMobile()
   
+  // Data mínima para filtros: 3 anos atrás
+  const minDate = new Date(new Date().setFullYear(new Date().getFullYear() - 3)).toISOString().split('T')[0]
+  const minMonth = minDate.substring(0, 7) // YYYY-MM
+
   // Estados para Vendas do Período
   const [dataInicio, setDataInicio] = useState('')
   const [dataFim, setDataFim] = useState('')
@@ -262,6 +266,7 @@ export default function RelatoriosPage() {
                   <Input
                     id="dataInicio"
                     type="date"
+                    min={minDate}
                     value={dataInicio}
                     onChange={(e) => setDataInicio(e.target.value)}
                   />
@@ -271,6 +276,7 @@ export default function RelatoriosPage() {
                   <Input
                     id="dataFim"
                     type="date"
+                    min={minDate}
                     value={dataFim}
                     onChange={(e) => setDataFim(e.target.value)}
                   />
@@ -462,6 +468,7 @@ export default function RelatoriosPage() {
                   <Input
                     id="mesVencimento"
                     type="month"
+                    min={minMonth}
                     value={mesVencimento}
                     onChange={(e) => setMesVencimento(e.target.value)}
                   />

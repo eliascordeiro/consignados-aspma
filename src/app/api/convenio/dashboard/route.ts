@@ -17,6 +17,11 @@ export async function GET(request: NextRequest) {
     const fimMesAtual = new Date(anoAtual, mesAtual, 0)
     fimMesAtual.setHours(23, 59, 59, 999)
 
+    // Limite de 3 anos: apenas vendas dos últimos 3 anos
+    const tresAnosAtras = new Date()
+    tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+    tresAnosAtras.setHours(0, 0, 0, 0)
+
     // Buscar todas as parcelas do conveniado (não canceladas, excluindo vendas com valor zerado)
     const todasParcelas = await prisma.parcela.findMany({
       where: {
@@ -24,6 +29,7 @@ export async function GET(request: NextRequest) {
           convenioId: session.convenioId,
           cancelado: false,
           valorTotal: { gt: 0 },
+          dataEmissao: { gte: tresAnosAtras },
         },
       },
       select: {
@@ -102,10 +108,11 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Últimas 10 vendas
+    // Últimas 10 vendas (últimos 3 anos)
     const vendasRecentes = await prisma.venda.findMany({
       where: {
         convenioId: session.convenioId,
+        dataEmissao: { gte: tresAnosAtras },
       },
       include: {
         socio: {

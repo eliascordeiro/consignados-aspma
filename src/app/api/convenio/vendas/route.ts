@@ -432,15 +432,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Filtro por data
-    if (dataInicio || dataFim) {
-      where.dataEmissao = {}
-      if (dataInicio) {
-        where.dataEmissao.gte = new Date(dataInicio + 'T00:00:00.000Z')
-      }
-      if (dataFim) {
-        where.dataEmissao.lte = new Date(dataFim + 'T23:59:59.999Z')
-      }
+    // Limite de 3 anos: nunca retornar vendas com mais de 3 anos
+    const tresAnosAtras = new Date()
+    tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+    tresAnosAtras.setHours(0, 0, 0, 0)
+
+    // Filtro por data (respeitando o limite de 3 anos)
+    const dataInicioDate = dataInicio ? new Date(dataInicio + 'T00:00:00.000Z') : tresAnosAtras
+    where.dataEmissao = {
+      gte: dataInicioDate < tresAnosAtras ? tresAnosAtras : dataInicioDate,
+    }
+    if (dataFim) {
+      where.dataEmissao.lte = new Date(dataFim + 'T23:59:59.999Z')
     }
 
     // Buscar vendas com paginação
