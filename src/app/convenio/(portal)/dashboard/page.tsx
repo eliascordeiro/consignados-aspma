@@ -271,21 +271,18 @@ export default function ConvenioDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Razão Social / Fantasia */}
-            {(data.perfil.razaoSocial || data.perfil.fantasia) && (
+            {/* Razão Social */}
+            {data.perfil.razaoSocial && (
               <div className="space-y-0.5">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Razão Social / Fantasia</p>
-                <p className="font-medium text-sm">{data.perfil.razaoSocial || '-'}</p>
-                {data.perfil.fantasia && (
-                  <p className="text-sm text-muted-foreground">{data.perfil.fantasia}</p>
-                )}
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Razão Social</p>
+                <p className="font-medium text-sm">{data.perfil.razaoSocial}</p>
               </div>
             )}
 
             {/* CNPJ */}
             {data.perfil.cnpj && (
               <div className="space-y-0.5">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">CNPJ / CGC</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">CNPJ</p>
                 <p className="font-medium text-sm">{data.perfil.cnpj}</p>
               </div>
             )}
