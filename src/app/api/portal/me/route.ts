@@ -21,6 +21,11 @@ export async function GET(request: NextRequest) {
   const socioId = await getSocioId(request)
   if (!socioId) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
+  // Limite de 3 anos: apenas vendas dos últimos 3 anos
+  const tresAnosAtras = new Date()
+  tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+  tresAnosAtras.setHours(0, 0, 0, 0)
+
   const socio = await prisma.socio.findUnique({
     where: { id: socioId },
     select: {
@@ -51,7 +56,7 @@ export async function GET(request: NextRequest) {
       banco: true,
       empresa: { select: { nome: true, diaCorte: true } },
       vendas: {
-        where: { ativo: true, cancelado: false },
+        where: { ativo: true, cancelado: false, dataEmissao: { gte: tresAnosAtras } },
         select: {
           id: true,
           numeroVenda: true,
