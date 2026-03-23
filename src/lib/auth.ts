@@ -85,6 +85,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
                 OR: [
                   { userId: user.id },
                   { usuario: { equals: login, mode: 'insensitive' } },
+                  { email: { equals: login, mode: 'insensitive' } },
                 ],
               },
               select: {
