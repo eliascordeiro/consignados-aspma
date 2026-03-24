@@ -188,9 +188,9 @@ export default function PortalDashboardPage() {
       </div>
 
       {/* Cards principais */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Margem disponível */}
-        <div className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md">
+        <div className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md lg:col-span-2">
           <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Margem Disponível</p>
           <p className="text-3xl font-bold mt-1">
             {loadingMargem
@@ -213,7 +213,7 @@ export default function PortalDashboardPage() {
           const navMes = navKey % 100
           const navAno = Math.floor(navKey / 100)
           return (
-            <div className="col-span-2 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="col-span-2 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 lg:col-span-2">
               <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Vencimentos</p>
               {mesesKeys.length > 0 && mesNavIdx >= 0 ? (
                 <>
@@ -261,7 +261,7 @@ export default function PortalDashboardPage() {
             <p className="text-gray-400 text-sm">Nenhuma compra ativa</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {socio.vendas.slice(0, 3).map(venda => {
               const total = venda.parcelas.length || venda.quantidadeParcelas
 

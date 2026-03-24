@@ -184,7 +184,7 @@ export default function DescontoPage() {
                     <span className="text-xs font-bold text-emerald-600">{item.numeroParcela}</span>
                   </div>
                   <div>
-                    <p className="text-gray-800 text-sm font-medium leading-tight truncate max-w-[180px]">
+                    <p className="text-gray-800 text-sm font-medium leading-tight truncate max-w-[180px] lg:max-w-xs">
                       {item.convenio}
                     </p>
                     <p className="text-gray-400 text-xs">

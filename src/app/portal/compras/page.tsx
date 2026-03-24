@@ -86,7 +86,7 @@ export default function ComprasPage() {
           <p className="text-gray-400 text-sm mt-1">Não há compras ativas</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {vendas.map((venda, idx) => {
             const total = venda.parcelas.length || venda.quantidadeParcelas
             const pagas = venda.parcelas.filter(p => p.baixa === 'S').length

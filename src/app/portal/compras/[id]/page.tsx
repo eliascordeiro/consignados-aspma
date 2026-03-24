@@ -130,7 +130,8 @@ export default function EmprestimoDetailPage() {
       {/* Lista de parcelas */}
       <div>
         <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wider mb-3">Parcelas</h2>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-50 lg:grid lg:grid-cols-2 lg:divide-y-0 lg:[&>*]:border-b lg:[&>*]:border-gray-50 lg:[&>*:nth-child(odd)]:border-r">
           {venda.parcelas.map(parcela => {
             // Determina cor do ícone baseado na data de vencimento
             const hoje = new Date()
@@ -170,6 +171,7 @@ export default function EmprestimoDetailPage() {
               </div>
             )
           })}
+          </div>
         </div>
       </div>
     </div>
