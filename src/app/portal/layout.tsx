@@ -80,7 +80,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
 
       {/* ── SIDEBAR — visível apenas em desktop (lg+) ── */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-emerald-600 text-white min-h-screen shadow-xl">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-emerald-600 text-white sticky top-0 h-screen overflow-y-auto shadow-xl">
         {/* Logo / marca */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-500/50">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
@@ -137,7 +137,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Header — visível apenas em mobile */}
-        <header className="lg:hidden bg-emerald-600 text-white shadow-md">
+        <header className="lg:hidden sticky top-0 z-40 bg-emerald-600 text-white shadow-md">
           <div className="pt-safe-top" />
           <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
