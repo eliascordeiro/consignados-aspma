@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 const navItems = [
   {
@@ -65,6 +66,23 @@ const navItems = [
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [dark, setDark] = useState(false)
+
+  // Carrega preferência salva (ou sistema)
+  useEffect(() => {
+    const saved = localStorage.getItem('portal-theme')
+    if (saved) {
+      setDark(saved === 'dark')
+    } else {
+      setDark(window.matchMedia('(prefers-color-scheme: dark)').matches)
+    }
+  }, [])
+
+  function toggleDark() {
+    const next = !dark
+    setDark(next)
+    localStorage.setItem('portal-theme', next ? 'dark' : 'light')
+  }
 
   async function handleLogout() {
     await fetch('/api/portal/auth', { method: 'DELETE' })
@@ -76,8 +94,23 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     return <>{children}</>
   }
 
+  // Ícone lua (modo escuro) / sol (modo claro)
+  const ThemeIcon = () => dark ? (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+      />
+    </svg>
+  ) : (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+      />
+    </svg>
+  )
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+    <div className={`min-h-screen bg-gray-50 pdark:bg-gray-900 flex flex-col lg:flex-row transition-colors duration-200${dark ? ' pdark' : ''}`}>
 
       {/* ── SIDEBAR — visível apenas em desktop (lg+) ── */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-emerald-600 text-white sticky top-0 h-screen overflow-y-auto shadow-xl">
@@ -118,7 +151,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </nav>
 
         {/* Botão sair */}
-        <div className="px-3 py-4 border-t border-emerald-500/50">
+        <div className="px-3 py-4 border-t border-emerald-500/50 space-y-1">
+          <button
+            onClick={toggleDark}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <ThemeIcon />
+            {dark ? 'Modo claro' : 'Modo escuro'}
+          </button>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
@@ -154,6 +194,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               </div>
             </div>
             <button
+              onClick={toggleDark}
+              className="flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-xl w-8 h-8 transition-colors active:scale-95"
+            >
+              <ThemeIcon />
+            </button>
+            <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors active:scale-95"
             >
@@ -168,14 +214,14 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 pdark:bg-gray-900">
           <div className="max-w-lg mx-auto lg:max-w-2xl lg:mx-0 lg:px-4 lg:py-4">
             {children}
           </div>
         </main>
 
         {/* Bottom Navigation — visível apenas em mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe-bottom shadow-lg z-50">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white pdark:bg-gray-800 border-t border-gray-200 pdark:border-gray-700 pb-safe-bottom shadow-lg z-50">
           <div className="max-w-lg mx-auto flex">
             {navItems.map(item => {
               const active = pathname === item.href || pathname?.startsWith(item.href + '/')
@@ -184,11 +230,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   key={item.href}
                   href={item.href}
                   className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 transition-colors active:scale-95 ${
-                    active ? 'text-emerald-600' : 'text-gray-500'
+                    active ? 'text-emerald-500' : 'text-gray-500 pdark:text-gray-400'
                   }`}
                 >
                   {item.icon(active)}
-                  <span className={`text-[10px] font-medium whitespace-nowrap ${active ? 'text-emerald-600' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] font-medium whitespace-nowrap ${active ? 'text-emerald-500' : 'text-gray-400 pdark:text-gray-500'}`}>
                     {item.label}
                   </span>
                 </Link>

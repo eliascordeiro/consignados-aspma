@@ -180,10 +180,10 @@ export default function PortalDashboardPage() {
     <div className="px-4 py-5 space-y-5">
       {/* Saudação */}
       <div>
-        <p className="text-gray-500 text-sm">Olá,</p>
-        <h1 className="text-xl font-bold text-gray-800">{primeiroNome} 👋</h1>
+        <p className="text-gray-500 pdark:text-gray-400 text-sm">Olá,</p>
+        <h1 className="text-xl font-bold text-gray-800 pdark:text-gray-100">{primeiroNome} 👋</h1>
         {socio.matricula && (
-          <p className="text-gray-400 text-xs mt-0.5">Matrícula: {socio.matricula}</p>
+          <p className="text-gray-400 pdark:text-gray-500 text-xs mt-0.5">Matrícula: {socio.matricula}</p>
         )}
       </div>
 
@@ -213,33 +213,33 @@ export default function PortalDashboardPage() {
           const navMes = navKey % 100
           const navAno = Math.floor(navKey / 100)
           return (
-            <div className="col-span-2 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 lg:col-span-2">
-              <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">Vencimentos</p>
+            <div className="col-span-2 bg-white pdark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 pdark:border-gray-700 lg:col-span-2">
+              <p className="text-gray-400 pdark:text-gray-500 text-xs font-medium uppercase tracking-wider">Vencimentos</p>
               {mesesKeys.length > 0 && mesNavIdx >= 0 ? (
                 <>
                   <div className="flex items-center justify-between mt-1.5">
                     <button
                       onClick={() => setMesNavIdx(i => Math.max(0, i - 1))}
                       disabled={mesNavIdx === 0}
-                      className="text-gray-400 disabled:opacity-25 text-xl leading-none px-0.5 active:scale-90"
+                      className="text-gray-400 pdark:text-gray-500 disabled:opacity-25 text-xl leading-none px-0.5 active:scale-90"
                     >&#8249;</button>
-                    <p className="text-xs font-semibold text-gray-700">
+                    <p className="text-xs font-semibold text-gray-700 pdark:text-gray-200">
                       {String(navMes).padStart(2, '0')}/{navAno}
                     </p>
                     <button
                       onClick={() => setMesNavIdx(i => Math.min(mesesKeys.length - 1, i + 1))}
                       disabled={mesNavIdx === mesesKeys.length - 1}
-                      className="text-gray-400 disabled:opacity-25 text-xl leading-none px-0.5 active:scale-90"
+                      className="text-gray-400 pdark:text-gray-500 disabled:opacity-25 text-xl leading-none px-0.5 active:scale-90"
                     >&#8250;</button>
                   </div>
-                  <p className="text-lg font-bold text-gray-800 mt-0.5">{formatBRL(navTotal)}</p>
-                  <p className="text-gray-400 text-xs">{navParcelas.length} parcela{navParcelas.length !== 1 ? 's' : ''}</p>
-                  <Link href="/portal/desconto" className="text-emerald-600 text-xs font-medium mt-2 inline-block">
+                  <p className="text-lg font-bold text-gray-800 pdark:text-gray-100 mt-0.5">{formatBRL(navTotal)}</p>
+                  <p className="text-gray-400 pdark:text-gray-500 text-xs">{navParcelas.length} parcela{navParcelas.length !== 1 ? 's' : ''}</p>
+                  <Link href="/portal/desconto" className="text-emerald-600 pdark:text-emerald-400 text-xs font-medium mt-2 inline-block">
                     Ver detalhes em Descontos →
                   </Link>
                 </>
               ) : (
-                <p className="text-gray-500 text-sm mt-1">Nenhuma</p>
+                <p className="text-gray-500 pdark:text-gray-400 text-sm mt-1">Nenhuma</p>
               )}
             </div>
           )
@@ -250,15 +250,15 @@ export default function PortalDashboardPage() {
       {/* Últimas Compras */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wider">Últimas Compras</h2>
-          <Link href="/portal/compras" className="text-emerald-600 text-sm font-medium">
+          <h2 className="text-gray-800 pdark:text-gray-100 font-semibold text-sm uppercase tracking-wider">Últimas Compras</h2>
+          <Link href="/portal/compras" className="text-emerald-600 pdark:text-emerald-400 text-sm font-medium">
             Ver todos
           </Link>
         </div>
 
         {socio.vendas.length === 0 ? (
-          <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
-            <p className="text-gray-400 text-sm">Nenhuma compra ativa</p>
+          <div className="bg-white pdark:bg-gray-800 rounded-2xl p-6 text-center border border-gray-100 pdark:border-gray-700 shadow-sm">
+            <p className="text-gray-400 pdark:text-gray-500 text-sm">Nenhuma compra ativa</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -278,24 +278,24 @@ export default function PortalDashboardPage() {
 
               return (
                 <Link key={venda.id} href={`/portal/compras/${venda.id}`}>
-                  <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm active:scale-[0.98] transition-transform">
+                  <div className="bg-white pdark:bg-gray-800 rounded-2xl p-4 border border-gray-100 pdark:border-gray-700 shadow-sm active:scale-[0.98] transition-transform">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="text-gray-800 font-medium text-sm truncate">
+                        <p className="text-gray-800 pdark:text-gray-100 font-medium text-sm truncate">
                           {venda.convenio?.razao_soc || `Venda #${venda.numeroVenda}`}
                         </p>
-                        <p className="text-gray-400 text-xs mt-0.5">
+                        <p className="text-gray-400 pdark:text-gray-500 text-xs mt-0.5">
                           {total} parcela{total !== 1 ? 's' : ''}
                         </p>
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-gray-400 pdark:text-gray-500 text-xs">
                           Compra: {new Date(venda.dataEmissao.slice(0,10) + 'T12:00:00').toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                       <div className="text-right ml-3 shrink-0">
-                        <p className="text-gray-800 font-semibold text-sm">{formatBRL(venda.valorTotal)}</p>
-                        <p className="text-gray-400 text-xs">{formatBRL(venda.valorParcela)}/parcela</p>
-                        {inicio && <p className="text-gray-400 text-xs mt-0.5">De {inicio}</p>}
-                        {fim && <p className="text-gray-400 text-xs">Até {fim}</p>}
+                        <p className="text-gray-800 pdark:text-gray-100 font-semibold text-sm">{formatBRL(venda.valorTotal)}</p>
+                        <p className="text-gray-400 pdark:text-gray-500 text-xs">{formatBRL(venda.valorParcela)}/parcela</p>
+                        {inicio && <p className="text-gray-400 pdark:text-gray-500 text-xs mt-0.5">De {inicio}</p>}
+                        {fim && <p className="text-gray-400 pdark:text-gray-500 text-xs">Até {fim}</p>}
                       </div>
                     </div>
                   </div>

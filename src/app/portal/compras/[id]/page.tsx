@@ -51,7 +51,7 @@ function ParcelaStatus({ parcela }: { parcela: Parcela }) {
     if (vencimento < hoje) {
       // Parcela finalizada
       return (
-        <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+        <span className="text-xs font-medium bg-green-100 pdark:bg-green-900/30 text-green-700 pdark:text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">
           Finalizada
         </span>
       )
@@ -60,7 +60,7 @@ function ParcelaStatus({ parcela }: { parcela: Parcela }) {
   
   // Parcela a descontar
   return (
-    <span className="text-xs font-medium bg-red-50 text-red-600 px-2 py-0.5 rounded-full whitespace-nowrap">
+    <span className="text-xs font-medium bg-red-50 pdark:bg-red-900/30 text-red-600 pdark:text-red-400 px-2 py-0.5 rounded-full whitespace-nowrap">
       A descontar
     </span>
   )
@@ -89,7 +89,7 @@ export default function EmprestimoDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 text-sm">Carregando...</p>
+        <p className="text-gray-500 pdark:text-gray-400 text-sm">Carregando...</p>
       </div>
     )
   }
@@ -97,8 +97,8 @@ export default function EmprestimoDetailPage() {
   if (notFound || !venda) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center gap-4">
-        <p className="text-gray-600 font-medium">Empréstimo não encontrado</p>
-        <Link href="/portal/compras" className="text-emerald-600 text-sm font-medium">
+        <p className="text-gray-600 pdark:text-gray-300 font-medium">Empréstimo não encontrado</p>
+        <Link href="/portal/compras" className="text-emerald-600 pdark:text-emerald-400 text-sm font-medium">
           ← Voltar para compras
         </Link>
       </div>
@@ -110,7 +110,7 @@ export default function EmprestimoDetailPage() {
   return (
     <div className="px-4 py-5 space-y-5">
       {/* Back */}
-      <button onClick={() => router.back()} className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+      <button onClick={() => router.back()} className="flex items-center gap-1.5 text-emerald-600 pdark:text-emerald-400 text-sm font-medium">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
@@ -129,9 +129,9 @@ export default function EmprestimoDetailPage() {
 
       {/* Lista de parcelas */}
       <div>
-        <h2 className="text-gray-800 font-semibold text-sm uppercase tracking-wider mb-3">Parcelas</h2>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="divide-y divide-gray-50 lg:grid lg:grid-cols-2 lg:divide-y-0 lg:[&>*]:border-b lg:[&>*]:border-gray-50 lg:[&>*:nth-child(odd)]:border-r">
+        <h2 className="text-gray-800 pdark:text-gray-100 font-semibold text-sm uppercase tracking-wider mb-3">Parcelas</h2>
+        <div className="bg-white pdark:bg-gray-800 rounded-2xl border border-gray-100 pdark:border-gray-700 shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-50 pdark:divide-gray-700 lg:grid lg:grid-cols-2 lg:divide-y-0 lg:[&>*]:border-b lg:[&>*]:border-gray-50 pdark:lg:[&>*]:border-gray-700 lg:[&>*:nth-child(odd)]:border-r">
           {venda.parcelas.map(parcela => {
             // Determina cor do ícone baseado na data de vencimento
             const hoje = new Date()
@@ -147,25 +147,27 @@ export default function EmprestimoDetailPage() {
                 <div className="flex items-center gap-3">
                   {/* Ícone */}
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    isVencida ? 'bg-green-100' : 'bg-red-50'
+                    isVencida ? 'bg-green-100 pdark:bg-green-900/30' : 'bg-red-50 pdark:bg-red-900/30'
                   }`}>
-                    <span className={`text-xs font-bold ${isVencida ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className={`text-xs font-bold ${
+                      isVencida ? 'text-green-600 pdark:text-green-400' : 'text-red-600 pdark:text-red-400'
+                    }`}>
                       {parcela.numeroParcela}
                     </span>
                   </div>
 
                   <div>
-                    <p className="text-gray-800 text-sm font-medium">
+                    <p className="text-gray-800 pdark:text-gray-100 text-sm font-medium">
                       Parcela {parcela.numeroParcela}/{total}
                     </p>
-                    <p className="text-gray-400 text-xs">
+                    <p className="text-gray-400 pdark:text-gray-500 text-xs">
                       Desconto em {formatMonthYear(parcela.dataVencimento)}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-end gap-1">
-                  <span className="text-gray-800 font-semibold text-sm">{formatBRL(parcela.valorPago ?? parcela.valor)}</span>
+                  <span className="text-gray-800 pdark:text-gray-100 font-semibold text-sm">{formatBRL(parcela.valorPago ?? parcela.valor)}</span>
                   <ParcelaStatus parcela={parcela} />
                 </div>
               </div>

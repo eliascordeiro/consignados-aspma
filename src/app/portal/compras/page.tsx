@@ -63,7 +63,7 @@ export default function ComprasPage() {
     <div className="px-4 py-5 space-y-4">
       {/* Cabeçalho */}
       <div>
-        <h1 className="text-xl font-bold text-gray-800">Minhas Compras</h1>
+        <h1 className="text-xl font-bold text-gray-800 pdark:text-gray-100">Minhas Compras</h1>
       </div>
 
       {/* Card resumo */}
@@ -76,14 +76,14 @@ export default function ComprasPage() {
 
       {/* Lista */}
       {vendas.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3">
+        <div className="bg-white pdark:bg-gray-800 rounded-2xl border border-gray-100 pdark:border-gray-700 shadow-sm p-12 text-center">
+          <div className="w-14 h-14 bg-emerald-50 pdark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
-          <p className="text-gray-700 font-semibold">Nenhuma compra</p>
-          <p className="text-gray-400 text-sm mt-1">Não há compras ativas</p>
+          <p className="text-gray-700 pdark:text-gray-200 font-semibold">Nenhuma compra</p>
+          <p className="text-gray-400 pdark:text-gray-500 text-sm mt-1">Não há compras ativas</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -102,17 +102,17 @@ export default function ComprasPage() {
 
             // Cores do avatar por índice
             const cores = [
-              'bg-emerald-100 text-emerald-700',
-              'bg-teal-100 text-teal-700',
-              'bg-cyan-100 text-cyan-700',
-              'bg-sky-100 text-sky-700',
+              'bg-emerald-100 text-emerald-700 pdark:bg-emerald-900/50 pdark:text-emerald-300',
+              'bg-teal-100 text-teal-700 pdark:bg-teal-900/50 pdark:text-teal-300',
+              'bg-cyan-100 text-cyan-700 pdark:bg-cyan-900/50 pdark:text-cyan-300',
+              'bg-sky-100 text-sky-700 pdark:bg-sky-900/50 pdark:text-sky-300',
             ]
             const cor = cores[idx % cores.length]
             const inicial = (venda.convenio?.razao_soc || `V${venda.numeroVenda}`).charAt(0).toUpperCase()
 
             return (
               <Link key={venda.id} href={`/portal/compras/${venda.id}`}>
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden active:scale-[0.98] transition-transform">
+                <div className="bg-white pdark:bg-gray-800 rounded-2xl border border-gray-100 pdark:border-gray-700 shadow-sm overflow-hidden active:scale-[0.98] transition-transform">
                   {/* Topo colorido */}
                   <div className="flex items-center gap-3 px-4 pt-4 pb-3">
                     {/* Avatar */}
@@ -120,41 +120,41 @@ export default function ComprasPage() {
                       {inicial}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-gray-800 font-semibold text-sm leading-tight truncate">
+                      <p className="text-gray-800 pdark:text-gray-100 font-semibold text-sm leading-tight truncate">
                         {venda.convenio?.razao_soc || `Venda #${venda.numeroVenda}`}
                       </p>
-                      <p className="text-gray-400 text-xs mt-0.5">Compra em {emissao}</p>
+                      <p className="text-gray-400 pdark:text-gray-500 text-xs mt-0.5">Compra em {emissao}</p>
                     </div>
 
                   </div>
 
                   {/* Linha divisória */}
-                  <div className="mx-4 border-t border-gray-50" />
+                  <div className="mx-4 border-t border-gray-50 pdark:border-gray-700" />
 
                   {/* Grid de dados */}
-                  <div className="grid grid-cols-3 divide-x divide-gray-50 px-0 py-3">
+                  <div className="grid grid-cols-3 divide-x divide-gray-50 pdark:divide-gray-700 px-0 py-3">
                     <div className="text-center px-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wide">Parcelas</p>
-                      <p className="text-gray-800 font-bold text-sm mt-0.5">{total}</p>
+                      <p className="text-gray-400 pdark:text-gray-500 text-[10px] uppercase tracking-wide">Parcelas</p>
+                      <p className="text-gray-800 pdark:text-gray-100 font-bold text-sm mt-0.5">{total}</p>
                     </div>
                     <div className="text-center px-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wide">Total</p>
-                      <p className="text-gray-800 font-bold text-sm mt-0.5">{formatBRL(venda.valorTotal)}</p>
+                      <p className="text-gray-400 pdark:text-gray-500 text-[10px] uppercase tracking-wide">Total</p>
+                      <p className="text-gray-800 pdark:text-gray-100 font-bold text-sm mt-0.5">{formatBRL(venda.valorTotal)}</p>
                     </div>
                     <div className="text-center px-2">
-                      <p className="text-gray-400 text-[10px] uppercase tracking-wide">Por parcela</p>
-                      <p className="text-emerald-600 font-bold text-sm mt-0.5">{formatBRL(venda.valorParcela)}</p>
+                      <p className="text-gray-400 pdark:text-gray-500 text-[10px] uppercase tracking-wide">Por parcela</p>
+                      <p className="text-emerald-600 pdark:text-emerald-400 font-bold text-sm mt-0.5">{formatBRL(venda.valorParcela)}</p>
                     </div>
                   </div>
 
                   {/* Período */}
                   {(inicio || fim) && (
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50/60">
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50/60 pdark:bg-gray-700/60">
                       <div className="flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3.5 h-3.5 text-gray-400 pdark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <p className="text-gray-500 text-xs">{inicio} → {fim}</p>
+                        <p className="text-gray-500 pdark:text-gray-400 text-xs">{inicio} → {fim}</p>
                       </div>
 
                     </div>

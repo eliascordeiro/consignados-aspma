@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.railway *));
 @custom-variant consignado (&:is(.consignado *));
 @custom-variant railway (&:is(.railway *));
+@custom-variant pdark (&:is(.pdark *));
 
 @theme inline {
   --color-background: var(--background);
