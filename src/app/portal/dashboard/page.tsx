@@ -55,6 +55,7 @@ export default function PortalDashboardPage() {
   const [margemZetra, setMargemZetra] = useState<number | null>(null)
   const [loadingMargem, setLoadingMargem] = useState(false)
   const [fonteMargem, setFonteMargem] = useState<string>('')
+  const [showMargem, setShowMargem] = useState(false)
 
   // Mapa mês → parcelas em aberto (mesmo padrão do fatura page)
   const mesesMap = useMemo(() => {
@@ -191,13 +192,31 @@ export default function PortalDashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Margem disponível */}
         <div className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 text-white shadow-md lg:col-span-2">
-          <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Margem Disponível</p>
-          <p className="text-3xl font-bold mt-1">
+          <div className="flex items-center justify-between">
+            <p className="text-emerald-100 text-xs font-medium uppercase tracking-wider">Margem Disponível</p>
+            <button
+              onClick={() => setShowMargem(v => !v)}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-emerald-100 hover:bg-white/10 active:scale-95 transition-all"
+              aria-label={showMargem ? 'Ocultar margem' : 'Mostrar margem'}
+            >
+              {showMargem ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              )}
+            </button>
+          </div>
+          <p className={`text-3xl font-bold mt-1 transition-all duration-200 ${showMargem ? '' : 'blur-md select-none pointer-events-none'}`}>
             {loadingMargem
               ? <span className="inline-block w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin align-middle" />
               : formatBRL(margem)}
           </p>
-          <p className="text-emerald-200 text-xs mt-1">
+          <p className={`text-emerald-200 text-xs mt-1 transition-all duration-200 ${showMargem ? '' : 'blur-sm select-none pointer-events-none'}`}>
             {isLocal
               ? `${String(refMes).padStart(2,'0')}/${refAno} · Comprometido: ${formatBRL(totalMesRef)} de ${formatBRL(socio.limite)}`
               : loadingMargem ? 'Consultando ZETRA...' : fonteMargem === 'zetra' ? 'Margem via ZETRA (tempo real)' : fonteMargem === 'fallback' ? 'Margem via ZETRA (fallback banco)' : fonteMargem === 'zetra_erro' ? 'Margem via ZETRA (erro — valor banco)' : 'Margem via convênio (ZETRA)'}
