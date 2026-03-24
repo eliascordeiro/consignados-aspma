@@ -77,29 +77,53 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-emerald-600 text-white shadow-md">
-        <div className="pt-safe-top" />
-        <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
-              <p className="text-sm font-semibold leading-tight">ASPMA</p>
-            </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+
+      {/* ── SIDEBAR — visível apenas em desktop (lg+) ── */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-emerald-600 text-white min-h-screen shadow-xl">
+        {/* Logo / marca */}
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-500/50">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
           </div>
+          <div>
+            <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
+            <p className="text-base font-bold leading-tight">ASPMA</p>
+          </div>
+        </div>
+
+        {/* Itens de navegação */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map(item => {
+            const active = pathname === item.href || pathname?.startsWith(item.href + '/')
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-white/20 text-white'
+                    : 'text-emerald-100 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item.icon(active)}
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Botão sair */}
+        <div className="px-3 py-4 border-t border-emerald-500/50">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors active:scale-95"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-emerald-100 hover:bg-white/10 hover:text-white transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
@@ -107,37 +131,73 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             Sair
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto pb-24">
-        <div className="max-w-lg mx-auto">
-          {children}
-        </div>
-      </main>
+      {/* ── COLUNA PRINCIPAL ── */}
+      <div className="flex-1 flex flex-col min-w-0">
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe-bottom shadow-lg z-50">
-        <div className="max-w-lg mx-auto flex">
-          {navItems.map(item => {
-            const active = pathname === item.href || pathname?.startsWith(item.href + '/')
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 transition-colors active:scale-95 ${
-                  active ? 'text-emerald-600' : 'text-gray-500'
-                }`}
-              >
-                {item.icon(active)}
-                <span className={`text-[10px] font-medium whitespace-nowrap ${active ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
+        {/* Header — visível apenas em mobile */}
+        <header className="lg:hidden bg-emerald-600 text-white shadow-md">
+          <div className="pt-safe-top" />
+          <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
+                <p className="text-sm font-semibold leading-tight">ASPMA</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors active:scale-95"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              Sair
+            </button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
+          <div className="max-w-lg mx-auto lg:max-w-2xl lg:mx-0 lg:px-4 lg:py-4">
+            {children}
+          </div>
+        </main>
+
+        {/* Bottom Navigation — visível apenas em mobile */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe-bottom shadow-lg z-50">
+          <div className="max-w-lg mx-auto flex">
+            {navItems.map(item => {
+              const active = pathname === item.href || pathname?.startsWith(item.href + '/')
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 transition-colors active:scale-95 ${
+                    active ? 'text-emerald-600' : 'text-gray-500'
+                  }`}
+                >
+                  {item.icon(active)}
+                  <span className={`text-[10px] font-medium whitespace-nowrap ${active ? 'text-emerald-600' : 'text-gray-400'}`}>
+                    {item.label}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </nav>
+
+      </div>
     </div>
   )
 }
