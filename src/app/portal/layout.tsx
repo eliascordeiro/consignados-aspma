@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import ChatWidget from '@/components/chat-widget'
 
 const navItems = [
   {
@@ -244,6 +245,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </nav>
 
       </div>
+      <ChatWidget apiEndpoint="/api/portal/chat" />
     </div>
   )
 }
