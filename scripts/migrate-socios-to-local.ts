@@ -88,7 +88,7 @@ async function migrateSociosToLocal() {
             motivoBloqueio: socio.motivo || null,
             codTipo: socio.codtipo || null,
             senha: socio.senha?.toString() || null,
-            dataExclusao: socio.data_exclusao || null,
+            dataExclusao: (socio.data_exclusao && new Date(socio.data_exclusao).getFullYear() > 1899) ? socio.data_exclusao : null,
             motivoExclusao: socio.motivo_exclusao || null,
             ativo: socio.bloqueio !== 'S',
             userId: null,

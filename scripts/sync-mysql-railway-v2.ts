@@ -129,7 +129,10 @@ async function syncSocios(mysqlConn: mysql.Connection): Promise<SyncResult> {
         nascimento as dataNascimento, funcao, lotacao, limite, autorizado,
         sexo, est_civil as estadoCivil, ncompras as numCompras, tipo,
         agencia, conta, banco, devolucao, bloqueio, motivo as motivoBloqueio,
-        codtipo as codTipo, data_exclusao as dataExclusao, motivo_exclusao as motivoExclusao
+        codtipo as codTipo,
+        CASE WHEN YEAR(data_exclusao) <= 1899 THEN NULL ELSE data_exclusao END as dataExclusao,
+        CASE WHEN YEAR(nascimento)    <= 1899 THEN NULL ELSE nascimento    END as dataNascimento,
+        motivo_exclusao as motivoExclusao
       FROM socios 
       WHERE matricula IN (?)
     `, [matriculas]);

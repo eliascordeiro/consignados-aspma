@@ -135,7 +135,7 @@ async function migrateSocios() {
             motivoBloqueio: socio.motivo?.trim() || null,
             codTipo: socio.codtipo,
             senha: socio.senha?.toString().trim() || null,
-            dataExclusao: socio.data_exclusao,
+            dataExclusao: (socio.data_exclusao && new Date(socio.data_exclusao).getFullYear() > 1899) ? socio.data_exclusao : null,
             motivoExclusao: socio.motivo_exclusao?.trim() || null,
             ativo: !socio.bloqueio || socio.bloqueio.trim() === ''
           }
