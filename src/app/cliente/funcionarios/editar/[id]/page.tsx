@@ -377,6 +377,23 @@ export default function EditarFuncionarioPage() {
                   <label className={labelCls}>Pessoa Autorizada</label>
                   <input value={formData.autorizado} onChange={(e) => set('autorizado', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>Tipo (Classe)</label>
+                    <select value={formData.tipo} onChange={(e) => set('tipo', e.target.value)} disabled={!canEdit} className={canEdit ? selectCls : disabledCls}>
+                      <option value="">Selecione a classe</option>
+                      {classes.map((c) => <option key={c.id} value={c.id.toString()}>{c.classe}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Setor</label>
+                    <select value={formData.codTipo} onChange={(e) => set('codTipo', e.target.value)} disabled={!canEdit} className={canEdit ? selectCls : disabledCls}>
+                      <option value="">Selecione o setor</option>
+                      {setores.map((s) => <option key={s.id} value={s.codigo}>{s.setores || s.codigo}</option>)}
+                    </select>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -436,13 +453,6 @@ export default function EditarFuncionarioPage() {
                       <option value="X">Bloqueado</option>
                     </select>
                   </div>
-                  <div>
-                    <label className={labelCls}>Tipo (Classe)</label>
-                    <select value={formData.tipo} onChange={(e) => set('tipo', e.target.value)} disabled={!canEdit} className={canEdit ? selectCls : disabledCls}>
-                      <option value="">Selecione a classe</option>
-                      {classes.map((c) => <option key={c.id} value={c.id.toString()}>{c.classe}</option>)}
-                    </select>
-                  </div>
                 </div>
 
                 <div>
@@ -455,13 +465,6 @@ export default function EditarFuncionarioPage() {
                     <label className={labelCls}>Data de Exclusão</label>
                     <input type="date" value={formData.dataExclusao} onChange={(e) => set('dataExclusao', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
                   </div>
-                  <div>
-                    <label className={labelCls}>Setor</label>
-                    <select value={formData.codTipo} onChange={(e) => set('codTipo', e.target.value)} disabled={!canEdit} className={canEdit ? selectCls : disabledCls}>
-                      <option value="">Selecione o setor</option>
-                      {setores.map((s) => <option key={s.id} value={s.codigo}>{s.setores || s.codigo}</option>)}
-                    </select>
-                  </div>
                 </div>
 
                 <div>
@@ -469,22 +472,14 @@ export default function EditarFuncionarioPage() {
                   <input value={formData.motivoExclusao} onChange={(e) => set('motivoExclusao', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Senha</label>
-                    <input value={formData.senha} onChange={(e) => set('senha', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
-                  </div>
-                  <div className="flex items-center gap-2 pt-5">
-                    <input
-                      type="checkbox"
-                      id="ativo"
-                      checked={formData.ativo}
-                      onChange={(e) => set('ativo', e.target.checked)}
-                      disabled={!canEdit}
-                      className="h-4 w-4 rounded border-border"
-                    />
-                    <label htmlFor="ativo" className="text-sm text-muted-foreground cursor-pointer">Ativo</label>
-                  </div>
+                <div className="hidden">
+                  <input value={formData.senha} onChange={(e) => set('senha', e.target.value)} />
+                  <input
+                    type="checkbox"
+                    id="ativo"
+                    checked={formData.ativo}
+                    onChange={(e) => set('ativo', e.target.checked)}
+                  />
                 </div>
               </div>
             )}
