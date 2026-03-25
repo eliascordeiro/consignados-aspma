@@ -184,7 +184,7 @@ export default function EditarFuncionarioPage() {
     { id: 'pessoais', label: 'Pessoais' },
     { id: 'profissionais', label: 'Profissionais' },
     { id: 'financeiros', label: 'Financeiros' },
-    { id: 'outros', label: 'Outros' },
+    { id: 'outros', label: 'Segurança' },
   ];
 
   if (loadingData) {
@@ -373,9 +373,8 @@ export default function EditarFuncionarioPage() {
                   <input value={formData.contato} onChange={(e) => set('contato', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
                 </div>
 
-                <div>
-                  <label className={labelCls}>Pessoa Autorizada</label>
-                  <input value={formData.autorizado} onChange={(e) => set('autorizado', e.target.value)} disabled={!canEdit} className={canEdit ? inputCls : disabledCls} />
+                <div className="hidden">
+                  <input value={formData.autorizado} onChange={(e) => set('autorizado', e.target.value)} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
