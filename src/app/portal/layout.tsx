@@ -245,7 +245,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </nav>
 
       </div>
-      <ChatWidget apiEndpoint="/api/portal/chat" />
+      <ChatWidget apiEndpoint="/api/portal/chat" buttonClassName="sm:bottom-6 sm:right-6 bottom-24 right-4" />
     </div>
   )
 }

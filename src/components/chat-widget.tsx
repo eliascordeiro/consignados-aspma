@@ -12,9 +12,10 @@ interface ChatMessage {
 
 interface ChatWidgetProps {
   apiEndpoint?: string
+  buttonClassName?: string
 }
 
-export default function ChatWidget({ apiEndpoint = '/api/convenio/chat' }: ChatWidgetProps) {
+export default function ChatWidget({ apiEndpoint = '/api/convenio/chat', buttonClassName }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -300,7 +301,7 @@ export default function ChatWidget({ apiEndpoint = '/api/convenio/chat' }: ChatW
       <button
         onClick={toggleChat}
         className={`
-          fixed bottom-6 right-6 z-50 
+          fixed bottom-6 right-6 z-50 ${buttonClassName ?? ''} 
           p-3.5 rounded-full shadow-lg 
           bg-primary text-primary-foreground 
           hover:shadow-xl hover:scale-105
