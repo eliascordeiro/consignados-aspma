@@ -7,12 +7,73 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 )
 
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000 // 15 minutos
+
+interface RateEntry {
+  count: number
+  firstAttempt: number
+}
+
+const rateLimitMap = new Map<string, RateEntry>()
+
+// Limpa entradas expiradas periodicamente para não crescer indefinidamente
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of rateLimitMap) {
+    if (now - entry.firstAttempt > WINDOW_MS) rateLimitMap.delete(key)
+  }
+}, WINDOW_MS)
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
+function checkRateLimit(ip: string): { blocked: boolean; minutosRestantes: number } {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+
+  if (!entry || now - entry.firstAttempt > WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, firstAttempt: now })
+    return { blocked: false, minutosRestantes: 0 }
+  }
+
+  entry.count++
+  if (entry.count > MAX_ATTEMPTS) {
+    const expiresAt = entry.firstAttempt + WINDOW_MS
+    const minutosRestantes = Math.ceil((expiresAt - now) / 60_000)
+    return { blocked: true, minutosRestantes }
+  }
+
+  return { blocked: false, minutosRestantes: 0 }
+}
+
+function clearRateLimit(ip: string) {
+  rateLimitMap.delete(ip)
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Normaliza CPF/celular removendo pontuação
 function normalizar(valor: string) {
   return valor.replace(/\D/g, '')
 }
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request)
+  const { blocked, minutosRestantes } = checkRateLimit(ip)
+
+  if (blocked) {
+    return NextResponse.json(
+      { error: `Muitas tentativas de login. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''} e tente novamente.` },
+      { status: 429 }
+    )
+  }
+
   try {
     const { celular, senha } = await request.json()
 
@@ -86,6 +147,9 @@ export async function POST(request: NextRequest) {
       .setIssuedAt()
       .setExpirationTime('8h')
       .sign(JWT_SECRET)
+
+    // Login bem-sucedido: limpa o contador de tentativas
+    clearRateLimit(ip)
 
     const response = NextResponse.json({ ok: true, nome: socio.nome.split(' ')[0] })
     response.cookies.set('portal_token', token, {
