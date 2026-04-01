@@ -285,6 +285,16 @@ model Parcela {
   @@map("parcelas")
 }
 
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String   // login ou celular normalizado
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+  @@map("login_attempts")
+}
+
 model AuditLog {
   id          String   @id @default(cuid())
   userId      String
