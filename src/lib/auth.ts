@@ -55,7 +55,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           // Falha aberta: erro técnico no banco não bloqueia o login
         }
 
-        const user = await prisma.users.findFirst({
+        let user = await prisma.users.findFirst({
           where: {
             OR: [
               { email: { equals: login, mode: 'insensitive' } },
@@ -74,6 +74,35 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             passwordChangedAt: true,
           }
         })
+
+        // Fallback: busca pelo convenio.usuario para suportar login pelo usuário legado
+        // Cobre o caso em que users.name foi definido como razao_soc/fantasia (não como usuario)
+        if (!user) {
+          const convenioByUsuario = await prisma.convenio.findFirst({
+            where: {
+              ativo: true,
+              usuario: { equals: login, mode: 'insensitive' },
+              userId: { not: null },
+            },
+            select: { userId: true },
+          })
+          if (convenioByUsuario?.userId) {
+            user = await prisma.users.findUnique({
+              where: { id: convenioByUsuario.userId },
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                password: true,
+                role: true,
+                active: true,
+                permissions: true,
+                createdById: true,
+                passwordChangedAt: true,
+              },
+            }) ?? null
+          }
+        }
 
         if (user) {
           if (!user.active) {

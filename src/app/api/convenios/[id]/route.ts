@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { db } from "@/lib/db"
 import { getDataUserId } from "@/lib/get-data-user-id"
+import { randomBytes } from "crypto"
 import { hasPermission } from "@/lib/permissions"
 
 // Função helper para converter o campo libera em tipo
@@ -134,6 +135,47 @@ export async function PUT(
       uf: data.estado || data.uf || existing.uf,
       fone: data.telefone || data.fone || existing.fone,
       tipo: getTipoFromLibera(data.libera),
+    }
+
+    // Sync email changes to the linked users record
+    const newEmail = data.email ? data.email.trim().toLowerCase() : null
+    const oldEmail = existing.email ? existing.email.trim().toLowerCase() : null
+
+    if (newEmail && newEmail !== oldEmail) {
+      if (existing.userId) {
+        // Convenio already has a linked user — update its email if not taken by another
+        const emailTaken = await db.users.findFirst({
+          where: { email: newEmail, NOT: { id: existing.userId } },
+        })
+        if (!emailTaken) {
+          await db.users.update({
+            where: { id: existing.userId },
+            data: { email: newEmail },
+          })
+        }
+      } else {
+        // No linked user yet — create one with a sentinel password
+        const nomeUser = (data.fantasia || data.razao_soc || 'Convênio').trim()
+        let convenioUserId: string | null = null
+        const existingUser = await db.users.findUnique({ where: { email: newEmail } })
+        if (existingUser) {
+          convenioUserId = existingUser.id
+        } else {
+          const newUser = await db.users.create({
+            data: {
+              email: newEmail,
+              name: nomeUser,
+              password: `!${randomBytes(32).toString('hex')}`,
+              role: 'USER',
+              active: true,
+              createdById: session.user!.id,
+            },
+          })
+          convenioUserId = newUser.id
+        }
+        // Attach userId so this block is only reached once
+        ;(dataToSave as Record<string, unknown>).userId = convenioUserId
+      }
     }
 
     const convenio = await db.convenio.update({

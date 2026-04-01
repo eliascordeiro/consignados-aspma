@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { sendWelcomeEmail } from "@/lib/email"
+import { hasPermission } from "@/lib/permissions"
+
+function isManagerOrPermitted(user: any, perm: string): boolean {
+  if (!user) return false
+  if (user.role === 'MANAGER') return true
+  return hasPermission(user, perm)
+}
 
 const userSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -20,7 +27,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth()
     
-    if (!session?.user || session.user.role !== "MANAGER") {
+    if (!session?.user || !isManagerOrPermitted(session.user, 'usuarios.view')) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
@@ -69,7 +76,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     
-    if (!session?.user || session.user.role !== "MANAGER") {
+    if (!session?.user || !isManagerOrPermitted(session.user, 'usuarios.create')) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 

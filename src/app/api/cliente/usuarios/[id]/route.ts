@@ -3,6 +3,13 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { hasPermission } from "@/lib/permissions"
+
+function isManagerOrPermitted(user: any, perm: string): boolean {
+  if (!user) return false
+  if (user.role === 'MANAGER') return true
+  return hasPermission(user, perm)
+}
 
 const userSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
@@ -21,7 +28,7 @@ export async function GET(
 ) {
   try {
     const session = await auth()
-    if (!session?.user || session.user.role !== "MANAGER") {
+    if (!session?.user || !isManagerOrPermitted(session.user, 'usuarios.view')) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
     const { id } = await params
@@ -57,13 +64,13 @@ export async function PUT(
   try {
     const session = await auth()
     
-    if (!session?.user || session.user.role !== "MANAGER") {
+    if (!session?.user || !isManagerOrPermitted(session.user, 'usuarios.edit')) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
     const { id } = await params
 
-    // Verificar se o usuário pertence ao MANAGER
+    // Verificar se o usuário pertence ao criador
     const existingUser = await prisma.users.findFirst({
       where: {
         id,
@@ -160,17 +167,17 @@ export async function DELETE(
   try {
     const session = await auth()
     
-    if (!session?.user || session.user.role !== "MANAGER") {
+    if (!session?.user || !isManagerOrPermitted(session.user, 'usuarios.delete')) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
     const { id } = await params
 
-    // Verificar se o usuário pertence ao MANAGER
+    // Verificar se o usuário pertence ao criador
     const existingUser = await prisma.users.findFirst({
       where: {
         id,
-        createdById: session.user.id,
+        createdById: session.user!.id,
         role: "USER",
       },
     })
