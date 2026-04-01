@@ -31,11 +31,22 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        // Auth.js v5: quando authorize lança CredentialsSignin subclass, result.error = code
+        // Auth.js v5: result.error pode ser o code da subclasse OU "CredentialsSignin"
+        // Para garantir a mensagem correta, consultamos o endpoint de rate limit
         if (result.error.startsWith('rate_limit_')) {
           const min = parseInt(result.error.replace('rate_limit_', '')) || 1
           setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
         } else {
+          // Verifica via API se o motivo real é rate limiting (beta.30 pode não propagar o code)
+          try {
+            const rl = await fetch(`/api/auth/rate-limit-status?login=${encodeURIComponent(login)}`)
+            const rlData = await rl.json()
+            if (rlData?.blocked) {
+              const min = rlData.minutosRestantes || 1
+              setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
+              return
+            }
+          } catch { /* ignora erro de rede */ }
           setError("Credenciais inválidas")
         }
       } else {
