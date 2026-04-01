@@ -67,7 +67,44 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           console.log("   Hash no banco:", user.password?.substring(0, 20) + "...")
 
           if (!isPasswordValid) {
-            console.log("   ❌ Senha inválida!")
+            console.log("   ❌ Senha inválida no users! Verificando fallback convenio...")
+
+            // Fallback: se o user é do tipo USER (auto-criado para convênio),
+            // a senha pode ter sido alterada na tabela convenio mas não sincronizada aqui.
+            // Verificamos diretamente na tabela convenio.
+            if (user.role === 'USER') {
+              const convenioFallback = await prisma.convenio.findFirst({
+                where: {
+                  ativo: true,
+                  senha: password,
+                  OR: [
+                    { userId: user.id },
+                    { usuario: { equals: login, mode: 'insensitive' } },
+                    { email: { equals: login, mode: 'insensitive' } },
+                  ],
+                },
+                select: { id: true, usuario: true, razao_soc: true, fantasia: true, tipo: true, userId: true, senhaChangedAt: true },
+              })
+
+              if (convenioFallback) {
+                // Sincroniza o hash desatualizado no users
+                const novoHash = await bcrypt.hash(password, 10)
+                await prisma.users.update({ where: { id: user.id }, data: { password: novoHash } })
+                console.log("   ✅ Senha do convênio válida — hash sincronizado!")
+                // Continua com retorno do convenio vinculado
+                return {
+                  id: user.id,
+                  email: user.email,
+                  name: user.name,
+                  role: user.role,
+                  permissions: user.permissions || [],
+                  createdById: user.createdById,
+                  isConvenio: true,
+                  passwordChangedAt: user.passwordChangedAt?.toISOString() || null,
+                }
+              }
+            }
+
             return null
           }
 
