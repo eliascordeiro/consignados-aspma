@@ -14,6 +14,30 @@ function normalizar(valor: string) {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limiting fora do try/catch para não ser silenciado por erros internos
+  let celularParaRateLimit = ''
+  try {
+    const body = await request.clone().json()
+    celularParaRateLimit = normalizar(String(body.celular || '').trim())
+  } catch { /* ignora erro de parse aqui, será capturado abaixo */ }
+
+  if (celularParaRateLimit) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') || undefined
+    try {
+      const { blocked, minutosRestantes } = await checkLoginRateLimit(`portal:${celularParaRateLimit}`, ip)
+      if (blocked) {
+        return NextResponse.json(
+          { error: `Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''} e tente novamente.` },
+          { status: 429 }
+        )
+      }
+    } catch (rateLimitErr) {
+      console.error('[portal/auth] rate limit error:', rateLimitErr)
+      // Falha aberta: se o banco estiver inacessível, não bloqueia o login
+    }
+  }
+
   try {
     const { celular, senha } = await request.json()
 
@@ -22,17 +46,6 @@ export async function POST(request: NextRequest) {
     }
 
     const celularLimpo = normalizar(celular.trim())
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-      request.headers.get('x-real-ip') || undefined
-
-    // Rate limiting por celular (persiste no banco — funciona com múltiplas instâncias)
-    const { blocked, minutosRestantes } = await checkLoginRateLimit(`portal:${celularLimpo}`, ip)
-    if (blocked) {
-      return NextResponse.json(
-        { error: `Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''} e tente novamente.` },
-        { status: 429 }
-      )
-    }
 
     // Busca somente por celular
     const socio = await prisma.socio.findFirst({
