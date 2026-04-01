@@ -11,7 +11,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const convenio = { id: session.convenioId }
+    const convenioId = session.convenioId
+
+    // Buscar desconto do convênio
+    const convenioData = await prisma.convenio.findUnique({
+      where: { id: convenioId },
+      select: { id: true, desconto: true },
+    })
+    const descontoPorParcela = Number(convenioData?.desconto ?? 0)
 
     const { searchParams } = new URL(request.url)
     const mesVencimento = searchParams.get('mesVencimento') // formato: YYYY-MM
@@ -43,7 +50,7 @@ export async function GET(request: NextRequest) {
           lte: dataFim,
         },
         venda: {
-          convenioId: convenio.id,
+          convenioId: convenioId,
           ativo: true,
           cancelado: false,
           dataEmissao: { gte: tresAnosAtras },
@@ -74,7 +81,9 @@ export async function GET(request: NextRequest) {
     // Calcular estatísticas
     const totalParcelas = parcelas.length
     const valorTotal = parcelas.reduce((sum, p) => sum + Number(p.valor), 0)
-    
+    const totalDesconto = descontoPorParcela * totalParcelas
+    const valorLiquido = valorTotal - totalDesconto
+
     const parcelasPagas = parcelas.filter(p => p.baixa === 'S')
     const parcelasPendentes = parcelas.filter(p => p.baixa !== 'S')
     
@@ -131,6 +140,9 @@ export async function GET(request: NextRequest) {
       resumo: {
         totalParcelas,
         valorTotal,
+        descontoPorParcela,
+        totalDesconto,
+        valorLiquido,
         parcelasPagas: parcelasPagas.length,
         valorPago,
         parcelasPendentes: parcelasPendentes.length,

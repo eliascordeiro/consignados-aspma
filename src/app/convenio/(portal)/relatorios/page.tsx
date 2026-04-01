@@ -60,6 +60,9 @@ interface ParcelasReceberData {
   resumo: {
     totalParcelas: number
     valorTotal: number
+    descontoPorParcela: number
+    totalDesconto: number
+    valorLiquido: number
     parcelasPagas: number
     valorPago: number
     parcelasPendentes: number
@@ -520,8 +523,14 @@ export default function RelatoriosPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {formatCurrency(parcelasData.resumo.valorTotal)}
+                      {formatCurrency(parcelasData.resumo.valorLiquido)}
                     </div>
+                    {parcelasData.resumo.descontoPorParcela > 0 && (
+                      <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                        <div>Bruto: {formatCurrency(parcelasData.resumo.valorTotal)}</div>
+                        <div className="text-red-500">Desconto: -{formatCurrency(parcelasData.resumo.totalDesconto)} ({formatCurrency(parcelasData.resumo.descontoPorParcela)}/parcela)</div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
