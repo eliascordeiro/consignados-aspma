@@ -11,6 +11,39 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"
 )
 
+// ─── Rate Limiting (Node.js runtime — persiste entre requests) ───────────────
+const LOGIN_MAX_ATTEMPTS = 5
+const LOGIN_WINDOW_MS = 15 * 60 * 1000 // 15 minutos
+
+interface RateEntry { count: number; firstAttempt: number }
+const loginRateLimitMap = new Map<string, RateEntry>()
+
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of loginRateLimitMap) {
+    if (now - entry.firstAttempt > LOGIN_WINDOW_MS) loginRateLimitMap.delete(key)
+  }
+}, LOGIN_WINDOW_MS)
+
+function checkLoginRateLimit(key: string): { blocked: boolean; minutosRestantes: number } {
+  const now = Date.now()
+  const entry = loginRateLimitMap.get(key)
+
+  if (!entry || now - entry.firstAttempt > LOGIN_WINDOW_MS) {
+    loginRateLimitMap.set(key, { count: 1, firstAttempt: now })
+    return { blocked: false, minutosRestantes: 0 }
+  }
+
+  entry.count++
+  if (entry.count > LOGIN_MAX_ATTEMPTS) {
+    const minutosRestantes = Math.ceil((entry.firstAttempt + LOGIN_WINDOW_MS - now) / 60_000)
+    return { blocked: true, minutosRestantes }
+  }
+
+  return { blocked: false, minutosRestantes: 0 }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   session: {
@@ -32,6 +65,13 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
         if (!login || !password) {
           return null
+        }
+
+        // Rate limiting por login (chave = login em minúsculas)
+        const rateLimitKey = login.toLowerCase()
+        const { blocked, minutosRestantes } = checkLoginRateLimit(rateLimitKey)
+        if (blocked) {
+          throw new Error(`Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''}.`)
         }
 
         const user = await prisma.users.findFirst({
