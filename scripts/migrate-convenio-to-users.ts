@@ -1,26 +1,31 @@
 /**
  * Migração: credenciais da tabela "convenio" → tabela "users"
  *
- * Para cada convênio ativo com usuario+senha definidos:
+ * Para cada convênio (ativo ou inativo) com usuario+senha definidos:
  *   1. Verifica se já existe user vinculado (userId) ou com mesmo nome/email
  *   2. Se não existe → cria em "users" com role=USER
  *   3. Se existe mas password desatualizado → atualiza o hash
  *   4. Garante que convenio.userId aponta para o user correto
  *
  * Executar: npx tsx app/scripts/migrate-convenio-to-users.ts
+ * (aponta sempre para Railway)
  */
 
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+const RAILWAY_URL = 'postgresql://postgres:DtTeiZzewsGAQlbosPGcsNrWAQqVCchf@yamanote.proxy.rlwy.net:29695/railway'
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: RAILWAY_URL } },
+})
 
 async function main() {
   console.log('🔄 Migrando credenciais de convênios para users...\n')
 
   const convenios = await prisma.convenio.findMany({
     where: {
-      ativo: true,
+      // ativos E inativos — migra todos com credenciais definidas
       senha: { not: null },
       usuario: { not: null },
     },
@@ -36,7 +41,7 @@ async function main() {
     orderBy: { id: 'asc' },
   })
 
-  console.log(`📋 ${convenios.length} convênios ativos com credenciais encontrados\n`)
+  console.log(`📋 ${convenios.length} convênios (ativos + inativos) com credenciais encontrados\n`)
 
   let criados = 0
   let atualizados = 0
