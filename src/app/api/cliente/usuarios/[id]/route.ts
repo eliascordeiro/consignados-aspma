@@ -11,6 +11,20 @@ function isManagerOrPermitted(user: any, perm: string): boolean {
   return hasPermission(user, perm)
 }
 
+// Retorna o ID do MANAGER raiz da hierarquia (para filtrar createdById)
+async function getRootOwnerId(user: any): Promise<string> {
+  if (user.role === 'MANAGER') return user.id
+  if (!user.createdById) return user.id
+  const creator = await prisma.users.findUnique({
+    where: { id: user.createdById },
+    select: { id: true, role: true, createdById: true },
+  })
+  if (!creator) return user.id
+  if (creator.role === 'MANAGER') return creator.id
+  // Nível 2: criador do criador é o MANAGER
+  return creator.createdById ?? creator.id
+}
+
 const userSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
@@ -32,8 +46,9 @@ export async function GET(
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
     const { id } = await params
+    const ownerId = await getRootOwnerId(session.user)
     const user = await prisma.users.findFirst({
-      where: { id, createdById: session.user.id, role: "USER" },
+      where: { id, createdById: ownerId, role: "USER" },
       select: {
         id: true,
         name: true,
@@ -70,11 +85,12 @@ export async function PUT(
 
     const { id } = await params
 
-    // Verificar se o usuário pertence ao criador
+    // Verificar se o usuário pertence ao owner correto
+    const ownerId = await getRootOwnerId(session.user)
     const existingUser = await prisma.users.findFirst({
       where: {
         id,
-        createdById: session.user.id,
+        createdById: ownerId,
         role: "USER",
       },
     })
@@ -173,11 +189,12 @@ export async function DELETE(
 
     const { id } = await params
 
-    // Verificar se o usuário pertence ao criador
+    // Verificar se o usuário pertence ao owner correto
+    const ownerId = await getRootOwnerId(session.user)
     const existingUser = await prisma.users.findFirst({
       where: {
         id,
-        createdById: session.user!.id,
+        createdById: ownerId,
         role: "USER",
       },
     })

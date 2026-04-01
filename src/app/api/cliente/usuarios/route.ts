@@ -12,6 +12,31 @@ function isManagerOrPermitted(user: any, perm: string): boolean {
   return hasPermission(user, perm)
 }
 
+// Retorna o ID do MANAGER raiz da hierarquia (para filtrar createdById)
+async function getRootOwnerId(user: any): Promise<string> {
+  if (user.role === 'MANAGER') return user.id
+  if (!user.createdById) return user.id
+  const creator = await prisma.users.findUnique({
+    where: { id: user.createdById },
+    select: { id: true, role: true, createdById: true },
+  })
+  if (!creator) return user.id
+  if (creator.role === 'MANAGER') return creator.id
+  // Nível 2: criador do criador é o MANAGER
+  return creator.createdById ?? creator.id
+}
+
+// Somente USER nível 1 (criado por MANAGER) pode criar novos usuários
+async function canCreateUser(user: any): Promise<boolean> {
+  if (user.role === 'MANAGER') return true
+  if (!user.createdById) return false
+  const criador = await prisma.users.findUnique({
+    where: { id: user.createdById },
+    select: { role: true },
+  })
+  return criador?.role === 'MANAGER'
+}
+
 const userSchema = z.object({
   name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
   email: z.string().email("Email inválido"),
@@ -34,9 +59,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
 
+    const ownerId = await getRootOwnerId(session.user)
+
     const users = await prisma.users.findMany({
       where: {
-        createdById: session.user.id,
+        createdById: ownerId,
         role: "USER",
         OR: search ? [
           { name: { contains: search, mode: "insensitive" } },
@@ -78,6 +105,11 @@ export async function POST(request: NextRequest) {
     
     if (!session?.user || !isManagerOrPermitted(session.user, 'usuarios.create')) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    // Bloquear criação se já é nível 2 (sub-usuário não pode criar mais usuários)
+    if (!await canCreateUser(session.user)) {
+      return NextResponse.json({ error: "Nível hierárquico máximo atingido" }, { status: 403 })
     }
 
     const body = await request.json()
