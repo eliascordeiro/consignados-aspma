@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { SignJWT } from 'jose'
 import bcrypt from 'bcryptjs'
-import { checkLoginRateLimit, clearLoginAttempts } from '@/lib/login-rate-limit'
+import { checkLoginRateLimit, isRateLimited, recordFailedAttempt, clearLoginAttempts } from '@/lib/login-rate-limit'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
       request.headers.get('x-real-ip') || undefined
     try {
-      const { blocked, minutosRestantes } = await checkLoginRateLimit(`portal:${celularParaRateLimit}`, ip)
+      const { blocked, minutosRestantes } = await isRateLimited(`portal:${celularParaRateLimit}`)
       if (blocked) {
         return NextResponse.json(
           { error: `Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''} e tente novamente.` },
@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (!senhaOk) {
+      // Senha errada — registrar tentativa falha
+      recordFailedAttempt(`portal:${celularLimpo}`).catch(() => {})
       return NextResponse.json({ error: 'Senha incorreta.' }, { status: 401 })
     }
 

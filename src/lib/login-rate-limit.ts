@@ -5,26 +5,19 @@ const MAX_ATTEMPTS = 5
 const WINDOW_MS = 15 * 60 * 1000 // 15 minutos
 
 /**
- * Verifica e registra uma tentativa de login.
- * Retorna { blocked: true, minutosRestantes } se o usuário excedeu o limite.
- * @param key - login (email/usuario) ou celular normalizado
+ * Apenas verifica se o usuário está bloqueado. NÃO registra tentativa.
+ * Chamar ANTES de verificar a senha.
  */
-export async function checkLoginRateLimit(
-  key: string,
-  ipAddress?: string
+export async function isRateLimited(
+  key: string
 ): Promise<{ blocked: boolean; minutosRestantes: number }> {
   const windowStart = new Date(Date.now() - WINDOW_MS)
 
-  // Contar tentativas na janela
   const count = await prisma.loginAttempt.count({
-    where: {
-      key,
-      createdAt: { gte: windowStart },
-    },
+    where: { key, createdAt: { gte: windowStart } },
   })
 
   if (count >= MAX_ATTEMPTS) {
-    // Descobrir quanto tempo falta para a janela expirar
     const oldest = await prisma.loginAttempt.findFirst({
       where: { key, createdAt: { gte: windowStart } },
       orderBy: { createdAt: 'asc' },
@@ -36,7 +29,16 @@ export async function checkLoginRateLimit(
     return { blocked: true, minutosRestantes }
   }
 
-  // Registrar esta tentativa
+  return { blocked: false, minutosRestantes: 0 }
+}
+
+/**
+ * Registra uma tentativa FALHA. Chamar apenas quando a senha estiver errada.
+ */
+export async function recordFailedAttempt(
+  key: string,
+  ipAddress?: string
+): Promise<void> {
   await prisma.loginAttempt.create({
     data: {
       id: randomBytes(16).toString('hex'),
@@ -44,7 +46,19 @@ export async function checkLoginRateLimit(
       ipAddress: ipAddress ?? null,
     },
   })
+}
 
+/**
+ * @deprecated Use isRateLimited + recordFailedAttempt separadamente.
+ * Mantido por compatibilidade com portal/auth.
+ */
+export async function checkLoginRateLimit(
+  key: string,
+  ipAddress?: string
+): Promise<{ blocked: boolean; minutosRestantes: number }> {
+  const result = await isRateLimited(key)
+  if (result.blocked) return result
+  await recordFailedAttempt(key, ipAddress)
   return { blocked: false, minutosRestantes: 0 }
 }
 

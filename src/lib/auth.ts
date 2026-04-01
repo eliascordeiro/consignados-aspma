@@ -1,6 +1,12 @@
 import NextAuth, { CredentialsSignin } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+import bcrypt from "bcryptjs"
+import "./auth-config"
+import { createAuditLog } from "@/lib/audit-log"
+import { SignJWT } from "jose"
+import { cookies } from "next/headers"
+import { isRateLimited, recordFailedAttempt, clearLoginAttempts } from "@/lib/login-rate-limit"
 
 class RateLimitError extends CredentialsSignin {
   constructor(minutosRestantes: number) {
@@ -8,12 +14,6 @@ class RateLimitError extends CredentialsSignin {
     this.code = `rate_limit_${minutosRestantes}`
   }
 }
-import bcrypt from "bcryptjs"
-import "./auth-config"
-import { createAuditLog } from "@/lib/audit-log"
-import { SignJWT } from "jose"
-import { cookies } from "next/headers"
-import { checkLoginRateLimit, clearLoginAttempts } from "@/lib/login-rate-limit"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"
@@ -42,17 +42,15 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        // Rate limiting por login (chave = login em minúsculas) — persiste no banco
+        // Rate limiting: verifica ANTES da senha, registra APENAS se senha errada
         const rateLimitKey = `admin:${login.toLowerCase()}`
         try {
-          const { blocked, minutosRestantes } = await checkLoginRateLimit(rateLimitKey)
+          const { blocked, minutosRestantes } = await isRateLimited(rateLimitKey)
           if (blocked) {
             throw new RateLimitError(minutosRestantes)
           }
         } catch (rlErr) {
-          if (rlErr instanceof RateLimitError) {
-            throw rlErr // repropaga o bloqueio real
-          }
+          if (rlErr instanceof RateLimitError) throw rlErr
           console.error('[auth] rate limit check failed:', rlErr)
           // Falha aberta: erro técnico no banco não bloqueia o login
         }
@@ -128,6 +126,8 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
               }
             }
 
+            // Senha errada — registrar tentativa falha
+            recordFailedAttempt(rateLimitKey).catch(() => {})
             return null
           }
 
@@ -135,7 +135,7 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           console.log("   👤 User role:", user.role)
 
           // Limpar contador de tentativas após sucesso
-          clearLoginAttempts(`admin:${login.toLowerCase()}`).catch(() => {})
+          clearLoginAttempts(rateLimitKey).catch(() => {})
 
           // Verificar se este user tem convênio vinculado
           // ADMIN e MANAGER NUNCA são tratados como convênio
