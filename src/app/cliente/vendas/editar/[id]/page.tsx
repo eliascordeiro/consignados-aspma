@@ -57,6 +57,8 @@ export default function EditarVendaPage() {
     novoVencimento: '',
     alterarValor: false,
     novoValor: '',
+    alterarBaixa: false,
+    novaBaixa: 'X' as 'X' | null,
   });
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +79,7 @@ export default function EditarVendaPage() {
     const de = Math.max(1, Math.min(massaForm.daParcela, parcelas.length));
     const ate = Math.max(de, Math.min(massaForm.ateParcela, parcelas.length));
 
-    if (!massaForm.alterarVencimento && !massaForm.alterarValor) {
+    if (!massaForm.alterarVencimento && !massaForm.alterarValor && !massaForm.alterarBaixa) {
       alert('Selecione ao menos uma opção para alterar.');
       return;
     }
@@ -109,6 +111,9 @@ export default function EditarVendaPage() {
       }
       if (massaForm.alterarValor) {
         novasParcelas[i] = { ...novasParcelas[i], valor: novoValorNum };
+      }
+      if (massaForm.alterarBaixa) {
+        novasParcelas[i] = { ...novasParcelas[i], baixa: massaForm.novaBaixa };
       }
     }
 
@@ -628,6 +633,45 @@ export default function EditarVendaPage() {
                     onChange={(e) => setMassaForm(f => ({ ...f, novoValor: e.target.value }))}
                     className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm text-right"
                   />
+                </div>
+              )}
+            </div>
+
+            {/* Seção Baixa */}
+            <div className="border border-border rounded-lg p-4 mb-4">
+              <label className="flex items-center gap-2 cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={massaForm.alterarBaixa}
+                  onChange={(e) => setMassaForm(f => ({ ...f, alterarBaixa: e.target.checked }))}
+                  className="w-4 h-4 accent-amber-500"
+                />
+                <span className="text-sm font-semibold text-foreground">Alterar Baixa</span>
+              </label>
+              {massaForm.alterarBaixa && (
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-border rounded bg-background flex-1 justify-center">
+                    <input
+                      type="radio"
+                      name="novaBaixa"
+                      value="X"
+                      checked={massaForm.novaBaixa === 'X'}
+                      onChange={() => setMassaForm(f => ({ ...f, novaBaixa: 'X' }))}
+                      className="accent-green-500"
+                    />
+                    <span className="text-sm text-foreground">&#10003; Marcar</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-border rounded bg-background flex-1 justify-center">
+                    <input
+                      type="radio"
+                      name="novaBaixa"
+                      value=""
+                      checked={massaForm.novaBaixa === null}
+                      onChange={() => setMassaForm(f => ({ ...f, novaBaixa: null }))}
+                      className="accent-red-500"
+                    />
+                    <span className="text-sm text-foreground">&#10005; Desmarcar</span>
+                  </label>
                 </div>
               )}
             </div>
