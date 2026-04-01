@@ -41,7 +41,7 @@ export default function RelatoriosPage() {
     socioMatricula: '',
     socioNome: '',
     mesAno: new Date().toISOString().slice(0, 7), // YYYY-MM
-    agrupaPor: 'socio', // 'socio' ou 'convenio'
+    agrupaPor: 'convenio', // 'convenio' ou 'consignataria'
   });
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -67,7 +67,7 @@ export default function RelatoriosPage() {
   const [showConsigRelModal, setShowConsigRelModal] = useState(false);
   const [filtrosConsigRel, setFiltrosConsigRel] = useState({
     mesAno: new Date().toISOString().slice(0, 7),
-    agrupaPor: 'socio',
+    agrupaPor: 'convenio',
     socioMatricula: '',
     socioNome: '',
   });
@@ -849,7 +849,6 @@ export default function RelatoriosPage() {
                     onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
                     className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   >
-                    <option value="socio">Sócio</option>
                     <option value="convenio">Resumido</option>
                     <option value="consignataria">Extrato</option>
                   </select>
@@ -1177,16 +1176,61 @@ export default function RelatoriosPage() {
                     </select>
                   )}
                 </div>
-                {/* Período */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Período *</label>
-                  <input
-                    type="month"
-                    value={filtros.mesAno}
-                    onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
-                    required
-                  />
+                {/* Período e Agrupamento */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Período *</label>
+                    <input
+                      type="month"
+                      value={filtros.mesAno}
+                      onChange={(e) => setFiltros({ ...filtros, mesAno: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Agrupar por *</label>
+                    <select
+                      value={filtros.agrupaPor}
+                      onChange={(e) => setFiltros({ ...filtros, agrupaPor: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    >
+                      <option value="convenio">Resumido</option>
+                      <option value="consignataria">Extrato</option>
+                    </select>
+                  </div>
+                </div>
+                {/* Sócio */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                    Sócio <span className="text-xs font-normal text-gray-400">(opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchSocio}
+                      onChange={(e) => { setSearchSocio(e.target.value); if (!e.target.value) limparSocio(); }}
+                      placeholder="Buscar por matrícula ou nome..."
+                      className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
+                    />
+                    {filtros.socioMatricula ? (
+                      <button type="button" onClick={limparSocio} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    ) : (
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    )}
+                  </div>
+                  {showSocioList && socios.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                      {socios.map((socio) => (
+                        <div key={socio.id} onClick={() => selecionarSocio(socio)} className="px-4 py-3 hover:bg-teal-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border last:border-b-0 transition-colors">
+                          <div className="font-semibold text-foreground text-sm">{socio.nome}</div>
+                          {socio.matricula && <div className="text-xs text-muted-foreground mt-0.5">Matrícula: {socio.matricula}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {/* Convênio */}
                 <div className="relative">
