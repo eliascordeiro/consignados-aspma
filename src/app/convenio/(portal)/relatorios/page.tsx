@@ -521,16 +521,21 @@ export default function RelatoriosPage() {
                     <CardTitle className="text-sm font-medium">Valor Total a Receber</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(parcelasData.resumo.valorLiquido)}
+                  <CardContent className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Bruto:</span>
+                      <span>{formatCurrency(parcelasData.resumo.valorTotal)}</span>
                     </div>
                     {parcelasData.resumo.descontoPorParcela > 0 && (
-                      <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                        <div>Bruto: {formatCurrency(parcelasData.resumo.valorTotal)}</div>
-                        <div className="text-red-500">Desconto: -{formatCurrency(parcelasData.resumo.totalDesconto)} ({formatCurrency(parcelasData.resumo.descontoPorParcela)}/parcela)</div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Valor do Desconto:</span>
+                        <span className="text-red-500">-{formatCurrency(parcelasData.resumo.totalDesconto)} ({formatCurrency(parcelasData.resumo.descontoPorParcela)}/parcela)</span>
                       </div>
                     )}
+                    <div className="flex justify-between text-base font-bold pt-1 border-t border-border">
+                      <span>Total Líquido:</span>
+                      <span>{formatCurrency(parcelasData.resumo.valorLiquido)}</span>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
