@@ -521,20 +521,20 @@ export default function RelatoriosPage() {
                     <CardTitle className="text-sm font-medium">Valor Total a Receber</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Total Bruto:</span>
-                      <span>{formatCurrency(parcelasData.resumo.valorTotal)}</span>
+                  <CardContent className="space-y-2">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Total Bruto</span>
+                      <span className="text-sm font-medium">{formatCurrency(parcelasData.resumo.valorTotal)}</span>
                     </div>
                     {parcelasData.resumo.descontoPorParcela > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Valor do Desconto:</span>
-                        <span className="text-red-500">-{formatCurrency(parcelasData.resumo.totalDesconto)} ({formatCurrency(parcelasData.resumo.descontoPorParcela)}/parcela)</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs text-muted-foreground">Valor do Desconto</span>
+                        <span className="text-sm font-medium text-red-500">{formatCurrency(parcelasData.resumo.totalDesconto)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-base font-bold pt-1 border-t border-border">
-                      <span>Total Líquido:</span>
-                      <span>{formatCurrency(parcelasData.resumo.valorLiquido)}</span>
+                    <div className="flex flex-col gap-0.5 pt-2 border-t border-border">
+                      <span className="text-xs text-muted-foreground">Total Líquido</span>
+                      <span className="text-xl font-bold">{formatCurrency(parcelasData.resumo.valorLiquido)}</span>
                     </div>
                   </CardContent>
                 </Card>
