@@ -337,7 +337,8 @@ export default function NovaVendaPage() {
       return;
     }
 
-    // REGRA CRÍTICA 1: Bloqueia se valor da PARCELA > margem disponível
+    // Regra AS200.PRG: compara apenas o valor da PARCELA com a margem disponível (mensal).
+    // A margem é por mês — cada parcela cai em um mês diferente, portanto não se soma o total.
     const valorParcela = parseFloat(formData.valorParcela || '0');
     const margemAtual = formData.limite || 0;
     
@@ -347,20 +348,6 @@ export default function NovaVendaPage() {
         `Valor da Parcela: R$ ${valorParcela.toFixed(2)}\n` +
         `Margem Disponível: R$ ${margemAtual.toFixed(2)}\n\n` +
         `Corrija o valor da parcela antes de continuar.`
-      );
-      return;
-    }
-
-    // REGRA CRÍTICA 2: Bloqueia se valor TOTAL > margem disponível
-    const valorTotal = parcelas.reduce((sum, p) => sum + p.valor, 0);
-    
-    if (valorTotal > margemAtual) {
-      alert(
-        `❌ BLOQUEADO! Valor total excede a margem.\n\n` +
-        `Valor Total: R$ ${valorTotal.toFixed(2)}\n` +
-        `Margem Disponível: R$ ${margemAtual.toFixed(2)}\n` +
-        `Excedente: R$ ${(valorTotal - margemAtual).toFixed(2)}\n\n` +
-        `Reduza o valor da parcela ou a quantidade de parcelas.`
       );
       return;
     }
