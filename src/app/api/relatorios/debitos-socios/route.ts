@@ -1195,8 +1195,8 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     const colConv = margin + 3;
     const colCNPJ = margin + 85;
     const colBanco = margin + 125;
-    const colAg = margin + 168;
-    const colConta = margin + 195;
+    const colAg = margin + 150;
+    const colConta = margin + 168;
     const colBruto = pageWidth - margin - 58;
     const colDesc = pageWidth - margin - 30;
     const colLiquid = pageWidth - margin - 3;
