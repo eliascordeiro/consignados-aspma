@@ -1002,7 +1002,7 @@ function agruparPorSocio(parcelas: any[]): GrupoSocio[] {
       st: baixaSocio !== '' ? 'BX' : '',
     });
     grupo.total += Number(parcela.valor);
-    grupo.totalDesconto += Number(parcela.venda.convenio?.desconto ?? 0);
+    grupo.totalDesconto += Number(parcela.valor) * Number(parcela.venda.convenio?.desconto ?? 0) / 100;
   });
 
   return Array.from(grupos.values()).map(g => ({ ...g, totalLiquido: g.total - g.totalDesconto }));
@@ -1043,7 +1043,7 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
       st: baixaConv !== '' ? 'BX' : '',
     });
     grupo.total += Number(parcela.valor);
-    grupo.totalDesconto += grupo.descontoPorParcela;
+    grupo.totalDesconto += Number(parcela.valor) * grupo.descontoPorParcela / 100;
   });
 
   // Ordenar por razão social (ordem alfabética)
@@ -1090,7 +1090,7 @@ function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
       st,
     });
     grupo.total += Number(parcela.valor);
-    grupo.totalDesconto += grupo.descontoPorParcela;
+    grupo.totalDesconto += Number(parcela.valor) * grupo.descontoPorParcela / 100;
   });
 
   return Array.from(grupos.values()).map(g => ({ ...g, totalLiquido: g.total - g.totalDesconto })).sort((a, b) =>

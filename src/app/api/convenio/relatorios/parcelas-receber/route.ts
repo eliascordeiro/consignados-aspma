@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     // Calcular estatísticas
     const totalParcelas = parcelas.length
     const valorTotal = parcelas.reduce((sum, p) => sum + Number(p.valor), 0)
-    const totalDesconto = descontoPorParcela * totalParcelas
+    const totalDesconto = valorTotal * descontoPorParcela / 100
     const valorLiquido = valorTotal - totalDesconto
 
     const parcelasPagas = parcelas.filter(p => p.baixa === 'S')
