@@ -31,10 +31,10 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        // NextAuth propaga a mensagem do throw quando começa com RATE_LIMIT:
-        const msg = result.error
-        if (msg.includes('RATE_LIMIT:')) {
-          setError(msg.replace('RATE_LIMIT:', '').trim())
+        // Auth.js v5: quando authorize lança CredentialsSignin subclass, result.error = code
+        if (result.error.startsWith('rate_limit_')) {
+          const min = parseInt(result.error.replace('rate_limit_', '')) || 1
+          setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
         } else {
           setError("Credenciais inválidas")
         }

@@ -1,6 +1,13 @@
-import NextAuth from "next-auth"
+import NextAuth, { CredentialsSignin } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+
+class RateLimitError extends CredentialsSignin {
+  constructor(minutosRestantes: number) {
+    super()
+    this.code = `rate_limit_${minutosRestantes}`
+  }
+}
 import bcrypt from "bcryptjs"
 import "./auth-config"
 import { createAuditLog } from "@/lib/audit-log"
@@ -40,10 +47,10 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
         try {
           const { blocked, minutosRestantes } = await checkLoginRateLimit(rateLimitKey)
           if (blocked) {
-            throw new Error(`RATE_LIMIT:Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''}.`)
+            throw new RateLimitError(minutosRestantes)
           }
         } catch (rlErr) {
-          if (rlErr instanceof Error && rlErr.message.startsWith('RATE_LIMIT:')) {
+          if (rlErr instanceof RateLimitError) {
             throw rlErr // repropaga o bloqueio real
           }
           console.error('[auth] rate limit check failed:', rlErr)
