@@ -4,6 +4,7 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import { getDataUserId } from "@/lib/get-data-user-id"
 import { hasPermission } from "@/lib/permissions"
+import { randomBytes } from "crypto"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -164,6 +165,39 @@ export async function POST(req: NextRequest) {
     }
 
     // Gerar campos derivados
+    const managerUserId = await getDataUserId(session as any)
+
+    // Se foi fornecido email, criar user para o convênio poder fazer login
+    // O user é criado sem senha válida — o convênio deve usar "Criar/Redefinir Senha"
+    let convenioUserId: string = managerUserId
+    if (data.email) {
+      const emailLower = data.email.trim().toLowerCase()
+      const nomeUser = (data.fantasia || data.razao_soc || emailLower).trim()
+
+      // Verifica se já existe user com esse email
+      const existingUser = await db.users.findUnique({ where: { email: emailLower } })
+
+      if (existingUser) {
+        // Reutiliza o user existente (pode ser de cadastro anterior)
+        convenioUserId = existingUser.id
+      } else {
+        // Cria user sem senha válida — senha bloqueada com sentinel
+        const newUser = await db.users.create({
+          data: {
+            email: emailLower,
+            name: nomeUser,
+            password: `!${randomBytes(32).toString('hex')}`, // sentinel: nunca passa no bcrypt.compare
+            role: 'USER',
+            active: true,
+            permissions: [],
+            createdById: managerUserId,
+          },
+        })
+        convenioUserId = newUser.id
+        console.log(`[convenios] User criado para convênio: ${emailLower} (id: ${newUser.id})`)
+      }
+    }
+
     const dataToSave = {
       ...data,
       nome: data.razao_soc || data.fantasia || 'Sem nome',
@@ -171,7 +205,7 @@ export async function POST(req: NextRequest) {
       uf: data.estado || data.uf,
       fone: data.telefone || data.fone,
       tipo: getTipoFromLibera(data.libera),
-      userId: await getDataUserId(session as any),
+      userId: convenioUserId,
     }
 
     const convenio = await db.convenio.create({
