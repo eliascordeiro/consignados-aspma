@@ -37,9 +37,17 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
         // Rate limiting por login (chave = login em minúsculas) — persiste no banco
         const rateLimitKey = `admin:${login.toLowerCase()}`
-        const { blocked, minutosRestantes } = await checkLoginRateLimit(rateLimitKey)
-        if (blocked) {
-          throw new Error(`Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''}.`)
+        try {
+          const { blocked, minutosRestantes } = await checkLoginRateLimit(rateLimitKey)
+          if (blocked) {
+            throw new Error(`RATE_LIMIT:Muitas tentativas. Aguarde ${minutosRestantes} minuto${minutosRestantes > 1 ? 's' : ''}.`)
+          }
+        } catch (rlErr) {
+          if (rlErr instanceof Error && rlErr.message.startsWith('RATE_LIMIT:')) {
+            throw rlErr // repropaga o bloqueio real
+          }
+          console.error('[auth] rate limit check failed:', rlErr)
+          // Falha aberta: erro técnico no banco não bloqueia o login
         }
 
         const user = await prisma.users.findFirst({

@@ -31,7 +31,13 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError("Credenciais inválidas")
+        // NextAuth propaga a mensagem do throw quando começa com RATE_LIMIT:
+        const msg = result.error
+        if (msg.includes('RATE_LIMIT:')) {
+          setError(msg.replace('RATE_LIMIT:', '').trim())
+        } else {
+          setError("Credenciais inválidas")
+        }
       } else {
         // Buscar sessão para verificar isConvenio
         const response = await fetch("/api/auth/session")
