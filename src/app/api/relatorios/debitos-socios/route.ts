@@ -1394,9 +1394,9 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
     doc.text('TOTAL DO CONVÊNIO:', pageWidth - margin - 87, y + 2);
     doc.setFontSize(10);
-    doc.text(`R$ ${grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 2, { align: 'right' });
+    doc.text(`R$ ${grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 2, { align: 'right' });
     y += 10;
-    totalGeral += grupo.total;
+    totalGeral += grupo.totalLiquido;
     totalDescontoGeral += grupo.totalDesconto;
   });
   } // Fim do modo detalhado
@@ -1625,7 +1625,7 @@ function gerarCSVConvenio(
         : parcela.valor.toFixed(2);
       
       const totalFormatado = index === grupo.parcelas.length - 1
-        ? (decimalSeparator === ',' ? grupo.total.toFixed(2).replace('.', ',') : grupo.total.toFixed(2))
+        ? (decimalSeparator === ',' ? grupo.totalLiquido.toFixed(2).replace('.', ',') : grupo.totalLiquido.toFixed(2))
         : '';
       
       const row = [
@@ -1645,7 +1645,7 @@ function gerarCSVConvenio(
       lines.push(row.join(delimiter));
     });
     
-    totalGeral += grupo.total;
+    totalGeral += grupo.totalLiquido;
   });
   
   // Total geral
@@ -1886,10 +1886,10 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
     doc.text('TOTAL DA CONSIGNATÁRIA:', pageWidth - margin - 92, y + 2);
     doc.setFontSize(10);
-    doc.text(`R$ ${grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 2, { align: 'right' });
+    doc.text(`R$ ${grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 2, { align: 'right' });
     y += 10;
 
-    totalGeral += grupo.total;
+    totalGeral += grupo.totalLiquido;
     totalDescontoGeral += grupo.totalDesconto;
   });
 
@@ -2052,7 +2052,7 @@ function gerarCSVConsignataria(
         : parcela.valor.toFixed(2);
 
       const totalFormatado = index === grupo.parcelas.length - 1
-        ? (decimalSeparator === ',' ? grupo.total.toFixed(2).replace('.', ',') : grupo.total.toFixed(2))
+        ? (decimalSeparator === ',' ? grupo.totalLiquido.toFixed(2).replace('.', ',') : grupo.totalLiquido.toFixed(2))
         : '';
 
       lines.push([
@@ -2065,7 +2065,7 @@ function gerarCSVConsignataria(
         parcela.st,
       ].join(delimiter));
     });
-    totalGeral += grupo.total;
+    totalGeral += grupo.totalLiquido;
   });
 
   const totalGeralFormatado = decimalSeparator === ','
