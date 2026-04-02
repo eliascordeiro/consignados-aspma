@@ -12,6 +12,7 @@ export default function NovoUsuarioPage() {
   const router = useRouter();
   const userPermissions = (session?.user as any)?.permissions || [];
   const canCreate = hasPermission(userPermissions, 'usuarios.create');
+  const isManager = (session?.user as any)?.role === 'MANAGER';
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -161,37 +162,46 @@ export default function NovoUsuarioPage() {
               const allSelected = modulePermIds.every((id) => formData.permissions.includes(id));
               const countSelected = modulePermIds.filter((id) => formData.permissions.includes(id)).length;
               const ModuleIcon = module.icon;
+              const isBlocked = module.id === 'usuarios' && isManager;
               return (
-                <div key={module.id} className="border border-border rounded-lg overflow-hidden">
+                <div key={module.id} className={`border border-border rounded-lg overflow-hidden${isBlocked ? ' opacity-60' : ''}`}>
                   <div className="flex items-center justify-between px-4 py-3 bg-muted/50/50">
                     <div className="flex items-center gap-2">
                       <ModuleIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       <span className="text-sm font-semibold text-foreground">{module.name}</span>
-                      {countSelected > 0 && (
+                      {!isBlocked && countSelected > 0 && (
                         <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full font-medium">
                           {countSelected}/{modulePermIds.length}
                         </span>
                       )}
+                      {isBlocked && (
+                        <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full font-medium">
+                          🔒 Restrito
+                        </span>
+                      )}
                     </div>
-                    <button type="button" onClick={() => toggleModule(modulePermIds)}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                      {allSelected ? 'Desmarcar todos' : 'Marcar todos'}
-                    </button>
+                    {!isBlocked && (
+                      <button type="button" onClick={() => toggleModule(modulePermIds)}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                        {allSelected ? 'Desmarcar todos' : 'Marcar todos'}
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 divide-y sm:divide-y-0 sm:divide-x-0">
                     {module.permissions.map((perm) => {
                       const PermIcon = perm.icon;
-                      const checked = formData.permissions.includes(perm.id);
+                      const checked = isBlocked ? false : formData.permissions.includes(perm.id);
                       return (
                         <label
                           key={perm.id}
-                          className="flex items-start gap-3 p-3 cursor-pointer hover:bg-muted/50/30 transition-colors"
+                          className={`flex items-start gap-3 p-3 transition-colors ${isBlocked ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50/30'}`}
                         >
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={() => togglePermission(perm.id)}
-                            className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                            onChange={() => !isBlocked && togglePermission(perm.id)}
+                            disabled={isBlocked}
+                            className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0 disabled:cursor-not-allowed"
                           />
                           <div>
                             <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
