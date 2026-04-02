@@ -1144,6 +1144,8 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     const colBanco = margin + 125;
     const colAg = margin + 150;
     const colConta = margin + 168;
+    const colTotalBruto = pageWidth - margin - 65;
+    const colDescontoR = pageWidth - margin - 33;
     const colLiquid = pageWidth - margin - 3;
     
     doc.text('CONVÊNIO', colConv, y + 1.5);
@@ -1151,7 +1153,9 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     doc.text('BANCO', colBanco, y + 1.5);
     doc.text('AG', colAg, y + 1.5);
     doc.text('CONTA', colConta, y + 1.5);
-    doc.text('TOTAL', colLiquid, y + 1.5, { align: 'right' });
+    doc.text('TOTAL', colTotalBruto, y + 1.5, { align: 'right' });
+    doc.text('DESCONTO', colDescontoR, y + 1.5, { align: 'right' });
+    doc.text('LÍQUIDO', colLiquid, y + 1.5, { align: 'right' });
     
     y += 7;
     
@@ -1179,7 +1183,9 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
         doc.text('BANCO', colBanco, y + 1.5);
         doc.text('AG', colAg, y + 1.5);
         doc.text('CONTA', colConta, y + 1.5);
-        doc.text('TOTAL', colLiquid, y + 1.5, { align: 'right' });
+        doc.text('TOTAL', colTotalBruto, y + 1.5, { align: 'right' });
+        doc.text('DESCONTO', colDescontoR, y + 1.5, { align: 'right' });
+        doc.text('LÍQUIDO', colLiquid, y + 1.5, { align: 'right' });
         y += 7;
         
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
@@ -1210,13 +1216,18 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
       // Conta
       doc.text(grupo.conta || '-', colConta, y + 1);
       
-      // Total
-      doc.setFont('helvetica', 'bold');
+      // Total / Desconto / Líquido
+      const totalBrutoFmtR = grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const descontoFmtR = grupo.totalDesconto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const liqFmtR = grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      doc.setFont('helvetica', 'normal');
+      doc.text(`R$ ${totalBrutoFmtR}`, colTotalBruto, y + 1, { align: 'right' });
+      doc.text(`R$ ${descontoFmtR}`, colDescontoR, y + 1, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
       doc.text(`R$ ${liqFmtR}`, colLiquid, y + 1, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       
-      totalGeral += grupo.total;
+      totalGeral += grupo.totalLiquido;
       totalDescontoGeral += grupo.totalDesconto;
       y += 6;
       isAlternate = !isAlternate;
@@ -1389,13 +1400,20 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     
     y += 2;
     doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-    doc.rect(pageWidth - margin - 90, y - 3, 90, 8, 'F');
+    doc.roundedRect(pageWidth - margin - 105, y - 3, 105, 30, 2, 2, 'F');
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    doc.text('TOTAL DO CONVÊNIO:', pageWidth - margin - 87, y + 2);
-    doc.setFontSize(10);
-    doc.text(`R$ ${grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 2, { align: 'right' });
-    y += 10;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text('TOTAL DO CONVÊNIO:', pageWidth - margin - 102, y + 4);
+    doc.text(`R$ ${grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 4, { align: 'right' });
+    doc.text('Desconto:', pageWidth - margin - 102, y + 12);
+    doc.text(`R$ ${grupo.totalDesconto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 12, { align: 'right' });
+    doc.setDrawColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setLineWidth(0.3);
+    doc.line(pageWidth - margin - 102, y + 15, pageWidth - margin - 3, y + 15);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text('Valor Líquido:', pageWidth - margin - 102, y + 23);
+    doc.text(`R$ ${grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 23, { align: 'right' });
+    y += 35;
     totalGeral += grupo.totalLiquido;
     totalDescontoGeral += grupo.totalDesconto;
   });
