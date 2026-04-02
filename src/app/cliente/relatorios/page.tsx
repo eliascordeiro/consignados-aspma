@@ -166,7 +166,7 @@ export default function RelatoriosPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchSocioExclusao]);
 
-  // Busca sócios no modal Descontos de Sócios
+  // Busca sócios no modal Débitos de Sócios
   useEffect(() => {
     if (searchSocioConsigRel.length >= 2 && !filtrosConsigRel.socioMatricula) {
       carregarSociosConsigRel();
@@ -835,7 +835,7 @@ export default function RelatoriosPage() {
           </div>
         </button>
 
-        {/* Card Descontos de Sócios */}
+        {/* Card Débitos de Sócios */}
         <button
           type="button"
           onClick={abrirModalConsigRel}
@@ -859,12 +859,12 @@ export default function RelatoriosPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-bold text-lg ${showConsigRelForm ? 'text-white' : 'text-foreground'}`}>
-                  Descontos de Sócios
+                  Débitos de Sócios
                 </h3>
                 <p className={`text-xs ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
                   {filtrosConsigRel.socioMatricula
                     ? `${filtrosConsigRel.socioNome} — mat. ${filtrosConsigRel.socioMatricula}`
-                    : 'Descontos de sócios — clique para configurar'}
+                    : 'Débitos de sócios — clique para configurar'
                 </p>
               </div>
               <div className={`flex-shrink-0 ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
@@ -1426,7 +1426,7 @@ export default function RelatoriosPage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Descontos de Sócios</h2>
+                  <h2 className="text-lg font-bold text-foreground">Débitos de Sócios</h2>
                   <p className="text-xs text-muted-foreground">Sócio opcional · sem cancelados · sem baixa</p>
                 </div>
               </div>
