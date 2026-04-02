@@ -45,8 +45,6 @@ export default function EditarVendaPage() {
   });
 
   const [parcelas, setParcelas] = useState<Parcela[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
 
   // ── Modal de alteração em massa ──────────────────────────────────────────────
   const [modalAberto, setModalAberto] = useState(false);
@@ -416,8 +414,9 @@ export default function EditarVendaPage() {
             </button>
           </div>
           <div className="overflow-x-auto">
+            <div className="max-h-[320px] overflow-y-auto">
             <table className="min-w-full bg-card text-card-foreground border border-border">
-              <thead className="bg-muted">
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr>
                   <th className="px-4 py-2 border border-border text-left text-foreground">#</th>
                   <th className="px-4 py-2 border border-border text-left text-foreground">Vencimento (Mês/Ano)</th>
@@ -426,8 +425,7 @@ export default function EditarVendaPage() {
                 </tr>
               </thead>
               <tbody>
-                {parcelas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((parcela, index) => {
-                  const originalIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+                {parcelas.map((parcela, originalIndex) => {
                   return (
                     <tr key={originalIndex} className="hover:bg-muted/50">
                       <td className="px-4 py-2 border border-border text-foreground">{parcela.numeroParcela}</td>
@@ -465,47 +463,11 @@ export default function EditarVendaPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
 
-          {/* Paginação */}
-          {parcelas.length > ITEMS_PER_PAGE && (
-            <div className="flex flex-wrap justify-center items-center gap-1 mt-4">
-              <button
-                type="button"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
-              >←</button>
-              {(() => {
-                const total = Math.ceil(parcelas.length / ITEMS_PER_PAGE);
-                const pages: (number | '...')[] = [];
-                if (total <= 7) {
-                  for (let i = 1; i <= total; i++) pages.push(i);
-                } else {
-                  pages.push(1);
-                  if (currentPage > 3) pages.push('...');
-                  for (let i = Math.max(2, currentPage - 1); i <= Math.min(total - 1, currentPage + 1); i++) pages.push(i);
-                  if (currentPage < total - 2) pages.push('...');
-                  pages.push(total);
-                }
-                return pages.map((p, i) => p === '...' ? (
-                  <span key={`e${i}`} className="px-2 py-1 text-sm text-gray-500">…</span>
-                ) : (
-                  <button type="button" key={p} onClick={() => setCurrentPage(p as number)}
-                    className={`px-3 py-1 text-sm rounded ${
-                      currentPage === p ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}>{p}</button>
-                ));
-              })()}
-              <button
-                type="button"
-                onClick={() => setCurrentPage(p => Math.min(Math.ceil(parcelas.length / ITEMS_PER_PAGE), p + 1))}
-                disabled={currentPage === Math.ceil(parcelas.length / ITEMS_PER_PAGE)}
-                className="px-3 py-1 text-sm bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
-              >→</button>
-              <span className="text-xs text-muted-foreground ml-2">{parcelas.length} parcelas</span>
-            </div>
-          )}
+          {/* Contador */}
+          <p className="text-xs text-muted-foreground mt-1 text-right">{parcelas.length} parcelas</p>
         </div>
 
         {/* Botões */}
