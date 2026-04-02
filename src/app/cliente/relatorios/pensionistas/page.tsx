@@ -134,7 +134,6 @@ export default function RelatorioPensionistasPage() {
 
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório PDF gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
@@ -180,7 +179,6 @@ export default function RelatorioPensionistasPage() {
 
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório Excel gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
@@ -231,7 +229,6 @@ export default function RelatorioPensionistasPage() {
 
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório CSV gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();

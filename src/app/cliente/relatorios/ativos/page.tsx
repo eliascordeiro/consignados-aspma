@@ -115,7 +115,7 @@ export default function RelatorioAtivosPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        setTimeout(() => { setProgress(0); alert('Relatório PDF gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgress(0); }, 500);
       } else {
         const error = await response.json();
         alert(error.error || 'Erro desconhecido');
@@ -150,7 +150,7 @@ export default function RelatorioAtivosPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        setTimeout(() => { setProgress(0); alert('Relatório Excel gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgress(0); }, 500);
       } else {
         const error = await response.json();
         alert(error.error || 'Erro desconhecido');
@@ -190,7 +190,7 @@ export default function RelatorioAtivosPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        setTimeout(() => { setProgress(0); alert('Relatório CSV gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgress(0); }, 500);
       } else {
         const error = await response.json();
         alert(error.error || 'Erro desconhecido');
@@ -226,7 +226,7 @@ export default function RelatorioAtivosPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         setProgress(100);
-        setTimeout(() => { setProgress(0); alert('Relatório MySQL gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgress(0); }, 500);
       } else {
         const error = await response.json();
         alert(`Erro ao gerar relatório MySQL: ${error.error || 'Erro desconhecido'}`);
