@@ -184,7 +184,7 @@ export default function EditarFuncionarioPage() {
     { id: 'pessoais', label: 'Pessoais' },
     { id: 'profissionais', label: 'Profissionais' },
     { id: 'financeiros', label: 'Financeiros' },
-    { id: 'outros', label: 'Segurança' },
+    { id: 'outros', label: 'Exclusão/Bloqueio' },
   ];
 
   if (loadingData) {
