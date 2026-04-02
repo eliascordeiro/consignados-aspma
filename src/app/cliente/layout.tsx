@@ -140,7 +140,7 @@ export default function ClienteLayout({
   // Montar navegação: Dashboard (sempre) + módulos na ordem de PERMISSION_MODULES (por permissão)
   // MANAGER não vê o módulo de Usuários e Permissões na sidebar
   const moduleNavItems = userModules
-    .filter(module => !(module.id === 'usuarios' && userRole === 'MANAGER'))
+    .filter(module => !(module.id === 'usuarios' && userRole === 'USER'))
     .map(module => moduleRoutes[module.id]).filter(Boolean)
   
   const navigation = [
