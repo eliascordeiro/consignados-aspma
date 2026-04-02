@@ -71,6 +71,8 @@ export default function EditarVendaPage() {
       novoValor: '',
       alterarVencimento: true,
       alterarValor: false,
+      alterarBaixa: true,
+      novaBaixa: 'X',
     }));
     setModalAberto(true);
   };
