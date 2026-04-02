@@ -67,7 +67,7 @@ export default function RelatoriosPage() {
   const [showConsigRelModal, setShowConsigRelModal] = useState(false);
   const [filtrosConsigRel, setFiltrosConsigRel] = useState({
     mesAno: new Date().toISOString().slice(0, 7),
-    agrupaPor: 'convenio',
+    agrupaPor: 'socio',
     socioMatricula: '',
     socioNome: '',
   });
@@ -401,7 +401,6 @@ export default function RelatoriosPage() {
         
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório PDF gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
@@ -460,7 +459,6 @@ export default function RelatoriosPage() {
         
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório Excel gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
@@ -524,7 +522,6 @@ export default function RelatoriosPage() {
         
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório CSV gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
@@ -567,7 +564,7 @@ export default function RelatoriosPage() {
         document.body.appendChild(a); a.click();
         window.URL.revokeObjectURL(url); document.body.removeChild(a);
         setProgressConsigRel(100);
-        setTimeout(() => { setProgressConsigRel(0); alert('Relatório PDF gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgressConsigRel(0); }, 500);
       } else {
         const error = await response.json();
         alert(error.error || 'Erro desconhecido');
@@ -605,7 +602,7 @@ export default function RelatoriosPage() {
         document.body.appendChild(a); a.click();
         window.URL.revokeObjectURL(url); document.body.removeChild(a);
         setProgressConsigRel(100);
-        setTimeout(() => { setProgressConsigRel(0); alert('Relatório Excel gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgressConsigRel(0); }, 500);
       } else {
         const error = await response.json();
         alert(error.error || 'Erro desconhecido');
@@ -647,7 +644,7 @@ export default function RelatoriosPage() {
         document.body.appendChild(a); a.click();
         window.URL.revokeObjectURL(url); document.body.removeChild(a);
         setProgressConsigRel(100);
-        setTimeout(() => { setProgressConsigRel(0); alert('Relatório CSV gerado com sucesso!'); }, 500);
+        setTimeout(() => { setProgressConsigRel(0); }, 500);
       } else {
         const error = await response.json();
         alert(error.error || 'Erro desconhecido');
@@ -701,7 +698,6 @@ export default function RelatoriosPage() {
         
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório MySQL gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
@@ -753,7 +749,6 @@ export default function RelatoriosPage() {
 
         setTimeout(() => {
           setProgress(0);
-          alert('Relatório MySQL (BD Legado) gerado com sucesso!');
         }, 500);
       } else {
         const error = await response.json();
