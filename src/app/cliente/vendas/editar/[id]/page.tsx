@@ -51,8 +51,8 @@ export default function EditarVendaPage() {
   const [massaForm, setMassaForm] = useState({
     daParcela: 1,
     ateParcela: 1,
-    alterarVencimento: true,
-    novoVencimento: '',
+    alterarVencimento: false,
+    novoVencimento: ''
     alterarValor: false,
     novoValor: '',
     alterarBaixa: false,
@@ -67,7 +67,7 @@ export default function EditarVendaPage() {
       ateParcela: parcelas.length,
       novoVencimento: parcelas.length > 0 ? parcelas[0].dataVencimento : '',
       novoValor: '',
-      alterarVencimento: true,
+      alterarVencimento: false,
       alterarValor: false,
       alterarBaixa: true,
       novaBaixa: 'X',
@@ -539,7 +539,11 @@ export default function EditarVendaPage() {
                   min={1}
                   max={parcelas.length}
                   value={massaForm.daParcela}
-                  onChange={(e) => setMassaForm(f => ({ ...f, daParcela: Math.max(1, parseInt(e.target.value) || 1) }))}
+                  onChange={(e) => {
+                    const novaDa = Math.max(1, parseInt(e.target.value) || 1);
+                    const novoVenc = parcelas[novaDa - 1]?.dataVencimento ?? '';
+                    setMassaForm(f => ({ ...f, daParcela: novaDa, novoVencimento: novoVenc }));
+                  }}
                   className="w-full px-3 py-2 border border-border rounded bg-background text-foreground text-sm"
                 />
               </div>
