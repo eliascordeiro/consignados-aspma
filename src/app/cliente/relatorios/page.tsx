@@ -872,26 +872,6 @@ export default function RelatoriosPage() {
           </div>
         </button>
 
-        {/* Card Comparação */}
-        <Link href="/cliente/relatorios/comparacao" className="md:col-span-2">
-          <div
-            className="relative cursor-pointer rounded-xl p-5 shadow-lg transition-all duration-200 bg-card text-card-foreground border border-border hover:shadow-xl hover:border-purple-400 dark:hover:border-purple-500"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/50">
-                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg text-foreground">
-                Comparar Bases
-              </h3>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Compare dados entre PostgreSQL e MySQL para auditoria e validação.
-            </p>
-          </div>
-        </Link>
       </div>
 
       {/* ── Impressões Gerais ──────────────────────────────────────────────── */}
