@@ -1405,7 +1405,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
   // TOTAL GERAL
   // ═══════════════════════════════════════════════════════════
   
-  if (y > pageHeight - 35) {
+  if (y > pageHeight - 45) {
     addFooter();
     doc.addPage();
     addHeader();
@@ -1413,16 +1413,25 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
   
   y += 5;
   
-  // Box de total geral destacado
-  const boxGeralHC = 12;
-  doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-  doc.roundedRect(pageWidth / 2 - 70, y - 4, 140, boxGeralHC, 2, 2, 'F');
+  // Box de total geral com 3 linhas
+  const totalBrutoGeralC = totalGeral + totalDescontoGeral;
+  const boxGeralHC = 32;
+  doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+  doc.roundedRect(pageWidth / 2 - 85, y - 4, 170, boxGeralHC, 2, 2, 'F');
   doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('Valor Total:', pageWidth / 2 - 80, y + 4);
+  doc.text(`R$ ${totalBrutoGeralC.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 4, { align: 'right' });
+  doc.text('Valor Desconto:', pageWidth / 2 - 80, y + 12);
+  doc.text(`R$ ${totalDescontoGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 12, { align: 'right' });
+  doc.setDrawColor(colors.white[0], colors.white[1], colors.white[2]);
+  doc.setLineWidth(0.3);
+  doc.line(pageWidth / 2 - 80, y + 15, pageWidth / 2 + 80, y + 15);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('TOTAL GERAL:', pageWidth / 2 - 52, y + 3);
-  doc.setFontSize(13);
-  doc.text(`R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 52, y + 3, { align: 'right' });
+  doc.text('Valor Líquido:', pageWidth / 2 - 80, y + 23);
+  doc.text(`R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 23, { align: 'right' });
   
   // Informações adicionais
   y += boxGeralHC + 8;
@@ -1901,15 +1910,25 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
   }
 
   y += 5;
-  const boxGeralHE = 12;
-  doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-  doc.roundedRect(pageWidth / 2 - 70, y - 4, 140, boxGeralHE, 2, 2, 'F');
+  // Box de total geral com 3 linhas
+  const totalBrutoGeralE = totalGeral + totalDescontoGeral;
+  const boxGeralHE = 32;
+  doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+  doc.roundedRect(pageWidth / 2 - 85, y - 4, 170, boxGeralHE, 2, 2, 'F');
   doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('Valor Total:', pageWidth / 2 - 80, y + 4);
+  doc.text(`R$ ${totalBrutoGeralE.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 4, { align: 'right' });
+  doc.text('Valor Desconto:', pageWidth / 2 - 80, y + 12);
+  doc.text(`R$ ${totalDescontoGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 12, { align: 'right' });
+  doc.setDrawColor(colors.white[0], colors.white[1], colors.white[2]);
+  doc.setLineWidth(0.3);
+  doc.line(pageWidth / 2 - 80, y + 15, pageWidth / 2 + 80, y + 15);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('TOTAL GERAL:', pageWidth / 2 - 52, y + 3);
-  doc.setFontSize(13);
-  doc.text(`R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 52, y + 3, { align: 'right' });
+  doc.text('Valor Líquido:', pageWidth / 2 - 80, y + 23);
+  doc.text(`R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 23, { align: 'right' });
 
   y += boxGeralHE + 8;
   doc.setFontSize(7);
