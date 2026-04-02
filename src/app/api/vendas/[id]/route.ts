@@ -181,7 +181,7 @@ export async function PUT(
                 dataVencimento: parcela.dataVencimento
                   ? new Date(parcela.dataVencimento)
                   : undefined,
-                valor: parcela.valor ? parseFloat(parcela.valor) : undefined,
+                valor: parcela.valor != null ? parseFloat(parcela.valor) : undefined,
                 baixa: parcela.baixa !== undefined ? parcela.baixa : undefined,
                 dataBaixa: parcela.dataBaixa
                   ? new Date(parcela.dataBaixa)
