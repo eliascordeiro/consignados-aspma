@@ -91,7 +91,7 @@ async function gerarPDFExclusao(socio: {
   const dataFormatada = `Araucária, ${now.getDate().toString().padStart(2, '0')} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
 
   /** Desenha uma via do requerimento de exclusão */
-  const drawVia = (yStart: number) => {
+  const drawVia = (yStart: number): void => {
     let y = yStart;
 
     // ── Faixa de cabeçalho ────────────────────────────────────────────────────
@@ -273,43 +273,34 @@ async function gerarPDFExclusao(socio: {
     doc.setTextColor(...colors.gray);
     doc.text('Representante Autorizado', sign2X + signWidth / 2, y + 8.5, { align: 'center' });
     doc.text('Carimbo e Assinatura', sign2X + signWidth / 2, y + 12.5, { align: 'center' });
-
-    y += 20;
-
-    return y;
   };
 
-  // ── 1ª Via ────────────────────────────────────────────────────────────────
-  const yAfterFirstVia = drawVia(10);
+  // ── 1ª Via — página 1 ────────────────────────────────────────────────────
+  drawVia(20);
 
-  // ── Linha de corte entre as vias ──────────────────────────────────────────
-  const yCut = yAfterFirstVia + 4;
-  doc.setDrawColor(...colors.border);
-  doc.setLineWidth(0.3);
-  doc.setLineDashPattern([2, 1.5], 0);
-  doc.line(margin, yCut, pageWidth - margin, yCut);
-  doc.setLineDashPattern([], 0);
-
-  // Tesoura na linha de corte
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...colors.gray);
-  doc.text('✂', pageWidth / 2 - 4, yCut + 1);
-  doc.setFontSize(6.5);
-  doc.text('2ª VIA', pageWidth / 2 + 2, yCut + 1);
-
-  // ── 2ª Via ─────────────────────────────────────────────────────────────────
-  drawVia(yCut + 5);
-
-  // ── Rodapé na parte inferior ──────────────────────────────────────────────
+  // Rodapé página 1
   doc.setFontSize(7);
   doc.setTextColor(...colors.gray);
   doc.setFont('helvetica', 'normal');
-  const footerY = pageHeight - 5;
   doc.text(
-    `Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} • Sistema de Gestão A.S.P.M.A.`,
+    `1ª VIA • Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} • Sistema de Gestão A.S.P.M.A.`,
     pageWidth / 2,
-    footerY,
+    pageHeight - 5,
+    { align: 'center' }
+  );
+
+  // ── 2ª Via — página 2 ────────────────────────────────────────────────────
+  doc.addPage();
+  drawVia(20);
+
+  // Rodapé página 2
+  doc.setFontSize(7);
+  doc.setTextColor(...colors.gray);
+  doc.setFont('helvetica', 'normal');
+  doc.text(
+    `2ª VIA • Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} • Sistema de Gestão A.S.P.M.A.`,
+    pageWidth / 2,
+    pageHeight - 5,
     { align: 'center' }
   );
 
