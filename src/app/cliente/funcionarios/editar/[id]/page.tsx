@@ -30,6 +30,7 @@ export default function EditarFuncionarioPage() {
 
   const [saving, setSaving] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadingRequerimento, setLoadingRequerimento] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('pessoais');
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [classes, setClasses] = useState<Classe[]>([]);
@@ -48,6 +49,21 @@ export default function EditarFuncionarioPage() {
 
   const set = (field: string, value: string | boolean) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+  const gerarRequerimentoExclusao = async () => {
+    setLoadingRequerimento(true);
+    try {
+      const res = await fetch(`/api/relatorios/exclusao-socio?socioId=${id}`);
+      if (!res.ok) throw new Error('Erro ao gerar PDF');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err) {
+      alert('Erro ao gerar Requerimento de Exclusão.');
+    } finally {
+      setLoadingRequerimento(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -479,6 +495,24 @@ export default function EditarFuncionarioPage() {
                     checked={formData.ativo}
                     onChange={(e) => set('ativo', e.target.checked)}
                   />
+                </div>
+
+                {/* Impressões */}
+                <div className="pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-3">Impressões</p>
+                  <button
+                    type="button"
+                    onClick={gerarRequerimentoExclusao}
+                    disabled={loadingRequerimento}
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-rose-600 text-white rounded-md hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loadingRequerimento ? (
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    )}
+                    {loadingRequerimento ? 'Gerando...' : 'Requerimento de Exclusão'}
+                  </button>
                 </div>
               </div>
             )}
