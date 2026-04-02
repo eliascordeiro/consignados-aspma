@@ -1417,6 +1417,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     y += 35;
     totalGeral += grupo.totalLiquido;
     totalDescontoGeral += grupo.totalDesconto;
+    } // Fim do if (!isRelatorioGeral)
   });
   } // Fim do modo detalhado
 
