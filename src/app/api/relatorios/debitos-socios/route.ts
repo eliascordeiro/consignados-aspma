@@ -1144,7 +1144,6 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     const colBanco = margin + 125;
     const colAg = margin + 150;
     const colConta = margin + 168;
-    const colBruto = pageWidth - margin - 30;
     const colLiquid = pageWidth - margin - 3;
     
     doc.text('CONVÊNIO', colConv, y + 1.5);
@@ -1152,7 +1151,6 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     doc.text('BANCO', colBanco, y + 1.5);
     doc.text('AG', colAg, y + 1.5);
     doc.text('CONTA', colConta, y + 1.5);
-    doc.text('BRUTO', colBruto, y + 1.5, { align: 'right' });
     doc.text('TOTAL', colLiquid, y + 1.5, { align: 'right' });
     
     y += 7;
@@ -1181,7 +1179,6 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
         doc.text('BANCO', colBanco, y + 1.5);
         doc.text('AG', colAg, y + 1.5);
         doc.text('CONTA', colConta, y + 1.5);
-        doc.text('BRUTO', colBruto, y + 1.5, { align: 'right' });
         doc.text('TOTAL', colLiquid, y + 1.5, { align: 'right' });
         y += 7;
         
@@ -1213,11 +1210,6 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
       // Conta
       doc.text(grupo.conta || '-', colConta, y + 1);
       
-      // Bruto
-      const brutoFmtR = grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      doc.setFont('helvetica', 'normal');
-      doc.text(`R$ ${brutoFmtR}`, colBruto, y + 1, { align: 'right' });
-
       // Total
       doc.setFont('helvetica', 'bold');
       const liqFmtR = grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
