@@ -278,7 +278,7 @@ export async function GET(request: NextRequest) {
       const gruposConsignataria = agruparPorConsignataria(parcelas);
 
       if (formato === 'pdf') {
-        const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano);
+        const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano, !!convenioId);
         return new NextResponse(pdfBuffer, {
           headers: {
             'Content-Type': 'application/pdf',
@@ -1395,9 +1395,10 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     });
     
     // ═══════════════════════════════════════════════════════════
-    // TOTAL DO CONVÊNIO
+    // TOTAL DO CONVÊNIO (apenas quando convênio específico selecionado)
     // ═══════════════════════════════════════════════════════════
     
+    if (!isRelatorioGeral) {
     y += 2;
     doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
     doc.roundedRect(pageWidth - margin - 105, y - 3, 105, 30, 2, 2, 'F');
@@ -1701,7 +1702,7 @@ function gerarCSVConvenio(
 // GERADORES DE RELATÓRIO POR CONSIGNATÁRIA
 // ═══════════════════════════════════════════════════════════════════
 
-async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: number): Promise<ArrayBuffer> {
+async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: number, mostrarTotalPorGrupo: boolean = false): Promise<ArrayBuffer> {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
@@ -1907,14 +1908,26 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
 
     // ═══ TOTAL DA CONSIGNATÁRIA ═══
     y += 2;
+    if (y > pageHeight - 45) {
+      addFooter();
+      doc.addPage();
+      addHeader(false);
+    }
     doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-    doc.rect(pageWidth - margin - 95, y - 3, 95, 8, 'F');
+    doc.roundedRect(pageWidth - margin - 110, y - 3, 110, 30, 2, 2, 'F');
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    doc.text('TOTAL DA CONSIGNATÁRIA:', pageWidth - margin - 92, y + 2);
-    doc.setFontSize(10);
-    doc.text(`R$ ${grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 2, { align: 'right' });
-    y += 10;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.text('TOTAL DA CONSIGNATÁRIA:', pageWidth - margin - 107, y + 4);
+    doc.text(`R$ ${grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 4, { align: 'right' });
+    doc.text('Desconto:', pageWidth - margin - 107, y + 12);
+    doc.text(`R$ ${grupo.totalDesconto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 12, { align: 'right' });
+    doc.setDrawColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setLineWidth(0.3);
+    doc.line(pageWidth - margin - 107, y + 15, pageWidth - margin - 3, y + 15);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text('Valor Líquido:', pageWidth - margin - 107, y + 23);
+    doc.text(`R$ ${grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 23, { align: 'right' });
+    y += 35;
 
     totalGeral += grupo.totalLiquido;
     totalDescontoGeral += grupo.totalDesconto;
