@@ -865,6 +865,7 @@ export default function RelatoriosPage() {
                   {filtrosConsigRel.socioMatricula
                     ? `${filtrosConsigRel.socioNome} — mat. ${filtrosConsigRel.socioMatricula}`
                     : 'Débitos de sócios — clique para configurar'
+                  }
                 </p>
               </div>
               <div className={`flex-shrink-0 ${showConsigRelForm ? 'text-emerald-100' : 'text-muted-foreground'}`}>
