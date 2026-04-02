@@ -92,8 +92,8 @@ export default function EditarVendaPage() {
     }
 
     const novoValorNum = massaForm.alterarValor ? parseFloat(massaForm.novoValor) : 0;
-    if (massaForm.alterarValor && (isNaN(novoValorNum) || novoValorNum <= 0)) {
-      alert('Informe um valor válido maior que zero.');
+    if (massaForm.alterarValor && isNaN(novoValorNum)) {
+      alert('Informe um valor válido.');
       return;
     }
 
@@ -629,7 +629,7 @@ export default function EditarVendaPage() {
                   <input
                     type="number"
                     step="0.01"
-                    min="0.01"
+                    min="0"
                     placeholder="0,00"
                     value={massaForm.novoValor}
                     onChange={(e) => setMassaForm(f => ({ ...f, novoValor: e.target.value }))}
