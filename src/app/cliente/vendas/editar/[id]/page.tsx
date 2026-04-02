@@ -414,7 +414,7 @@ export default function EditarVendaPage() {
             </button>
           </div>
           <div className="overflow-x-auto">
-            <div className="max-h-[320px] overflow-y-auto">
+            <div className="max-h-[520px] overflow-y-auto">
             <table className="min-w-full bg-card text-card-foreground border border-border">
               <thead className="bg-muted sticky top-0 z-10">
                 <tr>
