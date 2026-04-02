@@ -52,7 +52,7 @@ export default function EditarVendaPage() {
     daParcela: 1,
     ateParcela: 1,
     alterarVencimento: false,
-    novoVencimento: ''
+    novoVencimento: '',
     alterarValor: false,
     novoValor: '',
     alterarBaixa: false,
