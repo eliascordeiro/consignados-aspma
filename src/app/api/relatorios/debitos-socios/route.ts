@@ -1144,8 +1144,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     const colBanco = margin + 125;
     const colAg = margin + 150;
     const colConta = margin + 168;
-    const colBruto = pageWidth - margin - 58;
-    const colDesc = pageWidth - margin - 30;
+    const colBruto = pageWidth - margin - 30;
     const colLiquid = pageWidth - margin - 3;
     
     doc.text('CONVÊNIO', colConv, y + 1.5);
@@ -1154,8 +1153,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     doc.text('AG', colAg, y + 1.5);
     doc.text('CONTA', colConta, y + 1.5);
     doc.text('BRUTO', colBruto, y + 1.5, { align: 'right' });
-    doc.text('DESCONTO', colDesc, y + 1.5, { align: 'right' });
-    doc.text('LÍQUIDO', colLiquid, y + 1.5, { align: 'right' });
+    doc.text('TOTAL', colLiquid, y + 1.5, { align: 'right' });
     
     y += 7;
     
@@ -1184,8 +1182,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
         doc.text('AG', colAg, y + 1.5);
         doc.text('CONTA', colConta, y + 1.5);
         doc.text('BRUTO', colBruto, y + 1.5, { align: 'right' });
-        doc.text('DESCONTO', colDesc, y + 1.5, { align: 'right' });
-        doc.text('LÍQUIDO', colLiquid, y + 1.5, { align: 'right' });
+        doc.text('TOTAL', colLiquid, y + 1.5, { align: 'right' });
         y += 7;
         
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
@@ -1221,17 +1218,7 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
       doc.setFont('helvetica', 'normal');
       doc.text(`R$ ${brutoFmtR}`, colBruto, y + 1, { align: 'right' });
 
-      // Desconto
-      if (grupo.totalDesconto > 0) {
-        doc.setTextColor(180, 30, 30);
-        const descFmtR = grupo.totalDesconto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        doc.text(`-R$ ${descFmtR}`, colDesc, y + 1, { align: 'right' });
-        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-      } else {
-        doc.text('-', colDesc, y + 1, { align: 'right' });
-      }
-
-      // Líquido
+      // Total
       doc.setFont('helvetica', 'bold');
       const liqFmtR = grupo.totalLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       doc.text(`R$ ${liqFmtR}`, colLiquid, y + 1, { align: 'right' });
