@@ -77,6 +77,16 @@ export default function RelatoriosPage() {
   const [loadingConsigRel, setLoadingConsigRel] = useState(false);
   const [progressConsigRel, setProgressConsigRel] = useState(0);
 
+  // ── Estado Impressões Gerais — Exclusão de Sócio ──────────────────────────
+  const [showExclusaoModal, setShowExclusaoModal] = useState(false);
+  const [searchSocioExclusao, setSearchSocioExclusao] = useState('');
+  const [socioExclusaoId, setSocioExclusaoId] = useState('');
+  const [socioExclusaoNome, setSocioExclusaoNome] = useState('');
+  const [socioExclusaoMatricula, setSocioExclusaoMatricula] = useState('');
+  const [sociosExclusao, setSociosExclusao] = useState<Array<{ id: string; matricula: string; nome: string }>>([]);
+  const [showSocioListExclusao, setShowSocioListExclusao] = useState(false);
+  const [loadingExclusao, setLoadingExclusao] = useState(false);
+
   // Carrega consignatárias ao montar o componente
   useEffect(() => {
     carregarConsignatarias();
@@ -143,7 +153,18 @@ export default function RelatoriosPage() {
     } else if (searchSocio.length < 2) {
       setShowSocioList(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchSocio]);
+
+  // Busca sócios para exclusão
+  useEffect(() => {
+    if (searchSocioExclusao.length >= 2 && !socioExclusaoId) {
+      carregarSociosExclusao();
+    } else if (searchSocioExclusao.length < 2) {
+      setShowSocioListExclusao(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchSocioExclusao]);
 
   // Busca sócios no modal Descontos de Sócios
   useEffect(() => {
@@ -153,6 +174,68 @@ export default function RelatoriosPage() {
       setShowSocioListConsigRel(false);
     }
   }, [searchSocioConsigRel]);
+
+  const carregarSociosExclusao = async () => {
+    try {
+      const response = await fetch(`/api/socios?search=${encodeURIComponent(searchSocioExclusao)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const sociosData = data.data || data;
+        if (Array.isArray(sociosData)) {
+          setSociosExclusao(sociosData);
+          setShowSocioListExclusao(true);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar sócios:', error);
+    }
+  };
+
+  const selecionarSocioExclusao = (socio: { id: string; matricula: string; nome: string }) => {
+    setSocioExclusaoId(socio.id);
+    setSocioExclusaoNome(socio.nome);
+    setSocioExclusaoMatricula(socio.matricula);
+    setSearchSocioExclusao(`${socio.matricula} - ${socio.nome}`);
+    setShowSocioListExclusao(false);
+    setSociosExclusao([]);
+  };
+
+  const limparSocioExclusao = () => {
+    setSocioExclusaoId('');
+    setSocioExclusaoNome('');
+    setSocioExclusaoMatricula('');
+    setSearchSocioExclusao('');
+    setShowSocioListExclusao(false);
+    setSociosExclusao([]);
+  };
+
+  const gerarPDFExclusaoSocio = async () => {
+    if (!socioExclusaoId) {
+      alert('Selecione um sócio para gerar o requerimento.');
+      return;
+    }
+    setLoadingExclusao(true);
+    try {
+      const response = await fetch(`/api/relatorios/exclusao-socio?socioId=${encodeURIComponent(socioExclusaoId)}`);
+      if (!response.ok) {
+        const err = await response.json();
+        alert(err.error || 'Erro ao gerar PDF');
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `requerimento-exclusao-${socioExclusaoMatricula || socioExclusaoId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao gerar PDF de exclusão:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setLoadingExclusao(false);
+    }
+  };
 
   const carregarConvenios = async () => {
     try {
@@ -813,6 +896,56 @@ export default function RelatoriosPage() {
             </p>
           </div>
         </Link>
+      </div>
+
+      {/* ── Impressões Gerais ──────────────────────────────────────────────── */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-2">Impressões Gerais</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card Requerimento de Exclusão */}
+          <button
+            type="button"
+            onClick={() => setShowExclusaoModal(true)}
+            className={`relative rounded-xl shadow-lg transition-all duration-200 text-left w-full cursor-pointer ${
+              showExclusaoModal
+                ? 'bg-gradient-to-br from-rose-500 to-rose-700 text-white ring-2 ring-rose-400/50'
+                : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-rose-400 dark:hover:border-rose-500'
+            }`}
+          >
+            <div className="p-5">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  showExclusaoModal ? 'bg-white/20' : 'bg-rose-100 dark:bg-rose-900/50'
+                }`}>
+                  <svg className={`w-6 h-6 ${
+                    showExclusaoModal ? 'text-white' : 'text-rose-600 dark:text-rose-400'
+                  }`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className={`font-bold text-lg ${
+                    showExclusaoModal ? 'text-white' : 'text-foreground'
+                  }`}>Requerimento de Exclusão</h3>
+                  <p className={`text-xs ${
+                    showExclusaoModal ? 'text-rose-100' : 'text-muted-foreground'
+                  }`}>Gera o documento formal de exclusão de sócio em 2 vias</p>
+                </div>
+                <div className={`flex-shrink-0 ${
+                  showExclusaoModal ? 'text-rose-100' : 'text-muted-foreground'
+                }`}>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* [inline form removed — filters now live inside a Consignatárias modal] */}
@@ -1534,6 +1667,132 @@ export default function RelatoriosPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Gerar CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Modal Requerimento de Exclusão ─────────────────────────────────── */}
+      {showExclusaoModal && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowExclusaoModal(false); }}
+        >
+          <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-4 bg-rose-50 dark:bg-rose-900/20 border-b border-rose-200 dark:border-rose-800 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-100 dark:bg-rose-900/50 rounded-lg">
+                  <svg className="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Requerimento de Exclusão</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Gera documento oficial em 2 vias para assinatura</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowExclusaoModal(false)}
+                className="p-2 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-800/50 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              {/* Busca de Sócio */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                  Sócio <span className="text-red-500 ml-0.5">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchSocioExclusao}
+                    onChange={(e) => { setSearchSocioExclusao(e.target.value); if (!e.target.value) limparSocioExclusao(); }}
+                    placeholder="Buscar por matrícula ou nome..."
+                    className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-shadow"
+                  />
+                  {socioExclusaoId ? (
+                    <button type="button" onClick={limparSocioExclusao} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  ) : (
+                    <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  )}
+                </div>
+                {showSocioListExclusao && sociosExclusao.length > 0 && (
+                  <div className="mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                    {sociosExclusao.map((socio) => (
+                      <div
+                        key={socio.id}
+                        onClick={() => selecionarSocioExclusao(socio)}
+                        className="px-4 py-3 hover:bg-rose-50 dark:hover:bg-gray-700 cursor-pointer border-b border-border last:border-b-0 transition-colors"
+                      >
+                        <div className="font-semibold text-foreground text-sm">{socio.nome}</div>
+                        {socio.matricula && <div className="text-xs text-muted-foreground mt-0.5">Matrícula: {socio.matricula}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pré-visualização quando selecionado */}
+              {socioExclusaoId && (
+                <div className="p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-4.5 h-4.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-rose-800 dark:text-rose-200 text-sm">{socioExclusaoNome}</p>
+                      <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5">Matrícula: {socioExclusaoMatricula || '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Info sobre o documento */}
+              <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">O que será gerado:</span> um PDF em A4 com 2 vias do Requerimento de Exclusão de Sócio da A.S.P.M.A., prontas para impressão e assinatura pelo associado e representante.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex-shrink-0 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowExclusaoModal(false)}
+                className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-lg hover:bg-muted/50 font-semibold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={gerarPDFExclusaoSocio}
+                disabled={loadingExclusao || !socioExclusaoId || !canExport}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors"
+              >
+                {loadingExclusao ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    Imprimir / Baixar PDF
+                  </>
+                )}
               </button>
             </div>
           </div>
