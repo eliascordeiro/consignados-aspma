@@ -33,6 +33,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   AlertTriangle,
+  Fingerprint,
 } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { getUserModules, PERMISSION_MODULES } from "@/config/permissions"
@@ -382,6 +383,12 @@ export default function ClienteLayout({
                   <DropdownMenuItem onClick={() => setPerfilModalOpen(true)}>
                     <UserCog className="mr-2 h-4 w-4" />
                     Editar Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/cliente/biometria">
+                      <Fingerprint className="mr-2 h-4 w-4" />
+                      Biometria / Chave de Acesso
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
                     <LogOut className="mr-2 h-4 w-4" />
