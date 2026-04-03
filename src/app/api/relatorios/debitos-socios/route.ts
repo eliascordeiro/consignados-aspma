@@ -729,14 +729,14 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   ];
 
   // Título
-  worksheet.mergeCells('A1:F1');
+  worksheet.mergeCells('A1:H1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'DÉBITOS DE SÓCIOS';
   titleCell.font = { bold: true, size: 14 };
   titleCell.alignment = { horizontal: 'center' };
 
   // Período
-  worksheet.mergeCells('A2:F2');
+  worksheet.mergeCells('A2:H2');
   const periodoCell = worksheet.getCell('A2');
   periodoCell.value = `Período: ${mesNomes[mes - 1]}/${ano}`;
   periodoCell.font = { bold: true, size: 11 };
@@ -750,6 +750,10 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
     'Pc',
     'De',
     'Valor',
+    'Total Bruto',
+    'Desconto',
+    'Total Líquido',
+    'St',
   ]);
 
   headerRow.font = { bold: true };
@@ -761,6 +765,7 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
 
   // Dados
   let totalGeral = 0;
+  let totalDescontoGeral = 0;
 
   grupos.forEach((grupo) => {
     grupo.parcelas.forEach((parcela, index) => {
@@ -771,13 +776,28 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
         parcela.pc,
         parcela.de,
         parcela.valor,
+        index === grupo.parcelas.length - 1 ? grupo.total : '',
+        index === grupo.parcelas.length - 1 ? grupo.totalDesconto : '',
+        index === grupo.parcelas.length - 1 ? grupo.totalLiquido : '',
+        parcela.st,
       ]);
 
       // Formatar valor
       row.getCell(6).numFmt = '#,##0.00';
+      
+      // Formatar totais
+      if (index === grupo.parcelas.length - 1) {
+        row.getCell(7).numFmt = '#,##0.00';
+        row.getCell(7).font = { bold: true };
+        row.getCell(8).numFmt = '#,##0.00';
+        row.getCell(8).font = { bold: true, color: { argb: 'FFCC0000' } };
+        row.getCell(9).numFmt = '#,##0.00';
+        row.getCell(9).font = { bold: true };
+      }
     });
 
     totalGeral += grupo.total;
+    totalDescontoGeral += grupo.totalDesconto;
   });
 
   // Total Geral
@@ -786,20 +806,31 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
     '',
     '',
     '',
-    'TOTAL GERAL:',
+    '',
+    'TOTAIS:',
     totalGeral,
+    totalDescontoGeral,
+    totalGeral - totalDescontoGeral,
+    '',
   ]);
   totalRow.font = { bold: true };
-  totalRow.getCell(6).numFmt = '#,##0.00';
+  totalRow.getCell(7).numFmt = '#,##0.00';
+  totalRow.getCell(8).numFmt = '#,##0.00';
+  totalRow.getCell(8).font = { bold: true, color: { argb: 'FFCC0000' } };
+  totalRow.getCell(9).numFmt = '#,##0.00';
 
   // Auto-ajustar colunas
   worksheet.columns = [
     { width: 12 }, // Matrícula
     { width: 40 }, // Associado
-    { width: 50 }, // Conveniado
+    { width: 40 }, // Conveniado
     { width: 5 },  // Pc
     { width: 5 },  // De
     { width: 15 }, // Valor
+    { width: 15 }, // Total Bruto
+    { width: 15 }, // Desconto
+    { width: 15 }, // Total Líquido
+    { width: 5 },  // St
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
