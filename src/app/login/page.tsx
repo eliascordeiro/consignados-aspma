@@ -115,7 +115,8 @@ export default function LoginPage() {
         redirect: false,
       })
       if (result?.error) {
-        setError("Falha na autenticação. Tente novamente.")
+        // Senha digitada era inválida (biometria passou, mas senha não)
+        setError("Senha incorreta. Clique em 'Cancelar' e tente novamente com a senha correta.")
         return
       }
       await redirectAfterLogin()
@@ -151,19 +152,15 @@ export default function LoginPage() {
       const result = await signIn("credentials", { login, password, redirect: false })
 
       if (result?.error) {
-        // MFA obrigatório: senha válida, mas usuário tem biometria cadastrada
-        if (result.error === 'webauthn_required' || result.error.includes('webauthn_required')) {
-          setPendingLogin(login)
-          setPendingPassword(password)
-          setMfaRequired(true)
-          return
-        }
+        // 1. Rate limit explícito no código
         if (result.error.startsWith('rate_limit_')) {
           const min = parseInt(result.error.replace('rate_limit_', '')) || 1
           setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
           return
         }
-        // Fallback: verificar rate limit via API (beta.30 pode não propagar o code)
+
+        // 2. Verificar rate limit via API
+        //    NextAuth beta.30 pode não propagar o code customizado, então checamos pelo endpoint
         try {
           const rl = await fetch(`/api/auth/rate-limit-status?login=${encodeURIComponent(login)}`)
           const rlData = await rl.json()
@@ -173,7 +170,32 @@ export default function LoginPage() {
             return
           }
         } catch { /* ignora erro de rede */ }
-        setError("Credenciais inválidas")
+
+        // 3. Verificar se é MFA obrigatório (webauthn_required)
+        //    — NextAuth beta.30 normaliza CredentialsSignin subclasses para "CredentialsSignin",
+        //      então verificamos o cadastro de biometria diretamente via API
+        const possibleMfa =
+          result.error === 'webauthn_required' ||
+          result.error.includes('webauthn_required') ||
+          result.error === 'CredentialsSignin'
+
+        if (possibleMfa) {
+          try {
+            const enrolledRes = await fetch(
+              `/api/auth/webauthn/check-enrolled?login=${encodeURIComponent(login)}`
+            )
+            const enrolledData = await enrolledRes.json()
+            if (enrolledData?.enrolled) {
+              setPendingLogin(login)
+              setPendingPassword(password)
+              setMfaRequired(true)
+              return
+            }
+          } catch { /* ignora erro de rede */ }
+        }
+
+        // 4. Credenciais genuinamente inválidas
+        setError("Usuário ou senha inválidos")
       } else {
         await redirectAfterLogin()
       }
