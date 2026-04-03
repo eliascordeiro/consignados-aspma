@@ -60,6 +60,8 @@ export default function ClienteLayout({
   const [perfilModalOpen, setPerfilModalOpen] = useState(false)
   const [managerName, setManagerName] = useState<string | null>(null)
   const [passwordDaysLeft, setPasswordDaysLeft] = useState<number | null>(null)
+  const [idleWarning, setIdleWarning] = useState(false)
+  const [idleCountdown, setIdleCountdown] = useState(30)
   const { data: session } = useSession()
 
   // Detectar desktop para aplicar padding inline
@@ -117,6 +119,49 @@ export default function ClienteLayout({
     if (daysLeft <= 5) setPasswordDaysLeft(daysLeft)
     else setPasswordDaysLeft(null)
   }, [session, pathname, router])
+
+  // Timeout por inatividade: aviso em 4:30, logout em 5:00
+  useEffect(() => {
+    if (!session) return
+    const IDLE_TIMEOUT = 5 * 60 * 1000      // 5 minutos
+    const WARN_BEFORE  = 30 * 1000          // aviso 30s antes
+    let warningTimer: ReturnType<typeof setTimeout>
+    let logoutTimer:  ReturnType<typeof setTimeout>
+    let countdownInterval: ReturnType<typeof setInterval>
+
+    const reset = () => {
+      setIdleWarning(false)
+      setIdleCountdown(30)
+      clearTimeout(warningTimer)
+      clearTimeout(logoutTimer)
+      clearInterval(countdownInterval)
+
+      warningTimer = setTimeout(() => {
+        setIdleWarning(true)
+        let secs = 30
+        setIdleCountdown(secs)
+        countdownInterval = setInterval(() => {
+          secs -= 1
+          setIdleCountdown(secs)
+        }, 1000)
+        logoutTimer = setTimeout(() => {
+          clearInterval(countdownInterval)
+          signOut({ callbackUrl: '/login' })
+        }, WARN_BEFORE)
+      }, IDLE_TIMEOUT - WARN_BEFORE)
+    }
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }))
+    reset()
+
+    return () => {
+      clearTimeout(warningTimer)
+      clearTimeout(logoutTimer)
+      clearInterval(countdownInterval)
+      events.forEach(e => window.removeEventListener(e, reset))
+    }
+  }, [session])
 
   // Buscar nome do MANAGER se for usuário subordinado
   useEffect(() => {
@@ -405,6 +450,26 @@ export default function ClienteLayout({
 
       {/* Modal de Perfil */}
       <PerfilModal open={perfilModalOpen} onOpenChange={setPerfilModalOpen} />
+
+      {/* Aviso de inatividade */}
+      {idleWarning && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-background border rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+            <div className="text-4xl mb-3">⚠️</div>
+            <h2 className="text-lg font-bold text-foreground mb-2">Sessão expirando</h2>
+            <p className="text-muted-foreground text-sm mb-4">
+              Sua sessão será encerrada por inatividade em{' '}
+              <span className="font-bold text-red-500">{idleCountdown}s</span>.
+            </p>
+            <button
+              onClick={() => setIdleWarning(false)}
+              className="w-full bg-primary text-primary-foreground rounded-lg py-2 px-4 text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Continuar sessão
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Chat IA Widget */}
       <ChatWidget apiEndpoint="/api/cliente/chat" />
