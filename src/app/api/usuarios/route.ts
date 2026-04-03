@@ -13,6 +13,7 @@ const userSchema = z.object({
   phone: z.string().optional(),
   active: z.boolean().default(true),
   permissions: z.array(z.string()).optional(),
+  managerPrincipalId: z.string().optional(),
 })
 
 // GET - Listar usuários
@@ -27,17 +28,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
     const role = searchParams.get("role")
+    const managerPrincipalId = searchParams.get("managerPrincipalId")
 
     const users = await prisma.users.findMany({
       where: {
         AND: [
           role ? { role: role as any } : {},
-          {
+          // Se filtra por managerPrincipalId, mostra sub-managers desse manager
+          managerPrincipalId ? { managerPrincipalId } : {},
+          // Quando listando clientes (MANAGER) sem filtro de sub-manager, mostra apenas os principais
+          (role === "MANAGER" && !managerPrincipalId) ? { managerPrincipalId: null } : {},
+          search ? {
             OR: [
               { name: { contains: search, mode: "insensitive" } },
               { email: { contains: search, mode: "insensitive" } },
             ],
-          },
+          } : {},
         ],
       },
       select: {
@@ -50,6 +56,7 @@ export async function GET(request: NextRequest) {
         active: true,
         permissions: true,
         createdAt: true,
+        _count: { select: { subManagers: true } },
       },
       orderBy: {
         createdAt: "desc",
@@ -106,6 +113,7 @@ export async function POST(request: NextRequest) {
         phone: validatedData.phone,
         active: validatedData.active,
         permissions: validatedData.permissions || [],
+        managerPrincipalId: validatedData.managerPrincipalId || null,
       },
       select: {
         id: true,

@@ -11,10 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, Search, UserPlus, Building2 } from "lucide-react"
+import { Pencil, Trash2, Search, UserPlus, Building2, Mail } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { UserDialog } from "@/components/user-dialog"
+import { ClienteDialog } from "@/components/cliente-dialog"
 
 interface User {
   id: string
@@ -25,6 +25,7 @@ interface User {
   phone?: string
   active: boolean
   createdAt: string
+  _count?: { subManagers: number }
 }
 
 export default function ClientesPage() {
@@ -184,7 +185,17 @@ export default function ClientesPage() {
                   {users.map((user) => (
                     <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
                       <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          {user.email}
+                          {(user._count?.subManagers ?? 0) > 0 && (
+                            <Badge variant="secondary" className="text-xs gap-1">
+                              <Mail className="h-3 w-3" />
+                              +{user._count!.subManagers}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{user.cpf || "-"}</TableCell>
                       <TableCell className="text-muted-foreground">{user.phone || "-"}</TableCell>
                       <TableCell>
@@ -224,12 +235,11 @@ export default function ClientesPage() {
         </CardContent>
       </Card>
 
-      <UserDialog
+      <ClienteDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        user={selectedUser}
+        cliente={selectedUser}
         onSuccess={loadUsers}
-        defaultRole="MANAGER"
       />
     </div>
   )
