@@ -48,7 +48,14 @@ export default function LoginPage() {
     setError("")
     setMfaLoading(true)
     try {
-      const optRes = await fetch("/api/auth/webauthn/auth-options", { method: "POST" })
+      // Se o usuário já digitou o login, passa para o servidor filtrar
+      // apenas as credenciais daquele usuário (evita lista acumulada no browser)
+      const loginField = document.querySelector<HTMLInputElement>('#login')?.value?.trim()
+      const optRes = await fetch("/api/auth/webauthn/auth-options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginField ? { username: loginField } : {}),
+      })
       if (!optRes.ok) {
         setError("Nenhuma biometria cadastrada para este dispositivo.")
         return
@@ -88,7 +95,13 @@ export default function LoginPage() {
     setError("")
     setMfaLoading(true)
     try {
-      const optRes = await fetch("/api/auth/webauthn/auth-options", { method: "POST" })
+      // Passa o login para o servidor restringir ao allowCredentials do usuário
+      // — o browser mostra apenas as passkeys cadastradas no banco, não a lista acumulada
+      const optRes = await fetch("/api/auth/webauthn/auth-options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: pendingLogin }),
+      })
       if (!optRes.ok) {
         setError("Erro ao iniciar biometria. Tente novamente.")
         return
