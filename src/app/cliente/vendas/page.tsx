@@ -150,9 +150,11 @@ function isVencida(venda: Venda): boolean {
   if (venda.cancelado || !venda.ativo) return false;
   if (!venda.parcelas || venda.parcelas.length === 0) return false;
   const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+  const mesAnoAtual = hoje.getFullYear() * 12 + hoje.getMonth();
   const ultimaParcela = venda.parcelas[venda.parcelas.length - 1];
-  return new Date(ultimaParcela.dataVencimento) < hoje;
+  const dataVenc = new Date(ultimaParcela.dataVencimento);
+  const mesAnoVenc = dataVenc.getFullYear() * 12 + dataVenc.getMonth();
+  return mesAnoVenc < mesAnoAtual;
 }
 
 async function fetchVendas({
@@ -522,7 +524,7 @@ export default function VendasPage() {
                                   </span>
                                 ) : isVencida(venda) ? (
                                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                                    Vencido
+                                    Inativa
                                   </span>
                                 ) : venda.ativo ? (
                                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
@@ -645,7 +647,7 @@ export default function VendasPage() {
                               </span>
                             ) : isVencida(venda) ? (
                               <span className="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 whitespace-nowrap">
-                                Vencido
+                                Inativa
                               </span>
                             ) : venda.ativo ? (
                               <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
