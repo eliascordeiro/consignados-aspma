@@ -196,6 +196,7 @@ export async function GET(request: NextRequest) {
             quantidadeParcelas: true,
             socio: {
               select: {
+                id: true,
                 matricula: true,
                 nome: true,
               },
@@ -922,10 +923,13 @@ function agruparPorSocio(parcelas: any[]): GrupoSocio[] {
   const grupos: Map<string, GrupoSocio> = new Map();
 
   parcelas.forEach((parcela) => {
+    // Usar socio.id como chave garante que sócios distintos com mesma matrícula
+    // (ou sem matrícula) não sejam agrupados incorretamente.
+    const socioKey = parcela.venda.socio.id || parcela.venda.socio.matricula || '';
     const matricula = parcela.venda.socio.matricula || '';
-    
-    if (!grupos.has(matricula)) {
-      grupos.set(matricula, {
+
+    if (!grupos.has(socioKey)) {
+      grupos.set(socioKey, {
         matricula,
         nome: parcela.venda.socio.nome,
         parcelas: [],
@@ -935,10 +939,10 @@ function agruparPorSocio(parcelas: any[]): GrupoSocio[] {
       });
     }
 
-    const grupo = grupos.get(matricula)!;
-    const convenioTexto = parcela.venda.convenio 
-      ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc}`
-      : 'Sem convênio';
+    const grupo = grupos.get(socioKey)!;
+    const convenioTexto = parcela.venda.convenio
+      ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc} [Contrato: ${parcela.venda.numeroVenda}]`
+      : `Sem convênio [Contrato: ${parcela.venda.numeroVenda}]`;
     
     const baixaSocio = (parcela.baixa || '').toString().trim();
     grupo.parcelas.push({
