@@ -3,30 +3,141 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CreditCard, Lock, AlertCircle, User, Fingerprint, Loader2 } from "lucide-react"
+import { CreditCard, Lock, AlertCircle, User, Fingerprint, Loader2, ShieldCheck } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useFaceLogin } from "@/hooks/use-face-login"
+import { startAuthentication } from "@simplewebauthn/browser"
+
+// ── Helpers de redirecionamento ───────────────────────────────────────────────
+async function redirectAfterLogin() {
+  const response = await fetch("/api/auth/session")
+  const session = await response.json()
+
+  if (session?.user?.isConvenio) {
+    window.location.href = "/convenio/dashboard"
+    return
+  }
+  const convenioCheck = await fetch("/api/convenio/check")
+  const convenioData = await convenioCheck.json()
+  if (convenioData?.isConvenio) {
+    window.location.href = "/convenio/dashboard"
+    return
+  }
+  if (session?.user?.role === "ADMIN") {
+    window.location.href = "/dashboard"
+  } else if (session?.user?.role === "MANAGER" || session?.user?.role === "USER") {
+    window.location.href = "/cliente/dashboard"
+  } else {
+    window.location.href = "/dashboard"
+  }
+}
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const { loginWithFace, status: faceStatus, error: faceError, isSupported } = useFaceLogin()
-  const isFaceLoading = faceStatus === 'loading'
 
+  // Estado do fluxo MFA (biometria como 2º fator)
+  const [mfaRequired, setMfaRequired] = useState(false)
+  const [mfaLoading, setMfaLoading] = useState(false)
+  const [pendingLogin, setPendingLogin] = useState("")
+  const [pendingPassword, setPendingPassword] = useState("")
+
+  // ── Login standalone com biometria (sem senha) ────────────────────────────
   async function handleBiometricLogin() {
     setError("")
-    const { success, redirectPath } = await loginWithFace()
-    if (success && redirectPath) {
-      window.location.href = redirectPath
-    } else if (faceError) {
-      setError(faceError)
+    setMfaLoading(true)
+    try {
+      const optRes = await fetch("/api/auth/webauthn/auth-options", { method: "POST" })
+      if (!optRes.ok) {
+        setError("Nenhuma biometria cadastrada para este dispositivo.")
+        return
+      }
+      const options = await optRes.json()
+      const authResponse = await startAuthentication({ optionsJSON: options })
+      const verifyRes = await fetch("/api/auth/webauthn/auth-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(authResponse),
+      })
+      if (!verifyRes.ok) {
+        const data = await verifyRes.json()
+        setError(data.error || "Falha na verificação biométrica.")
+        return
+      }
+      const { faceToken } = await verifyRes.json()
+      const result = await signIn("credentials", { faceToken, redirect: false })
+      if (result?.error) {
+        setError("Autenticação biométrica falhou. Tente com senha.")
+        return
+      }
+      await redirectAfterLogin()
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        setError("Autenticação cancelada pelo usuário.")
+      } else {
+        setError("Biometria não disponível. Use sua senha.")
+      }
+    } finally {
+      setMfaLoading(false)
     }
   }
 
+  // ── MFA: confirmar biometria após senha válida ─────────────────────────────
+  async function handleMfaConfirm() {
+    setError("")
+    setMfaLoading(true)
+    try {
+      const optRes = await fetch("/api/auth/webauthn/auth-options", { method: "POST" })
+      if (!optRes.ok) {
+        setError("Erro ao iniciar biometria. Tente novamente.")
+        return
+      }
+      const options = await optRes.json()
+      const authResponse = await startAuthentication({ optionsJSON: options })
+      const verifyRes = await fetch("/api/auth/webauthn/auth-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(authResponse),
+      })
+      if (!verifyRes.ok) {
+        const data = await verifyRes.json()
+        setError(data.error || "Falha na verificação biométrica.")
+        return
+      }
+      const { faceToken } = await verifyRes.json()
+
+      // Re-submete com senha + faceToken (ambos validados no servidor)
+      const result = await signIn("credentials", {
+        login: pendingLogin,
+        password: pendingPassword,
+        faceToken,
+        redirect: false,
+      })
+      if (result?.error) {
+        setError("Falha na autenticação. Tente novamente.")
+        return
+      }
+      await redirectAfterLogin()
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        setError("Autenticação cancelada. Tente novamente.")
+      } else {
+        setError("Erro na biometria. Tente novamente.")
+      }
+    } finally {
+      setMfaLoading(false)
+    }
+  }
+
+  function handleCancelMfa() {
+    setMfaRequired(false)
+    setPendingLogin("")
+    setPendingPassword("")
+    setError("")
+  }
+
+  // ── Login com senha ────────────────────────────────────────────────────────
   async function onSubmitAdmin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
@@ -37,65 +148,36 @@ export default function LoginPage() {
     const password = formData.get("password") as string
 
     try {
-      const result = await signIn("credentials", {
-        login,
-        password,
-        redirect: false,
-      })
+      const result = await signIn("credentials", { login, password, redirect: false })
 
       if (result?.error) {
-        // Auth.js v5: result.error pode ser o code da subclasse OU "CredentialsSignin"
-        // Para garantir a mensagem correta, consultamos o endpoint de rate limit
+        // MFA obrigatório: senha válida, mas usuário tem biometria cadastrada
+        if (result.error === 'webauthn_required' || result.error.includes('webauthn_required')) {
+          setPendingLogin(login)
+          setPendingPassword(password)
+          setMfaRequired(true)
+          return
+        }
         if (result.error.startsWith('rate_limit_')) {
           const min = parseInt(result.error.replace('rate_limit_', '')) || 1
           setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
-        } else {
-          // Verifica via API se o motivo real é rate limiting (beta.30 pode não propagar o code)
-          try {
-            const rl = await fetch(`/api/auth/rate-limit-status?login=${encodeURIComponent(login)}`)
-            const rlData = await rl.json()
-            if (rlData?.blocked) {
-              const min = rlData.minutosRestantes || 1
-              setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
-              return
-            }
-          } catch { /* ignora erro de rede */ }
-          setError("Credenciais inválidas")
+          return
         }
+        // Fallback: verificar rate limit via API (beta.30 pode não propagar o code)
+        try {
+          const rl = await fetch(`/api/auth/rate-limit-status?login=${encodeURIComponent(login)}`)
+          const rlData = await rl.json()
+          if (rlData?.blocked) {
+            const min = rlData.minutosRestantes || 1
+            setError(`Muitas tentativas. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`)
+            return
+          }
+        } catch { /* ignora erro de rede */ }
+        setError("Credenciais inválidas")
       } else {
-        // Buscar sessão para verificar isConvenio
-        const response = await fetch("/api/auth/session")
-        const session = await response.json()
-        
-        console.log("📍 Session após login:", session)
-        
-        // PRIORIDADE 1: Se session indica que é conveniado, redirecionar para convenio
-        if (session?.user?.isConvenio) {
-          console.log("📍 Redirecionando conveniado para portal (via session.isConvenio)")
-          window.location.href = "/convenio/dashboard"
-          return
-        }
-
-        // PRIORIDADE 2: Verificar cookie convenio_session
-        const convenioCheck = await fetch("/api/convenio/check")
-        const convenioData = await convenioCheck.json()
-        
-        if (convenioData?.isConvenio) {
-          console.log("📍 Redirecionando conveniado para portal (via cookie)")
-          window.location.href = "/convenio/dashboard"
-          return
-        }
-        
-        // PRIORIDADE 3: Redirecionamento por role (apenas se NÃO for conveniado)
-        if (session?.user?.role === "ADMIN") {
-          window.location.href = "/dashboard"
-        } else if (session?.user?.role === "MANAGER" || session?.user?.role === "USER") {
-          window.location.href = "/cliente/dashboard"
-        } else {
-          window.location.href = "/dashboard"
-        }
+        await redirectAfterLogin()
       }
-    } catch (error) {
+    } catch {
       setError("Erro ao fazer login")
     } finally {
       setIsLoading(false)
@@ -125,7 +207,86 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Form */}
+          {/* Tela MFA — biometria como 2º fator */}
+          {mfaRequired ? (
+            <div className="text-center">
+              <div className="mb-6">
+                <div className="mx-auto h-20 w-20 rounded-full bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center mb-4 border-2 border-emerald-200 dark:border-emerald-800">
+                  {mfaLoading
+                    ? <Loader2 className="h-10 w-10 text-emerald-600 animate-spin" />
+                    : <ShieldCheck className="h-10 w-10 text-emerald-600" />
+                  }
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Confirme sua identidade</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Senha verificada. Complete o login com sua biometria cadastrada.
+                </p>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 text-sm text-red-600 dark:text-red-400 mb-4">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleMfaConfirm}
+                disabled={mfaLoading}
+                style={{
+                  width: '100%',
+                  height: '2.5rem',
+                  backgroundColor: '#059669',
+                  color: '#ffffff',
+                  fontWeight: '600',
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  cursor: mfaLoading ? 'not-allowed' : 'pointer',
+                  opacity: mfaLoading ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.9375rem',
+                  boxShadow: '0 4px 6px -1px rgba(5, 150, 105, 0.3)',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => !mfaLoading && (e.currentTarget.style.backgroundColor = '#047857')}
+                onMouseLeave={(e) => !mfaLoading && (e.currentTarget.style.backgroundColor = '#059669')}
+              >
+                {mfaLoading
+                  ? <><Loader2 className="h-5 w-5 animate-spin" /> Aguardando biometria...</>
+                  : <><Fingerprint className="h-5 w-5" /> Confirmar com Face ID / Biometria</>
+                }
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCancelMfa}
+                disabled={mfaLoading}
+                style={{
+                  marginTop: '0.75rem',
+                  width: '100%',
+                  height: '2.25rem',
+                  backgroundColor: 'transparent',
+                  color: '#6b7280',
+                  fontWeight: '500',
+                  borderRadius: '0.375rem',
+                  border: '1.5px solid #d1d5db',
+                  cursor: mfaLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                }}
+              >
+                Cancelar e usar outra conta
+              </button>
+
+              <p className="mt-5 text-xs text-muted-foreground">
+                Use Face ID, Windows Hello, Touch ID ou chave de segurança
+              </p>
+            </div>
+          ) : (
+          /* Tela normal de login com senha */
           <div>
             <div className="mb-6">
               <h3 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Bem-vindo de volta</h3>
@@ -186,7 +347,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={isLoading || isFaceLoading}
+                disabled={isLoading || mfaLoading}
                 style={{
                   width: '100%',
                   height: '2.25rem',
@@ -195,15 +356,15 @@ export default function LoginPage() {
                   fontWeight: '600',
                   borderRadius: '0.375rem',
                   border: 'none',
-                  cursor: (isLoading || isFaceLoading) ? 'not-allowed' : 'pointer',
-                  opacity: (isLoading || isFaceLoading) ? 0.5 : 1,
+                  cursor: (isLoading || mfaLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (isLoading || mfaLoading) ? 0.5 : 1,
                   boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => !(isLoading || isFaceLoading) && (e.currentTarget.style.backgroundColor = '#4f46e5')}
-                onMouseLeave={(e) => !(isLoading || isFaceLoading) && (e.currentTarget.style.backgroundColor = '#6366f1')}
+                onMouseEnter={(e) => !(isLoading || mfaLoading) && (e.currentTarget.style.backgroundColor = '#4f46e5')}
+                onMouseLeave={(e) => !(isLoading || mfaLoading) && (e.currentTarget.style.backgroundColor = '#6366f1')}
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? "Verificando..." : "Entrar"}
               </button>
 
               {/* Separador */}
@@ -216,43 +377,42 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Botão biometria */}
-              {isSupported && (
-                <button
-                  type="button"
-                  onClick={handleBiometricLogin}
-                  disabled={isLoading || isFaceLoading}
-                  title="Entrar com biometria (Face ID, Windows Hello, Digital)"
-                  style={{
-                    width: '100%',
-                    height: '2.25rem',
-                    backgroundColor: 'transparent',
-                    color: 'currentColor',
-                    fontWeight: '500',
-                    borderRadius: '0.375rem',
-                    border: '1.5px solid #d1d5db',
-                    cursor: (isLoading || isFaceLoading) ? 'not-allowed' : 'pointer',
-                    opacity: (isLoading || isFaceLoading) ? 0.5 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    fontSize: '0.875rem',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  {isFaceLoading
-                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando biometria...</>
-                    : <><Fingerprint className="h-4 w-4 text-emerald-600" /> Entrar com Biometria</>
-                  }
-                </button>
-              )}
+              {/* Botão biometria standalone */}
+              <button
+                type="button"
+                onClick={handleBiometricLogin}
+                disabled={isLoading || mfaLoading}
+                title="Entrar com biometria (Face ID, Windows Hello, Digital)"
+                style={{
+                  width: '100%',
+                  height: '2.25rem',
+                  backgroundColor: 'transparent',
+                  color: 'currentColor',
+                  fontWeight: '500',
+                  borderRadius: '0.375rem',
+                  border: '1.5px solid #d1d5db',
+                  cursor: (isLoading || mfaLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (isLoading || mfaLoading) ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {mfaLoading
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando biometria...</>
+                  : <><Fingerprint className="h-4 w-4 text-emerald-600" /> Entrar com Biometria</>
+                }
+              </button>
             </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
               <p>© 2026 A.S.P.M.A - Associação dos Servidores Municipais de Araucária</p>
             </div>
           </div>
+          )}
         </div>
       </div>
 
