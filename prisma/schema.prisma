@@ -69,9 +69,35 @@ model users {
   vendasUpdated     Venda[]       @relation("VendaUpdatedBy")
   parcelasCreated   Parcela[]     @relation("ParcelaCreatedBy")
   parcelasUpdated   Parcela[]     @relation("ParcelaUpdatedBy")
-  classes           Classe[]
-  setores           Setor[]
-  margemHistoricos  MargemHistorico[]
+  classes                Classe[]
+  setores                Setor[]
+  margemHistoricos       MargemHistorico[]
+  webAuthnAuthenticators WebAuthnAuthenticator[]
+}
+
+model WebAuthnAuthenticator {
+  id                   String   @id @default(cuid())
+  userId               String
+  credentialID         String   @unique
+  credentialPublicKey  Bytes
+  counter              BigInt
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String[]
+  createdAt            DateTime @default(now())
+  user                 users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("webauthn_authenticators")
+}
+
+model WebAuthnChallenge {
+  id        String   @id @default(cuid())
+  userId    String?
+  challenge String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("webauthn_challenges")
 }
 
 model convenio {

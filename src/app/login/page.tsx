@@ -7,12 +7,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CreditCard, Lock, AlertCircle, User } from "lucide-react"
+import { CreditCard, Lock, AlertCircle, User, Fingerprint, Loader2 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useFaceLogin } from "@/hooks/use-face-login"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const { loginWithFace, status: faceStatus, error: faceError, isSupported } = useFaceLogin()
+  const isFaceLoading = faceStatus === 'loading'
+
+  async function handleBiometricLogin() {
+    setError("")
+    const { success, redirectPath } = await loginWithFace()
+    if (success && redirectPath) {
+      window.location.href = redirectPath
+    } else if (faceError) {
+      setError(faceError)
+    }
+  }
 
   async function onSubmitAdmin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -173,7 +186,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isFaceLoading}
                 style={{
                   width: '100%',
                   height: '2.25rem',
@@ -182,16 +195,58 @@ export default function LoginPage() {
                   fontWeight: '600',
                   borderRadius: '0.375rem',
                   border: 'none',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  opacity: isLoading ? 0.5 : 1,
+                  cursor: (isLoading || isFaceLoading) ? 'not-allowed' : 'pointer',
+                  opacity: (isLoading || isFaceLoading) ? 0.5 : 1,
                   boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3)',
                   transition: 'all 0.2s'
                 }}
-                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#4f46e5')}
-                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#6366f1')}
+                onMouseEnter={(e) => !(isLoading || isFaceLoading) && (e.currentTarget.style.backgroundColor = '#4f46e5')}
+                onMouseLeave={(e) => !(isLoading || isFaceLoading) && (e.currentTarget.style.backgroundColor = '#6366f1')}
               >
                 {isLoading ? "Entrando..." : "Entrar"}
               </button>
+
+              {/* Separador */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white dark:bg-gray-950 px-2 text-muted-foreground">ou</span>
+                </div>
+              </div>
+
+              {/* Botão biometria */}
+              {isSupported && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={isLoading || isFaceLoading}
+                  title="Entrar com biometria (Face ID, Windows Hello, Digital)"
+                  style={{
+                    width: '100%',
+                    height: '2.25rem',
+                    backgroundColor: 'transparent',
+                    color: 'currentColor',
+                    fontWeight: '500',
+                    borderRadius: '0.375rem',
+                    border: '1.5px solid #d1d5db',
+                    cursor: (isLoading || isFaceLoading) ? 'not-allowed' : 'pointer',
+                    opacity: (isLoading || isFaceLoading) ? 0.5 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.875rem',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {isFaceLoading
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando biometria...</>
+                    : <><Fingerprint className="h-4 w-4 text-emerald-600" /> Entrar com Biometria</>
+                  }
+                </button>
+              )}
             </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">

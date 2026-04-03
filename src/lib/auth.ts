@@ -4,9 +4,14 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import "./auth-config"
 import { createAuditLog } from "@/lib/audit-log"
-import { SignJWT } from "jose"
+import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 import { isRateLimited, recordFailedAttempt, clearLoginAttempts } from "@/lib/login-rate-limit"
+
+// Secret exclusivo para tokens one-time do WebAuthn
+const WEBAUTHN_OTP_SECRET = new TextEncoder().encode(
+  process.env.WEBAUTHN_OTP_SECRET || process.env.NEXTAUTH_SECRET || 'webauthn-fallback-secret-change-me'
+)
 
 class RateLimitError extends CredentialsSignin {
   constructor(minutosRestantes: number) {
@@ -32,9 +37,53 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         login: { label: "Usuário ou Email", type: "text" },
-        password: { label: "Senha", type: "password" }
+        password: { label: "Senha", type: "password" },
+        faceToken: { label: "Face Token", type: "text" },
       },
       async authorize(credentials) {
+        // ── WebAuthn / Biometria ──────────────────────────────────────────
+        const faceToken = String(credentials?.faceToken || "").trim()
+        if (faceToken) {
+          try {
+            const { payload } = await jwtVerify(faceToken, WEBAUTHN_OTP_SECRET)
+            if (!payload.webauthn || !payload.userId) return null
+
+            const user = await prisma.users.findUnique({
+              where: { id: String(payload.userId) },
+              select: {
+                id: true, email: true, name: true, password: true,
+                role: true, active: true, permissions: true,
+                createdById: true, passwordChangedAt: true,
+              },
+            })
+            if (!user || !user.active) return null
+
+            createAuditLog({
+              userId: user.id,
+              userName: user.name,
+              userRole: user.role,
+              action: 'LOGIN',
+              module: 'auth',
+              description: 'Login realizado com biometria (WebAuthn)',
+              metadata: { email: user.email },
+            }).catch(() => {})
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              permissions: user.permissions || [],
+              createdById: user.createdById,
+              isConvenio: false,
+              passwordChangedAt: user.passwordChangedAt?.toISOString() || null,
+            }
+          } catch {
+            return null
+          }
+        }
+
+        // ── Login tradicional ────────────────────────────────────────────
         const login = String(credentials?.login || "").trim()
         const password = String(credentials?.password || "")
 
