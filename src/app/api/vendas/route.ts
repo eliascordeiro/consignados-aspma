@@ -173,6 +173,7 @@ export async function GET(request: NextRequest) {
               id: true,
               numeroParcela: true,
               baixa: true,
+              dataVencimento: true,
             },
             orderBy: {
               numeroParcela: 'asc',
@@ -263,6 +264,7 @@ export async function GET(request: NextRequest) {
               id: true,
               numeroParcela: true,
               baixa: true,
+              dataVencimento: true,
             },
             orderBy: {
               numeroParcela: 'asc',

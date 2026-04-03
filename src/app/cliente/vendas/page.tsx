@@ -129,6 +129,7 @@ interface Venda {
     id: string;
     numeroParcela: number;
     baixa: string | null;
+    dataVencimento: string;
   }>;
 }
 
@@ -143,6 +144,15 @@ interface VendasResponse {
     totalParcelas: number;
     valorTotalParcelas: number;
   };
+}
+
+function isVencida(venda: Venda): boolean {
+  if (venda.cancelado || !venda.ativo) return false;
+  if (!venda.parcelas || venda.parcelas.length === 0) return false;
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const ultimaParcela = venda.parcelas[venda.parcelas.length - 1];
+  return new Date(ultimaParcela.dataVencimento) < hoje;
 }
 
 async function fetchVendas({
@@ -510,6 +520,10 @@ export default function VendasPage() {
                                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                                     Cancelado
                                   </span>
+                                ) : isVencida(venda) ? (
+                                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                    Vencido
+                                  </span>
                                 ) : venda.ativo ? (
                                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                                     Ativo
@@ -628,6 +642,10 @@ export default function VendasPage() {
                             {venda.cancelado ? (
                               <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
                                 Cancel
+                              </span>
+                            ) : isVencida(venda) ? (
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 whitespace-nowrap">
+                                Vencido
                               </span>
                             ) : venda.ativo ? (
                               <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 whitespace-nowrap">
