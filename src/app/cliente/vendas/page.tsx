@@ -263,7 +263,7 @@ export default function VendasPage() {
     socioNome: string
   ) => {
     const confirma = confirm(
-      `Deseja realmente cancelar a venda #${numeroVenda} de ${socioNome}?`
+      `Deseja realmente excluir definitivamente esta venda?`
     );
 
     if (!confirma) return;
@@ -274,15 +274,15 @@ export default function VendasPage() {
       });
 
       if (response.ok) {
-        alert('Venda cancelada com sucesso!');
+        alert('Venda excluida com sucesso!');
         refetch();
       } else {
         const error = await response.json();
-        alert(`Erro ao cancelar venda: ${error.error}`);
+        alert(`Erro ao excluir venda: ${error.error}`);
       }
     } catch (error) {
-      console.error('Erro ao cancelar venda:', error);
-      alert('Erro ao cancelar venda. Tente novamente.');
+      console.error('Erro ao excluir venda:', error);
+      alert('Erro ao excluir venda. Tente novamente.');
     }
   };
 
