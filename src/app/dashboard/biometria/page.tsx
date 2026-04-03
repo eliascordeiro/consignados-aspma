@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { useWebAuthnRegister } from '@/hooks/use-webauthn-register'
-import { Fingerprint, CheckCircle, XCircle, Loader2, Trash2, Plus, ShieldCheck } from 'lucide-react'
+import { Fingerprint, CheckCircle, XCircle, Loader2, Trash2, Plus, ShieldCheck, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+const MAX_CREDENTIALS = 5
 
 type Authenticator = {
   id: string
@@ -17,7 +18,6 @@ type Authenticator = {
 }
 
 export default function BiometriaPage() {
-  const { data: session } = useSession()
   const { registerBiometrics, status, message, isSupported, reset } = useWebAuthnRegister()
   const [authenticators, setAuthenticators] = useState<Authenticator[]>([])
   const [loadingList, setLoadingList] = useState(true)
@@ -42,119 +42,141 @@ export default function BiometriaPage() {
 
   async function handleRegister() {
     const ok = await registerBiometrics()
-    if (ok) {
-      await fetchAuthenticators()
-    }
+    if (ok) await fetchAuthenticators()
   }
 
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {
       const res = await fetch(`/api/auth/webauthn/delete/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        setAuthenticators((prev) => prev.filter((a) => a.id !== id))
-      }
+      if (res.ok) await fetchAuthenticators()
     } finally {
       setDeletingId(null)
     }
   }
 
+  const atLimit = authenticators.length >= MAX_CREDENTIALS
+
   const deviceLabel = (a: Authenticator) => {
-    if (a.transports?.includes('internal')) return 'Biometria do dispositivo (Face ID / Digital / Windows Hello)'
-    if (a.transports?.includes('hybrid')) return 'Dispositivo externo (chave de segurança)'
-    return `Autenticador ${a.credentialDeviceType}`
+    const date = new Date(a.createdAt).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
+    let type = 'Autenticador'
+    if (a.transports?.includes('internal')) type = 'Face ID / Digital / Windows Hello'
+    else if (a.transports?.includes('hybrid')) type = 'Chave de segurança (USB/NFC)'
+    return { type, date }
   }
 
   return (
     <div className="container max-w-2xl py-8 space-y-6">
+
+      {/* Cabeçalho */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
           <Fingerprint className="h-5 w-5 text-emerald-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Autenticação Biométrica</h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie o login por Face ID, Windows Hello ou digital
-          </p>
+          <h1 className="text-2xl font-bold">Chave de Acesso (Biometria)</h1>
+          <p className="text-sm text-muted-foreground">Login sem senha com Face ID, Windows Hello ou digital</p>
         </div>
       </div>
 
-      {/* Card de suporte */}
+      {/* Aviso: sem suporte */}
       {!isSupported && (
         <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
           <CardContent className="flex items-center gap-3 pt-6">
             <XCircle className="h-5 w-5 text-yellow-600 shrink-0" />
             <p className="text-sm text-yellow-700 dark:text-yellow-400">
-              Seu dispositivo ou navegador não suporta WebAuthn. Use Chrome, Edge ou Safari em um dispositivo com biometria.
+              Seu navegador não suporta WebAuthn. Use Chrome, Edge ou Safari em um dispositivo com biometria.
             </p>
           </CardContent>
         </Card>
       )}
 
-      {/* Informação */}
+      {/* Explicação sobre o PIN do Windows */}
       {isSupported && (
-        <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
-          <CardContent className="flex items-center gap-3 pt-6">
-            <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />
-            <p className="text-sm text-emerald-700 dark:text-emerald-400">
-              A biometria nunca sai do seu dispositivo. O sistema usa <strong>WebAuthn/FIDO2</strong>, o padrão
-              mais seguro de autenticação — sem armazenar impressão digital ou foto facial.
-            </p>
+        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+          <CardContent className="flex items-start gap-3 pt-6">
+            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+              <p className="font-medium">Como funciona o cadastro?</p>
+              <p>
+                Ao cadastrar, o seu dispositivo vai pedir confirmação de identidade —
+                pode ser <strong>PIN do Windows Hello</strong>, senha do sistema, leitura de digital ou
+                reconhecimento facial. Isso é <strong>normal e esperado</strong>: é a forma do sistema operacional
+                autorizar a criação de uma nova chave criptográfica.
+              </p>
+              <p className="text-xs opacity-80">
+                Os dados biométricos nunca saem do dispositivo. Apenas uma chave criptográfica é guardada no servidor.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Lista de autenticadores */}
+      {/* Lista de dispositivos */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Dispositivos registrados</CardTitle>
-          <CardDescription>
-            Cada dispositivo cadastrado pode ser usado para acessar o sistema sem senha.
-          </CardDescription>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <CardTitle className="text-base">Dispositivos cadastrados</CardTitle>
+              <CardDescription>
+                Cada entrada abaixo corresponde a um cadastro neste sistema.
+                Remova entradas duplicadas ou de dispositivos antigos.
+              </CardDescription>
+            </div>
+            {!loadingList && (
+              <span className={`text-xs font-medium px-2 py-1 rounded-full shrink-0 ${
+                atLimit
+                  ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400'
+                  : 'bg-muted text-muted-foreground'
+              }`}>
+                {authenticators.length} / {MAX_CREDENTIALS}
+              </span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {loadingList ? (
-            <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando...
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
+              <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
             </div>
           ) : authenticators.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-2">
-              Nenhum dispositivo biométrico cadastrado ainda.
-            </p>
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              <Fingerprint className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              Nenhum dispositivo cadastrado ainda.
+            </div>
           ) : (
-            authenticators.map((a) => (
-              <div
-                key={a.id}
-                className="flex items-center justify-between rounded-lg border border-border p-3 gap-3"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                    <Fingerprint className="h-4 w-4 text-emerald-600" />
+            authenticators.map((a) => {
+              const { type, date } = deviceLabel(a)
+              return (
+                <div key={a.id} className="flex items-center justify-between rounded-lg border p-3 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <Fingerprint className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Cadastrado em {date}{a.credentialBackedUp ? ' · Sincronizado na nuvem' : ''}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{deviceLabel(a)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Registrado em {new Date(a.createdAt).toLocaleDateString('pt-BR')}
-                      {a.credentialBackedUp && ' · Sincronizado na nuvem'}
-                    </p>
-                  </div>
+                  <Button
+                    variant="ghost" size="icon"
+                    onClick={() => handleDelete(a.id)}
+                    disabled={!!deletingId}
+                    className="text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 shrink-0"
+                    title="Remover"
+                  >
+                    {deletingId === a.id
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : <Trash2 className="h-4 w-4" />}
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(a.id)}
-                  disabled={deletingId === a.id}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 shrink-0"
-                  title="Remover dispositivo"
-                >
-                  {deletingId === a.id
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <Trash2 className="h-4 w-4" />
-                  }
-                </Button>
-              </div>
-            ))
+              )
+            })
           )}
         </CardContent>
       </Card>
@@ -166,26 +188,35 @@ export default function BiometriaPage() {
             ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 text-emerald-700 dark:text-emerald-400'
             : 'bg-red-50 dark:bg-red-950/20 border-red-200 text-red-600 dark:text-red-400'
         }`}>
-          {status === 'success'
-            ? <CheckCircle className="h-4 w-4 shrink-0" />
-            : <XCircle className="h-4 w-4 shrink-0" />
-          }
+          {status === 'success' ? <CheckCircle className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
           {message}
         </div>
       )}
 
-      {/* Botão registrar */}
+      {/* Botão adicionar */}
       {isSupported && (
-        <Button
-          onClick={handleRegister}
-          disabled={status === 'loading'}
-          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          {status === 'loading'
-            ? <><Loader2 className="h-4 w-4 animate-spin" /> Aguardando biometria...</>
-            : <><Plus className="h-4 w-4" /> Adicionar este dispositivo</>
-          }
-        </Button>
+        <div className="space-y-2">
+          {atLimit && (
+            <p className="text-sm text-center text-red-600 dark:text-red-400">
+              Limite de {MAX_CREDENTIALS} dispositivos atingido. Remova um antes de adicionar outro.
+            </p>
+          )}
+          <Button
+            onClick={handleRegister}
+            disabled={status === 'loading' || atLimit}
+            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {status === 'loading'
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Aguardando confirmação do dispositivo...</>
+              : <><Plus className="h-4 w-4" /> Cadastrar este dispositivo</>
+            }
+          </Button>
+          {status === 'loading' && (
+            <p className="text-xs text-center text-muted-foreground">
+              Confirme o PIN do Windows Hello, digital ou reconhecimento facial quando solicitado.
+            </p>
+          )}
+        </div>
       )}
     </div>
   )

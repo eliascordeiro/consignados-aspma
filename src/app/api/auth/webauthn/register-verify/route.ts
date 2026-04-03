@@ -50,11 +50,30 @@ export async function POST(req: NextRequest) {
 
   const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo
 
-  // Salvar o autenticador no banco
-  await prisma.webAuthnAuthenticator.create({
-    data: {
+  // Limite: máx 5 credenciais por usuário (evita acumulação por cadastros repetidos)
+  const existingCount = await prisma.webAuthnAuthenticator.count({ where: { userId } })
+  if (existingCount >= 5) {
+    await prisma.webAuthnChallenge.delete({ where: { id: challengeRecord.id } })
+    return NextResponse.json(
+      { error: 'Limite de 5 dispositivos atingido. Remova um antes de adicionar outro.' },
+      { status: 400 }
+    )
+  }
+
+  // Upsert por credentialID: se o mesmo ID já existe (re-registro do mesmo aparelho),
+  // apenas atualiza o contador em vez de criar entrada duplicada.
+  await prisma.webAuthnAuthenticator.upsert({
+    where: { credentialID: credential.id },
+    create: {
       userId,
       credentialID: credential.id,
+      credentialPublicKey: Buffer.from(credential.publicKey),
+      counter: credential.counter,
+      credentialDeviceType,
+      credentialBackedUp,
+      transports: body.response.transports ?? [],
+    },
+    update: {
       credentialPublicKey: Buffer.from(credential.publicKey),
       counter: credential.counter,
       credentialDeviceType,
