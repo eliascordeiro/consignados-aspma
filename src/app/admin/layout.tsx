@@ -21,13 +21,15 @@ import {
   LogOut,
   Menu,
   X,
-  CreditCard
+  CreditCard,
+  Fingerprint
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
 const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Clientes", href: "/admin/clientes", icon: Users },
+  { name: "Biometria", href: "/admin/biometria", icon: Fingerprint },
 ]
 
 export default function AdminLayout({
@@ -120,6 +122,13 @@ export default function AdminLayout({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/biometria">
+                    <Fingerprint className="mr-2 h-4 w-4" />
+                    Biometria / Chave de Acesso
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
                   <LogOut className="mr-2 h-4 w-4" />
