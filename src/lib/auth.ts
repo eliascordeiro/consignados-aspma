@@ -20,6 +20,14 @@ class RateLimitError extends CredentialsSignin {
   }
 }
 
+// Sinaliza ao frontend que a senha foi válida mas MFA biométrico é obrigatório
+class BiometricRequiredError extends CredentialsSignin {
+  constructor() {
+    super()
+    this.code = 'webauthn_required'
+  }
+}
+
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"
 )
@@ -214,6 +222,31 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
           // Limpar contador de tentativas após sucesso
           clearLoginAttempts(rateLimitKey).catch(() => {})
+
+          // ── MFA: se o user tem biometria cadastrada, exige confirmação ──────
+          const biometriasCount = await prisma.webAuthnAuthenticator.count({
+            where: { userId: user.id },
+          })
+          if (biometriasCount > 0) {
+            if (!faceToken) {
+              // Senha válida mas biometria não fornecida — exige o 2º fator
+              throw new BiometricRequiredError()
+            }
+            // Valida que o faceToken foi emitido para ESTE usuário
+            // (impede usar o token biométrico de outro user)
+            try {
+              const { payload } = await jwtVerify(faceToken, WEBAUTHN_OTP_SECRET)
+              if (!payload.webauthn || payload.userId !== user.id) {
+                console.log('   ❌ faceToken não pertence a este usuário')
+                return null
+              }
+              console.log('   ✅ MFA biométrico confirmado')
+            } catch {
+              console.log('   ❌ faceToken inválido ou expirado')
+              return null
+            }
+          }
+          // ────────────────────────────────────────────────────────────────────
 
           // Verificar se este user tem convênio vinculado
           // ADMIN e MANAGER NUNCA são tratados como convênio
