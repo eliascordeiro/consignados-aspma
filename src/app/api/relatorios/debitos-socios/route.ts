@@ -32,6 +32,7 @@ interface ParcelaRelatorio {
 interface GrupoSocio {
   matricula: string;
   nome: string;
+  matriculaInfo?: { antiga: number; atual: number } | null;
   parcelas: {
     convenio: string;
     pc: number;
@@ -355,7 +356,26 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Agrupar por sócio (lógica existente)
-      const grupos = agruparPorSocio(parcelas);
+      // Busca mapeamento de matrículas (de/para) para os sócios do relatório
+      const uniqueNums = [...new Set(
+        parcelas.map((p: any) => parseInt(p.venda.socio.matricula || '')).filter((n: number) => !isNaN(n) && n > 0)
+      )];
+      const matriculaMap = new Map<string, { antiga: number; atual: number }>();
+      if (uniqueNums.length > 0) {
+        try {
+          const mappings = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+            SELECT matricula_antiga, matricula_atual FROM matriculas
+            WHERE matricula_antiga = ANY(${uniqueNums}::integer[])
+               OR matricula_atual  = ANY(${uniqueNums}::integer[])
+          `;
+          for (const m of mappings) {
+            const entry = { antiga: Number(m.matricula_antiga), atual: Number(m.matricula_atual) };
+            matriculaMap.set(m.matricula_antiga.toString(), entry);
+            matriculaMap.set(m.matricula_atual.toString(), entry);
+          }
+        } catch { /* tabela inexistente ou erro — ignora */ }
+      }
+      const grupos = agruparPorSocio(parcelas, matriculaMap);
 
       // Gerar PDF, Excel ou CSV para sócios
       if (formato === 'pdf') {
@@ -530,8 +550,9 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     // ═══════════════════════════════════════════════════════════
     
     // Box de fundo do sócio
+    const cardHeight = grupo.matriculaInfo ? 16 : 12;
     doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
-    doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, cardHeight, 2, 2, 'F');
     
     // Matrícula e Nome do sócio
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
@@ -543,12 +564,20 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.setFontSize(9);
     doc.text(`Matrícula: ${grupo.matricula}`, margin + 20, y + 5);
     
+    // De/Para: mapeamento da tabela matriculas
+    if (grupo.matriculaInfo) {
+      doc.setFontSize(8);
+      doc.setTextColor(255, 235, 150); // amarelo suave para destaque
+      doc.text(`De: ${grupo.matriculaInfo.antiga}  →  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    }
+    
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     const nomeText = grupo.nome.length > 80 ? grupo.nome.substring(0, 77) + '...' : grupo.nome;
-    doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
+    doc.text(nomeText.toUpperCase(), margin + 3, grupo.matriculaInfo ? y + 13.5 : y + 9);
     
-    y += 15;
+    y += cardHeight + 3;
 
     // ═══════════════════════════════════════════════════════════
     // TABELA DE PARCELAS
@@ -592,8 +621,9 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         addHeader(false); // Cabeçalho reduzido nas páginas seguintes
         
         // Repetir info do sócio e cabeçalho da tabela na nova página
+        const cardHeightPB = grupo.matriculaInfo ? 16 : 12;
         doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
-        doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, cardHeightPB, 2, 2, 'F');
         doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
@@ -601,10 +631,16 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text(`Matrícula: ${grupo.matricula}`, margin + 20, y + 5);
+        if (grupo.matriculaInfo) {
+          doc.setFontSize(8);
+          doc.setTextColor(255, 235, 150);
+          doc.text(`De: ${grupo.matriculaInfo.antiga}  →  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
+          doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+        }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
-        y += 15;
+        doc.text(nomeText.toUpperCase(), margin + 3, grupo.matriculaInfo ? y + 13.5 : y + 9);
+        y += cardHeightPB + 3;
         
         // Cabeçalho da tabela
         doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
@@ -919,7 +955,7 @@ function gerarCSV(
 // FUNÇÕES DE AGRUPAMENTO
 // ═══════════════════════════════════════════════════════════════════
 
-function agruparPorSocio(parcelas: any[]): GrupoSocio[] {
+function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>): GrupoSocio[] {
   const grupos: Map<string, GrupoSocio> = new Map();
 
   parcelas.forEach((parcela) => {
@@ -932,6 +968,7 @@ function agruparPorSocio(parcelas: any[]): GrupoSocio[] {
       grupos.set(socioKey, {
         matricula,
         nome: parcela.venda.socio.nome,
+        matriculaInfo: matriculaMap?.get(matricula) ?? null,
         parcelas: [],
         total: 0,
         totalDesconto: 0,
