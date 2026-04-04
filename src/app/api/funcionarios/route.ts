@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
         const searchFilters: any[] = [
           { nome: { contains: search, mode: "insensitive" } },
           { matricula: { contains: search, mode: "insensitive" } },
+          { empresa: { nome: { contains: search, mode: "insensitive" } } },
         ]
         
         // Só adiciona filtro de CPF se houver números no termo de busca

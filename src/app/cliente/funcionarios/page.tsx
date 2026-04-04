@@ -32,11 +32,12 @@ interface FuncionariosResponse {
   };
 }
 
-async function fetchFuncionarios({ page = 1, searchTerm }: { page?: number; searchTerm: string }): Promise<FuncionariosResponse> {
+async function fetchFuncionarios({ page = 1, searchTerm, empresaId }: { page?: number; searchTerm: string; empresaId: string }): Promise<FuncionariosResponse> {
   const params = new URLSearchParams();
   params.set('page', page.toString());
   params.set('limit', '50');
   if (searchTerm) params.set('search', searchTerm);
+  if (empresaId) params.set('empresaId', empresaId);
   const response = await fetch(`/api/funcionarios?${params.toString()}`);
   if (!response.ok) throw new Error('Erro ao carregar sócios');
   const json = await response.json();
@@ -56,6 +57,8 @@ export default function FuncionariosPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [empresaId, setEmpresaId] = useState('');
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -66,6 +69,14 @@ export default function FuncionariosPage() {
   }, [searchInput]);
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm]);
+  useEffect(() => { setCurrentPage(1); }, [empresaId]);
+
+  useEffect(() => {
+    fetch('/api/consignatarias?limit=1000')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.data) setEmpresas(d.data); else if (Array.isArray(d)) setEmpresas(d); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -75,8 +86,8 @@ export default function FuncionariosPage() {
   }, []);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['funcionarios', searchTerm, currentPage],
-    queryFn: () => fetchFuncionarios({ page: currentPage, searchTerm }),
+    queryKey: ['funcionarios', searchTerm, empresaId, currentPage],
+    queryFn: () => fetchFuncionarios({ page: currentPage, searchTerm, empresaId }),
     staleTime: 60000,
   });
 
@@ -140,7 +151,28 @@ export default function FuncionariosPage() {
               className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="flex items-end">
+          <div className="w-full sm:w-64">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Consignatária</label>
+            <select
+              value={empresaId}
+              onChange={(e) => setEmpresaId(e.target.value)}
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todas</option>
+              {empresas.map((e) => (
+                <option key={e.id} value={e.id.toString()}>{e.nome}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end gap-2">
+            {(searchInput || empresaId) && (
+              <button
+                onClick={() => { setSearchInput(''); setEmpresaId(''); }}
+                className="px-3 py-2 border border-border rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
+              >
+                Limpar
+              </button>
+            )}
             <button
               onClick={() => refetch()}
               className="px-4 py-2 border border-border rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
