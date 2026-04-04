@@ -68,6 +68,7 @@ interface GrupoConvenio {
 interface GrupoSocioResumo {
   matricula: string;
   nome: string;
+  matriculaInfo?: { antiga: number; atual: number } | null;
   qtdParcelas: number;
   total: number;
 }
@@ -320,7 +321,26 @@ export async function GET(request: NextRequest) {
       }
     } else if (agrupaPor === 'resumido-consignataria') {
       // Resumo de débitos em aberto por sócio - para entrega à consignatária
-      const gruposResumo = agruparPorSocioResumo(parcelas);
+      // Busca mapeamento de matrículas (de/para)
+      const uniqueNumsR = [...new Set(
+        parcelas.map((p: any) => parseInt(p.venda.socio.matricula || '')).filter((n: number) => !isNaN(n) && n > 0)
+      )] as number[];
+      const matriculaMapR = new Map<string, { antiga: number; atual: number }>();
+      if (uniqueNumsR.length > 0) {
+        try {
+          const mappingsR = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+            SELECT matricula_antiga, matricula_atual FROM matriculas
+            WHERE matricula_antiga = ANY(${uniqueNumsR}::integer[])
+               OR matricula_atual  = ANY(${uniqueNumsR}::integer[])
+          `;
+          for (const m of mappingsR) {
+            const entry = { antiga: Number(m.matricula_antiga), atual: Number(m.matricula_atual) };
+            matriculaMapR.set(m.matricula_antiga.toString(), entry);
+            matriculaMapR.set(m.matricula_atual.toString(), entry);
+          }
+        } catch { /* tabela inexistente ou erro — ignora */ }
+      }
+      const gruposResumo = agruparPorSocioResumo(parcelas, matriculaMapR);
 
       if (formato === 'pdf') {
         const pdfBuffer = await gerarPDFSocioResumo(gruposResumo, mes, ano);
@@ -2173,7 +2193,7 @@ function gerarCSVConsignataria(
 // AGRUPAMENTO POR SÓCIO — RESUMO (para consignatárias, sem baixa)
 // ═══════════════════════════════════════════════════════════════════
 
-function agruparPorSocioResumo(parcelas: any[]): GrupoSocioResumo[] {
+function agruparPorSocioResumo(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>): GrupoSocioResumo[] {
   const grupos: Map<string, GrupoSocioResumo> = new Map();
   parcelas.forEach((parcela) => {
     const matricula = parcela.venda.socio.matricula || '';
@@ -2181,6 +2201,7 @@ function agruparPorSocioResumo(parcelas: any[]): GrupoSocioResumo[] {
       grupos.set(matricula, {
         matricula,
         nome: parcela.venda.socio.nome,
+        matriculaInfo: matriculaMap?.get(matricula) ?? null,
         qtdParcelas: 0,
         total: 0,
       });
@@ -2292,15 +2313,25 @@ async function gerarPDFSocioResumo(grupos: GrupoSocioResumo[], mes: number, ano:
       isAlternate = false;
     }
 
+    const rowHeight = grupo.matriculaInfo ? 11 : 6;
+
     if (isAlternate) {
       doc.setFillColor(colors.tableAlt[0], colors.tableAlt[1], colors.tableAlt[2]);
-      doc.rect(margin, y - 3, pageWidth - 2 * margin, 6, 'F');
+      doc.rect(margin, y - 3, pageWidth - 2 * margin, rowHeight, 'F');
     }
 
     doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.text(grupo.matricula, colMat, y + 1);
+
+    if (grupo.matriculaInfo) {
+      doc.setFontSize(7);
+      doc.setTextColor(180, 100, 0);
+      doc.text(`De: ${grupo.matriculaInfo.antiga}  ->  Para: ${grupo.matriculaInfo.atual}`, colMat, y + 6);
+      doc.setFontSize(8);
+      doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    }
 
     const nomeText = grupo.nome.length > 120 ? grupo.nome.substring(0, 117) + '...' : grupo.nome;
     doc.text(nomeText.toUpperCase(), colNome, y + 1);
@@ -2312,7 +2343,7 @@ async function gerarPDFSocioResumo(grupos: GrupoSocioResumo[], mes: number, ano:
     doc.setFont('helvetica', 'normal');
 
     totalGeral += grupo.total;
-    y += 6;
+    y += rowHeight;
     isAlternate = !isAlternate;
   });
 
@@ -2359,22 +2390,26 @@ async function gerarExcelSocioResumo(grupos: GrupoSocioResumo[], mes: number, an
   p.font = { bold: true, size: 11 };
   p.alignment = { horizontal: 'center' };
 
-  const headerRow = ws.addRow(['Matrícula', 'Nome', 'Qtd. Parcelas', 'Total']);
+  const headerRow = ws.addRow(['Matrícula', 'De -> Para', 'Nome', 'Qtd. Parcelas', 'Total']);
   headerRow.font = { bold: true };
   headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB7E1CD' } };
 
   let totalGeral = 0;
   grupos.forEach((g) => {
-    const row = ws.addRow([g.matricula, g.nome, g.qtdParcelas, g.total]);
-    row.getCell(4).numFmt = '#,##0.00';
+    const dePara = g.matriculaInfo ? `${g.matriculaInfo.antiga} -> ${g.matriculaInfo.atual}` : '';
+    const row = ws.addRow([g.matricula, dePara, g.nome, g.qtdParcelas, g.total]);
+    row.getCell(5).numFmt = '#,##0.00';
+    if (dePara) {
+      row.getCell(2).font = { color: { argb: 'FFB46400' } };
+    }
     totalGeral += g.total;
   });
 
-  const totalRow = ws.addRow(['', '', 'TOTAL GERAL:', totalGeral]);
+  const totalRow = ws.addRow(['', '', '', 'TOTAL GERAL:', totalGeral]);
   totalRow.font = { bold: true };
-  totalRow.getCell(4).numFmt = '#,##0.00';
+  totalRow.getCell(5).numFmt = '#,##0.00';
 
-  ws.columns = [{ width: 15 }, { width: 50 }, { width: 15 }, { width: 18 }];
+  ws.columns = [{ width: 15 }, { width: 22 }, { width: 50 }, { width: 15 }, { width: 18 }];
 
   const buffer = await workbook.xlsx.writeBuffer();
   const u8 = new Uint8Array(buffer);
