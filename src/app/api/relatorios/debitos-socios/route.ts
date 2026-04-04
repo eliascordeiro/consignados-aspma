@@ -568,7 +568,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     if (grupo.matriculaInfo) {
       doc.setFontSize(8);
       doc.setTextColor(255, 235, 150); // amarelo suave para destaque
-      doc.text(`De: ${grupo.matriculaInfo.antiga}  →  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
+      doc.text(`De: ${grupo.matriculaInfo.antiga}  ->  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
       doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
     }
     
@@ -634,7 +634,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         if (grupo.matriculaInfo) {
           doc.setFontSize(8);
           doc.setTextColor(255, 235, 150);
-          doc.text(`De: ${grupo.matriculaInfo.antiga}  →  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
+          doc.text(`De: ${grupo.matriculaInfo.antiga}  ->  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
           doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
         }
         doc.setFont('helvetica', 'bold');
