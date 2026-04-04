@@ -13,8 +13,21 @@ function isManagerOrPermitted(user: any, perm: string): boolean {
 }
 
 // Retorna o ID do MANAGER raiz da hierarquia (para filtrar createdById)
+// Resolve sub-managers (managerPrincipalId) para que o principal seja sempre o dono
 async function getRootOwnerId(user: any): Promise<string> {
-  if (user.role === 'MANAGER') return user.id
+  if (user.role === 'MANAGER') {
+    // Se é sub-manager, escalar para o principal
+    try {
+      const mgr = await prisma.users.findUnique({
+        where: { id: user.id },
+        select: { managerPrincipalId: true } as any,
+      }) as any
+      if (mgr?.managerPrincipalId) return mgr.managerPrincipalId
+    } catch {
+      // Migration pendente — ignora
+    }
+    return user.id
+  }
   if (!user.createdById) return user.id
   const creator = await prisma.users.findUnique({
     where: { id: user.createdById },
@@ -152,7 +165,7 @@ export async function POST(request: NextRequest) {
         phone: validatedData.phone,
         active: validatedData.active,
         permissions: allowedPermissions,
-        createdById: session.user.id, // Vincula ao MANAGER criador
+        createdById: await getRootOwnerId(session.user), // Vincula ao MANAGER principal (resolve sub-managers)
       },
       select: {
         id: true,

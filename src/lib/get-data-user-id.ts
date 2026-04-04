@@ -43,6 +43,17 @@ export async function getDataUserId(session: {
 
   // Se tem manager criador, usar o ID dele para ver os mesmos dados
   if (currentUser?.createdById) {
+    // Se o criador é um sub-manager (tem managerPrincipalId), escalar para o principal
+    // Isso garante que usuários criados por sub-managers vejam os dados do principal
+    try {
+      const creator = await prisma.users.findUnique({
+        where: { id: currentUser.createdById },
+        select: { managerPrincipalId: true } as any,
+      }) as any
+      if (creator?.managerPrincipalId) return creator.managerPrincipalId
+    } catch {
+      // Coluna managerPrincipalId ainda não existe no DB (migration pendente) — ignora
+    }
     return currentUser.createdById
   }
 
