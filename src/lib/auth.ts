@@ -179,7 +179,8 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             // Fallback: se o user é do tipo USER (auto-criado para convênio),
             // a senha pode ter sido alterada na tabela convenio mas não sincronizada aqui.
             // Verificamos diretamente na tabela convenio.
-            if (user.role === 'USER') {
+            // Usuários com createdById são criados pelo portal e NÃO são convênio.
+            if (user.role === 'USER' && !user.createdById) {
               const convenioFallback = await prisma.convenio.findFirst({
                 where: {
                   ativo: true,
@@ -250,9 +251,10 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
           // Verificar se este user tem convênio vinculado
           // ADMIN e MANAGER NUNCA são tratados como convênio
-          // Para USER, verificar se tem convênio vinculado por userId OU por usuario (login)
+          // Usuários com createdById foram criados pelo portal e NÃO são convênio
+          // Para USER sem createdById, verificar se tem convênio vinculado
           let convenioVinculado = null
-          if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
+          if (user.role !== 'ADMIN' && user.role !== 'MANAGER' && !user.createdById) {
             convenioVinculado = await prisma.convenio.findFirst({
               where: {
                 ativo: true,
