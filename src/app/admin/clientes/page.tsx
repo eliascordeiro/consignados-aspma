@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, Search, UserPlus, Building2, Mail } from "lucide-react"
+import { Pencil, Trash2, Search, UserPlus, Building2, Mail, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ClienteDialog } from "@/components/cliente-dialog"
@@ -34,17 +34,23 @@ export default function ClientesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/usuarios?search=${searchTerm}&role=MANAGER`)
+      setApiError(null)
+      const response = await fetch(`/api/usuarios?search=${encodeURIComponent(searchTerm)}&role=MANAGER`)
       if (response.ok) {
         const data = await response.json()
         setUsers(data)
+      } else {
+        const err = await response.json().catch(() => ({}))
+        setApiError(err.error || `Erro ao carregar clientes (status ${response.status})`)
       }
     } catch (error) {
       console.error("Erro ao carregar clientes:", error)
+      setApiError("Erro de conexão ao carregar clientes")
     } finally {
       setLoading(false)
     }
@@ -142,6 +148,15 @@ export default function ClientesPage() {
           />
         </div>
       </div>
+
+      {/* Table */}
+      {apiError && (
+        <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 p-4 text-sm text-red-700 dark:text-red-400">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span>{apiError}</span>
+          <button className="ml-auto underline text-xs" onClick={loadUsers}>Tentar novamente</button>
+        </div>
+      )}
 
       {/* Table */}
       <Card className="border-gray-200 dark:border-gray-800">

@@ -30,40 +30,68 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get("role")
     const managerPrincipalId = searchParams.get("managerPrincipalId")
 
-    const users = await prisma.users.findMany({
-      where: {
-        AND: [
-          role ? { role: role as any } : {},
-          // Se filtra por managerPrincipalId, mostra sub-managers desse manager
-          managerPrincipalId ? { managerPrincipalId } : {},
-          // Quando listando clientes (MANAGER) sem filtro de sub-manager, mostra apenas os principais
-          (role === "MANAGER" && !managerPrincipalId) ? { managerPrincipalId: null } : {},
-          search ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { email: { contains: search, mode: "insensitive" } },
-            ],
-          } : {},
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        cpf: true,
-        phone: true,
-        active: true,
-        permissions: true,
-        createdAt: true,
-        _count: { select: { subManagers: true } },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
+    const searchFilter = search
+      ? { OR: [
+          { name: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
+        ] }
+      : undefined
 
-    return NextResponse.json(users)
+    // Tenta query completa com managerPrincipalId; cai back se coluna ainda não existe
+    try {
+      const where: any = { AND: [] }
+      if (role) where.AND.push({ role: role as any })
+      if (managerPrincipalId) {
+        where.AND.push({ managerPrincipalId })
+      } else if (role === "MANAGER") {
+        // Mostrar apenas managers principais (não sub-managers)
+        where.AND.push({ managerPrincipalId: null })
+      }
+      if (searchFilter) where.AND.push(searchFilter)
+
+      const users = await prisma.users.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          cpf: true,
+          phone: true,
+          active: true,
+          permissions: true,
+          createdAt: true,
+          _count: { select: { subManagers: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+
+      return NextResponse.json(users)
+    } catch (queryErr: any) {
+      // Fallback: coluna managerPrincipalId pode ainda não existir no DB (migration pendente)
+      console.warn("[usuarios GET] Fallback query (migration pendente?):", queryErr?.message)
+      const where: any = {}
+      if (role) where.role = role as any
+      if (searchFilter) where.AND = [searchFilter]
+
+      const users = await prisma.users.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          cpf: true,
+          phone: true,
+          active: true,
+          permissions: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      })
+
+      return NextResponse.json(users)
+    }
   } catch (error) {
     console.error("Erro ao listar usuários:", error)
     return NextResponse.json(
