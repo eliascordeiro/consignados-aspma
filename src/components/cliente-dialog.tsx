@@ -202,8 +202,6 @@ export function ClienteDialog({ open, onOpenChange, cliente, onSuccess }: Client
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              disabled={!!cliente}
-              className={cliente ? "bg-muted text-muted-foreground" : ""}
             />
             {!cliente && (
               <p className="text-xs text-muted-foreground">
