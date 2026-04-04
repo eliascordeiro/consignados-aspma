@@ -131,31 +131,50 @@ export async function POST(request: NextRequest) {
       10
     )
 
-    const user = await prisma.users.create({
-      data: {
-        name: validatedData.name,
-        email: validatedData.email,
-        password: hashedPassword,
-        role: validatedData.role,
-        cpf: validatedData.cpf,
-        phone: validatedData.phone,
-        active: validatedData.active,
-        permissions: validatedData.permissions || [],
-        managerPrincipalId: validatedData.managerPrincipalId || null,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        cpf: true,
-        phone: true,
-        active: true,
-        permissions: true,
-        createdAt: true,
-      },
-    })
-
+    // Tenta criar com managerPrincipalId; se coluna não existe ainda, cria sem ele
+    let user
+    try {
+      user = await prisma.users.create({
+        data: {
+          name: validatedData.name,
+          email: validatedData.email,
+          password: hashedPassword,
+          role: validatedData.role,
+          cpf: validatedData.cpf,
+          phone: validatedData.phone,
+          active: validatedData.active,
+          permissions: validatedData.permissions || [],
+          managerPrincipalId: validatedData.managerPrincipalId || null,
+        } as any,
+        select: {
+          id: true, name: true, email: true, role: true,
+          cpf: true, phone: true, active: true, permissions: true, createdAt: true,
+        },
+      })
+    } catch (createErr: any) {
+      // Coluna managerPrincipalId ainda não existe → cria sem ela
+      if (createErr?.code === 'P2022') {
+        user = await prisma.users.create({
+          data: {
+            name: validatedData.name,
+            email: validatedData.email,
+            password: hashedPassword,
+            role: validatedData.role,
+            cpf: validatedData.cpf,
+            phone: validatedData.phone,
+            active: validatedData.active,
+            permissions: validatedData.permissions || [],
+          },
+          select: {
+            id: true, name: true, email: true, role: true,
+            cpf: true, phone: true, active: true, permissions: true, createdAt: true,
+          },
+        })
+      } else {
+        throw createErr
+      }
+    }
+    // (bloco select abaixo removido — já incluso nos creates acima)
     return NextResponse.json(user, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {

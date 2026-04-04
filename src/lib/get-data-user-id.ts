@@ -22,12 +22,16 @@ export async function getDataUserId(session: {
 
   // MANAGER: pode ser sub-conta de outro MANAGER
   if (role === "MANAGER") {
-    const mgr = await prisma.users.findUnique({
-      where: { id },
-      select: { managerPrincipalId: true }
-    })
-    // Se é sub-conta, herda os dados do manager principal
-    if (mgr?.managerPrincipalId) return mgr.managerPrincipalId
+    try {
+      const mgr = await prisma.users.findUnique({
+        where: { id },
+        select: { managerPrincipalId: true } as any,
+      }) as any
+      // Se é sub-conta, herda os dados do manager principal
+      if (mgr?.managerPrincipalId) return mgr.managerPrincipalId
+    } catch {
+      // Coluna managerPrincipalId ainda não existe no DB (migration pendente) — ignora
+    }
     return id
   }
 

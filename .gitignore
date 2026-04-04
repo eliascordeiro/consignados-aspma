@@ -41,5 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+# Bloqueia SQL soltos, mas permite migrations do Prisma
 *.sql
+!prisma/migrations/**/*.sql
 *.log
