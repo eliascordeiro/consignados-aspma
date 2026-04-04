@@ -188,11 +188,11 @@ export async function POST(request: NextRequest) {
 
     // Determina o userId correto baseado no role
     // ADMIN: null (dados globais)
-    // MANAGER: próprio ID (gerencia seus próprios dados)
-    // USER: próprio ID (se tiver permissão para criar)
-    const targetUserId = session.user.role === "ADMIN" 
-      ? null 
-      : session.user.id
+    // Sub-manager (MANAGER com managerPrincipalId): usa o ID do principal
+    // MANAGER principal / USER subordinado: resolve via getDataUserId
+    const targetUserId = session.user.role === "ADMIN"
+      ? null
+      : await getDataUserId(session as any)
 
     const funcionario = await prisma.socio.create({
       data: {
