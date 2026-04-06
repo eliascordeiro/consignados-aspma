@@ -242,7 +242,8 @@ export default function NovaVendaPage() {
     const valorNum = parseFloat(valor);
     const margemAtual = formData.limite || 0;
     
-    if (valorNum > margemAtual) {
+    // Arredonda ambos para 2 casas decimais para evitar erros de ponto flutuante
+    if (Math.round(valorNum * 100) > Math.round(margemAtual * 100)) {
       alert(
         `❌ VALOR BLOQUEADO!\n\n` +
         `Valor da Parcela: R$ ${valorNum.toFixed(2)}\n` +
@@ -339,10 +340,13 @@ export default function NovaVendaPage() {
 
     // Regra AS200.PRG: compara apenas o valor da PARCELA com a margem disponível (mensal).
     // A margem é por mês — cada parcela cai em um mês diferente, portanto não se soma o total.
-    const valorParcela = parseFloat(formData.valorParcela || '0');
+    // Converte formato brasileiro (ex: "1.200,33") para número antes de comparar
+    const valorParcelaStr = (formData.valorParcela || '0').replace(/\./g, '').replace(',', '.');
+    const valorParcela = parseFloat(valorParcelaStr);
     const margemAtual = formData.limite || 0;
     
-    if (valorParcela > margemAtual) {
+    // Arredonda ambos para 2 casas decimais para evitar erros de ponto flutuante
+    if (Math.round(valorParcela * 100) > Math.round(margemAtual * 100)) {
       alert(
         `❌ BLOQUEADO! Valor da parcela excede a margem.\n\n` +
         `Valor da Parcela: R$ ${valorParcela.toFixed(2)}\n` +
