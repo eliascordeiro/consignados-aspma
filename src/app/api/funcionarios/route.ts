@@ -56,30 +56,60 @@ export async function GET(request: NextRequest) {
     if (search && statusFilter === null) {
       const cpfNumbers = search.replace(/\D/g, "")
       const isOnlyNumbers = cpfNumbers === search
+
+      // De/Para: se a busca for numérica e não for CPF, verifica mapeamento na tabela matriculas
+      const matriculasAlternativas: string[] = []
+      if (isOnlyNumbers && search.length < 11) {
+        const numMatricula = parseInt(search, 10)
+        if (!isNaN(numMatricula)) {
+          try {
+            const mappings = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+              SELECT matricula_antiga, matricula_atual FROM matriculas
+              WHERE matricula_antiga = ${numMatricula}::integer
+                 OR matricula_atual  = ${numMatricula}::integer
+            `
+            for (const m of mappings) {
+              const antiga = m.matricula_antiga.toString()
+              const atual = m.matricula_atual.toString()
+              if (antiga !== search) matriculasAlternativas.push(antiga)
+              if (atual !== search) matriculasAlternativas.push(atual)
+            }
+          } catch { /* tabela inexistente ou erro — ignora */ }
+        }
+      }
       
-      // Se for apenas números, tentar busca exata de matrícula primeiro
+      // Se for apenas números, tentar busca exata de matrícula primeiro (incluindo de/para)
       if (isOnlyNumbers) {
         const exactMatch = await prisma.socio.findFirst({
           where: {
-            matricula: search,
+            OR: [
+              { matricula: search },
+              ...matriculasAlternativas.map(m => ({ matricula: m })),
+            ],
             userId: dataUserId,
             ...(empresaId ? { empresaId: parseInt(empresaId) } : {})
           }
         })
         
         if (exactMatch) {
-          // Se encontrou matrícula exata, usar apenas esse filtro
+          // Se encontrou matrícula exata (ou via de/para), usar filtro restrito
           useExactMatch = true
-          where.AND.push({ matricula: { equals: search } })
+          where.AND.push({
+            OR: [
+              { matricula: { equals: search } },
+              ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
+            ]
+          })
         }
       }
       
-      // Se não encontrou matrícula exata, fazer busca ampla
+      // Se não encontrou matrícula exata, fazer busca ampla (incluindo alternativas de/para)
       if (!useExactMatch) {
         const searchFilters: any[] = [
           { nome: { contains: search, mode: "insensitive" } },
           { matricula: { contains: search, mode: "insensitive" } },
           { empresa: { nome: { contains: search, mode: "insensitive" } } },
+          ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
         ]
         
         // Só adiciona filtro de CPF se houver números no termo de busca
