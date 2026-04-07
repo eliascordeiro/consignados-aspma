@@ -124,7 +124,29 @@ export async function GET(request: NextRequest) {
       ? `${buscaLimpa.slice(0,3)}.${buscaLimpa.slice(3,6)}.${buscaLimpa.slice(6,9)}-${buscaLimpa.slice(9,11)}`
       : null
 
-    // Filtro de busca por matrícula/CPF
+    // De/Para: se a busca for numérica e não for CPF, verifica mapeamento na tabela matriculas
+    // Permite buscar tanto pela matrícula antiga quanto pela atual
+    const matriculasAlternativas: string[] = []
+    if (buscaLimpa && buscaLimpa.length < 11) {
+      const numMatricula = parseInt(buscaLimpa, 10)
+      if (!isNaN(numMatricula)) {
+        try {
+          const mappings = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+            SELECT matricula_antiga, matricula_atual FROM matriculas
+            WHERE matricula_antiga = ${numMatricula}::integer
+               OR matricula_atual  = ${numMatricula}::integer
+          `
+          for (const m of mappings) {
+            const antiga = m.matricula_antiga.toString()
+            const atual = m.matricula_atual.toString()
+            if (antiga !== buscaLimpa) matriculasAlternativas.push(antiga)
+            if (atual !== buscaLimpa) matriculasAlternativas.push(atual)
+          }
+        } catch { /* tabela inexistente ou erro — ignora */ }
+      }
+    }
+
+    // Filtro de busca por matrícula/CPF (inclui mapeamento de/para da tabela matriculas)
     const buscaFilter = buscaLimpa
       ? {
           OR: [
@@ -133,6 +155,7 @@ export async function GET(request: NextRequest) {
             { cpf: { equals: buscaLimpa } },
             { cpf: { equals: buscaTrimmed } },
             ...(cpfFormatado ? [{ cpf: { equals: cpfFormatado } }] : []),
+            ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
           ],
         }
       : undefined
