@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
     const formato = searchParams.get('formato') || 'pdf'; // 'pdf' ou 'excel'
     const tipoSocio = searchParams.get('tipoSocio'); // 'pensionistas' = codTipo 3 e 4
     const apenasEmAberto = searchParams.get('apenasEmAberto'); // 'true' = somente parcelas sem baixa
+    const apenasPositivos = searchParams.get('apenasPositivos'); // 'true' = desconsiderar parcelas com valor <= 0
     const empresaId = searchParams.get('empresaId'); // filtra sócios pela empresa consignatária (novo sistema)
 
     if (!mesAno) {
@@ -140,6 +141,11 @@ export async function GET(request: NextRequest) {
         { baixa: ' ' },
         { baixa: 'N' }, // Migração MySQL->PG: 'N' = não baixada
       ];
+    }
+
+    // Desconsiderar parcelas com valor <= 0
+    if (apenasPositivos === 'true') {
+      where.valor = { gt: 0 };
     }
 
     // Consignatária: inclui TODAS as parcelas (inclusive baixa 'S'/'X')

@@ -374,6 +374,7 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'pdf',
+        apenasPositivos: 'true',
         // Filtra por empresa (consignatária) quando selecionada (exceto 'todas')
         ...(consignatariaId && consignatariaId !== 'todas' && { empresaId: consignatariaId }),
       });
@@ -432,6 +433,7 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'excel',
+        apenasPositivos: 'true',
         // Filtra por empresa (consignatária) quando selecionada (exceto 'todas')
         ...(consignatariaId && consignatariaId !== 'todas' && { empresaId: consignatariaId }),
       });
@@ -491,6 +493,7 @@ export default function RelatoriosPage() {
         ...(filtros.socioMatricula && { socioMatricula: filtros.socioMatricula }),
         agrupaPor: filtros.agrupaPor,
         formato: 'csv',
+        apenasPositivos: 'true',
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
