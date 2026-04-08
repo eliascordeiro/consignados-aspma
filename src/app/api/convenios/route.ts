@@ -42,7 +42,7 @@ const convenioSchema = z.object({
   fone: z.string().optional(),
   fax: z.string().optional(),
   contato: z.string().optional(),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
   banco: z.string().optional(),
   agencia: z.string().optional(),
   conta: z.string().optional(),
