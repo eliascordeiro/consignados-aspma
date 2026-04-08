@@ -22,13 +22,13 @@ const convenioSchema = z.object({
   cgc: z.string().optional(),
   tipo: z.string().optional(),
   libera: z.string().optional(),
-  desconto: z.union([z.string(), z.number()]).optional().transform(val => {
-    if (!val) return null
+  desconto: z.union([z.string(), z.number()]).optional().nullable().transform(val => {
+    if (val === null || val === undefined || val === '') return null
     const num = typeof val === 'string' ? parseFloat(val) : val
     return isNaN(num) ? null : num
   }),
-  parcelas: z.union([z.string(), z.number()]).optional().transform(val => {
-    if (!val) return null
+  parcelas: z.union([z.string(), z.number()]).optional().nullable().transform(val => {
+    if (val === null || val === undefined || val === '') return null
     const num = typeof val === 'string' ? parseInt(val) : val
     return isNaN(num) ? null : num
   }),
