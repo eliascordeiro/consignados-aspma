@@ -1477,45 +1477,47 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
   } // Fim do modo detalhado
 
   // ═══════════════════════════════════════════════════════════
-  // TOTAL GERAL
+  // TOTAL GERAL (apenas no relatório geral — sem filtro de convênio)
   // ═══════════════════════════════════════════════════════════
   
-  if (y > pageHeight - 45) {
-    addFooter();
-    doc.addPage();
-    addHeader();
+  if (isRelatorioGeral) {
+    if (y > pageHeight - 45) {
+      addFooter();
+      doc.addPage();
+      addHeader();
+    }
+    
+    y += 5;
+    
+    // Box de total geral com 3 linhas
+    const totalBrutoGeralC = totalGeral + totalDescontoGeral;
+    const boxGeralHC = 32;
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.roundedRect(pageWidth / 2 - 85, y - 4, 170, boxGeralHC, 2, 2, 'F');
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Valor Total:', pageWidth / 2 - 80, y + 4);
+    doc.text(`R$ ${totalBrutoGeralC.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 4, { align: 'right' });
+    doc.text('Valor Desconto:', pageWidth / 2 - 80, y + 12);
+    doc.text(`R$ ${totalDescontoGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 12, { align: 'right' });
+    doc.setDrawColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setLineWidth(0.3);
+    doc.line(pageWidth / 2 - 80, y + 15, pageWidth / 2 + 80, y + 15);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Valor Líquido:', pageWidth / 2 - 80, y + 23);
+    doc.text(`R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 23, { align: 'right' });
+    
+    // Informações adicionais
+    y += boxGeralHC + 8;
+    doc.setFontSize(7);
+    doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+    doc.setFont('helvetica', 'italic');
+    const totalConvenios = grupos.length;
+    const totalParcelas = grupos.reduce((sum, g) => sum + g.parcelas.length, 0);
+    doc.text(`Total de Convênios: ${totalConvenios} • Total de Parcelas: ${totalParcelas}`, pageWidth / 2, y, { align: 'center' });
   }
-  
-  y += 5;
-  
-  // Box de total geral com 3 linhas
-  const totalBrutoGeralC = totalGeral + totalDescontoGeral;
-  const boxGeralHC = 32;
-  doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-  doc.roundedRect(pageWidth / 2 - 85, y - 4, 170, boxGeralHC, 2, 2, 'F');
-  doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Valor Total:', pageWidth / 2 - 80, y + 4);
-  doc.text(`R$ ${totalBrutoGeralC.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 4, { align: 'right' });
-  doc.text('Valor Desconto:', pageWidth / 2 - 80, y + 12);
-  doc.text(`R$ ${totalDescontoGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 12, { align: 'right' });
-  doc.setDrawColor(colors.white[0], colors.white[1], colors.white[2]);
-  doc.setLineWidth(0.3);
-  doc.line(pageWidth / 2 - 80, y + 15, pageWidth / 2 + 80, y + 15);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('Valor Líquido:', pageWidth / 2 - 80, y + 23);
-  doc.text(`R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth / 2 + 80, y + 23, { align: 'right' });
-  
-  // Informações adicionais
-  y += boxGeralHC + 8;
-  doc.setFontSize(7);
-  doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
-  doc.setFont('helvetica', 'italic');
-  const totalConvenios = grupos.length;
-  const totalParcelas = grupos.reduce((sum, g) => sum + g.parcelas.length, 0);
-  doc.text(`Total de Convênios: ${totalConvenios} • Total de Parcelas: ${totalParcelas}`, pageWidth / 2, y, { align: 'center' });
   
   // Adicionar rodapé na última página
   addFooter();
