@@ -1382,13 +1382,11 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
     const col2 = pageWidth - 100;         // Parcela
     const col3 = pageWidth - 85;          // De
     const col4 = pageWidth - 55;          // Valor
-    const col5 = pageWidth - 15;          // Status
     
     doc.text('SÓCIO', col1, y + 1.5);
     doc.text('PARC.', col2, y + 1.5);
     doc.text('DE', col3, y + 1.5);
     doc.text('VALOR', col4, y + 1.5, { align: 'right' });
-    doc.text('ST', col5, y + 1.5);
     
     y += 7;
     
@@ -1415,7 +1413,6 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
         doc.text('PARC.', col2, y + 1.5);
         doc.text('DE', col3, y + 1.5);
         doc.text('VALOR', col4, y + 1.5, { align: 'right' });
-        doc.text('ST', col5, y + 1.5);
         y += 7;
         
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
@@ -1447,15 +1444,6 @@ async function gerarPDFConvenio(grupos: GrupoConvenio[], mes: number, ano: numbe
       doc.setFont('helvetica', 'bold');
       doc.text(`R$ ${valorFormatado}`, col4, y + 1, { align: 'right' });
       doc.setFont('helvetica', 'normal');
-      
-      // Status
-      if (parcela.st === 'BX') {
-        doc.setTextColor(231, 76, 60);
-        doc.setFont('helvetica', 'bold');
-        doc.text('BX', col5, y + 1);
-        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-        doc.setFont('helvetica', 'normal');
-      }
       
       y += 6;
       isAlternate = !isAlternate;
@@ -1602,7 +1590,6 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
       'De',
       'Valor',
       'Total',
-      'St',
     ]);
 
     headerRow.font = { bold: true };
@@ -1623,7 +1610,6 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
         index === grupo.parcelas.length - 1 ? grupo.total : '',
         index === grupo.parcelas.length - 1 ? grupo.totalDesconto : '',
         index === grupo.parcelas.length - 1 ? grupo.totalLiquido : '',
-        parcela.st,
       ]);
 
       // Formatar valor
@@ -1655,7 +1641,6 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
     totalGeral,
     totalDescontoGeralEC,
     totalGeral - totalDescontoGeralEC,
-    '',
   ]);
   totalRow.font = { bold: true };
   totalRow.getCell(5).numFmt = '#,##0.00';
@@ -1672,7 +1657,6 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
     { width: 15 }, // Total Bruto
     { width: 15 }, // Desconto
     { width: 15 }, // Total Líquido
-    { width: 5 },  // St
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -1707,7 +1691,6 @@ function gerarCSVConvenio(
       'Total_Parcelas',
       'Valor',
       'Total_Convenio',
-      'Status'
     ].join(delimiter));
   }
   
@@ -1735,7 +1718,6 @@ function gerarCSVConvenio(
         parcela.de.toString(),
         valorFormatado,
         totalFormatado,
-        parcela.st
       ];
       
       lines.push(row.join(delimiter));
@@ -1760,7 +1742,6 @@ function gerarCSVConvenio(
     '',
     'TOTAL GERAL:',
     totalGeralFormatado,
-    ''
   ].join(delimiter));
   
   return lines.join('\n');
@@ -1891,13 +1872,11 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
     const col2 = pageWidth - 100;
     const col3 = pageWidth - 85;
     const col4 = pageWidth - 55;
-    const col5 = pageWidth - 15;
 
     doc.text('SÓCIO', col1, y + 1.5);
     doc.text('PARC.', col2, y + 1.5);
     doc.text('DE', col3, y + 1.5);
     doc.text('VALOR', col4, y + 1.5, { align: 'right' });
-    doc.text('ST', col5, y + 1.5);
 
     y += 7;
 
@@ -1933,7 +1912,6 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
         doc.text('PARC.', col2, y + 1.5);
         doc.text('DE', col3, y + 1.5);
         doc.text('VALOR', col4, y + 1.5, { align: 'right' });
-        doc.text('ST', col5, y + 1.5);
         y += 7;
 
         doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
@@ -1961,14 +1939,6 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
       doc.setFont('helvetica', 'bold');
       doc.text(`R$ ${valorFormatado}`, col4, y + 1, { align: 'right' });
       doc.setFont('helvetica', 'normal');
-
-      if (parcela.st === 'BX') {
-        doc.setTextColor(231, 76, 60); // laranja/vermelho = baixado
-        doc.setFont('helvetica', 'bold');
-        doc.text('BX', col5, y + 1);
-        doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-        doc.setFont('helvetica', 'normal');
-      }
 
       y += 6;
       isAlternate = !isAlternate;
@@ -2074,7 +2044,6 @@ async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano
     'Total Bruto',
     'Desconto',
     'Total Líquido',
-    'St',
   ]);
   headerRow.font = { bold: true };
   headerRow.fill = {
@@ -2096,7 +2065,6 @@ async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano
         index === grupo.parcelas.length - 1 ? grupo.total : '',
         index === grupo.parcelas.length - 1 ? grupo.totalDesconto : '',
         index === grupo.parcelas.length - 1 ? grupo.totalLiquido : '',
-        parcela.st,
       ]);
       row.getCell(5).numFmt = '#,##0.00';
       if (index === grupo.parcelas.length - 1) {
@@ -2112,7 +2080,7 @@ async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano
   });
 
   const totalDescontoGeralEX = grupos.reduce((s, g) => s + g.totalDesconto, 0);
-  const totalRow = worksheet.addRow(['', '', '', '', 'TOTAIS:', totalGeral, totalDescontoGeralEX, totalGeral - totalDescontoGeralEX, '']);
+  const totalRow = worksheet.addRow(['', '', '', '', 'TOTAIS:', totalGeral, totalDescontoGeralEX, totalGeral - totalDescontoGeralEX]);
   totalRow.font = { bold: true };
   totalRow.getCell(6).numFmt = '#,##0.00';
   totalRow.getCell(7).numFmt = '#,##0.00';
@@ -2128,7 +2096,6 @@ async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano
     { width: 15 }, // Total Bruto
     { width: 15 }, // Desconto
     { width: 15 }, // Total Líquido
-    { width: 5 },  // St
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -2157,7 +2124,6 @@ function gerarCSVConsignataria(
       'Total_Parcelas',
       'Valor',
       'Total_Consignataria',
-      'Status',
     ].join(delimiter));
   }
 
@@ -2180,7 +2146,6 @@ function gerarCSVConsignataria(
         parcela.de.toString(),
         valorFormatado,
         totalFormatado,
-        parcela.st,
       ].join(delimiter));
     });
     totalGeral += grupo.totalLiquido;
@@ -2190,7 +2155,7 @@ function gerarCSVConsignataria(
     ? totalGeral.toFixed(2).replace('.', ',')
     : totalGeral.toFixed(2);
 
-  lines.push(['', '', '', '', 'TOTAL GERAL:', totalGeralFormatado, ''].join(delimiter));
+  lines.push(['', '', '', '', 'TOTAL GERAL:', totalGeralFormatado].join(delimiter));
 
   return lines.join('\n');
 }
