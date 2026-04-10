@@ -81,12 +81,42 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      where.OR = [
-        { nome: { contains: search, mode: "insensitive" } },
-        { cpf: { contains: search } },
-        ...(isNumericSearch ? [{ matricula: search }] : [{ matricula: { contains: search } }]),
-        ...matriculasAlternativas.map(m => ({ matricula: m })),
-      ]
+      // Se for numérico, tentar match exato primeiro (matrícula exata ou via de/para)
+      if (isNumericSearch) {
+        const exactMatch = await prisma.socio.findFirst({
+          where: {
+            OR: [
+              { matricula: search },
+              ...matriculasAlternativas.map(m => ({ matricula: m })),
+            ],
+            userId: dataUserId,
+          }
+        })
+
+        if (exactMatch) {
+          // Achou exato (ou de/para) → restringe a equals para não vazar substrings
+          where.OR = [
+            { nome: { contains: search, mode: "insensitive" } },
+            { matricula: search },
+            ...matriculasAlternativas.map(m => ({ matricula: m })),
+          ]
+        } else {
+          // Não achou exato → busca ampla com contains
+          where.OR = [
+            { nome: { contains: search, mode: "insensitive" } },
+            { cpf: { contains: search } },
+            { matricula: { contains: search } },
+            ...matriculasAlternativas.map(m => ({ matricula: m })),
+          ]
+        }
+      } else {
+        // Busca textual normal
+        where.OR = [
+          { nome: { contains: search, mode: "insensitive" } },
+          { cpf: { contains: search } },
+          { matricula: { contains: search } },
+        ]
+      }
     }
 
     const [socios, total] = await Promise.all([

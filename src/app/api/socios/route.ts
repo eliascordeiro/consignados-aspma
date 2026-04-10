@@ -36,9 +36,10 @@ export async function GET(req: NextRequest) {
     const where: any = { userId: dataUserId }
 
     if (search) {
+      const isOnlyNumbers = /^\d+$/.test(search)
+
       // De/Para: se a busca for numérica, verifica mapeamento na tabela matriculas
       const matriculasAlternativas: string[] = []
-      const isOnlyNumbers = /^\d+$/.test(search)
       if (isOnlyNumbers) {
         const numMatricula = parseInt(search, 10)
         if (!isNaN(numMatricula)) {
@@ -58,11 +59,40 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      where.OR = [
-        { matricula: { contains: search, mode: "insensitive" as const } },
-        { nome: { contains: search, mode: "insensitive" as const } },
-        ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
-      ]
+      // Se for numérico, tentar match exato primeiro (matrícula exata ou via de/para)
+      if (isOnlyNumbers) {
+        const exactMatch = await db.socio.findFirst({
+          where: {
+            OR: [
+              { matricula: search },
+              ...matriculasAlternativas.map(m => ({ matricula: m })),
+            ],
+            userId: dataUserId,
+          }
+        })
+
+        if (exactMatch) {
+          // Achou exato (ou de/para) → restringe a equals para não vazar substrings
+          where.OR = [
+            { matricula: { equals: search } },
+            { nome: { contains: search, mode: "insensitive" as const } },
+            ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
+          ]
+        } else {
+          // Não achou exato → busca ampla com contains
+          where.OR = [
+            { matricula: { contains: search, mode: "insensitive" as const } },
+            { nome: { contains: search, mode: "insensitive" as const } },
+            ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
+          ]
+        }
+      } else {
+        // Busca textual normal
+        where.OR = [
+          { matricula: { contains: search, mode: "insensitive" as const } },
+          { nome: { contains: search, mode: "insensitive" as const } },
+        ]
+      }
     }
 
     const [socios, total] = await Promise.all([
