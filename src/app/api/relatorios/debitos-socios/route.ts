@@ -744,37 +744,39 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
   });
 
   // ═══════════════════════════════════════════════════════════
-  // TOTAL GERAL
+  // TOTAL GERAL (somente quando há mais de um sócio)
   // ═══════════════════════════════════════════════════════════
-  
-  if (y > pageHeight - 35) {
-    addFooter();
-    doc.addPage();
-    addHeader();
+
+  if (grupos.length > 1) {
+    if (y > pageHeight - 35) {
+      addFooter();
+      doc.addPage();
+      addHeader();
+    }
+    
+    y += 5;
+    
+    // Box de total geral destacado
+    const boxGeralH = 12;
+    doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+    doc.roundedRect(pageWidth / 2 - 70, y - 4, 140, boxGeralH, 2, 2, 'F');
+    doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('TOTAL GERAL:', pageWidth / 2 - 52, y + 3);
+    const totalGeralFormatado = totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    doc.setFontSize(13);
+    doc.text(`R$ ${totalGeralFormatado}`, pageWidth / 2 + 52, y + 3, { align: 'right' });
+    
+    // Informações adicionais
+    y += boxGeralH + 8;
+    doc.setFontSize(7);
+    doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+    doc.setFont('helvetica', 'italic');
+    const totalSocios = grupos.length;
+    const totalParcelas = grupos.reduce((sum, g) => sum + g.parcelas.length, 0);
+    doc.text(`Total de Sócios: ${totalSocios} • Total de Parcelas: ${totalParcelas}`, pageWidth / 2, y, { align: 'center' });
   }
-  
-  y += 5;
-  
-  // Box de total geral destacado
-  const boxGeralH = 12;
-  doc.setFillColor(colors.accent[0], colors.accent[1], colors.accent[2]);
-  doc.roundedRect(pageWidth / 2 - 70, y - 4, 140, boxGeralH, 2, 2, 'F');
-  doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text('TOTAL GERAL:', pageWidth / 2 - 52, y + 3);
-  const totalGeralFormatado = totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  doc.setFontSize(13);
-  doc.text(`R$ ${totalGeralFormatado}`, pageWidth / 2 + 52, y + 3, { align: 'right' });
-  
-  // Informações adicionais
-  y += boxGeralH + 8;
-  doc.setFontSize(7);
-  doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
-  doc.setFont('helvetica', 'italic');
-  const totalSocios = grupos.length;
-  const totalParcelas = grupos.reduce((sum, g) => sum + g.parcelas.length, 0);
-  doc.text(`Total de Sócios: ${totalSocios} • Total de Parcelas: ${totalParcelas}`, pageWidth / 2, y, { align: 'center' });
   
   // Adicionar rodapé na última página
   addFooter();
