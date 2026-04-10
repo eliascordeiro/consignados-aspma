@@ -141,7 +141,18 @@ export async function PUT(
     const newEmail = data.email ? data.email.trim().toLowerCase() : null
     const oldEmail = existing.email ? existing.email.trim().toLowerCase() : null
 
-    if (newEmail && newEmail !== oldEmail) {
+    if (!newEmail && existing.userId) {
+      // Email foi removido — bloquear ou excluir o usuário vinculado
+      const vendasCount = await db.venda.count({ where: { convenioId: id } })
+      if (vendasCount === 0) {
+        // Sem vendas → excluir o usuário
+        await db.users.delete({ where: { id: existing.userId } }).catch(() => null)
+      } else {
+        // Com vendas → bloquear o usuário (active = false)
+        await db.users.update({ where: { id: existing.userId }, data: { active: false } }).catch(() => null)
+      }
+      ;(dataToSave as Record<string, unknown>).userId = null
+    } else if (newEmail && newEmail !== oldEmail) {
       if (existing.userId) {
         // Convenio already has a linked user — update its email if not taken by another
         const emailTaken = await db.users.findFirst({
