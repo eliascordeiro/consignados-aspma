@@ -576,7 +576,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     // ═══════════════════════════════════════════════════════════
     
     // Box de fundo do sócio
-    const cardHeight = grupo.matriculaInfo ? 16 : 12;
+    const cardHeight = 12;
     doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
     doc.roundedRect(margin, y, pageWidth - 2 * margin, cardHeight, 2, 2, 'F');
     
@@ -590,18 +590,10 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.setFontSize(9);
     doc.text(`Matrícula: ${grupo.matricula}`, margin + 20, y + 5);
     
-    // De/Para: mapeamento da tabela matriculas
-    if (grupo.matriculaInfo) {
-      doc.setFontSize(8);
-      doc.setTextColor(255, 235, 150); // amarelo suave para destaque
-      doc.text(`De: ${grupo.matriculaInfo.antiga}  ->  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
-      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-    }
-    
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     const nomeText = grupo.nome.length > 80 ? grupo.nome.substring(0, 77) + '...' : grupo.nome;
-    doc.text(nomeText.toUpperCase(), margin + 3, grupo.matriculaInfo ? y + 13.5 : y + 9);
+    doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
     
     y += cardHeight + 3;
 
@@ -647,7 +639,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         addHeader(false); // Cabeçalho reduzido nas páginas seguintes
         
         // Repetir info do sócio e cabeçalho da tabela na nova página
-        const cardHeightPB = grupo.matriculaInfo ? 16 : 12;
+        const cardHeightPB = 12;
         doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
         doc.roundedRect(margin, y, pageWidth - 2 * margin, cardHeightPB, 2, 2, 'F');
         doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
@@ -657,15 +649,9 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
         doc.text(`Matrícula: ${grupo.matricula}`, margin + 20, y + 5);
-        if (grupo.matriculaInfo) {
-          doc.setFontSize(8);
-          doc.setTextColor(255, 235, 150);
-          doc.text(`De: ${grupo.matriculaInfo.antiga}  ->  Para: ${grupo.matriculaInfo.atual}`, margin + 20, y + 9.5);
-          doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
-        }
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text(nomeText.toUpperCase(), margin + 3, grupo.matriculaInfo ? y + 13.5 : y + 9);
+        doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
         y += cardHeightPB + 3;
         
         // Cabeçalho da tabela
@@ -2288,7 +2274,7 @@ async function gerarPDFSocioResumo(grupos: GrupoSocioResumo[], mes: number, ano:
       isAlternate = false;
     }
 
-    const rowHeight = grupo.matriculaInfo ? 11 : 6;
+    const rowHeight = 6;
 
     if (isAlternate) {
       doc.setFillColor(colors.tableAlt[0], colors.tableAlt[1], colors.tableAlt[2]);
@@ -2299,14 +2285,6 @@ async function gerarPDFSocioResumo(grupos: GrupoSocioResumo[], mes: number, ano:
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.text(grupo.matricula, colMat, y + 1);
-
-    if (grupo.matriculaInfo) {
-      doc.setFontSize(7);
-      doc.setTextColor(180, 100, 0);
-      doc.text(`De: ${grupo.matriculaInfo.antiga}  ->  Para: ${grupo.matriculaInfo.atual}`, colMat, y + 6);
-      doc.setFontSize(8);
-      doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-    }
 
     const nomeText = grupo.nome.length > 120 ? grupo.nome.substring(0, 117) + '...' : grupo.nome;
     doc.text(nomeText.toUpperCase(), colNome, y + 1);
@@ -2365,26 +2343,22 @@ async function gerarExcelSocioResumo(grupos: GrupoSocioResumo[], mes: number, an
   p.font = { bold: true, size: 11 };
   p.alignment = { horizontal: 'center' };
 
-  const headerRow = ws.addRow(['Matrícula', 'De -> Para', 'Nome', 'Qtd. Parcelas', 'Total']);
+  const headerRow = ws.addRow(['Matrícula', 'Nome', 'Qtd. Parcelas', 'Total']);
   headerRow.font = { bold: true };
   headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFB7E1CD' } };
 
   let totalGeral = 0;
   grupos.forEach((g) => {
-    const dePara = g.matriculaInfo ? `${g.matriculaInfo.antiga} -> ${g.matriculaInfo.atual}` : '';
-    const row = ws.addRow([g.matricula, dePara, g.nome, g.qtdParcelas, g.total]);
-    row.getCell(5).numFmt = '#,##0.00';
-    if (dePara) {
-      row.getCell(2).font = { color: { argb: 'FFB46400' } };
-    }
+    const row = ws.addRow([g.matricula, g.nome, g.qtdParcelas, g.total]);
+    row.getCell(4).numFmt = '#,##0.00';
     totalGeral += g.total;
   });
 
-  const totalRow = ws.addRow(['', '', '', 'TOTAL GERAL:', totalGeral]);
+  const totalRow = ws.addRow(['', '', 'TOTAL GERAL:', totalGeral]);
   totalRow.font = { bold: true };
-  totalRow.getCell(5).numFmt = '#,##0.00';
+  totalRow.getCell(4).numFmt = '#,##0.00';
 
-  ws.columns = [{ width: 15 }, { width: 22 }, { width: 50 }, { width: 15 }, { width: 18 }];
+  ws.columns = [{ width: 15 }, { width: 50 }, { width: 15 }, { width: 18 }];
 
   const buffer = await workbook.xlsx.writeBuffer();
   const u8 = new Uint8Array(buffer);
