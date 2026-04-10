@@ -36,9 +36,32 @@ export async function GET(req: NextRequest) {
     const where: any = { userId: dataUserId }
 
     if (search) {
+      // De/Para: se a busca for numérica, verifica mapeamento na tabela matriculas
+      const matriculasAlternativas: string[] = []
+      const isOnlyNumbers = /^\d+$/.test(search)
+      if (isOnlyNumbers) {
+        const numMatricula = parseInt(search, 10)
+        if (!isNaN(numMatricula)) {
+          try {
+            const mappings = await db.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+              SELECT matricula_antiga, matricula_atual FROM matriculas
+              WHERE matricula_antiga = ${numMatricula}::integer
+                 OR matricula_atual  = ${numMatricula}::integer
+            `
+            for (const m of mappings) {
+              const antiga = m.matricula_antiga.toString()
+              const atual = m.matricula_atual.toString()
+              if (antiga !== search) matriculasAlternativas.push(antiga)
+              if (atual !== search) matriculasAlternativas.push(atual)
+            }
+          } catch { /* tabela inexistente ou erro — ignora */ }
+        }
+      }
+
       where.OR = [
         { matricula: { contains: search, mode: "insensitive" as const } },
         { nome: { contains: search, mode: "insensitive" as const } },
+        ...matriculasAlternativas.map(m => ({ matricula: { equals: m } })),
       ]
     }
 

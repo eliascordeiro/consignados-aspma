@@ -59,10 +59,33 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       const isNumericSearch = /^\d+$/.test(search)
+
+      // De/Para: se a busca for numérica, verifica mapeamento na tabela matriculas
+      const matriculasAlternativas: string[] = []
+      if (isNumericSearch) {
+        const numMatricula = parseInt(search, 10)
+        if (!isNaN(numMatricula)) {
+          try {
+            const mappings = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+              SELECT matricula_antiga, matricula_atual FROM matriculas
+              WHERE matricula_antiga = ${numMatricula}::integer
+                 OR matricula_atual  = ${numMatricula}::integer
+            `
+            for (const m of mappings) {
+              const antiga = m.matricula_antiga.toString()
+              const atual = m.matricula_atual.toString()
+              if (antiga !== search) matriculasAlternativas.push(antiga)
+              if (atual !== search) matriculasAlternativas.push(atual)
+            }
+          } catch { /* tabela inexistente ou erro — ignora */ }
+        }
+      }
+
       where.OR = [
         { nome: { contains: search, mode: "insensitive" } },
         { cpf: { contains: search } },
         ...(isNumericSearch ? [{ matricula: search }] : [{ matricula: { contains: search } }]),
+        ...matriculasAlternativas.map(m => ({ matricula: m })),
       ]
     }
 
