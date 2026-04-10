@@ -1504,7 +1504,7 @@ export default function RelatoriosPage() {
                       onChange={(e) => setFiltrosConsigRel({ ...filtrosConsigRel, agrupaPor: e.target.value })}
                       className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
                     >
-                      <option value="socio">Sócios</option>
+                      <option value="socio">Extrato</option>
                       <option value="resumido-consignataria">Resumido</option>
                     </select>
                   </div>

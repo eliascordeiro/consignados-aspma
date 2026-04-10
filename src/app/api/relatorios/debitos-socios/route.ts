@@ -33,6 +33,7 @@ interface GrupoSocio {
   matricula: string;
   nome: string;
   matriculaInfo?: { antiga: number; atual: number } | null;
+  margemConsignada?: number;
   parcelas: {
     convenio: string;
     pc: number;
@@ -401,7 +402,25 @@ export async function GET(request: NextRequest) {
           }
         } catch { /* tabela inexistente ou erro — ignora */ }
       }
-      const grupos = agruparPorSocio(parcelas, matriculaMap);
+
+      // Busca margem consignada para cada sócio (tipo 3/4 usa limite; outros usam margemConsig)
+      const uniqueSocioIds = [...new Set(parcelas.map((p: any) => p.venda.socio.id).filter(Boolean))] as string[];
+      const margemMap = new Map<string, number>();
+      if (uniqueSocioIds.length > 0) {
+        try {
+          const socios = await prisma.socio.findMany({
+            where: { id: { in: uniqueSocioIds } },
+            select: { id: true, tipo: true, limite: true, margemConsig: true },
+          });
+          for (const s of socios) {
+            const isLocal = s.tipo === '3' || s.tipo === '4';
+            const margem = isLocal ? Number(s.limite || 0) : Number(s.margemConsig || 0);
+            margemMap.set(s.id, margem);
+          }
+        } catch { /* ignora erros de consulta de margem */ }
+      }
+
+      const grupos = agruparPorSocio(parcelas, matriculaMap, margemMap);
 
       // Gerar PDF, Excel ou CSV para sócios
       if (formato === 'pdf') {
@@ -713,6 +732,14 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     doc.setFontSize(10);
     doc.text(`R$ ${totalFormatado}`, pageWidth - margin - 3, y + 2, { align: 'right' });
     y += 10;
+    if (grupo.margemConsignada !== undefined) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.setTextColor(colors.darkGray[0], colors.darkGray[1], colors.darkGray[2]);
+      const margemConsigFormatado = grupo.margemConsignada.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      doc.text(`Margem Consignada: R$ ${margemConsigFormatado}`, pageWidth - margin - 3, y, { align: 'right' });
+      y += 5;
+    }
     totalGeral += grupo.total;
   });
 
@@ -932,7 +959,7 @@ function gerarCSV(
 // FUNÇÕES DE AGRUPAMENTO
 // ═══════════════════════════════════════════════════════════════════
 
-function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>): GrupoSocio[] {
+function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>, margemMap?: Map<string, number>): GrupoSocio[] {
   const grupos: Map<string, GrupoSocio> = new Map();
 
   parcelas.forEach((parcela) => {
@@ -942,10 +969,12 @@ function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: n
     const matricula = parcela.venda.socio.matricula || '';
 
     if (!grupos.has(socioKey)) {
+      const margemConsignada = margemMap?.get(parcela.venda.socio.id);
       grupos.set(socioKey, {
         matricula,
         nome: parcela.venda.socio.nome,
         matriculaInfo: matriculaMap?.get(matricula) ?? null,
+        margemConsignada,
         parcelas: [],
         total: 0,
         totalDesconto: 0,
