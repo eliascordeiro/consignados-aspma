@@ -588,7 +588,8 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text(`Matrícula: ${grupo.matricula}`, margin + 20, y + 5);
+    const matriculaExibir = grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula;
+    doc.text(`Matrícula: ${matriculaExibir}`, margin + 20, y + 5);
     
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
@@ -648,7 +649,8 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         doc.text('SÓCIO:', margin + 3, y + 5);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(`Matrícula: ${grupo.matricula}`, margin + 20, y + 5);
+        const matriculaExibirPB = grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula;
+        doc.text(`Matrícula: ${matriculaExibirPB}`, margin + 20, y + 5);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
@@ -818,7 +820,7 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   grupos.forEach((grupo) => {
     grupo.parcelas.forEach((parcela, index) => {
       const row = worksheet.addRow([
-        index === 0 ? grupo.matricula : '',
+        index === 0 ? (grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula) : '',
         index === 0 ? grupo.nome : '',
         parcela.convenio,
         parcela.pc,
@@ -928,7 +930,7 @@ function gerarCSV(
         : '';
       
       const row = [
-        grupo.matricula, // Repetir em todas as linhas
+        grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula, // Repetir em todas as linhas
         `"${grupo.nome}"`, // Repetir em todas as linhas - Aspas para nomes com vírgula
         `"${parcela.convenio}"`, // Aspas para convênios com vírgula
         parcela.pc.toString(),
@@ -2284,7 +2286,7 @@ async function gerarPDFSocioResumo(grupos: GrupoSocioResumo[], mes: number, ano:
     doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text(grupo.matricula, colMat, y + 1);
+    doc.text(grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula, colMat, y + 1);
 
     const nomeText = grupo.nome.length > 120 ? grupo.nome.substring(0, 117) + '...' : grupo.nome;
     doc.text(nomeText.toUpperCase(), colNome, y + 1);
@@ -2349,7 +2351,7 @@ async function gerarExcelSocioResumo(grupos: GrupoSocioResumo[], mes: number, an
 
   let totalGeral = 0;
   grupos.forEach((g) => {
-    const row = ws.addRow([g.matricula, g.nome, g.qtdParcelas, g.total]);
+    const row = ws.addRow([g.matriculaInfo ? g.matriculaInfo.antiga.toString() : g.matricula, g.nome, g.qtdParcelas, g.total]);
     row.getCell(4).numFmt = '#,##0.00';
     totalGeral += g.total;
   });
@@ -2381,7 +2383,8 @@ function gerarCSVSocioResumo(
   let totalGeral = 0;
   grupos.forEach((g) => {
     const totalFmt = decimalSeparator === ',' ? g.total.toFixed(2).replace('.', ',') : g.total.toFixed(2);
-    lines.push([g.matricula, `"${g.nome}"`, g.qtdParcelas.toString(), totalFmt].join(delimiter));
+    const matCsv = g.matriculaInfo ? g.matriculaInfo.antiga.toString() : g.matricula;
+    lines.push([matCsv, `"${g.nome}"`, g.qtdParcelas.toString(), totalFmt].join(delimiter));
     totalGeral += g.total;
   });
 
