@@ -252,6 +252,21 @@ export async function DELETE(
       )
     }
 
+    // Verificar se o convênio tem vendas associadas
+    const vendasCount = await db.venda.count({ where: { convenioId: id } })
+
+    if (vendasCount > 0) {
+      return NextResponse.json(
+        { error: `Não é possível excluir: este convênio possui ${vendasCount} venda(s) associada(s). Desative-o ao invés de excluir.` },
+        { status: 400 }
+      )
+    }
+
+    // Se tem usuário vinculado e não tem vendas, deletar o usuário também
+    if (existing.userId) {
+      await db.users.delete({ where: { id: existing.userId } }).catch(() => null)
+    }
+
     await db.convenio.delete({
       where: { id },
     })

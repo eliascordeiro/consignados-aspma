@@ -199,18 +199,21 @@ export default function EditarConvenioPage() {
           <div className="px-6 py-4 border-b border-border">
             <h2 className="text-base font-semibold text-foreground">Dados Principais</h2>
           </div>
-          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Linha 1: CPF/CNPJ + Razão Social */}
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Código</label>
-              <input type="text" value={formData.codigo} onChange={(e) => set('codigo', e.target.value)} disabled={!canEdit}
+              <label className="block text-xs font-medium text-muted-foreground mb-1">CPF / CNPJ</label>
+              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', formatCpfCnpj(e.target.value))} disabled={!canEdit} maxLength={18}
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 className={inputCls(!canEdit)} />
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Razão Social <span className="text-red-500">*</span></label>
               <input type="text" required value={formData.razao_soc} onChange={(e) => set('razao_soc', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
-            <div className="sm:col-span-2">
+            {/* Linha 2: Nome/Fantasia + Tipo */}
+            <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Nome / Fantasia</label>
               <input type="text" value={formData.fantasia} onChange={(e) => set('fantasia', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
@@ -222,12 +225,25 @@ export default function EditarConvenioPage() {
                 {LIBERA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
+            {/* Linha 3: Email (acesso ao portal) + Código */}
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">CPF / CNPJ</label>
-              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', formatCpfCnpj(e.target.value))} disabled={!canEdit} maxLength={18}
-                placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                className={inputCls(!canEdit)} />
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                E-mail de Acesso <span className="text-red-500">*</span>
+              </label>
+              <input type="email" required value={formData.email} onChange={(e) => set('email', e.target.value)} disabled={!canEdit}
+                placeholder="email@exemplo.com"
+                className={`w-full border-2 ${!canEdit ? 'border-border bg-muted/50 text-muted-foreground cursor-not-allowed' : 'border-blue-300 dark:border-blue-600 bg-background text-foreground'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`} />
+              <p className="mt-1.5 text-xs text-blue-600 dark:text-blue-400 flex items-start gap-1">
+                <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                Este e-mail será o login do convênio para acessar o portal.
+              </p>
             </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Código</label>
+              <input type="text" value={formData.codigo} readOnly disabled
+                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-muted text-muted-foreground cursor-not-allowed" />
+            </div>
+            {/* Linha 4: Desconto + Parcelas */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">% Desconto</label>
               <input type="number" step="0.01" value={formData.desconto} onChange={(e) => set('desconto', e.target.value)} disabled={!canEdit}
@@ -237,11 +253,6 @@ export default function EditarConvenioPage() {
               <label className="block text-xs font-medium text-muted-foreground mb-1">Parcelas máx.</label>
               <input type="number" min="1" value={formData.parcelas} onChange={(e) => set('parcelas', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
-            </div>
-            <div className="flex items-center gap-2 pt-5">
-              <input type="checkbox" id="ativo-edit" checked={formData.ativo} onChange={(e) => set('ativo', e.target.checked)} disabled={!canEdit}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed" />
-              <label htmlFor="ativo-edit" className="text-sm text-muted-foreground">Ativo</label>
             </div>
           </div>
         </div>
@@ -327,11 +338,22 @@ export default function EditarConvenioPage() {
               <input type="text" value={formData.contato} onChange={(e) => set('contato', e.target.value)} disabled={!canEdit}
                 className={inputCls(!canEdit)} />
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">E-mail</label>
-              <input type="email" value={formData.email} onChange={(e) => set('email', e.target.value)} disabled={!canEdit}
-                className={inputCls(!canEdit)} />
+          </div>
+        </div>
+
+        {/* Status do Convênio */}
+        <div className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Status do Convênio</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Defina se este convênio estará ativo no sistema</p>
             </div>
+            <label htmlFor="ativo-edit" className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="ativo-edit" checked={formData.ativo} onChange={(e) => set('ativo', e.target.checked)} disabled={!canEdit}
+                className="sr-only peer" />
+              <div className={`w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
+              <span className="ml-3 text-sm font-medium text-foreground">{formData.ativo ? 'Ativo' : 'Inativo'}</span>
+            </label>
           </div>
         </div>
 

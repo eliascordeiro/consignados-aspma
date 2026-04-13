@@ -39,7 +39,18 @@ export async function GET(request: NextRequest) {
 
     // Tenta query completa com managerPrincipalId; cai back se coluna ainda não existe
     try {
+      // Busca IDs de usuários vinculados a convênios para excluí-los da listagem
+      const convenioUsers = await prisma.convenio.findMany({
+        where: { userId: { not: null } },
+        select: { userId: true },
+      })
+      const convenioUserIds = convenioUsers.map((c) => c.userId!).filter(Boolean)
+
       const where: any = { AND: [] }
+      // Excluir usuários de convênios da listagem
+      if (convenioUserIds.length > 0) {
+        where.AND.push({ id: { notIn: convenioUserIds } })
+      }
       if (role) where.AND.push({ role: role as any })
       if (managerPrincipalId) {
         where.AND.push({ managerPrincipalId })
@@ -70,9 +81,20 @@ export async function GET(request: NextRequest) {
     } catch (queryErr: any) {
       // Fallback: coluna managerPrincipalId pode ainda não existir no DB (migration pendente)
       console.warn("[usuarios GET] Fallback query (migration pendente?):", queryErr?.message)
-      const where: any = {}
-      if (role) where.role = role as any
-      if (searchFilter) where.AND = [searchFilter]
+
+      // Busca IDs de usuários vinculados a convênios para excluí-los da listagem
+      const convenioUsersFallback = await prisma.convenio.findMany({
+        where: { userId: { not: null } },
+        select: { userId: true },
+      })
+      const convenioUserIdsFallback = convenioUsersFallback.map((c) => c.userId!).filter(Boolean)
+
+      const where: any = { AND: [] }
+      if (convenioUserIdsFallback.length > 0) {
+        where.AND.push({ id: { notIn: convenioUserIdsFallback } })
+      }
+      if (role) where.AND.push({ role: role as any })
+      if (searchFilter) where.AND.push(searchFilter)
 
       const users = await prisma.users.findMany({
         where,
