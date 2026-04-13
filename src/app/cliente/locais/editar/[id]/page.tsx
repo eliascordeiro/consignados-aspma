@@ -28,6 +28,23 @@ function normalizeLiberaValue(libera: string | null | undefined, tipo: string | 
   return 'C';
 }
 
+function formatCpfCnpj(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 14);
+  if (digits.length <= 11) {
+    // CPF: 000.000.000-00
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+  // CNPJ: 00.000.000/0000-00
+  return digits
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+}
+
 interface FormState {
   codigo: string;
   razao_soc: string;
@@ -89,7 +106,7 @@ export default function EditarConvenioPage() {
           razao_soc: data.razao_soc ?? '',
           fantasia: data.fantasia ?? '',
           nome: data.nome ?? '',
-          cnpj: data.cnpj ?? '',
+          cnpj: formatCpfCnpj(data.cnpj ?? ''),
           cgc: data.cgc ?? '',
           libera: normalizeLiberaValue(data.libera, data.tipo),
           desconto: data.desconto != null ? String(data.desconto) : '',
@@ -206,8 +223,9 @@ export default function EditarConvenioPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">CNPJ</label>
-              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', e.target.value)} disabled={!canEdit}
+              <label className="block text-xs font-medium text-muted-foreground mb-1">CPF / CNPJ</label>
+              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', formatCpfCnpj(e.target.value))} disabled={!canEdit} maxLength={18}
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 className={inputCls(!canEdit)} />
             </div>
             <div>

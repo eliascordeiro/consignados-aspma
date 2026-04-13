@@ -24,6 +24,23 @@ function getTipoLabel(libera: string): string {
   return 'COMÉRCIO';
 }
 
+function formatCpfCnpj(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 14);
+  if (digits.length <= 11) {
+    // CPF: 000.000.000-00
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  }
+  // CNPJ: 00.000.000/0000-00
+  return digits
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+}
+
 export default function NovoConvenioPage() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -140,8 +157,9 @@ export default function NovoConvenioPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">CNPJ</label>
-              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', e.target.value)}
+              <label className="block text-xs font-medium text-muted-foreground mb-1">CPF / CNPJ</label>
+              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', formatCpfCnpj(e.target.value))} maxLength={18}
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
