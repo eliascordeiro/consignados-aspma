@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Mail } from 'lucide-react';
+import { toast } from 'sonner';
 
 const LIBERA_OPTIONS = [
   { value: 'C', label: 'COMÉRCIO' },
@@ -49,6 +50,9 @@ export default function NovoConvenioPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [createdConvenioId, setCreatedConvenioId] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const [formData, setFormData] = useState({
     codigo: '',
@@ -105,7 +109,13 @@ export default function NovoConvenioPage() {
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        router.push('/cliente/locais');
+        const data = await res.json();
+        if (formData.email?.trim()) {
+          setCreatedConvenioId(data.id);
+          setShowEmailDialog(true);
+        } else {
+          router.push('/cliente/locais');
+        }
       } else {
         const data = await res.json();
         setError(data.error || 'Erro ao criar convênio');
@@ -114,6 +124,27 @@ export default function NovoConvenioPage() {
       setError('Erro de conexão');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendAccessEmail = async () => {
+    setSendingEmail(true);
+    try {
+      const res = await fetch(`/api/convenios/${createdConvenioId}/enviar-acesso`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        toast.success('Email com instruções de acesso enviado!');
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Erro ao enviar email');
+      }
+    } catch {
+      toast.error('Erro de conexão ao enviar email');
+    } finally {
+      setSendingEmail(false);
+      setShowEmailDialog(false);
+      router.push('/cliente/locais');
     }
   };
 
@@ -317,6 +348,41 @@ export default function NovoConvenioPage() {
           </button>
         </div>
       </form>
+
+      {/* Dialog: enviar email de acesso */}
+      {showEmailDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card text-card-foreground rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <Mail className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Enviar Instruções de Acesso</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-1">
+              Convênio criado com sucesso!
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Deseja enviar um email com instruções de acesso ao portal para <strong className="text-foreground">{formData.email}</strong>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setShowEmailDialog(false); router.push('/cliente/locais'); }}
+                disabled={sendingEmail}
+                className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted/50 transition-colors disabled:opacity-50">
+                Não enviar
+              </button>
+              <button
+                onClick={handleSendAccessEmail}
+                disabled={sendingEmail}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                {sendingEmail ? 'Enviando...' : 'Enviar Email'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

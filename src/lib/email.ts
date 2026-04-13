@@ -127,3 +127,74 @@ export async function sendWelcomeEmail(email: string, name: string, createdBy: s
     return { success: false, error }
   }
 }
+
+export async function sendConvenioAccessEmail(email: string, convenioName: string) {
+  const loginUrl = `${process.env.NEXTAUTH_URL}/forgot-password`
+
+  try {
+    await resend.emails.send({
+      from: process.env.SMTP_FROM || 'aspma@aspma-consignados.com.br',
+      to: email,
+      subject: 'Instruções de Acesso - A.S.P.M.A Gestor de Consignados',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
+              .button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+              .info-box { background: #e0f2fe; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>Instruções de Acesso</h1>
+              </div>
+              <div class="content">
+                <p>Olá <strong>${convenioName}</strong>,</p>
+                <p>Você possui acesso ao portal <strong>A.S.P.M.A - Gestor de Consignados</strong>.</p>
+                
+                <div class="info-box">
+                  <p style="margin: 0;"><strong>📧 Seu email de acesso:</strong></p>
+                  <p style="margin: 5px 0 0 0; color: #0ea5e9; font-size: 16px;">${email}</p>
+                </div>
+
+                <p>Para acessar o sistema, crie ou redefina sua senha clicando no botão abaixo:</p>
+
+                <div style="text-align: center;">
+                  <a href="${loginUrl}" class="button">Criar / Redefinir Senha</a>
+                </div>
+
+                <p>Ou acesse diretamente:</p>
+                <p style="word-break: break-all; color: #0ea5e9;">${loginUrl}</p>
+
+                <p><strong>Passos para acesso:</strong></p>
+                <ol>
+                  <li>Clique no botão acima ou acesse o link</li>
+                  <li>Digite seu email: <strong>${email}</strong></li>
+                  <li>Crie sua senha seguindo as instruções</li>
+                  <li>Faça login e comece a usar o sistema</li>
+                </ol>
+
+                <p>Qualquer dúvida, entre em contato com o administrador do sistema.</p>
+              </div>
+              <div class="footer">
+                <p>© 2026 A.S.P.M.A - Associação dos Servidores Municipais de Araucária</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('Erro ao enviar email de acesso ao convênio:', error)
+    return { success: false, error }
+  }
+}

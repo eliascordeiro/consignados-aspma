@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Mail } from 'lucide-react';
+import { toast } from 'sonner';
 
 const LIBERA_OPTIONS = [
   { value: 'C', label: 'COMÉRCIO' },
@@ -89,6 +90,7 @@ export default function EditarConvenioPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<FormState>(INITIAL);
 
@@ -159,6 +161,25 @@ export default function EditarConvenioPage() {
       setError('Erro de conexão');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendAccessEmail = async () => {
+    setSendingEmail(true);
+    try {
+      const res = await fetch(`/api/convenios/${id}/enviar-acesso`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        toast.success('Email com instruções de acesso enviado!');
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Erro ao enviar email');
+      }
+    } catch {
+      toast.error('Erro de conexão ao enviar email');
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -363,16 +384,30 @@ export default function EditarConvenioPage() {
             {error}
           </div>
         )}
-        <div className="flex justify-end gap-3">
-          <Link href="/cliente/locais" className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
-            {canEdit ? 'Cancelar' : 'Voltar'}
-          </Link>
-          {canEdit && (
-            <button type="submit" disabled={saving}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-              {saving ? 'Salvando...' : 'Salvar Alterações'}
-            </button>
-          )}
+        <div className="flex justify-between items-center">
+          <div>
+            {canEdit && formData.email?.trim() && (
+              <button
+                type="button"
+                onClick={handleSendAccessEmail}
+                disabled={sendingEmail}
+                className="px-4 py-2 border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50 transition-colors flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                {sendingEmail ? 'Enviando...' : 'Enviar Instruções de Acesso'}
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Link href="/cliente/locais" className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+              {canEdit ? 'Cancelar' : 'Voltar'}
+            </Link>
+            {canEdit && (
+              <button type="submit" disabled={saving}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                {saving ? 'Salvando...' : 'Salvar Alterações'}
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>
