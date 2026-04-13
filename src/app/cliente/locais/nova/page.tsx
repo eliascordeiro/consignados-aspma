@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/config/permissions';
 import { useRouter } from 'next/navigation';
@@ -78,6 +78,16 @@ export default function NovoConvenioPage() {
   const set = (field: string, value: unknown) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
+  // Busca o próximo código disponível automaticamente
+  useEffect(() => {
+    fetch('/api/convenios/proximo-codigo')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.codigo) set('codigo', data.codigo);
+      })
+      .catch((err) => console.error('Erro ao buscar código:', err));
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -135,14 +145,20 @@ export default function NovoConvenioPage() {
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Código</label>
-              <input type="text" value={formData.codigo} onChange={(e) => set('codigo', e.target.value)}
+              <label className="block text-xs font-medium text-muted-foreground mb-1">CPF / CNPJ</label>
+              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', formatCpfCnpj(e.target.value))} maxLength={18}
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Razão Social <span className="text-red-500">*</span></label>
               <input type="text" required value={formData.razao_soc} onChange={(e) => set('razao_soc', e.target.value)}
                 className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Código</label>
+              <input type="text" value={formData.codigo} readOnly disabled
+                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-muted text-muted-foreground cursor-not-allowed" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-muted-foreground mb-1">Nome / Fantasia</label>
@@ -155,12 +171,6 @@ export default function NovoConvenioPage() {
                 className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {LIBERA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">CPF / CNPJ</label>
-              <input type="text" value={formData.cnpj} onChange={(e) => set('cnpj', formatCpfCnpj(e.target.value))} maxLength={18}
-                placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">% Desconto</label>
