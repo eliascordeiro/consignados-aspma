@@ -552,6 +552,7 @@ export default function RelatoriosPage() {
         agrupaPor: filtrosConsigRel.agrupaPor,
         formato: 'pdf',
         apenasEmAberto: 'true',
+        apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
@@ -590,6 +591,7 @@ export default function RelatoriosPage() {
         agrupaPor: filtrosConsigRel.agrupaPor,
         formato: 'excel',
         apenasEmAberto: 'true',
+        apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
@@ -628,6 +630,7 @@ export default function RelatoriosPage() {
         agrupaPor: filtrosConsigRel.agrupaPor,
         formato: 'csv',
         apenasEmAberto: 'true',
+        apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
