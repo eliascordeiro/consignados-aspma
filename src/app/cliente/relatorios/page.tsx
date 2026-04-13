@@ -76,6 +76,11 @@ export default function RelatoriosPage() {
   const [sociosConsigRel, setSociosConsigRel] = useState<Socio[]>([]);
   const [loadingConsigRel, setLoadingConsigRel] = useState(false);
   const [progressConsigRel, setProgressConsigRel] = useState(0);
+  // Convênio no modal Débitos de Sócios
+  const [searchConvenioConsigRel, setSearchConvenioConsigRel] = useState('');
+  const [showConvenioListConsigRel, setShowConvenioListConsigRel] = useState(false);
+  const [conveniosConsigRel, setConveniosConsigRel] = useState<Convenio[]>([]);
+  const [convenioConsigRelId, setConvenioConsigRelId] = useState('');
 
   // ── Estado Impressões Gerais — Exclusão de Sócio ──────────────────────────
   const [showExclusaoModal, setShowExclusaoModal] = useState(false);
@@ -174,6 +179,15 @@ export default function RelatoriosPage() {
       setShowSocioListConsigRel(false);
     }
   }, [searchSocioConsigRel]);
+
+  // Busca convênios no modal Débitos de Sócios
+  useEffect(() => {
+    if (searchConvenioConsigRel.length >= 2 && !convenioConsigRelId) {
+      carregarConveniosConsigRel();
+    } else if (searchConvenioConsigRel.length < 2) {
+      setShowConvenioListConsigRel(false);
+    }
+  }, [searchConvenioConsigRel]);
 
   const carregarSociosExclusao = async () => {
     try {
@@ -356,6 +370,41 @@ export default function RelatoriosPage() {
     setSearchSocioConsigRel('');
     setShowSocioListConsigRel(false);
     setSociosConsigRel([]);
+  };
+
+  const carregarConveniosConsigRel = async () => {
+    try {
+      const response = await fetch(`/api/convenios?search=${encodeURIComponent(searchConvenioConsigRel)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const conveniosData = data.data || data;
+        if (Array.isArray(conveniosData)) {
+          setConveniosConsigRel(conveniosData);
+          setShowConvenioListConsigRel(true);
+        } else {
+          setConveniosConsigRel([]);
+        }
+      } else {
+        setConveniosConsigRel([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar convênios:', error);
+      setConveniosConsigRel([]);
+    }
+  };
+
+  const selecionarConvenioConsigRel = (convenio: Convenio) => {
+    setConvenioConsigRelId(convenio.id.toString());
+    setSearchConvenioConsigRel(`${convenio.codigo} - ${convenio.razao_soc}`);
+    setShowConvenioListConsigRel(false);
+    setConveniosConsigRel([]);
+  };
+
+  const limparConvenioConsigRel = () => {
+    setConvenioConsigRelId('');
+    setSearchConvenioConsigRel('');
+    setShowConvenioListConsigRel(false);
+    setConveniosConsigRel([]);
   };
 
   const gerarRelatorioPDF = async () => {
@@ -554,6 +603,7 @@ export default function RelatoriosPage() {
         apenasEmAberto: 'true',
         apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
+        ...(convenioConsigRelId && { convenioId: convenioConsigRelId }),
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
       setProgressConsigRel(30);
@@ -593,6 +643,7 @@ export default function RelatoriosPage() {
         apenasEmAberto: 'true',
         apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
+        ...(convenioConsigRelId && { convenioId: convenioConsigRelId }),
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
       setProgressConsigRel(30);
@@ -632,6 +683,7 @@ export default function RelatoriosPage() {
         apenasEmAberto: 'true',
         apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
+        ...(convenioConsigRelId && { convenioId: convenioConsigRelId }),
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
@@ -1459,6 +1511,47 @@ export default function RelatoriosPage() {
                   {filtrosConsigRel.socioMatricula && (
                     <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                       ✓ {filtrosConsigRel.socioNome} — mat. {filtrosConsigRel.socioMatricula}
+                    </p>
+                  )}
+                </div>
+
+                {/* Convênio — busca por código ou nome (opcional) */}
+                <div className="relative">
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                    Convênio
+                    <span className="ml-1 text-xs font-normal text-gray-400">(código ou nome — opcional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchConvenioConsigRel}
+                      onChange={(e) => {
+                        setSearchConvenioConsigRel(e.target.value);
+                        if (!e.target.value) limparConvenioConsigRel();
+                      }}
+                      placeholder="Digite o código ou nome do convênio..."
+                      className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow"
+                    />
+                    {convenioConsigRelId ? (
+                      <button type="button" onClick={limparConvenioConsigRel} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors" title="Limpar seleção">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    ) : (
+                      <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    )}
+                  </div>
+                  {showConvenioListConsigRel && conveniosConsigRel.length > 0 && (
+                    <div className="absolute z-20 w-full mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                      {conveniosConsigRel.map((convenio) => (
+                        <div key={convenio.id} onClick={() => selecionarConvenioConsigRel(convenio)} className="px-4 py-3 hover:bg-emerald-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border last:border-b-0 transition-colors">
+                          <div className="font-semibold text-foreground text-sm">{convenio.codigo} - {convenio.razao_soc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {convenioConsigRelId && (
+                    <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                      ✓ Convênio selecionado
                     </p>
                   )}
                 </div>
