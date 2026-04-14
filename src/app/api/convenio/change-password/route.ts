@@ -30,6 +30,8 @@ export async function POST(req: Request) {
       senha: true,
       senhaChangedAt: true,
       usuario: true,
+      userId: true,
+      email: true,
       razao_soc: true,
       fantasia: true,
       tipo: true,
@@ -48,19 +50,46 @@ export async function POST(req: Request) {
     }
   }
 
-  // Validate current password against convenio.senha (plain text),
-  // consistent with how /api/convenio/auth/login validates.
-  if (convenio.senha !== currentSenha) {
-    return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
+  // Validate current password.
+  // There are two login paths that can create a convenio_session:
+  //  1. /api/convenio/auth/login — compares against convenio.senha (plain text)
+  //  2. NextAuth /api/auth (auth.ts) — user logs in via users table (bcrypt), then
+  //     the system finds a linked convenio and sets the convenio_session cookie.
+  // We must accept the password if it matches EITHER path.
+
+  // Find linked user via convenio.userId, matching username, or matching email
+  // (auth.ts links convênios via userId, usuario, or email)
+  const linkedUsers = await prisma.users.findMany({
+    where: {
+      OR: [
+        ...(convenio.userId ? [{ id: convenio.userId }] : []),
+        ...(convenio.usuario ? [{ name: { equals: convenio.usuario, mode: 'insensitive' as const } }] : []),
+        ...(convenio.email ? [{ email: { equals: convenio.email, mode: 'insensitive' as const } }] : []),
+      ],
+    },
+    select: { id: true, password: true, role: true },
+  })
+
+  let passwordValid = false
+
+  // Path 1: plain-text match against convenio.senha
+  if (convenio.senha === currentSenha) {
+    passwordValid = true
   }
 
-  // Look up linked users record (for updating its password too)
-  const linkedUser = convenio.usuario
-    ? await prisma.users.findFirst({
-        where: { name: { equals: convenio.usuario, mode: 'insensitive' } },
-        select: { id: true, role: true },
-      })
-    : null
+  // Path 2: bcrypt match against any linked user's password
+  if (!passwordValid) {
+    for (const user of linkedUsers) {
+      if (await bcrypt.compare(currentSenha, user.password)) {
+        passwordValid = true
+        break
+      }
+    }
+  }
+
+  if (!passwordValid) {
+    return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
+  }
 
   const now = new Date()
   await prisma.convenio.update({
@@ -68,14 +97,15 @@ export async function POST(req: Request) {
     data: { senha: newSenha, senhaChangedAt: now },
   })
 
-  // For Path 1: also update users.password so NextAuth login accepts the new password.
-  // Never update ADMIN/MANAGER passwords this way.
-  if (linkedUser && linkedUser.role !== 'ADMIN' && linkedUser.role !== 'MANAGER') {
-    const hashedNewSenha = await bcrypt.hash(newSenha, 10)
-    await prisma.users.update({
-      where: { id: linkedUser.id },
-      data: { password: hashedNewSenha },
-    })
+  // Sync password to all non-ADMIN/MANAGER linked users
+  const hashedNewSenha = await bcrypt.hash(newSenha, 10)
+  for (const user of linkedUsers) {
+    if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
+      await prisma.users.update({
+        where: { id: user.id },
+        data: { password: hashedNewSenha },
+      })
+    }
   }
 
   // Issue a fresh JWT cookie so the new senhaChangedAt is reflected immediately
