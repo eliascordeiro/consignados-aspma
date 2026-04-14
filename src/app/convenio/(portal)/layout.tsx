@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getConvenioSession } from '@/lib/convenio-auth'
+import { prisma } from '@/lib/prisma'
 import ConvenioLayoutClient from './ConvenioLayoutClient'
 
 export default async function ConvenioLayout({
@@ -12,6 +13,16 @@ export default async function ConvenioLayout({
 
   if (!session) {
     redirect('/login')
+  }
+
+  // Verificar se o convênio ainda está ativo no banco
+  const convenio = await prisma.convenio.findUnique({
+    where: { id: session.convenioId },
+    select: { ativo: true },
+  })
+
+  if (!convenio || !convenio.ativo) {
+    redirect('/convenio/bloqueado')
   }
 
   const hdrs = await headers()

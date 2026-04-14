@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "git-push-debitos-fix",
+			"type": "shell",
+			"command": "cd /media/araudata/28452488-400b-4bd9-9e97-e0023d96c6193/UBUNTU/novo_projeto_consignados/app && git add src/app/api/relatorios/debitos-socios/route.ts && git commit -m 'feat: exibe De/Para matriculas no relatorio Agrupamento por Socio' && git push origin main",
+			"isBackground": false
+		}
+	]
+}

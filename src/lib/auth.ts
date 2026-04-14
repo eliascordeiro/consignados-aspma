@@ -183,7 +183,6 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
             if (user.role === 'USER' && !user.createdById) {
               const convenioFallback = await prisma.convenio.findFirst({
                 where: {
-                  ativo: true,
                   senha: password,
                   OR: [
                     { userId: user.id },
@@ -191,8 +190,14 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
                     { email: { equals: login, mode: 'insensitive' } },
                   ],
                 },
-                select: { id: true, usuario: true, razao_soc: true, fantasia: true, tipo: true, userId: true, senhaChangedAt: true },
+                select: { id: true, usuario: true, razao_soc: true, fantasia: true, tipo: true, userId: true, ativo: true, senhaChangedAt: true },
               })
+
+              // Se encontrou mas está inativo, bloqueia
+              if (convenioFallback && !convenioFallback.ativo) {
+                console.log("   🚫 Convênio inativo (fallback):", convenioFallback.razao_soc)
+                return null
+              }
 
               if (convenioFallback) {
                 // Sincroniza o hash desatualizado no users
@@ -257,7 +262,6 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
           if (user.role !== 'ADMIN' && user.role !== 'MANAGER' && !user.createdById) {
             convenioVinculado = await prisma.convenio.findFirst({
               where: {
-                ativo: true,
                 OR: [
                   { userId: user.id },
                   { usuario: { equals: login, mode: 'insensitive' } },
@@ -271,9 +275,16 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
                 fantasia: true,
                 tipo: true,
                 userId: true,
+                ativo: true,
                 senhaChangedAt: true,
               },
             })
+
+            // Se o convênio existe mas está inativo, bloqueia
+            if (convenioVinculado && !convenioVinculado.ativo) {
+              console.log("   🚫 Convênio inativo:", convenioVinculado.razao_soc)
+              return null
+            }
           }
 
           if (convenioVinculado) {

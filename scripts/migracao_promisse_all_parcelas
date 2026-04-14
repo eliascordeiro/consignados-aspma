@@ -4,6 +4,21 @@ npx tsx app/scripts/migrate-all-to-railway.ts
 migrar vendas e parcelas
 npx tsx app/scripts/migrate-vendas-parcelas-v2.ts
 
+inserir empresaId em "vendas"
+npx tsx app/scripts/populate-vendas-empresaId.ts
+
+não usar.
+migra usuario e senha de "convenio" para "users"
+npx tsx app/scripts/migrate-convenio-to-users.ts
+
+
+
+
+
+
+
+
+
 colocar "41 9" nos celulares dos sócios (atencao de nao vai quebar nova migração) 
 scripts/fix-celular-socios.ts
 
@@ -38,3 +53,16 @@ npx tsx app/scripts/migrate-corrigir-vendas-parcelas.ts
 
 # Validação: Verificar pensionistas
 npx tsx app/scripts/calcular-diferenca-exata-pensionistas.ts
+
+
+
+
+IVALDIRENE (11163/1116301)	Sem sócio → NULL codtipo → excluída	codTipo=22 → incluída (R$ 15)
+JOSIANE (6623/662301)	Sem sócio → NULL codtipo → excluída	codTipo=5 → incluída (R$ 15)
+O Railway está mais correto — inclui parcelas de sócias que existem no sistema mas estavam "órfãs" no MySQL. A diferença de R$ 30,00 é comportamento esperado.
+
+Claude Opus 4.6 (fast mode) (Preview) • 30x
+
+
+saldo do JUAREZ (328302):
+6.415,36

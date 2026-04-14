@@ -81,16 +81,20 @@ export async function POST(request: NextRequest) {
 
     // Busca convênio pelo usuário
     const convenio = await prisma.convenio.findFirst({
-      where: {
-        usuario: usuario,
-        ativo: true,
-      },
+      where: { usuario: usuario },
     })
 
     if (!convenio) {
       return NextResponse.json(
         { error: 'Usuário ou senha inválidos' },
         { status: 401 }
+      )
+    }
+
+    if (!convenio.ativo) {
+      return NextResponse.json(
+        { error: 'convenio_inativo' },
+        { status: 403 }
       )
     }
 

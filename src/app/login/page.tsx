@@ -207,7 +207,19 @@ export default function LoginPage() {
           } catch { /* ignora erro de rede */ }
         }
 
-        // 4. Credenciais genuinamente inválidas
+        // 4. Verificar se convênio está inativo (login falhou porque convênio foi desativado)
+        try {
+          const inativoRes = await fetch(
+            `/api/convenio/check-ativo?login=${encodeURIComponent(login)}`
+          )
+          const inativoData = await inativoRes.json()
+          if (inativoData?.inativo) {
+            window.location.href = '/convenio/bloqueado'
+            return
+          }
+        } catch { /* ignora erro de rede */ }
+
+        // 5. Credenciais genuinamente inválidas
         setError("Usuário ou senha inválidos")
       } else {
         await redirectAfterLogin()
