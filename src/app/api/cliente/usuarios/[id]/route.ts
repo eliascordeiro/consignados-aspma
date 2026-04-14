@@ -13,7 +13,19 @@ function isManagerOrPermitted(user: any, perm: string): boolean {
 
 // Retorna o ID do MANAGER raiz da hierarquia (para filtrar createdById)
 async function getRootOwnerId(user: any): Promise<string> {
-  if (user.role === 'MANAGER') return user.id
+  if (user.role === 'MANAGER') {
+    // Se é sub-manager, escalar para o principal
+    try {
+      const mgr = await prisma.users.findUnique({
+        where: { id: user.id },
+        select: { managerPrincipalId: true } as any,
+      }) as any
+      if (mgr?.managerPrincipalId) return mgr.managerPrincipalId
+    } catch {
+      // Migration pendente — ignora
+    }
+    return user.id
+  }
   if (!user.createdById) return user.id
   const creator = await prisma.users.findUnique({
     where: { id: user.createdById },
@@ -206,14 +218,57 @@ export async function DELETE(
       )
     }
 
+    // Verificar dependências que impedem exclusão (FKs required não-anuláveis)
+    const [consignadosCount, vendasCount] = await Promise.all([
+      prisma.consignados.count({ where: { userId: id } }),
+      prisma.venda.count({ where: { userId: id } }),
+    ])
+
+    if (consignadosCount > 0) {
+      return NextResponse.json(
+        { error: `Não é possível excluir: usuário possui ${consignadosCount} consignado(s) vinculado(s). Desative-o em vez de excluir.` },
+        { status: 400 }
+      )
+    }
+
+    if (vendasCount > 0) {
+      return NextResponse.json(
+        { error: `Não é possível excluir: usuário possui ${vendasCount} venda(s) vinculada(s). Desative-o em vez de excluir.` },
+        { status: 400 }
+      )
+    }
+
+    // Limpar dependências e excluir em transação
     await prisma.$transaction([
+      // FKs anuláveis: desvincula registros
+      prisma.venda.updateMany({ where: { createdById: id }, data: { createdById: null } }),
+      prisma.venda.updateMany({ where: { updatedById: id }, data: { updatedById: null } }),
+      prisma.parcela.updateMany({ where: { createdById: id }, data: { createdById: null } }),
+      prisma.parcela.updateMany({ where: { updatedById: id }, data: { updatedById: null } }),
+      // FKs self-ref: desvincular subordinados
+      prisma.users.updateMany({ where: { createdById: id }, data: { createdById: null } }),
+      prisma.users.updateMany({ where: { managerPrincipalId: id }, data: { managerPrincipalId: null } }),
+      // Excluir registros pertencentes ao usuário
       prisma.auditLog.deleteMany({ where: { userId: id } }),
+      prisma.margemHistorico.deleteMany({ where: { userId: id } }),
+      prisma.classe.deleteMany({ where: { userId: id } }),
+      prisma.setor.deleteMany({ where: { userId: id } }),
+      // WebAuthnAuthenticator cascade automático, mas limpar explicitamente
+      prisma.webAuthnAuthenticator.deleteMany({ where: { userId: id } }),
+      // Finalmente, excluir o usuário
       prisma.users.delete({ where: { id } }),
     ])
 
     return NextResponse.json({ message: "Usuário excluído com sucesso" })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao excluir usuário:", error)
+    // Capturar erros de FK não tratados
+    if (error?.code === 'P2003') {
+      return NextResponse.json(
+        { error: "Não é possível excluir: existem registros vinculados a este usuário. Desative-o em vez de excluir." },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
       { error: "Erro ao excluir usuário" },
       { status: 500 }
