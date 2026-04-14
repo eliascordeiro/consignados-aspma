@@ -109,7 +109,19 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(payload),
     })
 
-    const data = await response.json()
+    // Ler resposta como texto primeiro para evitar crash com HTML
+    const responseText = await response.text()
+    let data: any
+    try {
+      data = JSON.parse(responseText)
+    } catch {
+      console.error('❌ [WhatsGW] Resposta não-JSON:', responseText.substring(0, 300))
+      return NextResponse.json(
+        { error: 'Erro de comunicação com WhatsApp. O serviço pode estar indisponível. Tente novamente.' },
+        { status: 502 }
+      )
+    }
+
     console.log('📥 [WhatsGW] Resposta:', data)
 
     if (data.result !== 'success') {

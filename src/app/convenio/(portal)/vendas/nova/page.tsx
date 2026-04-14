@@ -247,6 +247,11 @@ export default function NovaVendaPage() {
         }),
       })
 
+      const contentType = response.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        throw new Error('Erro de comunicação com o servidor. Tente novamente.')
+      }
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -286,6 +291,11 @@ export default function NovaVendaPage() {
         }),
       })
 
+      const validarCt = validarResponse.headers.get('content-type') || ''
+      if (!validarCt.includes('application/json')) {
+        throw new Error('Erro de comunicação com o servidor. Tente novamente.')
+      }
+
       const validarData = await validarResponse.json()
 
       if (!validarResponse.ok) {
@@ -304,6 +314,11 @@ export default function NovaVendaPage() {
           observacoes: formData.observacoes,
         }),
       })
+
+      const vendaCt = response.headers.get('content-type') || ''
+      if (!vendaCt.includes('application/json')) {
+        throw new Error('Erro de comunicação com o servidor. Tente novamente.')
+      }
 
       const data = await response.json()
 
