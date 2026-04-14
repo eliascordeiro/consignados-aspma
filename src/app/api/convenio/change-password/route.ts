@@ -48,28 +48,19 @@ export async function POST(req: Request) {
     }
   }
 
-  // Validate current password.
-  // Look up user by username (convenio.usuario) — more reliable than convenio.userId
-  // which can be set to an org/admin account instead of the actual person's account.
-  // Path 1: a users account exists with matching name → bcrypt comparison.
-  // Path 2: no matching users account → standalone convenio, plaintext comparison.
+  // Validate current password against convenio.senha (plain text),
+  // consistent with how /api/convenio/auth/login validates.
+  if (convenio.senha !== currentSenha) {
+    return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
+  }
+
+  // Look up linked users record (for updating its password too)
   const linkedUser = convenio.usuario
     ? await prisma.users.findFirst({
         where: { name: { equals: convenio.usuario, mode: 'insensitive' } },
-        select: { id: true, password: true, role: true },
+        select: { id: true, role: true },
       })
     : null
-
-  if (linkedUser) {
-    const valid = await bcrypt.compare(currentSenha, linkedUser.password)
-    if (!valid) {
-      return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
-    }
-  } else {
-    if (convenio.senha !== currentSenha) {
-      return NextResponse.json({ error: 'Senha atual incorreta.' }, { status: 400 })
-    }
-  }
 
   const now = new Date()
   await prisma.convenio.update({
