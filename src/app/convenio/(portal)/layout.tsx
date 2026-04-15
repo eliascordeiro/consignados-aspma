@@ -43,12 +43,35 @@ export default async function ConvenioLayout({
       ? Math.ceil(30 - daysElapsed)
       : null
 
+  // Buscar logo do manager vinculado ao convênio
+  let managerLogo: string | null = null
+  const convenioData = await prisma.convenio.findUnique({
+    where: { id: session.convenioId },
+    select: { userId: true },
+  })
+  if (convenioData?.userId) {
+    const user = await prisma.users.findUnique({
+      where: { id: convenioData.userId },
+      select: { logo: true, managerPrincipalId: true },
+    })
+    if (user?.logo) {
+      managerLogo = user.logo
+    } else if (user?.managerPrincipalId) {
+      const principal = await prisma.users.findUnique({
+        where: { id: user.managerPrincipalId },
+        select: { logo: true },
+      })
+      managerLogo = principal?.logo || null
+    }
+  }
+
   return (
     <ConvenioLayoutClient
       fantasia={session.fantasia}
       razaoSocial={session.razaoSocial}
       tipo={session.tipo}
       passwordDaysLeft={passwordDaysLeft}
+      managerLogo={managerLogo}
     >
       {children}
     </ConvenioLayoutClient>

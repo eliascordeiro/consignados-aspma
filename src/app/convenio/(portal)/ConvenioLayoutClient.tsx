@@ -14,6 +14,7 @@ interface ConvenioLayoutClientProps {
   razaoSocial: string | null
   tipo: string | null
   passwordDaysLeft?: number | null
+  managerLogo?: string | null
 }
 
 // Mapeia o tipo do convênio para a classe CSS de categoria
@@ -60,6 +61,7 @@ export default function ConvenioLayoutClient({
   razaoSocial,
   tipo,
   passwordDaysLeft,
+  managerLogo,
 }: ConvenioLayoutClientProps) {
   const [queryClient] = useState(
     () =>
@@ -87,9 +89,19 @@ export default function ConvenioLayoutClient({
           <div className="container mx-auto px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="p-1.5 sm:p-2 bg-primary/15 rounded-lg flex-shrink-0">
-                  <CategoriaIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                </div>
+                {managerLogo ? (
+                  <div className="p-1 bg-white rounded-lg flex-shrink-0 border border-border">
+                    <img
+                      src={managerLogo}
+                      alt="Logo"
+                      className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-1.5 sm:p-2 bg-primary/15 rounded-lg flex-shrink-0">
+                    <CategoriaIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  </div>
+                )}
                 <div className="min-w-0">
                   <h1 className="text-base sm:text-xl font-bold text-foreground truncate">
                     {fantasia || razaoSocial}
