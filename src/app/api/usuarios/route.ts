@@ -40,11 +40,23 @@ export async function GET(request: NextRequest) {
     // Tenta query completa com managerPrincipalId; cai back se coluna ainda não existe
     try {
       // Busca IDs de usuários vinculados a convênios para excluí-los da listagem
+      // Apenas exclui USER (auto-criados para convênio), nunca ADMIN/MANAGER
       const convenioUsers = await prisma.convenio.findMany({
         where: { userId: { not: null } },
         select: { userId: true },
       })
-      const convenioUserIds = convenioUsers.map((c) => c.userId!).filter(Boolean)
+      const convenioUserIdsRaw = convenioUsers.map((c) => c.userId!).filter(Boolean)
+
+      // Filtrar: manter apenas USERs na lista de exclusão (ADMIN/MANAGER não devem ser excluídos)
+      let convenioUserIds: string[] = []
+      if (convenioUserIdsRaw.length > 0) {
+        const adminManagerIds = await prisma.users.findMany({
+          where: { id: { in: convenioUserIdsRaw }, role: { in: ['ADMIN', 'MANAGER'] } },
+          select: { id: true },
+        })
+        const protectedIds = new Set(adminManagerIds.map(u => u.id))
+        convenioUserIds = convenioUserIdsRaw.filter(id => !protectedIds.has(id))
+      }
 
       const where: any = { AND: [] }
       // Excluir usuários de convênios da listagem
@@ -54,9 +66,6 @@ export async function GET(request: NextRequest) {
       if (role) where.AND.push({ role: role as any })
       if (managerPrincipalId) {
         where.AND.push({ managerPrincipalId })
-      } else if (role === "MANAGER") {
-        // Mostrar apenas managers principais (não sub-managers)
-        where.AND.push({ managerPrincipalId: null })
       }
       if (searchFilter) where.AND.push(searchFilter)
 
@@ -83,11 +92,22 @@ export async function GET(request: NextRequest) {
       console.warn("[usuarios GET] Fallback query (migration pendente?):", queryErr?.message)
 
       // Busca IDs de usuários vinculados a convênios para excluí-los da listagem
+      // Apenas exclui USER (auto-criados para convênio), nunca ADMIN/MANAGER
       const convenioUsersFallback = await prisma.convenio.findMany({
         where: { userId: { not: null } },
         select: { userId: true },
       })
-      const convenioUserIdsFallback = convenioUsersFallback.map((c) => c.userId!).filter(Boolean)
+      const convenioUserIdsRawFb = convenioUsersFallback.map((c) => c.userId!).filter(Boolean)
+
+      let convenioUserIdsFallback: string[] = []
+      if (convenioUserIdsRawFb.length > 0) {
+        const adminManagerIdsFb = await prisma.users.findMany({
+          where: { id: { in: convenioUserIdsRawFb }, role: { in: ['ADMIN', 'MANAGER'] } },
+          select: { id: true },
+        })
+        const protectedIdsFb = new Set(adminManagerIdsFb.map(u => u.id))
+        convenioUserIdsFallback = convenioUserIdsRawFb.filter(id => !protectedIdsFb.has(id))
+      }
 
       const where: any = { AND: [] }
       if (convenioUserIdsFallback.length > 0) {
