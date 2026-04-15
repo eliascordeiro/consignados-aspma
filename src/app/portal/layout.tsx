@@ -68,6 +68,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname()
   const router = useRouter()
   const [dark, setDark] = useState(false)
+  const [managerLogo, setManagerLogo] = useState<string | null>(null)
+  const [managerName, setManagerName] = useState<string | null>(null)
 
   // Carrega preferência salva (ou sistema)
   useEffect(() => {
@@ -77,6 +79,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     } else {
       setDark(window.matchMedia('(prefers-color-scheme: dark)').matches)
     }
+  }, [])
+
+  // Carrega logo do manager
+  useEffect(() => {
+    if (pathname === '/portal/login' || pathname?.startsWith('/portal/primeiro-acesso') || pathname?.startsWith('/portal/redefinir-senha')) return
+    fetch('/api/portal/manager-info')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setManagerLogo(data.managerLogo || null)
+          setManagerName(data.managerName || null)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   function toggleDark() {
@@ -117,16 +133,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-emerald-600 text-white sticky top-0 h-screen overflow-y-auto shadow-xl">
         {/* Logo / marca */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-500/50">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-          </div>
+          {managerLogo ? (
+            <img src={managerLogo} alt="Logo" className="w-10 h-10 rounded-full object-cover shrink-0 bg-white/20" />
+          ) : (
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+          )}
           <div>
             <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
-            <p className="text-base font-bold leading-tight">ASPMA</p>
+            <p className="text-base font-bold leading-tight">{managerName || 'ASPMA'}</p>
           </div>
         </div>
 
@@ -182,16 +202,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <div className="pt-safe-top" />
           <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </div>
+              {managerLogo ? (
+                <img src={managerLogo} alt="Logo" className="w-8 h-8 rounded-full object-cover bg-white/20" />
+              ) : (
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
-                <p className="text-sm font-semibold leading-tight">ASPMA</p>
+                <p className="text-sm font-semibold leading-tight">{managerName || 'ASPMA'}</p>
               </div>
             </div>
             <button
