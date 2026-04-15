@@ -831,8 +831,8 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   grupos.forEach((grupo) => {
     grupo.parcelas.forEach((parcela, index) => {
       const row = worksheet.addRow([
-        index === 0 ? (grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula) : '',
-        index === 0 ? grupo.nome : '',
+        grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula,
+        grupo.nome,
         parcela.convenio,
         parcela.pc,
         parcela.de,
