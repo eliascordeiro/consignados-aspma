@@ -162,8 +162,8 @@ export default function ClienteEditPage() {
     const file = e.target.files?.[0]
     if (!file || isNew) return
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Arquivo muito grande. Máximo 2MB.")
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Arquivo muito grande. Máximo 5MB.")
       return
     }
 
@@ -425,7 +425,7 @@ export default function ClienteEditPage() {
                 </Button>
 
                 <p className="text-[11px] text-muted-foreground text-center">
-                  PNG, JPG, WebP ou SVG. Máximo 2MB.
+                  PNG, JPG, WebP ou SVG. Máx 5MB. Otimizada automaticamente.
                 </p>
               </CardContent>
             </Card>
