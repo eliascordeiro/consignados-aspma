@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -11,10 +12,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, Search, UserPlus, Building2, Mail, AlertCircle } from "lucide-react"
+import { Pencil, Trash2, Search, UserPlus, Building2, Mail, AlertCircle, ImageIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { ClienteDialog } from "@/components/cliente-dialog"
 
 interface User {
   id: string
@@ -24,16 +24,16 @@ interface User {
   cpf?: string
   phone?: string
   active: boolean
+  logo?: string | null
   createdAt: string
   _count?: { subManagers: number }
 }
 
 export default function ClientesPage() {
+  const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
 
   const loadUsers = async () => {
@@ -68,13 +68,11 @@ export default function ClientesPage() {
   }, [searchTerm])
 
   const handleEdit = (user: User) => {
-    setSelectedUser(user)
-    setDialogOpen(true)
+    router.push(`/admin/clientes/${user.id}`)
   }
 
   const handleNew = () => {
-    setSelectedUser(null)
-    setDialogOpen(true)
+    router.push("/admin/clientes/novo")
   }
 
   const handleDelete = async (user: User) => {
@@ -188,6 +186,7 @@ export default function ClientesPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                    <TableHead className="font-semibold w-12"></TableHead>
                     <TableHead className="font-semibold">Nome</TableHead>
                     <TableHead className="font-semibold">Email</TableHead>
                     <TableHead className="font-semibold">CPF</TableHead>
@@ -198,7 +197,16 @@ export default function ClientesPage() {
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+                    <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 cursor-pointer" onClick={() => handleEdit(user)}>
+                      <TableCell className="w-12">
+                        {user.logo ? (
+                          <img src={user.logo} alt="" className="h-8 w-8 rounded object-contain" />
+                        ) : (
+                          <div className="h-8 w-8 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                            <ImageIcon className="h-4 w-4 text-muted-foreground/40" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell className="text-muted-foreground">
                         <div className="flex items-center gap-2">
@@ -250,12 +258,6 @@ export default function ClientesPage() {
         </CardContent>
       </Card>
 
-      <ClienteDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        cliente={selectedUser}
-        onSuccess={loadUsers}
-      />
     </div>
   )
 }

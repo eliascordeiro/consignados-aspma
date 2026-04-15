@@ -55,6 +55,7 @@ model users {
   phone             String?
   active            Boolean       @default(true)
   permissions       String[]      @default([])
+  logo              String?
   resetToken        String?
   resetTokenExpiry  DateTime?
   passwordChangedAt DateTime?

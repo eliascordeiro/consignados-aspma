@@ -15,6 +15,46 @@ const updateUserSchema = z.object({
   permissions: z.array(z.string()).optional(),
 })
 
+// GET - Buscar usuário por id
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
+    }
+
+    const { id } = await params
+    const user = await prisma.users.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        cpf: true,
+        phone: true,
+        active: true,
+        logo: true,
+        permissions: true,
+        createdAt: true,
+        _count: { select: { subManagers: true } },
+      },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 })
+    }
+
+    return NextResponse.json(user)
+  } catch (error) {
+    console.error("Erro ao buscar usuário:", error)
+    return NextResponse.json({ error: "Erro ao buscar usuário" }, { status: 500 })
+  }
+}
+
 // PUT - Atualizar usuário
 export async function PUT(
   request: NextRequest,
