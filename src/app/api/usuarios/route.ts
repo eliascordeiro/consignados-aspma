@@ -66,6 +66,9 @@ export async function GET(request: NextRequest) {
       if (role) where.AND.push({ role: role as any })
       if (managerPrincipalId) {
         where.AND.push({ managerPrincipalId })
+      } else if (role === "MANAGER") {
+        // Se buscando MANAGER sem filtro de principal, excluir sub-managers
+        where.AND.push({ managerPrincipalId: null })
       }
       if (searchFilter) where.AND.push(searchFilter)
 
@@ -115,6 +118,7 @@ export async function GET(request: NextRequest) {
         where.AND.push({ id: { notIn: convenioUserIdsFallback } })
       }
       if (role) where.AND.push({ role: role as any })
+      // No fallback, não temos managerPrincipalId — não filtra sub-managers
       if (searchFilter) where.AND.push(searchFilter)
 
       const users = await prisma.users.findMany({
