@@ -1537,7 +1537,8 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
 
     // Cabeçalho da tabela
     const headerRow = worksheet.addRow([
-      'Sócio',
+      'Matrícula',
+      'Nome',
       'Pc',
       'De',
       'Valor',
@@ -1554,8 +1555,12 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
 
     // Dados
     grupo.parcelas.forEach((parcela, index) => {
+      const partes = parcela.socio.split(' - ');
+      const matricula = partes[0] || '';
+      const nome = partes.slice(1).join(' - ') || '';
       const row = worksheet.addRow([
-        parcela.socio,
+        matricula,
+        nome,
         parcela.pc,
         parcela.de,
         parcela.valor,
@@ -1563,12 +1568,12 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
       ]);
 
       // Formatar valor
-      row.getCell(4).numFmt = '#,##0.00';
+      row.getCell(5).numFmt = '#,##0.00';
       
       // Formatar total
       if (index === grupo.parcelas.length - 1) {
-        row.getCell(5).numFmt = '#,##0.00';
-        row.getCell(5).font = { bold: true };
+        row.getCell(6).numFmt = '#,##0.00';
+        row.getCell(6).font = { bold: true };
       }
       currentRow++;
     });
@@ -1582,15 +1587,17 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
     '',
     '',
     '',
+    '',
     'TOTAIS:',
     totalGeral,
   ]);
   totalRow.font = { bold: true };
-  totalRow.getCell(5).numFmt = '#,##0.00';
+  totalRow.getCell(6).numFmt = '#,##0.00';
 
   // Auto-ajustar colunas
   worksheet.columns = [
-    { width: 50 }, // Sócio
+    { width: 12 }, // Matrícula
+    { width: 40 }, // Nome
     { width: 5 },  // Pc
     { width: 5 },  // De
     { width: 15 }, // Valor
@@ -1624,7 +1631,8 @@ function gerarCSVConvenio(
       'Banco',
       'Agencia',
       'Conta',
-      'Socio',
+      'Matricula',
+      'Nome',
       'Parcela',
       'Total_Parcelas',
       'Valor',
@@ -1645,13 +1653,17 @@ function gerarCSVConvenio(
         ? (decimalSeparator === ',' ? grupo.total.toFixed(2).replace('.', ',') : grupo.total.toFixed(2))
         : '';
       
+      const partes = parcela.socio.split(' - ');
+      const matricula = partes[0] || '';
+      const nome = partes.slice(1).join(' - ') || '';
       const row = [
         `"${grupo.convenioNome}"`,
         grupo.cnpj || '',
         grupo.banco || '',
         grupo.agencia || '',
         grupo.conta || '',
-        `"${parcela.socio}"`,
+        matricula,
+        `"${nome}"`,
         parcela.pc.toString(),
         parcela.de.toString(),
         valorFormatado,
@@ -1670,6 +1682,7 @@ function gerarCSVConvenio(
     : totalGeral.toFixed(2);
   
   lines.push([
+    '',
     '',
     '',
     '',
@@ -1738,10 +1751,10 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
       doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(18);
-      doc.text('RELATÓRIO DE DÉBITOS', pageWidth / 2, 12, { align: 'center' });
+      doc.text('EXTRATOS DE CONVÊNIADOS', pageWidth / 2, 12, { align: 'center' });
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.text('Agrupamento por Consignatária', pageWidth / 2, 18, { align: 'center' });
+      doc.text('Agrupamento por Convêniados', pageWidth / 2, 18, { align: 'center' });
       y = 30;
       doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
       doc.roundedRect(pageWidth / 2 - 35, y - 5, 70, 10, 2, 2, 'F');
@@ -1757,7 +1770,7 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
       doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.text(`Débitos - ${mesNomes[mes - 1]}/${ano} - Agrupamento por Consignatária`, pageWidth / 2, 7, { align: 'center' });
+      doc.text(`Extratos - ${mesNomes[mes - 1]}/${ano} - Agrupamento por Convêniados`, pageWidth / 2, 7, { align: 'center' });
       y += 7;
     }
   };
@@ -1784,14 +1797,14 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
     }
     isFirstGroup = false;
 
-    // ═══ CARD DA CONSIGNATÁRIA ═══
+    // ═══ CARD DO CONVÊNIADO ═══
     doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
     doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
 
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text('CONSIGNATÁRIA:', margin + 3, y + 5);
+    doc.text('CONVÊNIADO:', margin + 3, y + 5);
 
     doc.setFontSize(10);
     const nomeText = grupo.convenioNome.length > 80 ? grupo.convenioNome.substring(0, 77) + '...' : grupo.convenioNome;
@@ -1830,13 +1843,13 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
         doc.addPage();
         addHeader(false);
 
-        // Repetir card da consignatária na continuação
+        // Repetir card do convêniado na continuação
         doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
         doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
         doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
-        doc.text('CONSIGNATÁRIA:', margin + 3, y + 5);
+        doc.text('CONVÊNIADO:', margin + 3, y + 5);
         doc.setFontSize(10);
         doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
         y += 15;
@@ -1893,7 +1906,7 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
     doc.roundedRect(pageWidth - margin - 110, y - 3, 110, 30, 2, 2, 'F');
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text('TOTAL DA CONSIGNATÁRIA:', pageWidth - margin - 107, y + 4);
+    doc.text('TOTAL DO CONVÊNIADO:', pageWidth - margin - 107, y + 4);
     doc.text(`R$ ${grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 4, { align: 'right' });
     doc.text('Desconto:', pageWidth - margin - 107, y + 12);
     doc.text(`R$ ${grupo.totalDesconto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - margin - 3, y + 12, { align: 'right' });
@@ -1956,28 +1969,29 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
 
 async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano: number): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Débitos por Consignatária');
+  const worksheet = workbook.addWorksheet('Extratos de Convêniados');
 
   const mesNomes = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
-  worksheet.mergeCells('A1:G1');
+  worksheet.mergeCells('A1:H1');
   const titleCell = worksheet.getCell('A1');
-  titleCell.value = 'DÉBITOS POR CONSIGNATÁRIA';
+  titleCell.value = 'EXTRATOS DE CONVÊNIADOS';
   titleCell.font = { bold: true, size: 14 };
   titleCell.alignment = { horizontal: 'center' };
 
-  worksheet.mergeCells('A2:G2');
+  worksheet.mergeCells('A2:H2');
   const periodoCell = worksheet.getCell('A2');
   periodoCell.value = `Período: ${mesNomes[mes - 1]}/${ano}`;
   periodoCell.font = { bold: true, size: 11 };
   periodoCell.alignment = { horizontal: 'center' };
 
   const headerRow = worksheet.addRow([
-    'Consignatária',
-    'Sócio',
+    'Convêniados',
+    'Matrícula',
+    'Nome',
     'Pc',
     'De',
     'Valor',
@@ -1996,9 +2010,13 @@ async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano
 
   grupos.forEach((grupo) => {
     grupo.parcelas.forEach((parcela, index) => {
+      const partes = parcela.socio.split(' - ');
+      const matricula = partes[0] || '';
+      const nome = partes.slice(1).join(' - ') || '';
       const row = worksheet.addRow([
         index === 0 ? grupo.convenioNome : '',
-        parcela.socio,
+        matricula,
+        nome,
         parcela.pc,
         parcela.de,
         parcela.valor,
@@ -2006,30 +2024,31 @@ async function gerarExcelConsignataria(grupos: GrupoConvenio[], mes: number, ano
         index === grupo.parcelas.length - 1 ? grupo.totalDesconto : '',
         index === grupo.parcelas.length - 1 ? grupo.totalLiquido : '',
       ]);
-      row.getCell(5).numFmt = '#,##0.00';
+      row.getCell(6).numFmt = '#,##0.00';
       if (index === grupo.parcelas.length - 1) {
-        row.getCell(6).numFmt = '#,##0.00';
-        row.getCell(6).font = { bold: true };
         row.getCell(7).numFmt = '#,##0.00';
-        row.getCell(7).font = { bold: true, color: { argb: 'FFCC0000' } };
+        row.getCell(7).font = { bold: true };
         row.getCell(8).numFmt = '#,##0.00';
-        row.getCell(8).font = { bold: true };
+        row.getCell(8).font = { bold: true, color: { argb: 'FFCC0000' } };
+        row.getCell(9).numFmt = '#,##0.00';
+        row.getCell(9).font = { bold: true };
       }
     });
     totalGeral += grupo.total;
   });
 
   const totalDescontoGeralEX = grupos.reduce((s, g) => s + g.totalDesconto, 0);
-  const totalRow = worksheet.addRow(['', '', '', '', 'TOTAIS:', totalGeral, totalDescontoGeralEX, totalGeral - totalDescontoGeralEX]);
+  const totalRow = worksheet.addRow(['', '', '', '', '', 'TOTAIS:', totalGeral, totalDescontoGeralEX, totalGeral - totalDescontoGeralEX]);
   totalRow.font = { bold: true };
-  totalRow.getCell(6).numFmt = '#,##0.00';
   totalRow.getCell(7).numFmt = '#,##0.00';
-  totalRow.getCell(7).font = { bold: true, color: { argb: 'FFCC0000' } };
   totalRow.getCell(8).numFmt = '#,##0.00';
+  totalRow.getCell(8).font = { bold: true, color: { argb: 'FFCC0000' } };
+  totalRow.getCell(9).numFmt = '#,##0.00';
 
   worksheet.columns = [
-    { width: 40 }, // Consignatária
-    { width: 50 }, // Sócio
+    { width: 40 }, // Convêniados
+    { width: 12 }, // Matrícula
+    { width: 40 }, // Nome
     { width: 5 },  // Pc
     { width: 5 },  // De
     { width: 15 }, // Valor
@@ -2058,12 +2077,13 @@ function gerarCSVConsignataria(
 
   if (includeHeader) {
     lines.push([
-      'Consignataria',
-      'Socio',
+      'Conveniado',
+      'Matricula',
+      'Nome',
       'Parcela',
       'Total_Parcelas',
       'Valor',
-      'Total_Consignataria',
+      'Total_Conveniado',
     ].join(delimiter));
   }
 
@@ -2079,9 +2099,13 @@ function gerarCSVConsignataria(
         ? (decimalSeparator === ',' ? grupo.totalLiquido.toFixed(2).replace('.', ',') : grupo.totalLiquido.toFixed(2))
         : '';
 
+      const partes = parcela.socio.split(' - ');
+      const matricula = partes[0] || '';
+      const nome = partes.slice(1).join(' - ') || '';
       lines.push([
         `"${grupo.convenioNome}"`,
-        `"${parcela.socio}"`,
+        matricula,
+        `"${nome}"`,
         parcela.pc.toString(),
         parcela.de.toString(),
         valorFormatado,
@@ -2095,7 +2119,7 @@ function gerarCSVConsignataria(
     ? totalGeral.toFixed(2).replace('.', ',')
     : totalGeral.toFixed(2);
 
-  lines.push(['', '', '', '', 'TOTAL GERAL:', totalGeralFormatado].join(delimiter));
+  lines.push(['', '', '', '', '', 'TOTAL GERAL:', totalGeralFormatado].join(delimiter));
 
   return lines.join('\n');
 }
