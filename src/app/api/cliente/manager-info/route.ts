@@ -10,10 +10,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 })
     }
 
-    // Se for MANAGER, retorna próprio nome
+    // Se for MANAGER, retorna próprio nome e logo
     if (session.user.role === "MANAGER") {
+      const manager = await prisma.users.findUnique({
+        where: { id: session.user.id },
+        select: { name: true, logo: true, managerPrincipalId: true },
+      })
+
+      // Se é sub-manager, buscar logo do manager principal
+      if (manager?.managerPrincipalId) {
+        const principal = await prisma.users.findUnique({
+          where: { id: manager.managerPrincipalId },
+          select: { name: true, logo: true },
+        })
+        return NextResponse.json({
+          managerName: principal?.name || manager?.name,
+          managerLogo: principal?.logo || manager?.logo || null,
+        })
+      }
+
       return NextResponse.json({
-        managerName: session.user.name,
+        managerName: manager?.name || session.user.name,
+        managerLogo: manager?.logo || null,
       })
     }
 
@@ -25,6 +43,7 @@ export async function GET(request: NextRequest) {
           users: {
             select: {
               name: true,
+              logo: true,
             }
           }
         }
@@ -32,11 +51,13 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         managerName: user?.users?.name || null,
+        managerLogo: user?.users?.logo || null,
       })
     }
 
     return NextResponse.json({
       managerName: null,
+      managerLogo: null,
     })
   } catch (error) {
     console.error("Erro ao buscar info do MANAGER:", error)

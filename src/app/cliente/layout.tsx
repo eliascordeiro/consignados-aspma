@@ -60,6 +60,7 @@ export default function ClienteLayout({
   const [isDesktop, setIsDesktop] = useState(false)
   const [perfilModalOpen, setPerfilModalOpen] = useState(false)
   const [managerName, setManagerName] = useState<string | null>(null)
+  const [managerLogo, setManagerLogo] = useState<string | null>(null)
   const [passwordDaysLeft, setPasswordDaysLeft] = useState<number | null>(null)
   const [idleWarning, setIdleWarning] = useState(false)
   const [idleCountdown, setIdleCountdown] = useState(30)
@@ -164,15 +165,16 @@ export default function ClienteLayout({
     }
   }, [session])
 
-  // Buscar nome do MANAGER se for usuário subordinado
+  // Buscar nome e logo do MANAGER
   useEffect(() => {
-    if (session?.user?.role === "USER") {
+    if (!session?.user) return
+    const role = session.user.role
+    if (role === "MANAGER" || role === "USER") {
       fetch("/api/cliente/manager-info")
         .then(res => res.json())
         .then(data => {
-          if (data.managerName) {
-            setManagerName(data.managerName)
-          }
+          if (data.managerName) setManagerName(data.managerName)
+          if (data.managerLogo) setManagerLogo(data.managerLogo)
         })
         .catch(err => console.error("Erro ao buscar MANAGER:", err))
     }
@@ -221,12 +223,20 @@ export default function ClienteLayout({
           {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
             <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "lg:justify-center")}>
-              <div className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
-                <CreditCard className="h-5 w-5 text-white" />
-              </div>
+              {managerLogo ? (
+                <img
+                  src={managerLogo}
+                  alt="Logo"
+                  className="h-8 w-8 shrink-0 rounded-lg object-contain"
+                />
+              ) : (
+                <div className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
+                  <CreditCard className="h-5 w-5 text-white" />
+                </div>
+              )}
               <div className={cn("transition-all duration-300 overflow-hidden", collapsed ? "lg:w-0 lg:opacity-0" : "w-auto opacity-100")}>
                 <h1 className="text-lg font-bold text-sidebar-foreground whitespace-nowrap">
-                  A.S.P.M.A
+                  {managerName || "A.S.P.M.A"}
                 </h1>
                 <span className="text-xs text-sidebar-foreground/60 whitespace-nowrap">Portal do Administrador</span>
               </div>
