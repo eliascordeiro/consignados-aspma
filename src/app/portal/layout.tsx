@@ -200,12 +200,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         {/* Header — visível apenas em mobile */}
         <header className="lg:hidden sticky top-0 z-40 bg-emerald-600 text-white shadow-md">
           <div className="pt-safe-top" />
-          <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <Link href="/portal/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1">
               {managerLogo ? (
-                <img src={managerLogo} alt="Logo" className="w-8 h-8 rounded-full object-cover bg-white/20" />
+                <img src={managerLogo} alt="Logo" className="w-9 h-9 rounded-full object-cover bg-white/20 ring-2 ring-white/20 shrink-0" />
               ) : (
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
@@ -213,53 +213,57 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   </svg>
                 </div>
               )}
-              <div>
-                <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
-                <p className="text-sm font-semibold leading-tight">{managerName || 'ASPMA'}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] text-emerald-200 leading-none uppercase tracking-wider font-medium">Portal do Sócio</p>
+                <p className="text-sm font-bold leading-tight truncate">{managerName || 'ConsigExpress'}</p>
               </div>
+            </Link>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={toggleDark}
+                className="flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-full w-9 h-9 transition-colors active:scale-90"
+                aria-label={dark ? 'Modo claro' : 'Modo escuro'}
+              >
+                <ThemeIcon />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-full w-9 h-9 transition-colors active:scale-90"
+                aria-label="Sair"
+              >
+                <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={toggleDark}
-              className="flex items-center justify-center bg-white/15 hover:bg-white/25 rounded-xl w-8 h-8 transition-colors active:scale-95"
-            >
-              <ThemeIcon />
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors active:scale-95"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              Sair
-            </button>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 pdark:bg-gray-900">
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-8 pdark:bg-gray-900">
           <div className="max-w-lg mx-auto lg:max-w-2xl lg:mx-0 lg:px-4 lg:py-4">
             {children}
           </div>
         </main>
 
         {/* Bottom Navigation — visível apenas em mobile */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white pdark:bg-gray-800 border-t border-gray-200 pdark:border-gray-700 pb-safe-bottom shadow-lg z-50">
-          <div className="max-w-lg mx-auto flex">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white pdark:bg-gray-800 border-t border-gray-100 pdark:border-gray-700 pb-safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-50">
+          <div className="flex">
             {navItems.map(item => {
               const active = pathname === item.href || pathname?.startsWith(item.href + '/')
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 transition-colors active:scale-95 ${
-                    active ? 'text-emerald-500' : 'text-gray-500 pdark:text-gray-400'
+                  className={`flex-1 flex flex-col items-center justify-center pt-2 pb-2.5 gap-0.5 transition-all active:scale-90 relative ${
+                    active ? 'text-emerald-600' : 'text-gray-400 pdark:text-gray-500'
                   }`}
                 >
+                  {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-500 rounded-full" />}
                   {item.icon(active)}
-                  <span className={`text-[10px] font-medium whitespace-nowrap ${active ? 'text-emerald-500' : 'text-gray-400 pdark:text-gray-500'}`}>
+                  <span className={`text-[10px] font-semibold whitespace-nowrap ${active ? 'text-emerald-600' : 'text-gray-400 pdark:text-gray-500'}`}>
                     {item.label}
                   </span>
                 </Link>

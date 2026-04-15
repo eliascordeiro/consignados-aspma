@@ -66,7 +66,6 @@ export default function PortalLoginPage() {
         {/* Logo da Associação */}
         <div className="mb-8 text-center animate-in fade-in slide-in-from-top duration-500">
           <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">Portal do Sócio</h1>
-          <p className="text-emerald-50 text-base mt-2 font-medium">ASPMA</p>
         </div>
 
         {/* Card de Login */}
