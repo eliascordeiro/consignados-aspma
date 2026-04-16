@@ -45,7 +45,9 @@ export default function PortalLoginPage() {
         return
       }
 
-      router.push('/portal/dashboard')
+      // Navegação completa para forçar re-render do server layout (carregar logo)
+      window.location.href = '/portal/dashboard'
+      return
     } catch {
       setErro('Erro de conexão. Tente novamente.')
     } finally {
