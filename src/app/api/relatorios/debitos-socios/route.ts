@@ -33,6 +33,8 @@ interface GrupoSocio {
   matricula: string;
   nome: string;
   matriculaInfo?: { antiga: number; atual: number } | null;
+  todasMatriculas: string;
+  empresaNome: string;
   margemConsignada?: number;
   parcelas: {
     convenio: string;
@@ -209,6 +211,11 @@ export async function GET(request: NextRequest) {
                 id: true,
                 matricula: true,
                 nome: true,
+                empresa: {
+                  select: {
+                    nome: true,
+                  },
+                },
               },
             },
             convenio: {
@@ -595,11 +602,11 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     // ═══════════════════════════════════════════════════════════
     
     // Box de fundo do sócio
-    const cardHeight = 12;
+    const cardHeight = grupo.empresaNome ? 16 : 12;
     doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
     doc.roundedRect(margin, y, pageWidth - 2 * margin, cardHeight, 2, 2, 'F');
     
-    // Matrícula e Nome do sócio
+    // Matrícula(s) e Nome do sócio
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
@@ -607,13 +614,19 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    const matriculaExibir = grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula;
-    doc.text(`Matrícula: ${matriculaExibir}`, margin + 20, y + 5);
+    doc.text(`Matrícula(s): ${grupo.todasMatriculas}`, margin + 20, y + 5);
     
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     const nomeText = grupo.nome.length > 80 ? grupo.nome.substring(0, 77) + '...' : grupo.nome;
     doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
+    
+    // Empresa (consignatária)
+    if (grupo.empresaNome) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text(`Consignatária: ${grupo.empresaNome}`, margin + 3, y + 13);
+    }
     
     y += cardHeight + 3;
 
@@ -657,7 +670,7 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         addHeader(false); // Cabeçalho reduzido nas páginas seguintes
         
         // Repetir info do sócio e cabeçalho da tabela na nova página
-        const cardHeightPB = 12;
+        const cardHeightPB = grupo.empresaNome ? 16 : 12;
         doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
         doc.roundedRect(margin, y, pageWidth - 2 * margin, cardHeightPB, 2, 2, 'F');
         doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
@@ -666,11 +679,15 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
         doc.text('SÓCIO:', margin + 3, y + 5);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        const matriculaExibirPB = grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula;
-        doc.text(`Matrícula: ${matriculaExibirPB}`, margin + 20, y + 5);
+        doc.text(`Matrícula(s): ${grupo.todasMatriculas}`, margin + 20, y + 5);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
+        if (grupo.empresaNome) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.text(`Consignatária: ${grupo.empresaNome}`, margin + 3, y + 13);
+        }
         y += cardHeightPB + 3;
         
         // Cabeçalho da tabela
@@ -973,10 +990,21 @@ function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: n
 
     if (!grupos.has(socioKey)) {
       const margemConsignada = margemMap?.get(parcela.venda.socio.id);
+      const info = matriculaMap?.get(matricula) ?? null;
+      // Monta string com todas as matrículas (antiga e atual)
+      let todasMatriculas = matricula;
+      if (info) {
+        const parts: string[] = [];
+        if (info.antiga) parts.push(info.antiga.toString());
+        if (info.atual && info.atual.toString() !== info.antiga.toString()) parts.push(info.atual.toString());
+        if (parts.length > 0) todasMatriculas = parts.join(' / ');
+      }
       grupos.set(socioKey, {
         matricula,
         nome: parcela.venda.socio.nome,
-        matriculaInfo: matriculaMap?.get(matricula) ?? null,
+        matriculaInfo: info,
+        todasMatriculas,
+        empresaNome: parcela.venda.socio.empresa?.nome || '',
         margemConsignada,
         parcelas: [],
         total: 0,
