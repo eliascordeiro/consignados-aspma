@@ -184,9 +184,10 @@ export async function GET(request: NextRequest) {
       hasVendaFilter = true;
     }
 
-    // Filtro por empresa (consignatária) - usa empresaId snapshot da venda (não do sócio)
+    // Filtro por empresa (consignatária) - usa empresaId atual do sócio (não o snapshot da venda)
+    // O snapshot da venda pode estar desatualizado quando o sócio muda de empresa
     if (empresaId) {
-      vendaFilter.empresaId = parseInt(empresaId);
+      vendaFilter.socio = { ...vendaFilter.socio, empresaId: parseInt(empresaId) };
       hasVendaFilter = true;
     }
 
