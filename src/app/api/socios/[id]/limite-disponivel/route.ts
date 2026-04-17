@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getRequestInfo } from '@/lib/audit-log'
+import { calcularDataCorte } from '@/lib/data-corte'
 
 /**
  * GET /api/socios/[id]/limite-disponivel
  * 
  * Calcula o limite disponível do sócio baseado na lógica do AS200.PRG:
- * Limite Disponível = Limite Total - Total em Aberto (parcelas não pagas)
+ * Limite Disponível = Limite Total - Descontos do mês de referência
+ * 
+ * Data de corte: se dia atual > diaCorte (da consignatária), 
+ * considera parcelas do mês seguinte; senão, do mês atual.
  */
 export async function GET(
   request: NextRequest,
@@ -16,7 +20,7 @@ export async function GET(
     const { id } = await params
     const requestInfo = getRequestInfo(request)
 
-    // Buscar sócio
+    // Buscar sócio com empresa (para diaCorte)
     const socio = await prisma.socio.findUnique({
       where: { id },
       select: {
@@ -25,6 +29,7 @@ export async function GET(
         matricula: true,
         limite: true,
         tipo: true,
+        empresa: { select: { diaCorte: true } },
       }
     })
 
@@ -37,12 +42,15 @@ export async function GET(
 
     const limiteTotal = Number(socio.limite) || 0
 
-    // Se tipo 3 ou 4 (local), calcula limite local: limite - parcelas em aberto
+    // Se tipo 3 ou 4 (local), calcula limite local: limite - descontos do mês de referência
     // AS200.PRG linha 1130: pLimite := oLimite - nLimite
     if (socio.tipo === '3' || socio.tipo === '4') {
-      // Busca soma das parcelas em aberto (baixa = null ou vazio)
-      // AS200.PRG linha 1126: WHERE ... and baixa = '' 
-      const parcelasEmAberto = await prisma.parcela.findMany({
+      // Calcula data de corte usando o diaCorte da consignatária (empresa) do sócio
+      const dataCorte = calcularDataCorte(socio.empresa?.diaCorte ?? 9)
+
+      // Busca soma das parcelas do mês de referência em aberto (baixa = null, vazio ou 'N')
+      const result = await prisma.parcela.aggregate({
+        _sum: { valor: true },
         where: {
           venda: {
             socioId: socio.id,
@@ -51,21 +59,24 @@ export async function GET(
           },
           OR: [
             { baixa: null },
-            { baixa: '' }
-          ]
+            { baixa: '' },
+            { baixa: 'N' },
+          ],
+          dataVencimento: {
+            gte: new Date(dataCorte.ano, dataCorte.mes - 1, 1),
+            lt: new Date(dataCorte.ano, dataCorte.mes, 1),
+          },
         },
-        select: {
-          valor: true
-        }
       })
 
-      const totalEmAberto = parcelasEmAberto.reduce((sum, p) => sum + Number(p.valor), 0)
+      const totalEmAberto = Number(result._sum.valor || 0)
       const limiteDisponivel = limiteTotal - totalEmAberto
 
       return NextResponse.json({
         limiteTotal,
         totalEmAberto,
         limiteDisponivel,
+        mesReferencia: `${dataCorte.mes}/${dataCorte.ano}`,
         tipo: socio.tipo,
         tipoDescricao: 'Local',
         socio: {
