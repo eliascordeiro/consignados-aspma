@@ -112,12 +112,12 @@ export async function POST(req: Request) {
   // Buscar dados atualizados do convênio direto do banco
   const convenioAtualizado = await prisma.convenio.findUnique({
     where: { id: session.convenioId },
-    select: { tipo: true, fantasia: true, razaoSocial: true },
+    select: { tipo: true, fantasia: true, razao_soc: true },
   })
   const newToken = await new SignJWT({
     convenioId: session.convenioId,
     usuario: session.usuario,
-    razaoSocial: convenioAtualizado?.razaoSocial || session.razaoSocial,
+    razaoSocial: convenioAtualizado?.razao_soc || session.razaoSocial,
     fantasia: convenioAtualizado?.fantasia || session.fantasia,
     tipo: convenioAtualizado?.tipo || session.tipo,
     senhaChangedAt: now.toISOString(),
