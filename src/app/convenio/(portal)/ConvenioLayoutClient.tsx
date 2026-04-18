@@ -19,22 +19,22 @@ interface ConvenioLayoutClientProps {
 
 // Mapeia o tipo do convênio para a classe CSS de categoria
 function getCategoriaClass(tipo: string | null): string {
-  if (!tipo) return ''
+  if (!tipo) return 'categoria-comercio'
   const t = tipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   if (t === 'banco') return 'categoria-banco'
   if (t === 'comercio') return 'categoria-comercio'
   if (t === 'teste') return 'categoria-teste'
-  return ''
+  return 'categoria-comercio'
 }
 
 // Mapeia o tipo para ícone e label
 function getCategoriaInfo(tipo: string | null) {
-  if (!tipo) return { Icon: Building2, label: 'Conveniado' }
+  if (!tipo) return { Icon: Store, label: 'Comércio' }
   const t = tipo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   if (t === 'banco') return { Icon: Landmark, label: 'Banco' }
   if (t === 'comercio') return { Icon: Store, label: 'Comércio' }
   if (t === 'teste') return { Icon: FlaskConical, label: 'Teste' }
-  return { Icon: Building2, label: tipo }
+  return { Icon: Store, label: 'Comércio' }
 }
 
 function ConvenioLogoutButton() {
