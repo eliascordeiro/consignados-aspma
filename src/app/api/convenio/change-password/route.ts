@@ -109,12 +109,17 @@ export async function POST(req: Request) {
   }
 
   // Issue a fresh JWT cookie so the new senhaChangedAt is reflected immediately
+  // Buscar dados atualizados do convênio direto do banco
+  const convenioAtualizado = await prisma.convenio.findUnique({
+    where: { id: session.convenioId },
+    select: { tipo: true, fantasia: true, razaoSocial: true },
+  })
   const newToken = await new SignJWT({
     convenioId: session.convenioId,
     usuario: session.usuario,
-    razaoSocial: session.razaoSocial,
-    fantasia: session.fantasia,
-    tipo: session.tipo,
+    razaoSocial: convenioAtualizado?.razaoSocial || session.razaoSocial,
+    fantasia: convenioAtualizado?.fantasia || session.fantasia,
+    tipo: convenioAtualizado?.tipo || session.tipo,
     senhaChangedAt: now.toISOString(),
   })
     .setProtectedHeader({ alg: 'HS256' })

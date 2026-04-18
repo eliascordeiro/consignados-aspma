@@ -15,10 +15,10 @@ export default async function ConvenioLayout({
     redirect('/login')
   }
 
-  // Verificar se o convênio ainda está ativo no banco
+  // Buscar dados atualizados do convênio direto do banco (não do JWT)
   const convenio = await prisma.convenio.findUnique({
     where: { id: session.convenioId },
-    select: { ativo: true },
+    select: { ativo: true, tipo: true, fantasia: true, razao_soc: true, userId: true },
   })
 
   if (!convenio || !convenio.ativo) {
@@ -45,13 +45,9 @@ export default async function ConvenioLayout({
 
   // Buscar logo do manager vinculado ao convênio
   let managerLogo: string | null = null
-  const convenioData = await prisma.convenio.findUnique({
-    where: { id: session.convenioId },
-    select: { userId: true },
-  })
-  if (convenioData?.userId) {
+  if (convenio.userId) {
     const user = await prisma.users.findUnique({
-      where: { id: convenioData.userId },
+      where: { id: convenio.userId },
       select: { logo: true, managerPrincipalId: true },
     })
     if (user?.logo) {
@@ -67,9 +63,9 @@ export default async function ConvenioLayout({
 
   return (
     <ConvenioLayoutClient
-      fantasia={session.fantasia}
-      razaoSocial={session.razaoSocial}
-      tipo={session.tipo}
+      fantasia={convenio.fantasia || session.fantasia}
+      razaoSocial={convenio.razao_soc || session.razaoSocial}
+      tipo={convenio.tipo || null}
       passwordDaysLeft={passwordDaysLeft}
       managerLogo={managerLogo}
     >
