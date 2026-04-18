@@ -110,17 +110,15 @@ export default function ConvenioLayoutClient({
                     <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                       Portal do Conveniado
                     </p>
-                    {tipo && (
-                      <span
-                        className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full"
-                        style={{
-                          backgroundColor: 'var(--categoria-badge-bg, var(--muted))',
-                          color: 'var(--categoria-badge-text, var(--muted-foreground))',
-                        }}
-                      >
-                        {categoriaLabel}
-                      </span>
-                    )}
+                    <span
+                      className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full"
+                      style={{
+                        backgroundColor: 'var(--categoria-badge-bg, var(--muted))',
+                        color: 'var(--categoria-badge-text, var(--muted-foreground))',
+                      }}
+                    >
+                      {categoriaLabel}
+                    </span>
                   </div>
                 </div>
               </div>
