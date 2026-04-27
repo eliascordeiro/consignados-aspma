@@ -237,8 +237,15 @@ function gerarPDFAverbacao(data: {
     doc.setFontSize(6.5);
     doc.setTextColor(...C.gray);
     doc.text(label.toUpperCase(), x + 3, yy + 4.5);
+    // Ajusta font size para caber no campo
+    const maxW = w - 6;
+    let fs = 9.5;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
+    doc.setFontSize(fs);
+    while (doc.getTextWidth(value || '—') > maxW && fs > 6) {
+      fs -= 0.5;
+      doc.setFontSize(fs);
+    }
     doc.setTextColor(...C.dark);
     doc.text(value || '—', x + 3, yy + 10.5);
   };
@@ -279,8 +286,10 @@ function gerarPDFAverbacao(data: {
 
   campo('Consignatária', data.consignataria || '—', ML, y, CW);
   y += 16;
-  campo('Convênio', data.convenio || '—', ML, y, half);
-  campo('C.N.P.J', data.cnpj || '—', ML + half + gap, y, half);
+  const convW = CW * 0.62;
+  const cnpjW = CW - convW - gap;
+  campo('Convênio', data.convenio || '—', ML, y, convW);
+  campo('C.N.P.J', data.cnpj || '—', ML + convW + gap, y, cnpjW);
   y += 20;
 
   // ══════════════════════════════════════════════════════════════════════════
