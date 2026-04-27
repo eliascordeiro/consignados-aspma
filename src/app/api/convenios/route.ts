@@ -89,22 +89,30 @@ export async function GET(req: NextRequest) {
     }
 
     // ADMIN vê TODOS os convênios (não filtra por userId)
-    // MANAGER/USER vê apenas os convênios do seu userId
-    const where: any = session.user?.role === 'ADMIN' ? {} : { userId: dataUserId }
+    // MANAGER/USER vê os convênios do seu userId OU convênios globais (userId = null)
+    const userFilter = session.user?.role === 'ADMIN'
+      ? {}
+      : { OR: [{ userId: dataUserId }, { userId: null }] }
 
-    if (statusFilter !== null) {
-      where.ativo = statusFilter
-    } else if (search) {
-      where.OR = [
-        { codigo: { contains: search, mode: "insensitive" as const } },
-        { razao_soc: { contains: search, mode: "insensitive" as const } },
-        { fantasia: { contains: search, mode: "insensitive" as const } },
-        { nome: { contains: search, mode: "insensitive" as const } },
-        { cgc: { contains: search, mode: "insensitive" as const } },
-        { cnpj: { contains: search, mode: "insensitive" as const } },
-        { cidade: { contains: search, mode: "insensitive" as const } },
-      ]
-    }
+    const searchFilter = statusFilter !== null
+      ? { ativo: statusFilter }
+      : search
+        ? {
+            OR: [
+              { codigo: { contains: search, mode: "insensitive" as const } },
+              { razao_soc: { contains: search, mode: "insensitive" as const } },
+              { fantasia: { contains: search, mode: "insensitive" as const } },
+              { nome: { contains: search, mode: "insensitive" as const } },
+              { cgc: { contains: search, mode: "insensitive" as const } },
+              { cnpj: { contains: search, mode: "insensitive" as const } },
+              { cidade: { contains: search, mode: "insensitive" as const } },
+            ]
+          }
+        : {}
+
+    const where: any = session.user?.role === 'ADMIN'
+      ? searchFilter
+      : { AND: [userFilter, ...(Object.keys(searchFilter).length ? [searchFilter] : [])] }
 
     const [convenios, total] = await Promise.all([
       db.convenio.findMany({
