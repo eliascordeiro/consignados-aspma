@@ -1950,6 +1950,18 @@ export default function RelatoriosPage() {
                 )}
               </div>
 
+              {/* CPF */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">C.P.F</label>
+                <input
+                  type="text"
+                  value={averbacaoForm.cpf}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, cpf: e.target.value }))}
+                  placeholder="000.000.000-00"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+
               {/* Nº do Contrato + Situação */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -1995,18 +2007,6 @@ export default function RelatoriosPage() {
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
                   />
                 </div>
-              </div>
-
-              {/* CPF */}
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">C.P.F</label>
-                <input
-                  type="text"
-                  value={averbacaoForm.cpf}
-                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, cpf: e.target.value }))}
-                  placeholder="000.000.000-00"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                />
               </div>
 
               {/* Parcelas + Valor Parcela + Valor Total */}
