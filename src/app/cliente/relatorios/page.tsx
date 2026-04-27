@@ -10,6 +10,7 @@ interface Convenio {
   id: number;
   codigo: string;
   razao_soc: string;
+  fantasia?: string;
 }
 
 interface Socio {
