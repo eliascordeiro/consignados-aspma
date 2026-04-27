@@ -168,9 +168,9 @@ export default function RelatoriosPage() {
 
   // Busca convênios ao digitar
   useEffect(() => {
-    if (searchConvenio.length >= 2 && !filtros.convenioId) {
+    if (searchConvenio.length >= 1 && !filtros.convenioId) {
       carregarConvenios();
-    } else if (searchConvenio.length < 2) {
+    } else if (searchConvenio.length < 1) {
       setShowConvenioList(false);
     }
   }, [searchConvenio]);
