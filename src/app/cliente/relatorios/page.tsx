@@ -82,6 +82,30 @@ export default function RelatoriosPage() {
   const [conveniosConsigRel, setConveniosConsigRel] = useState<Convenio[]>([]);
   const [convenioConsigRelId, setConvenioConsigRelId] = useState('');
 
+  // ── Estado Impressões Gerais — Averbação ───────────────────────────────────
+  const [showAverbacaoModal, setShowAverbacaoModal] = useState(false);
+  const [searchSocioAverbacao, setSearchSocioAverbacao] = useState('');
+  const [sociosAverbacao, setSociosAverbacao] = useState<Array<{ id: string; matricula: string; nome: string; cpf?: string }>>([]);
+  const [showSocioListAverbacao, setShowSocioListAverbacao] = useState(false);
+  const [loadingAverbacao, setLoadingAverbacao] = useState(false);
+  const [averbacaoForm, setAverbacaoForm] = useState({
+    socioId: '',
+    nome: '',
+    matricula: '',
+    cpf: '',
+    contrato: '',
+    situacao: 'APOSENTADO',
+    admissao: '',
+    margem: '',
+    parcelas: '',
+    valorParcela: '',
+    valorTotal: '',
+    prDesconto: '',
+    consignataria: 'CAIXA ECONOMICA FEDERAL',
+    convenio: 'FUNDO DE PREVIDENCIA MUNICIPAL DE ARAUCARIA',
+    cnpj: '04.105.170/0001-38',
+  });
+
   // ── Estado Impressões Gerais — Exclusão de Sócio ──────────────────────────
   const [showExclusaoModal, setShowExclusaoModal] = useState(false);
   const [searchSocioExclusao, setSearchSocioExclusao] = useState('');
@@ -161,6 +185,16 @@ export default function RelatoriosPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchSocio]);
 
+  // Busca sócios para averbação
+  useEffect(() => {
+    if (searchSocioAverbacao.length >= 2 && !averbacaoForm.socioId) {
+      carregarSociosAverbacao();
+    } else if (searchSocioAverbacao.length < 2) {
+      setShowSocioListAverbacao(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchSocioAverbacao]);
+
   // Busca sócios para exclusão
   useEffect(() => {
     if (searchSocioExclusao.length >= 2 && !socioExclusaoId) {
@@ -188,6 +222,74 @@ export default function RelatoriosPage() {
       setShowConvenioListConsigRel(false);
     }
   }, [searchConvenioConsigRel]);
+
+  const carregarSociosAverbacao = async () => {
+    try {
+      const response = await fetch(`/api/socios?search=${encodeURIComponent(searchSocioAverbacao)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const sociosData = data.data || data;
+        if (Array.isArray(sociosData)) {
+          setSociosAverbacao(sociosData);
+          setShowSocioListAverbacao(true);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar sócios:', error);
+    }
+  };
+
+  const selecionarSocioAverbacao = (socio: { id: string; matricula: string; nome: string; cpf?: string }) => {
+    setAverbacaoForm(prev => ({
+      ...prev,
+      socioId: socio.id,
+      nome: socio.nome,
+      matricula: socio.matricula,
+      cpf: socio.cpf || prev.cpf,
+    }));
+    setSearchSocioAverbacao(`${socio.matricula} - ${socio.nome}`);
+    setShowSocioListAverbacao(false);
+    setSociosAverbacao([]);
+  };
+
+  const limparSocioAverbacao = () => {
+    setAverbacaoForm(prev => ({ ...prev, socioId: '', nome: '', matricula: '', cpf: '' }));
+    setSearchSocioAverbacao('');
+    setShowSocioListAverbacao(false);
+    setSociosAverbacao([]);
+  };
+
+  const gerarPDFAverbacao = async () => {
+    if (!averbacaoForm.socioId) {
+      alert('Selecione um sócio para gerar a averbação.');
+      return;
+    }
+    setLoadingAverbacao(true);
+    try {
+      const response = await fetch('/api/relatorios/averbacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(averbacaoForm),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        alert(err.error || 'Erro ao gerar PDF');
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `averbacao-${averbacaoForm.matricula || averbacaoForm.socioId}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao gerar PDF de averbação:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setLoadingAverbacao(false);
+    }
+  };
 
   const carregarSociosExclusao = async () => {
     try {
@@ -940,6 +1042,38 @@ export default function RelatoriosPage() {
           <div className="h-px flex-1 bg-border" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card Averbação */}
+          <button
+            type="button"
+            onClick={() => setShowAverbacaoModal(true)}
+            className={`relative rounded-xl shadow-lg transition-all duration-200 text-left w-full cursor-pointer ${
+              showAverbacaoModal
+                ? 'bg-gradient-to-br from-indigo-500 to-indigo-700 text-white ring-2 ring-indigo-400/50'
+                : 'bg-card text-card-foreground border border-border hover:shadow-xl hover:border-indigo-400 dark:hover:border-indigo-500'
+            }`}
+          >
+            <div className="p-5">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${showAverbacaoModal ? 'bg-white/20' : 'bg-indigo-100 dark:bg-indigo-900/50'}`}>
+                  <svg className={`w-6 h-6 ${showAverbacaoModal ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className={`font-bold text-lg ${showAverbacaoModal ? 'text-white' : 'text-foreground'}`}>Averbação</h3>
+                  <p className={`text-xs ${showAverbacaoModal ? 'text-indigo-100' : 'text-muted-foreground'}`}>
+                    Confirmação de averbação F.P.M.A. — clique para preencher
+                  </p>
+                </div>
+                <div className={`flex-shrink-0 ${showAverbacaoModal ? 'text-indigo-100' : 'text-muted-foreground'}`}>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </button>
+
           {/* Card Requerimento de Exclusão */}
           <button
             type="button"
@@ -1747,6 +1881,251 @@ export default function RelatoriosPage() {
           </div>
         </div>
       )}
+      {/* ── Modal Averbação ────────────────────────────────────────────────── */}
+      {showAverbacaoModal && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAverbacaoModal(false); }}
+        >
+          <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
+                  <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Averbação F.P.M.A.</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Confirmação de averbação para cr&eacute;dito consignado</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAverbacaoModal(false)}
+                className="p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/50 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {/* Sócio */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">
+                  Matrícula / Sócio <span className="text-red-500 ml-0.5">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchSocioAverbacao}
+                    onChange={(e) => { setSearchSocioAverbacao(e.target.value); if (!e.target.value) limparSocioAverbacao(); }}
+                    placeholder="Buscar por matrícula ou nome..."
+                    className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                  {averbacaoForm.socioId ? (
+                    <button type="button" onClick={limparSocioAverbacao} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  ) : (
+                    <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  )}
+                </div>
+                {showSocioListAverbacao && sociosAverbacao.length > 0 && (
+                  <div className="mt-1 bg-background border border-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                    {sociosAverbacao.map((socio) => (
+                      <div
+                        key={socio.id}
+                        onClick={() => selecionarSocioAverbacao(socio)}
+                        className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-gray-700 cursor-pointer border-b border-border last:border-b-0 transition-colors"
+                      >
+                        <div className="font-semibold text-foreground text-sm">{socio.nome}</div>
+                        {socio.matricula && <div className="text-xs text-muted-foreground mt-0.5">Matrícula: {socio.matricula}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Nº do Contrato + Situação */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Nº do Contrato</label>
+                  <input
+                    type="text"
+                    value={averbacaoForm.contrato}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, contrato: e.target.value.toUpperCase() }))}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Situação</label>
+                  <input
+                    type="text"
+                    value={averbacaoForm.situacao}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, situacao: e.target.value.toUpperCase() }))}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
+                  />
+                </div>
+              </div>
+
+              {/* Admissão + Margem */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Admissão</label>
+                  <input
+                    type="date"
+                    value={averbacaoForm.admissao}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, admissao: e.target.value }))}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Margem (30%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={averbacaoForm.margem}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, margem: e.target.value }))}
+                    placeholder="0,00"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+              </div>
+
+              {/* CPF */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">C.P.F</label>
+                <input
+                  type="text"
+                  value={averbacaoForm.cpf}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, cpf: e.target.value }))}
+                  placeholder="000.000.000-00"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+
+              {/* Parcelas + Valor Parcela + Valor Total */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Nº Parcelas</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={averbacaoForm.parcelas}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, parcelas: e.target.value }))}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Vlr. Parcela</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={averbacaoForm.valorParcela}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, valorParcela: e.target.value }))}
+                    placeholder="0,00"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Vlr. Contrato</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={averbacaoForm.valorTotal}
+                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, valorTotal: e.target.value }))}
+                    placeholder="0,00"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+              </div>
+
+              {/* 1º Desconto */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">1º Desconto</label>
+                <input
+                  type="date"
+                  value={averbacaoForm.prDesconto}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, prDesconto: e.target.value }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+
+              {/* Consignatária */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Consignatária</label>
+                <input
+                  type="text"
+                  value={averbacaoForm.consignataria}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, consignataria: e.target.value.toUpperCase() }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
+                />
+              </div>
+
+              {/* Convênio + CNPJ */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Convênio</label>
+                <input
+                  type="text"
+                  value={averbacaoForm.convenio}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, convenio: e.target.value.toUpperCase() }))}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">C.N.P.J</label>
+                <input
+                  type="text"
+                  value={averbacaoForm.cnpj}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, cnpj: e.target.value }))}
+                  placeholder="00.000.000/0001-00"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex-shrink-0 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAverbacaoModal(false)}
+                className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-lg hover:bg-muted/50 font-semibold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={gerarPDFAverbacao}
+                disabled={loadingAverbacao || !averbacaoForm.socioId || !canExport}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors"
+              >
+                {loadingAverbacao ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    Imprimir / Baixar PDF
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Modal Requerimento de Exclusão ─────────────────────────────────── */}
       {showExclusaoModal && (
         <div
