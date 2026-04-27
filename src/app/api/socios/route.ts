@@ -102,6 +102,7 @@ export async function GET(req: NextRequest) {
           id: true,
           matricula: true,
           nome: true,
+          cpf: true,
         },
         orderBy: { matricula: "asc" },
         take: limit,
