@@ -50,6 +50,7 @@ interface GrupoSocio {
 
 interface GrupoConvenio {
   convenioId: number;
+  codigoCon: string | null;
   convenioNome: string;
   cnpj: string | null;
   agencia: string | null;
@@ -1044,6 +1045,7 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
     if (!grupos.has(convenioId)) {
       grupos.set(convenioId, {
         convenioId,
+        codigoCon: parcela.venda.convenio.codigo ?? null,
         convenioNome: parcela.venda.convenio.razao_soc,
         cnpj: parcela.venda.convenio.cnpj,
         agencia: parcela.venda.convenio.agencia,
@@ -1089,6 +1091,7 @@ function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
     if (!grupos.has(convenioId)) {
       grupos.set(convenioId, {
         convenioId,
+        codigoCon: parcela.venda.convenio.codigo ?? null,
         convenioNome: parcela.venda.convenio.razao_soc,
         cnpj: parcela.venda.convenio.cnpj,
         agencia: parcela.venda.convenio.agencia,
@@ -1118,9 +1121,14 @@ function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
     grupo.totalDesconto += Number(parcela.valor) * grupo.descontoPorParcela / 100;
   });
 
-  return Array.from(grupos.values()).map(g => ({ ...g, totalLiquido: g.total - g.totalDesconto })).sort((a, b) =>
-    a.convenioNome.localeCompare(b.convenioNome, 'pt-BR', { sensitivity: 'base' })
-  );
+  return Array.from(grupos.values())
+    .map(g => ({ ...g, totalLiquido: g.total - g.totalDesconto }))
+    .sort((a, b) => {
+      const ca = parseInt(a.codigoCon || '999999');
+      const cb = parseInt(b.codigoCon || '999999');
+      if (!isNaN(ca) && !isNaN(cb)) return ca - cb;
+      return (a.codigoCon || '').localeCompare(b.codigoCon || '', 'pt-BR');
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1877,36 +1885,29 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
   let isFirstGroup = true;
 
   grupos.forEach((grupo) => {
-    if (y > pageHeight - 40) {
+    // Cada convênio começa sempre em nova página (exceto o primeiro)
+    if (!isFirstGroup) {
       addFooter();
       doc.addPage();
       addHeader(false);
-      isFirstGroup = true;
-    }
-
-    if (!isFirstGroup) {
-      y += 3;
-      doc.setDrawColor(colors.lightGray[0], colors.lightGray[1], colors.lightGray[2]);
-      doc.setLineWidth(0.5);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 5;
     }
     isFirstGroup = false;
 
     // ═══ CARD DO CONVÊNIADO ═══
     doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
-    doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 14, 2, 2, 'F');
 
     doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.text('CONVÊNIADO:', margin + 3, y + 5);
 
-    doc.setFontSize(10);
-    const nomeText = grupo.convenioNome.length > 80 ? grupo.convenioNome.substring(0, 77) + '...' : grupo.convenioNome;
-    doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
+    const codigoLabel = grupo.codigoCon ? `[${grupo.codigoCon}] ` : '';
+    doc.setFontSize(11);
+    const nomeText = grupo.convenioNome.length > 75 ? grupo.convenioNome.substring(0, 72) + '...' : grupo.convenioNome;
+    doc.text(`${codigoLabel}${nomeText.toUpperCase()}`, margin + 3, y + 11);
 
-    y += 15;
+    y += 17;
 
     // ═══ CABEÇALHO DA TABELA ═══
     doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
@@ -1941,14 +1942,15 @@ async function gerarPDFConsignataria(grupos: GrupoConvenio[], mes: number, ano: 
 
         // Repetir card do convêniado na continuação
         doc.setFillColor(colors.tableHeader[0], colors.tableHeader[1], colors.tableHeader[2]);
-        doc.roundedRect(margin, y, pageWidth - 2 * margin, 12, 2, 2, 'F');
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 14, 2, 2, 'F');
         doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
         doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('CONVÊNIADO: (continuação)', margin + 3, y + 5);
+        const codigoLabelCont = grupo.codigoCon ? `[${grupo.codigoCon}] ` : '';
         doc.setFontSize(11);
-        doc.text('CONVÊNIADO:', margin + 3, y + 5);
-        doc.setFontSize(10);
-        doc.text(nomeText.toUpperCase(), margin + 3, y + 9);
-        y += 15;
+        doc.text(`${codigoLabelCont}${nomeText.toUpperCase()}`, margin + 3, y + 11);
+        y += 17;
 
         doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
         doc.rect(margin, y - 3, pageWidth - 2 * margin, 7, 'F');
