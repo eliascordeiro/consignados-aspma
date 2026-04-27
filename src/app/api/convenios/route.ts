@@ -88,9 +88,9 @@ export async function GET(req: NextRequest) {
       statusFilter = false
     }
 
-    // ADMIN vê TODOS os convênios (não filtra por userId)
-    // MANAGER/USER vê os convênios do seu userId OU convênios globais (userId = null)
-    const userFilter = session.user?.role === 'ADMIN'
+    // ADMIN e MANAGER veem TODOS os convênios (não filtra por userId)
+    // USER vê os convênios do seu userId OU convênios globais (userId = null)
+    const userFilter = (session.user?.role === 'ADMIN' || session.user?.role === 'MANAGER')
       ? {}
       : { OR: [{ userId: dataUserId }, { userId: null }] }
 
@@ -110,7 +110,8 @@ export async function GET(req: NextRequest) {
           }
         : {}
 
-    const where: any = session.user?.role === 'ADMIN'
+    const isFullAccess = session.user?.role === 'ADMIN' || session.user?.role === 'MANAGER'
+    const where: any = isFullAccess
       ? searchFilter
       : { AND: [userFilter, ...(Object.keys(searchFilter).length ? [searchFilter] : [])] }
 
