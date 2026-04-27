@@ -355,7 +355,7 @@ export default function RelatoriosPage() {
 
   const carregarConvenios = async () => {
     try {
-      const response = await fetch(`/api/convenios?search=${searchConvenio}`);
+      const response = await fetch(`/api/convenios?search=${encodeURIComponent(searchConvenio)}`);
       if (response.ok) {
         const data = await response.json();
         // API pode retornar { data: [], pagination: {} } ou array direto
@@ -1462,7 +1462,7 @@ export default function RelatoriosPage() {
                       type="text"
                       value={searchConvenio}
                       onChange={(e) => { setSearchConvenio(e.target.value); if (!e.target.value) limparConvenio(); }}
-                      placeholder="Buscar por código ou razão social..."
+                      placeholder="Buscar por código, razão social ou nome fantasia..."
                       className="w-full px-3 py-2.5 pr-9 border border-border rounded-lg bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
                     />
                     {filtros.convenioId ? (
@@ -1478,6 +1478,7 @@ export default function RelatoriosPage() {
                       {convenios.map((convenio) => (
                         <div key={convenio.id} onClick={() => selecionarConvenio(convenio)} className="px-4 py-3 hover:bg-teal-50 dark:hover:bg-gray-600 cursor-pointer border-b border-border last:border-b-0 transition-colors">
                           <div className="font-semibold text-foreground text-sm">{convenio.razao_soc}</div>
+                          {convenio.fantasia && <div className="text-xs text-muted-foreground mt-0.5">{convenio.fantasia}</div>}
                           {convenio.codigo && <div className="text-xs text-muted-foreground mt-0.5">Código: {convenio.codigo}</div>}
                         </div>
                       ))}
