@@ -115,15 +115,37 @@ export async function GET(req: NextRequest) {
       ? searchFilter
       : { AND: [userFilter, ...(Object.keys(searchFilter).length ? [searchFilter] : [])] }
 
-    const [convenios, total] = await Promise.all([
+    // Quando busca é numérica, busca mais registros e reordena: código exato → começa com → resto
+    const isNumericSearch = /^\d+$/.test(search.trim())
+
+    const [conveniosRaw, total] = await Promise.all([
       db.convenio.findMany({
         where,
         orderBy: { razao_soc: "asc" },
-        take: limit,
-        skip,
+        take: isNumericSearch ? limit * 4 : limit,
+        skip: isNumericSearch ? 0 : skip,
       }),
       db.convenio.count({ where })
     ])
+
+    let convenios = conveniosRaw
+    if (isNumericSearch) {
+      const termo = search.trim()
+      const exact = conveniosRaw.filter(c => c.codigo === termo)
+      const starts = conveniosRaw.filter(c => c.codigo !== termo && c.codigo?.startsWith(termo))
+      const rest   = conveniosRaw.filter(c => c.codigo !== termo && !c.codigo?.startsWith(termo))
+
+      // Ordenar exact e starts numericamente pelo código
+      const numSort = (a: any, b: any) => {
+        const na = parseInt(a.codigo || '0', 10)
+        const nb = parseInt(b.codigo || '0', 10)
+        return na - nb
+      }
+      exact.sort(numSort)
+      starts.sort(numSort)
+
+      convenios = [...exact, ...starts, ...rest].slice(skip, skip + limit)
+    }
 
     return NextResponse.json({
       data: convenios,
