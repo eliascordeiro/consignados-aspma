@@ -60,8 +60,15 @@ export async function GET(
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 })
     }
     const { id } = await params
-    const dataUserId = await getDataUserId(session as any)
-    const convenio = await db.convenio.findFirst({ where: { id: parseInt(id), userId: dataUserId } })
+    const role = (session.user as any).role
+    const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER'
+    let convenio
+    if (isAdminOrManager) {
+      convenio = await db.convenio.findUnique({ where: { id: parseInt(id) } })
+    } else {
+      const dataUserId = await getDataUserId(session as any)
+      convenio = await db.convenio.findFirst({ where: { id: parseInt(id), userId: dataUserId } })
+    }
     if (!convenio) return NextResponse.json({ error: "Convênio não encontrado" }, { status: 404 })
     return NextResponse.json(convenio)
   } catch (error) {
@@ -98,13 +105,16 @@ export async function PUT(
       )
     }
 
-    // Verificar ownership usando getDataUserId (herda dados do MANAGER se for subordinado)
-    const dataUserId = await getDataUserId(session as any)
-    if (existing.userId !== null && existing.userId !== dataUserId) {
-      return NextResponse.json(
-        { error: "Sem permissão para editar este convênio" },
-        { status: 403 }
-      )
+    // ADMIN e MANAGER podem editar qualquer convênio; USER só edita os próprios
+    const putRole = (session.user as any).role
+    if (putRole !== 'ADMIN' && putRole !== 'MANAGER') {
+      const dataUserId = await getDataUserId(session as any)
+      if (existing.userId !== null && existing.userId !== dataUserId) {
+        return NextResponse.json(
+          { error: "Sem permissão para editar este convênio" },
+          { status: 403 }
+        )
+      }
     }
 
     const body = await req.json()
@@ -243,13 +253,16 @@ export async function DELETE(
       )
     }
 
-    // Verificar ownership usando getDataUserId (herda dados do MANAGER se for subordinado)
-    const dataUserIdDel = await getDataUserId(session as any)
-    if (existing.userId !== null && existing.userId !== dataUserIdDel) {
-      return NextResponse.json(
-        { error: "Sem permissão para excluir este convênio" },
-        { status: 403 }
-      )
+    // ADMIN e MANAGER podem excluir qualquer convênio; USER só exclui os próprios
+    const delRole = (session.user as any).role
+    if (delRole !== 'ADMIN' && delRole !== 'MANAGER') {
+      const dataUserIdDel = await getDataUserId(session as any)
+      if (existing.userId !== null && existing.userId !== dataUserIdDel) {
+        return NextResponse.json(
+          { error: "Sem permissão para excluir este convênio" },
+          { status: 403 }
+        )
+      }
     }
 
     // Verificar se o convênio tem vendas associadas
