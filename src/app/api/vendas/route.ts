@@ -365,7 +365,6 @@ export async function POST(request: NextRequest) {
       where: {
         id: socioId,
         userId: targetUserId,
-        ativo: true,
       },
       select: {
         id: true,
