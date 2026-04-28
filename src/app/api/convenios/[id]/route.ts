@@ -168,12 +168,16 @@ export async function PUT(
         const emailTaken = await db.users.findFirst({
           where: { email: newEmail, NOT: { id: existing.userId } },
         })
-        if (!emailTaken) {
-          await db.users.update({
-            where: { id: existing.userId },
-            data: { email: newEmail },
-          })
+        if (emailTaken) {
+          return NextResponse.json(
+            { error: 'Este email já está em uso por outro cadastro. Escolha um email diferente.' },
+            { status: 400 }
+          )
         }
+        await db.users.update({
+          where: { id: existing.userId },
+          data: { email: newEmail },
+        })
       } else {
         // No linked user yet — create one with a sentinel password
         const nomeUser = (data.fantasia || data.razao_soc || 'Convênio').trim()
