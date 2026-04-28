@@ -55,9 +55,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Listar sócios com margem (busca geral)
-    // Inclui sócios ativos E sócios com ativo=null (registros legados migrados sem o campo)
-    // Exclui apenas os explicitamente marcados como ativo=false
-    const where: any = { ativo: { not: false }, userId: dataUserId }
+    // Sem filtro por ativo — igual à página Sócios (status é determinado por bloqueio !== 'X')
+    const where: any = { userId: dataUserId }
 
     if (search) {
       const isNumericSearch = /^\d+$/.test(search)
@@ -92,7 +91,6 @@ export async function GET(request: NextRequest) {
               ...matriculasAlternativas.map(m => ({ matricula: m })),
             ],
             userId: dataUserId,
-            ativo: { not: false },
           }
         })
 
