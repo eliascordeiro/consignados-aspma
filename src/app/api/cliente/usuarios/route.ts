@@ -74,10 +74,18 @@ export async function GET(request: NextRequest) {
 
     const ownerId = await getRootOwnerId(session.user)
 
+    // Excluir users que são logins de convênio (criados automaticamente ao cadastrar convênio com email)
+    const convenioUsers = await prisma.convenio.findMany({
+      where: { userId: { not: null } },
+      select: { userId: true },
+    })
+    const convenioUserIds = convenioUsers.map((c) => c.userId!).filter(Boolean)
+
     const users = await prisma.users.findMany({
       where: {
         createdById: ownerId,
         role: "USER",
+        ...(convenioUserIds.length > 0 ? { id: { notIn: convenioUserIds } } : {}),
         OR: search ? [
           { name: { contains: search, mode: "insensitive" } },
           { email: { contains: search, mode: "insensitive" } },
