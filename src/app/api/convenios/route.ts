@@ -90,9 +90,19 @@ export async function GET(req: NextRequest) {
 
     // ADMIN e MANAGER veem TODOS os convênios (não filtra por userId)
     // USER vê os convênios do seu userId OU convênios globais (userId = null)
-    const userFilter = (session.user?.role === 'ADMIN' || session.user?.role === 'MANAGER')
-      ? {}
-      : { OR: [{ userId: dataUserId }, { userId: null }] }
+    // Inclui também convênios cujo userId pertence a sub-usuários criados pelo mesmo manager
+    // (necessário porque ao criar convênio com email, um novo user é criado com createdById=managerUserId)
+    let userFilter: any
+    if (session.user?.role === 'ADMIN' || session.user?.role === 'MANAGER') {
+      userFilter = {}
+    } else {
+      const subUsers = await db.users.findMany({
+        where: { createdById: dataUserId },
+        select: { id: true },
+      })
+      const allUserIds = [dataUserId, ...subUsers.map((u) => u.id)]
+      userFilter = { OR: [{ userId: { in: allUserIds } }, { userId: null }] }
+    }
 
     const searchFilter = statusFilter !== null
       ? { ativo: statusFilter }
