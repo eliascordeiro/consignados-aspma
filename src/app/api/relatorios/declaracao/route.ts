@@ -81,134 +81,121 @@ function gerarPDFDeclaracao(data: {
     white:   [255,255, 255]  as [number,number,number],
   };
 
-  // ── Desenha uma via a partir de yBase ───────────────────────────────────────
-  function drawCopy(yBase: number) {
-    const HDR = 18; // altura do cabeçalho
+  // ── Desenha uma via; retorna posição Y do fim ───────────────────────────────
+  function drawCopy(yBase: number): number {
+    const HDR = 20; // cabeçalho mais alto para acomodar fontes maiores
 
     // ── Faixa de cabeçalho ───────────────────────────────────────────────────
-    // Gradiente simulado: faixa escura à esquerda + faixa principal
     doc.setFillColor(...C.darkBlue);
     doc.rect(0, yBase, W, HDR, 'F');
     doc.setFillColor(...C.blue);
     doc.rect(12, yBase, W - 12, HDR, 'F');
-
-    // Barra de acento lateral bem fina + clara
     doc.setFillColor(180, 220, 240);
     doc.rect(12, yBase, 0.8, HDR, 'F');
 
-    // Logotipo textual "A.S.P.M.A." grande e bold
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(...C.white);
-    doc.text('A.S.P.M.A.', ML, yBase + 8.5);
+    doc.text('A.S.P.M.A.', ML, yBase + 9);
 
-    // Linha divisória fina entre nome e endereço
     doc.setDrawColor(180, 220, 240);
     doc.setLineWidth(0.2);
-    doc.line(ML, yBase + 10.5, W - ML, yBase + 10.5);
+    doc.line(ML, yBase + 11.5, W - ML, yBase + 11.5);
 
-    // Nome completo e endereço
+    // Fontes do cabeçalho aumentadas conforme solicitado
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
+    doc.setFontSize(8.5);
     doc.setTextColor(220, 235, 245);
-    doc.text('Associação dos Servidores da Prefeitura do Município de Araucária', ML, yBase + 14);
-    doc.setFontSize(6.5);
+    doc.text('Associação dos Servidores da Prefeitura do Município de Araucária', ML, yBase + 15.5);
+    doc.setFontSize(8);
     doc.setTextColor(190, 215, 235);
-    doc.text('Rua Raimundo Suckow, 129 – Jardim Iguaçu – Araucária/PR  |  Fones: (41) 642-4155 / 642-7796', ML, yBase + 17.2);
+    doc.text('Rua Raimundo Suckow, 129 – Jardim Iguaçu – Araucária/PR  |  Fones: (41) 642-4155 / 642-7796', ML, yBase + 19.5);
 
     // ── Título do documento ──────────────────────────────────────────────────
-    const titleY = yBase + HDR + 9;
+    const titleY = yBase + HDR + 8;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(15);
     doc.setTextColor(...C.dark);
     doc.text('DECLARAÇÃO', W / 2, titleY, { align: 'center' });
 
-    // Linha decorativa dupla abaixo do título
     doc.setDrawColor(...C.blue);
     doc.setLineWidth(0.8);
-    doc.line(ML + 38, titleY + 2.5, W - ML - 38, titleY + 2.5);
+    doc.line(ML + 38, titleY + 2, W - ML - 38, titleY + 2);
     doc.setLineWidth(0.25);
-    doc.line(ML + 42, titleY + 4, W - ML - 42, titleY + 4);
+    doc.line(ML + 42, titleY + 3.5, W - ML - 42, titleY + 3.5);
     doc.setLineWidth(0.2);
 
     // ── Box de dados ────────────────────────────────────────────────────────
-    const boxY = titleY + 8;
+    const boxY = titleY + 5;
     const rows: { label: string; value: string; bold?: boolean; blue?: boolean }[] = [
       { label: 'AO CONVÊNIO', value: (data.convenio || '—').toUpperCase() },
       { label: 'MATRÍCULA',   value: data.matricula || '—' },
       { label: 'ASSOCIADO',   value: (data.nome || '—').toUpperCase() },
       { label: 'VALOR',       value: valorFormatado, bold: true, blue: true },
     ];
-    const rowH = 7.5;
-    const boxH = rows.length * rowH + 4;
+    const rowH = 7.0;
+    const boxH = rows.length * rowH + 2;   // 30mm
 
     doc.setFillColor(...C.lightBg);
     doc.setDrawColor(...C.accent);
     doc.setLineWidth(0.35);
     doc.roundedRect(ML, boxY, CW, boxH, 2.5, 2.5, 'FD');
-    // Barra lateral azul
     doc.setFillColor(...C.blue);
     doc.roundedRect(ML, boxY, 3, boxH, 1.5, 1.5, 'F');
 
     rows.forEach((row, i) => {
       const ry = boxY + 7 + i * rowH;
-      // Label coluna esquerda
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7);
       doc.setTextColor(...C.gray);
       doc.text(row.label + ':', ML + 6, ry);
-      // Linha separadora entre linhas
       if (i > 0) {
         doc.setDrawColor(220, 228, 235);
         doc.setLineWidth(0.15);
         doc.line(ML + 3, ry - 5, ML + CW - 1, ry - 5);
       }
-      // Valor
       doc.setFont('helvetica', row.bold ? 'bold' : 'normal');
       doc.setFontSize(9);
       doc.setTextColor(row.blue ? C.blue[0] : C.dark[0], row.blue ? C.blue[1] : C.dark[1], row.blue ? C.blue[2] : C.dark[2]);
       doc.text(row.value, ML + 42, ry);
     });
 
-    let y = boxY + boxH + 5;
+    let y = boxY + boxH + 4;
 
     // ── Observações (opcional) ───────────────────────────────────────────────
     if (hasObs) {
-      const obsH = hasObs2 ? 16 : 10;
+      const obsH = hasObs2 ? 12 : 8;
       doc.setFillColor(...C.obsBg);
       doc.setDrawColor(...C.obsLine);
       doc.setLineWidth(0.35);
       doc.roundedRect(ML, y, CW, obsH, 2, 2, 'FD');
-      // Barra lateral amarela
       doc.setFillColor(...C.obsLine);
       doc.roundedRect(ML, y, 3, obsH, 1.5, 1.5, 'F');
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);
       doc.setTextColor(140, 100, 10);
-      doc.text('OBS.:', ML + 6, y + 6.5);
+      doc.text('OBS.:', ML + 6, y + 5.5);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(...C.dark);
-      doc.text(data.obs1.toUpperCase().substring(0, 64), ML + 20, y + 6.5);
+      doc.text(data.obs1.toUpperCase().substring(0, 64), ML + 20, y + 5.5);
       if (hasObs2) {
-        doc.text(data.obs2.toUpperCase().substring(0, 64), ML + 20, y + 12.5);
+        doc.text(data.obs2.toUpperCase().substring(0, 64), ML + 20, y + 10);
       }
-      y += obsH + 5;
+      y += obsH + 3;
     }
 
     // ── Texto declaratório ───────────────────────────────────────────────────
-    const bodyH = 36;
+    const bodyH = 26;
     doc.setFillColor(...C.bodyBg);
     doc.setDrawColor(...C.border);
     doc.setLineWidth(0.3);
     doc.roundedRect(ML, y, CW, bodyH, 2.5, 2.5, 'FD');
-    // Barra lateral azul
     doc.setFillColor(...C.blue);
     doc.roundedRect(ML, y, 3, bodyH, 1.5, 1.5, 'F');
 
-    // Texto justificado com espaçamento entre linhas confortável
     const txtX = ML + 8;
     const txtW = CW - 10;
     const bodyText =
@@ -222,28 +209,27 @@ function gerarPDFDeclaracao(data: {
     doc.setTextColor(...C.dark);
     const wrappedLines = doc.splitTextToSize(bodyText, txtW);
     wrappedLines.forEach((line: string, i: number) => {
-      doc.text(line, txtX, y + 8 + i * 6.5);
+      doc.text(line, txtX, y + 7 + i * 6);
     });
 
-    y += bodyH + 6;
+    y += bodyH + 4;
 
-    // ── Data ────────────────────────────────────────────────────────────────
+    // ── Data ─────────────────────────────────────────────────────────────────
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);
     doc.setTextColor(...C.dark);
     doc.text(dataFormatada, ML, y);
+    y += 8;
 
-    // ── Assinatura ───────────────────────────────────────────────────────────
-    y += 9;
+    // ── Atenciosamente ────────────────────────────────────────────────────────
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...C.gray);
     doc.text('Atenciosamente,', ML, y);
+    y += 9;
 
-    y += 12;
+    // ── Assinatura ────────────────────────────────────────────────────────────
     const sigX = W / 2;
-
-    // Linha de assinatura mais elegante
     doc.setDrawColor(...C.dark);
     doc.setLineWidth(0.4);
     doc.line(sigX - 34, y, sigX + 34, y);
@@ -251,19 +237,21 @@ function gerarPDFDeclaracao(data: {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9.5);
     doc.setTextColor(...C.dark);
-    doc.text('MIGUEL NUNES', sigX, y + 5, { align: 'center' });
+    doc.text('MIGUEL NUNES', sigX, y + 4, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...C.gray);
-    doc.text('Presidente', sigX, y + 10, { align: 'center' });
+    doc.text('Presidente', sigX, y + 8, { align: 'center' });
+
+    return y + 10; // retorna o Y do fim desta via
   }
 
   // ── 1ª via ──────────────────────────────────────────────────────────────────
-  drawCopy(4);
+  const via1End = drawCopy(4);
 
-  // ── Separador tracejado ──────────────────────────────────────────────────────
-  const sepY = 146;
+  // ── Separador tracejado (dinâmico: sempre após o fim real da 1ª via) ─────────
+  const sepY = via1End + 5;
   doc.setDrawColor(160, 160, 160);
   doc.setLineWidth(0.25);
   for (let dx = 0; dx <= CW; dx += 3.5) {
@@ -275,7 +263,7 @@ function gerarPDFDeclaracao(data: {
   doc.text('✂  2ª VIA', W / 2, sepY - 1.5, { align: 'center' });
 
   // ── 2ª via ──────────────────────────────────────────────────────────────────
-  drawCopy(150);
+  drawCopy(sepY + 4);
 
   return doc.output('arraybuffer');
 }
