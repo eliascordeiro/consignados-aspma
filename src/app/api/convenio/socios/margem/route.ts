@@ -267,7 +267,7 @@ export async function GET(request: NextRequest) {
     }
 
     const socio = await prisma.socio.findFirst({
-      where: { id: socioId, ativo: true },
+      where: { id: socioId },
       select: {
         id: true,
         nome: true,
