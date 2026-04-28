@@ -83,167 +83,199 @@ function gerarPDFDeclaracao(data: {
 
   // ── Desenha uma via a partir de yBase ───────────────────────────────────────
   function drawCopy(yBase: number) {
+    const HDR = 18; // altura do cabeçalho
 
-    // ── Faixa azul ──────────────────────────────────────────────────────────
-    doc.setFillColor(...C.blue);
-    doc.rect(0, yBase, W, 12, 'F');
+    // ── Faixa de cabeçalho ───────────────────────────────────────────────────
+    // Gradiente simulado: faixa escura à esquerda + faixa principal
     doc.setFillColor(...C.darkBlue);
-    doc.rect(0, yBase, 5, 12, 'F');
+    doc.rect(0, yBase, W, HDR, 'F');
+    doc.setFillColor(...C.blue);
+    doc.rect(12, yBase, W - 12, HDR, 'F');
 
+    // Barra de acento lateral bem fina + clara
+    doc.setFillColor(180, 220, 240);
+    doc.rect(12, yBase, 0.8, HDR, 'F');
+
+    // Logotipo textual "A.S.P.M.A." grande e bold
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(12);
     doc.setTextColor(...C.white);
-    doc.text('A.S.P.M.A.', ML, yBase + 5.5);
+    doc.text('A.S.P.M.A.', ML, yBase + 8.5);
 
+    // Linha divisória fina entre nome e endereço
+    doc.setDrawColor(180, 220, 240);
+    doc.setLineWidth(0.2);
+    doc.line(ML, yBase + 10.5, W - ML, yBase + 10.5);
+
+    // Nome completo e endereço
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.text('Associação dos Servidores da Prefeitura do Município de Araucária', ML + 22, yBase + 5.5);
-
     doc.setFontSize(7);
-    doc.text('Rua Raimundo Suckow, 129 – Jardim Iguaçu – Araucária/PR  |  Fones: (41) 642-4155 / 642-7796', ML, yBase + 10.5);
+    doc.setTextColor(220, 235, 245);
+    doc.text('Associação dos Servidores da Prefeitura do Município de Araucária', ML, yBase + 14);
+    doc.setFontSize(6.5);
+    doc.setTextColor(190, 215, 235);
+    doc.text('Rua Raimundo Suckow, 129 – Jardim Iguaçu – Araucária/PR  |  Fones: (41) 642-4155 / 642-7796', ML, yBase + 17.2);
 
-    // ── Título ──────────────────────────────────────────────────────────────
+    // ── Título do documento ──────────────────────────────────────────────────
+    const titleY = yBase + HDR + 9;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
+    doc.setFontSize(15);
     doc.setTextColor(...C.dark);
-    doc.text('DECLARAÇÃO', W / 2, yBase + 20, { align: 'center' });
+    doc.text('DECLARAÇÃO', W / 2, titleY, { align: 'center' });
 
+    // Linha decorativa dupla abaixo do título
     doc.setDrawColor(...C.blue);
-    doc.setLineWidth(0.7);
-    doc.line(ML + 45, yBase + 22, W - ML - 45, yBase + 22);
+    doc.setLineWidth(0.8);
+    doc.line(ML + 38, titleY + 2.5, W - ML - 38, titleY + 2.5);
+    doc.setLineWidth(0.25);
+    doc.line(ML + 42, titleY + 4, W - ML - 42, titleY + 4);
     doc.setLineWidth(0.2);
 
     // ── Box de dados ────────────────────────────────────────────────────────
-    const boxY = yBase + 26;
-    const boxH = 30;
-    doc.setFillColor(...C.lightBg);
-    doc.setDrawColor(...C.accent);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(ML, boxY, CW, boxH, 2, 2, 'FD');
-    // Acento lateral
-    doc.setFillColor(...C.blue);
-    doc.rect(ML, boxY, 2.5, boxH, 'F');
-
+    const boxY = titleY + 8;
     const rows: { label: string; value: string; bold?: boolean; blue?: boolean }[] = [
       { label: 'AO CONVÊNIO', value: (data.convenio || '—').toUpperCase() },
       { label: 'MATRÍCULA',   value: data.matricula || '—' },
       { label: 'ASSOCIADO',   value: (data.nome || '—').toUpperCase() },
       { label: 'VALOR',       value: valorFormatado, bold: true, blue: true },
     ];
+    const rowH = 7.5;
+    const boxH = rows.length * rowH + 4;
+
+    doc.setFillColor(...C.lightBg);
+    doc.setDrawColor(...C.accent);
+    doc.setLineWidth(0.35);
+    doc.roundedRect(ML, boxY, CW, boxH, 2.5, 2.5, 'FD');
+    // Barra lateral azul
+    doc.setFillColor(...C.blue);
+    doc.roundedRect(ML, boxY, 3, boxH, 1.5, 1.5, 'F');
 
     rows.forEach((row, i) => {
-      const ry = boxY + 7.5 + i * 6;
+      const ry = boxY + 7 + i * rowH;
+      // Label coluna esquerda
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(6.5);
+      doc.setFontSize(7);
       doc.setTextColor(...C.gray);
-      doc.text(row.label + ':', ML + 5, ry);
-      doc.setFont('helvetica', row.bold ? 'bold' : 'normal');
-      doc.setFontSize(8.5);
-      if (row.blue) {
-        doc.setTextColor(...C.blue);
-      } else {
-        doc.setTextColor(...C.dark);
+      doc.text(row.label + ':', ML + 6, ry);
+      // Linha separadora entre linhas
+      if (i > 0) {
+        doc.setDrawColor(220, 228, 235);
+        doc.setLineWidth(0.15);
+        doc.line(ML + 3, ry - 5, ML + CW - 1, ry - 5);
       }
-      doc.text(row.value, ML + 40, ry);
+      // Valor
+      doc.setFont('helvetica', row.bold ? 'bold' : 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(row.blue ? C.blue[0] : C.dark[0], row.blue ? C.blue[1] : C.dark[1], row.blue ? C.blue[2] : C.dark[2]);
+      doc.text(row.value, ML + 42, ry);
     });
 
-    let y = boxY + boxH + 4;  // yBase + 60
+    let y = boxY + boxH + 5;
 
     // ── Observações (opcional) ───────────────────────────────────────────────
     if (hasObs) {
-      const obsH = hasObs2 ? 14 : 9;
+      const obsH = hasObs2 ? 16 : 10;
       doc.setFillColor(...C.obsBg);
       doc.setDrawColor(...C.obsLine);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(ML, y, CW, obsH, 1.5, 1.5, 'FD');
+      doc.setLineWidth(0.35);
+      doc.roundedRect(ML, y, CW, obsH, 2, 2, 'FD');
+      // Barra lateral amarela
+      doc.setFillColor(...C.obsLine);
+      doc.roundedRect(ML, y, 3, obsH, 1.5, 1.5, 'F');
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);
-      doc.setTextColor(...C.gray);
-      doc.text('OBS:', ML + 3, y + 5.5);
+      doc.setTextColor(140, 100, 10);
+      doc.text('OBS.:', ML + 6, y + 6.5);
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.setTextColor(...C.dark);
-      doc.text(data.obs1.toUpperCase().substring(0, 66), ML + 14, y + 5.5);
+      doc.text(data.obs1.toUpperCase().substring(0, 64), ML + 20, y + 6.5);
       if (hasObs2) {
-        doc.text(data.obs2.toUpperCase().substring(0, 66), ML + 14, y + 11);
+        doc.text(data.obs2.toUpperCase().substring(0, 64), ML + 20, y + 12.5);
       }
-      y += obsH + 4;
+      y += obsH + 5;
     }
 
     // ── Texto declaratório ───────────────────────────────────────────────────
-    const bodyH = 27;
+    const bodyH = 36;
     doc.setFillColor(...C.bodyBg);
     doc.setDrawColor(...C.border);
     doc.setLineWidth(0.3);
-    doc.roundedRect(ML, y, CW, bodyH, 2, 2, 'FD');
-    // Acento lateral azul
+    doc.roundedRect(ML, y, CW, bodyH, 2.5, 2.5, 'FD');
+    // Barra lateral azul
     doc.setFillColor(...C.blue);
-    doc.rect(ML, y, 2.5, bodyH, 'F');
+    doc.roundedRect(ML, y, 3, bodyH, 1.5, 1.5, 'F');
 
-    const bodyLines = [
-      '     Declaro para fins de crédito pessoal que o(a) Associado(a)',
-      'acima apresenta vencimentos regulares dentro do limite consignável',
-      'de 30% (trinta por cento), para desconto em contracheque no valor',
-      'descrito acima, para fins de contrair empréstimos nesta instituição.',
-    ];
+    // Texto justificado com espaçamento entre linhas confortável
+    const txtX = ML + 8;
+    const txtW = CW - 10;
+    const bodyText =
+      '     Declaro para fins de crédito pessoal que o(a) Associado(a) acima ' +
+      'apresenta vencimentos regulares dentro do limite consignável de 30% ' +
+      '(trinta por cento), para desconto em contracheque no valor descrito ' +
+      'acima, para fins de contrair empréstimos junto a esta instituição.';
+
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(9.5);
     doc.setTextColor(...C.dark);
-    bodyLines.forEach((line, i) => {
-      doc.text(line, ML + 5, y + 7 + i * 5);
+    const wrappedLines = doc.splitTextToSize(bodyText, txtW);
+    wrappedLines.forEach((line: string, i: number) => {
+      doc.text(line, txtX, y + 8 + i * 6.5);
     });
 
-    y += bodyH + 5;
+    y += bodyH + 6;
 
     // ── Data ────────────────────────────────────────────────────────────────
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.setTextColor(...C.dark);
     doc.text(dataFormatada, ML, y);
 
     // ── Assinatura ───────────────────────────────────────────────────────────
-    y += 8;
+    y += 9;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.setTextColor(...C.gray);
     doc.text('Atenciosamente,', ML, y);
 
-    y += 10;
+    y += 12;
     const sigX = W / 2;
+
+    // Linha de assinatura mais elegante
     doc.setDrawColor(...C.dark);
-    doc.setLineWidth(0.3);
-    doc.line(sigX - 28, y, sigX + 28, y);
+    doc.setLineWidth(0.4);
+    doc.line(sigX - 34, y, sigX + 34, y);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(9.5);
     doc.setTextColor(...C.dark);
-    doc.text('MIGUEL NUNES', sigX, y + 4.5, { align: 'center' });
+    doc.text('MIGUEL NUNES', sigX, y + 5, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(8);
     doc.setTextColor(...C.gray);
-    doc.text('Presidente', sigX, y + 9, { align: 'center' });
+    doc.text('Presidente', sigX, y + 10, { align: 'center' });
   }
 
   // ── 1ª via ──────────────────────────────────────────────────────────────────
-  drawCopy(5);
+  drawCopy(4);
 
   // ── Separador tracejado ──────────────────────────────────────────────────────
-  const sepY = 140;
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.3);
-  for (let dx = 0; dx <= CW; dx += 4) {
-    doc.line(ML + dx, sepY, ML + Math.min(dx + 2.5, CW), sepY);
+  const sepY = 146;
+  doc.setDrawColor(160, 160, 160);
+  doc.setLineWidth(0.25);
+  for (let dx = 0; dx <= CW; dx += 3.5) {
+    doc.line(ML + dx, sepY, ML + Math.min(dx + 2, CW), sepY);
   }
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(6.5);
   doc.setTextColor(160, 160, 160);
-  doc.text('- - - - - - 2ª VIA - - - - - -', W / 2, sepY - 1.5, { align: 'center' });
+  doc.text('✂  2ª VIA', W / 2, sepY - 1.5, { align: 'center' });
 
   // ── 2ª via ──────────────────────────────────────────────────────────────────
-  drawCopy(145);
+  drawCopy(150);
 
   return doc.output('arraybuffer');
 }
