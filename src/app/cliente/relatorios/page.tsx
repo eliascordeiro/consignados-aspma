@@ -93,18 +93,10 @@ export default function RelatoriosPage() {
     socioId: '',
     nome: '',
     matricula: '',
-    cpf: '',
-    contrato: '',
-    situacao: 'APOSENTADO',
-    admissao: '',
-    margem: '',
-    parcelas: '',
-    valorParcela: '',
-    valorTotal: '',
-    prDesconto: '',
-    consignataria: 'CAIXA ECONOMICA FEDERAL',
-    convenio: 'FUNDO DE PREVIDENCIA MUNICIPAL DE ARAUCARIA',
-    cnpj: '04.105.170/0001-38',
+    obs1: '',
+    obs2: '',
+    valor: '',
+    convenio: '',
   });
 
   // ── Estado Impressões Gerais — Exclusão de Sócio ──────────────────────────
@@ -246,7 +238,6 @@ export default function RelatoriosPage() {
       socioId: socio.id,
       nome: socio.nome,
       matricula: socio.matricula,
-      cpf: socio.cpf || prev.cpf,
     }));
     setSearchSocioAverbacao(`${socio.matricula} - ${socio.nome}`);
     setShowSocioListAverbacao(false);
@@ -254,7 +245,7 @@ export default function RelatoriosPage() {
   };
 
   const limparSocioAverbacao = () => {
-    setAverbacaoForm(prev => ({ ...prev, socioId: '', nome: '', matricula: '', cpf: '' }));
+    setAverbacaoForm(prev => ({ ...prev, socioId: '', nome: '', matricula: '' }));
     setSearchSocioAverbacao('');
     setShowSocioListAverbacao(false);
     setSociosAverbacao([]);
@@ -262,12 +253,12 @@ export default function RelatoriosPage() {
 
   const gerarPDFAverbacao = async () => {
     if (!averbacaoForm.socioId) {
-      alert('Selecione um sócio para gerar a averbação.');
+      alert('Selecione um sócio para gerar a declaração.');
       return;
     }
     setLoadingAverbacao(true);
     try {
-      const response = await fetch('/api/relatorios/averbacao', {
+      const response = await fetch('/api/relatorios/declaracao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(averbacaoForm),
@@ -281,11 +272,11 @@ export default function RelatoriosPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `averbacao-${averbacaoForm.matricula || averbacaoForm.socioId}.pdf`;
+      link.download = `declaracao-${averbacaoForm.matricula || averbacaoForm.socioId}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Erro ao gerar PDF de averbação:', error);
+      console.error('Erro ao gerar PDF de declaração:', error);
       alert('Erro ao gerar PDF. Tente novamente.');
     } finally {
       setLoadingAverbacao(false);
@@ -1057,13 +1048,13 @@ export default function RelatoriosPage() {
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${showAverbacaoModal ? 'bg-white/20' : 'bg-indigo-100 dark:bg-indigo-900/50'}`}>
                   <svg className={`w-6 h-6 ${showAverbacaoModal ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className={`font-bold text-lg ${showAverbacaoModal ? 'text-white' : 'text-foreground'}`}>Averbação</h3>
+                  <h3 className={`font-bold text-lg ${showAverbacaoModal ? 'text-white' : 'text-foreground'}`}>Declaração P.M.A.</h3>
                   <p className={`text-xs ${showAverbacaoModal ? 'text-indigo-100' : 'text-muted-foreground'}`}>
-                    Confirmação de averbação F.P.M.A. — clique para preencher
+                    Declaração para fins de crédito consignado — 2 vias
                   </p>
                 </div>
                 <div className={`flex-shrink-0 ${showAverbacaoModal ? 'text-indigo-100' : 'text-muted-foreground'}`}>
@@ -1895,12 +1886,12 @@ export default function RelatoriosPage() {
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
                   <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Averbação F.P.M.A.</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Confirmação de averbação para cr&eacute;dito consignado</p>
+                  <h2 className="text-lg font-bold text-foreground">Declaração P.M.A.</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Declaração para fins de crédito consignado — 2 vias</p>
                 </div>
               </div>
               <button
@@ -1952,143 +1943,48 @@ export default function RelatoriosPage() {
                 )}
               </div>
 
-              {/* CPF */}
+              {/* Ao Convênio */}
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">C.P.F</label>
-                <input
-                  type="text"
-                  value={averbacaoForm.cpf}
-                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, cpf: e.target.value }))}
-                  placeholder="000.000.000-00"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                />
-              </div>
-
-              {/* Nº do Contrato + Situação */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Nº do Contrato</label>
-                  <input
-                    type="text"
-                    value={averbacaoForm.contrato}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, contrato: e.target.value.toUpperCase() }))}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Situação</label>
-                  <input
-                    type="text"
-                    value={averbacaoForm.situacao}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, situacao: e.target.value.toUpperCase() }))}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
-                  />
-                </div>
-              </div>
-
-              {/* Admissão + Margem */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Admissão</label>
-                  <input
-                    type="date"
-                    value={averbacaoForm.admissao}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, admissao: e.target.value }))}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Margem (30%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={averbacaoForm.margem}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, margem: e.target.value }))}
-                    placeholder="0,00"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                  />
-                </div>
-              </div>
-
-              {/* Parcelas + Valor Parcela + Valor Total */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Nº Parcelas</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={averbacaoForm.parcelas}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, parcelas: e.target.value }))}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Vlr. Parcela</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={averbacaoForm.valorParcela}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, valorParcela: e.target.value }))}
-                    placeholder="0,00"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Vlr. Contrato</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={averbacaoForm.valorTotal}
-                    onChange={(e) => setAverbacaoForm(prev => ({ ...prev, valorTotal: e.target.value }))}
-                    placeholder="0,00"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                  />
-                </div>
-              </div>
-
-              {/* 1º Desconto */}
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">1º Desconto</label>
-                <input
-                  type="date"
-                  value={averbacaoForm.prDesconto}
-                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, prDesconto: e.target.value }))}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
-                />
-              </div>
-
-              {/* Consignatária */}
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Consignatária</label>
-                <input
-                  type="text"
-                  value={averbacaoForm.consignataria}
-                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, consignataria: e.target.value.toUpperCase() }))}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
-                />
-              </div>
-
-              {/* Convênio + CNPJ */}
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Convênio</label>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Ao Convênio</label>
                 <input
                   type="text"
                   value={averbacaoForm.convenio}
                   onChange={(e) => setAverbacaoForm(prev => ({ ...prev, convenio: e.target.value.toUpperCase() }))}
+                  placeholder="Nome do convênio..."
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
                 />
               </div>
+
+              {/* Valor */}
               <div>
-                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">C.N.P.J</label>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Valor</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={averbacaoForm.valor}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, valor: e.target.value }))}
+                  placeholder="0,00"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+
+              {/* Observações */}
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-muted-foreground">Observações</label>
                 <input
                   type="text"
-                  value={averbacaoForm.cnpj}
-                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, cnpj: e.target.value }))}
-                  placeholder="00.000.000/0001-00"
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow"
+                  value={averbacaoForm.obs1}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, obs1: e.target.value.toUpperCase() }))}
+                  placeholder="Observação 1..."
+                  className="w-full px-3 py-2 mb-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
+                />
+                <input
+                  type="text"
+                  value={averbacaoForm.obs2}
+                  onChange={(e) => setAverbacaoForm(prev => ({ ...prev, obs2: e.target.value.toUpperCase() }))}
+                  placeholder="Observação 2 (opcional)..."
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow uppercase"
                 />
               </div>
             </div>
