@@ -55,7 +55,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Listar sócios com margem (busca geral)
-    const where: any = { ativo: true, userId: dataUserId }
+    // Inclui sócios ativos E sócios com ativo=null (registros legados migrados sem o campo)
+    // Exclui apenas os explicitamente marcados como ativo=false
+    const where: any = { ativo: { not: false }, userId: dataUserId }
 
     if (search) {
       const isNumericSearch = /^\d+$/.test(search)
@@ -90,6 +92,7 @@ export async function GET(request: NextRequest) {
               ...matriculasAlternativas.map(m => ({ matricula: m })),
             ],
             userId: dataUserId,
+            ativo: { not: false },
           }
         })
 
