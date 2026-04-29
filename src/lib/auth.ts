@@ -256,16 +256,19 @@ export const { handlers: { GET, POST }, signIn, signOut, auth } = NextAuth({
 
           // Verificar se este user tem convênio vinculado
           // ADMIN e MANAGER NUNCA são tratados como convênio
-          // Usuários com createdById foram criados pelo portal e NÃO são convênio
-          // Para USER sem createdById, verificar se tem convênio vinculado
+          // Para USER (mesmo com createdById), verificar se há convênio cujo userId = user.id
+          //   — convênios criados pelo MANAGER via /cliente/locais geram USER com createdById
+          //     vinculado ao manager, mas ainda são contas de convênio.
           let convenioVinculado = null
-          if (user.role !== 'ADMIN' && user.role !== 'MANAGER' && !user.createdById) {
+          if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
             convenioVinculado = await prisma.convenio.findFirst({
               where: {
                 OR: [
                   { userId: user.id },
-                  { usuario: { equals: login, mode: 'insensitive' } },
-                  { email: { equals: login, mode: 'insensitive' } },
+                  ...(!user.createdById ? [
+                    { usuario: { equals: login, mode: 'insensitive' as const } },
+                    { email: { equals: login, mode: 'insensitive' as const } },
+                  ] : []),
                 ],
               },
               select: {
