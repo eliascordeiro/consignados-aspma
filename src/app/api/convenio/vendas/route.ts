@@ -387,6 +387,8 @@ export async function GET(request: NextRequest) {
     const where: any = {
       convenioId: session.convenioId,
       valorTotal: { gt: 0 },
+      // Por padrão, não exibir vendas canceladas (apenas se filtro explícito 'cancelada')
+      ...(status === 'cancelada' ? {} : { cancelado: false }),
     }
 
     // Filtro por nome ou matrícula do sócio
