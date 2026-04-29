@@ -341,7 +341,6 @@ export default function VendasPage() {
                   <option value="">Todos</option>
                   <option value="ativa">Ativa</option>
                   <option value="finalizada">Finalizada</option>
-                  <option value="cancelada">Cancelada</option>
                 </select>
               </div>
 
