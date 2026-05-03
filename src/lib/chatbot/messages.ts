@@ -1,41 +1,48 @@
+import { greetingByHour } from './intents'
+
 export const MSG = {
-  saudacao: () =>
-    [
-      'Olá! Sou o assistente virtual da ASPMA Consignados.',
+  saudacao: (nomeOpt?: string) => {
+    const g = greetingByHour()
+    const nome = nomeOpt ? `, ${nomeOpt.split(' ')[0]}` : ''
+    return [
+      `${g}${nome}! 👋 Sou o assistente virtual da *ASPMA Consignados*.`,
       'Posso te ajudar com:',
-      '1) Margem disponível',
-      '2) Status da proposta',
-      '3) 2ª via / comprovante',
-      '4) Falar com um atendente',
       '',
-      'Digite o número ou descreva sua dúvida.',
-    ].join('\n'),
+      '*1)* 💰 Margem disponível',
+      '*2)* 📋 Status da proposta',
+      '*3)* 📄 2ª via / comprovante',
+      '*4)* 🙋 Falar com um atendente',
+      '',
+      '_Digite o número da opção ou descreva sua dúvida._',
+    ].join('\n')
+  },
   pedirCpf: () => 'Para consultar seus dados, informe seu *CPF* (apenas números).',
-  cpfInvalido: () => 'CPF inválido. Por favor, digite novamente apenas os números.',
-  pedirNascimento: () =>
-    'Agora informe sua *data de nascimento* no formato DD/MM/AAAA.',
-  nascimentoInvalido: () => 'Data inválida. Use o formato DD/MM/AAAA.',
+  cpfInvalido: () => 'CPF inválido. ❌ Por favor, digite novamente apenas os números.',
+  pedirNascimento: () => 'Agora informe sua *data de nascimento* no formato DD/MM/AAAA.',
+  nascimentoInvalido: () => 'Data inválida. ❌ Use o formato DD/MM/AAAA.',
   socioNaoEncontrado: () =>
-    'Não localizei seu cadastro com esses dados. Vou te transferir para um atendente.',
+    'Não localizei seu cadastro com esses dados. 🔎\nVou te transferir para um atendente.',
   otpEnviado: () =>
-    'Enviei um *código de 6 dígitos*. Digite-o aqui para concluir a verificação. (Validade de 5 minutos)',
+    'Enviei um *código de 6 dígitos* 🔐\nDigite-o aqui para concluir a verificação. _(Validade de 5 minutos)_',
   otpInvalido: (restantes: number) =>
-    `Código inválido. Você ainda tem ${restantes} tentativa(s).`,
-  otpExpirado: () => 'Código expirado. Vamos recomeçar.',
+    `Código inválido. ❌ Você ainda tem *${restantes}* tentativa(s).`,
+  otpExpirado: () => 'Código expirado. ⏱️ Vamos recomeçar.',
   bloqueado: () =>
-    'Muitas tentativas. Por segurança, vou transferir para um atendente.',
+    'Muitas tentativas. 🛑 Por segurança, vou transferir para um atendente.',
   handoff: () =>
-    'Tudo bem, vou transferir você para um atendente. Em instantes alguém da equipe entra em contato.',
-  encerrar: () =>
-    'Atendimento encerrado. Sempre que precisar, é só chamar. 👋',
+    'Tudo bem, vou transferir você para um atendente. 🙋\nEm instantes alguém da equipe entra em contato.',
+  encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
     [
-      'Não entendi sua mensagem. Posso te ajudar com:',
-      '1) Margem disponível',
-      '2) Status da proposta',
-      '3) 2ª via',
-      '4) Falar com atendente',
+      'Não entendi sua mensagem. 🤔',
+      '',
+      'Posso te ajudar com:',
+      '*1)* Margem disponível',
+      '*2)* Status da proposta',
+      '*3)* 2ª via',
+      '*4)* Falar com atendente',
     ].join('\n'),
   emConstrucao: (assunto: string) =>
-    `O atendimento de "${assunto}" estará disponível em breve. Posso te transferir para um atendente?`,
+    `O atendimento de "${assunto}" estará disponível em breve. ⚙️\nPosso te transferir para um atendente?`,
+  agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
 }

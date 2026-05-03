@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { processMessage } from '@/lib/chatbot/processor'
-import { sendWhatsApp } from '@/lib/whatsgw'
+import { sendWhatsApp, sendWhatsAppListButtons } from '@/lib/whatsgw'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -133,7 +133,29 @@ export async function POST(req: NextRequest) {
       provider: 'whatsgw',
     })
     if (result.reply) {
-      await sendWhatsApp(String(phone), result.reply)
+      let sent = { success: false } as { success: boolean; error?: string }
+      if (result.menu) {
+        // Tenta enviar como List Buttons (interativo); se o plano do WhatsGW não suportar, faz fallback
+        sent = await sendWhatsAppListButtons(String(phone), result.reply, {
+          buttonText: 'Ver opções',
+          title: 'ASPMA Consignados',
+          footer: 'Cooperativa de Crédito',
+          sections: [
+            {
+              title: 'Como posso ajudar?',
+              rows: [
+                { id: '1', title: '💰 Margem disponível', description: 'Consultar sua margem' },
+                { id: '2', title: '📋 Status da proposta', description: 'Acompanhar contrato' },
+                { id: '3', title: '📄 2ª via', description: 'Boleto / contracheque' },
+                { id: '4', title: '🙋 Falar com atendente', description: 'Atendimento humano' },
+              ],
+            },
+          ],
+        })
+      }
+      if (!sent.success) {
+        await sendWhatsApp(String(phone), result.reply)
+      }
     }
     return NextResponse.json({ ok: true, state: result.nextState, handoff: result.handoff })
   } catch (err: any) {

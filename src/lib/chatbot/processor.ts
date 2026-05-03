@@ -5,6 +5,21 @@ import crypto from 'crypto'
 import { brl, isValidCpf, maskCpf, normalizePhoneE164BR, onlyDigits, parseBirthDate, sameDateUTC, sha256Hex } from './util'
 import { detectIntent } from './intents'
 import { MSG } from './messages'
+import { groqChat } from './groq'
+
+// Janela curta de histórico para alimentar o LLM
+async function recentHistory(sessionId: string, take = 6) {
+  const rows = await db.chatMessage.findMany({
+    where: { sessionId },
+    orderBy: { createdAt: 'desc' },
+    take,
+    select: { direction: true, textBody: true },
+  })
+  return rows
+    .reverse()
+    .map((r) => ({ role: r.direction === 'in' ? ('user' as const) : ('assistant' as const), content: r.textBody || '' }))
+    .filter((r) => r.content.trim().length > 0)
+}
 
 const SESSION_TTL_MS = 15 * 60 * 1000
 const OTP_TTL_MS = 5 * 60 * 1000
@@ -22,6 +37,7 @@ export type ProcessResult = {
   nextState: string
   handoff: boolean
   ignored?: boolean
+  menu?: boolean // sinaliza ao webhook que pode enviar como List Buttons
 }
 
 function newExpiry() {
@@ -98,6 +114,18 @@ async function setState(
 async function openHandoff(sessionId: string, reason: string) {
   await db.chatHandoff.create({ data: { sessionId, reason } })
   await setState(sessionId, { state: 'HANDOFF' })
+}
+
+async function getSessionSocioName(sessionId: string): Promise<string | undefined> {
+  try {
+    const s = await db.chatSession.findUnique({
+      where: { id: sessionId },
+      include: { socio: true },
+    })
+    return s?.socio?.nome || undefined
+  } catch {
+    return undefined
+  }
 }
 
 function generateOtpCode(): string {
@@ -221,9 +249,36 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
   }
   if (intent === 'MENU' && session.state !== 'AWAITING_CPF' && session.state !== 'AWAITING_BIRTHDATE' && session.state !== 'OTP_SENT') {
     await setState(session.id, { state: 'AWAITING_INTENT' })
-    const reply = MSG.saudacao()
+    const nome = await getSessionSocioName(session.id)
+    const reply = MSG.saudacao(nome)
     await logOutgoing(session.id, reply, 'MENU')
-    return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+    return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true }
+  }
+
+  // Saudação simples (oi, bom dia, etc.) — não-bloqueia fluxos guiados
+  if (
+    intent === 'SAUDACAO' &&
+    session.state !== 'AWAITING_CPF' &&
+    session.state !== 'AWAITING_BIRTHDATE' &&
+    session.state !== 'OTP_SENT'
+  ) {
+    await setState(session.id, { state: 'AWAITING_INTENT' })
+    const nome = await getSessionSocioName(session.id)
+    const reply = MSG.saudacao(nome)
+    await logOutgoing(session.id, reply, 'SAUDACAO')
+    return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true }
+  }
+
+  // Agradecimento (obrigado, valeu, etc.)
+  if (
+    intent === 'AGRADECIMENTO' &&
+    session.state !== 'AWAITING_CPF' &&
+    session.state !== 'AWAITING_BIRTHDATE' &&
+    session.state !== 'OTP_SENT'
+  ) {
+    const reply = MSG.agradecer()
+    await logOutgoing(session.id, reply, 'AGRADECIMENTO')
+    return { reply, nextState: session.state, handoff: false }
   }
 
   switch (session.state) {
@@ -245,10 +300,25 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, intent)
         return { reply, nextState: 'HANDOFF', handoff: true }
       }
-      // Sem intenção clara
-      const reply = session.state === 'NEW' ? MSG.saudacao() : MSG.fallback()
+      if (intent === 'SIMULAR') {
+        const reply = MSG.emConstrucao('Simulação de crédito') + '\n\n_Digite *menu* para outras opções._'
+        await setState(session.id, { state: 'AWAITING_INTENT' })
+        await logOutgoing(session.id, reply, 'SIMULAR')
+        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+      }
+      // Sem intenção clara — mensagem nova: saudação; senão tenta LLM (Groq) como fallback inteligente
+      if (session.state === 'NEW') {
+        const nome = await getSessionSocioName(session.id)
+        const reply = MSG.saudacao(nome)
+        await setState(session.id, { state: 'AWAITING_INTENT' })
+        await logOutgoing(session.id, reply, intent)
+        return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true }
+      }
+      const history = await recentHistory(session.id, 6)
+      const aiReply = await groqChat(text, history)
+      const reply = aiReply || MSG.fallback()
       await setState(session.id, { state: 'AWAITING_INTENT' })
-      await logOutgoing(session.id, reply, intent)
+      await logOutgoing(session.id, reply, aiReply ? 'LLM_FALLBACK' : intent)
       return { reply, nextState: 'AWAITING_INTENT', handoff: false }
     }
 
