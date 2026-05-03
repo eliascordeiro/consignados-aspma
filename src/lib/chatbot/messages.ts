@@ -9,13 +9,13 @@ export const MSG = {
     const g = greetingByHour()
     const nome = nomeOpt ? `, ${nomeOpt.split(' ')[0]}` : ''
     return [
-      `${g}${nome}! 👋 Sou o assistente virtual da *ASPMA Consignados*.`,
+      `${g}${nome}! Sou o assistente virtual da *ASPMA Consignados*.`,
       'Posso te ajudar com:',
       '',
-      '*1)* 💰 Margem disponível',
-      '*2)* 🗒️ Descontos do mês',
-      '*3)* 🙋 Falar com atendente',
+      '*1)* Margem disponível',
+      '*2)* Descontos do mês',
       '',
+      `Atendente: *${ATENDENTE_TEL_DISPLAY}*`,
       '_Digite o número da opção ou descreva sua dúvida._',
     ].join('\n')
   },
@@ -60,12 +60,13 @@ ${ATENDENTE_TEL_LINK}`,
   encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
     [
-      'Não entendi sua mensagem. 🤔',
+      'Não entendi sua mensagem.',
       '',
       'Posso te ajudar com:',
       '*1)* Margem disponível',
       '*2)* Descontos do mês',
-      `*3)* Falar com atendente (*${ATENDENTE_TEL_DISPLAY}*)`,
+      '',
+      `Atendente: *${ATENDENTE_TEL_DISPLAY}*`,
     ].join('\n'),
   emConstrucao: (assunto: string) =>
     `O atendimento de "${assunto}" estará disponível em breve. ⚙️

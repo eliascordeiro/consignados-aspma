@@ -146,7 +146,6 @@ export async function POST(req: NextRequest) {
               rows: [
                 { id: '1', title: 'Margem disponível', description: 'Consultar sua margem' },
                 { id: '2', title: 'Descontos do mês', description: 'Ver parcelas pendentes' },
-                { id: '3', title: 'Falar com atendente', description: 'Atendimento humano' },
               ],
             },
           ],

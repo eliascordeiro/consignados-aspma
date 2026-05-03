@@ -86,7 +86,6 @@ export function detectIntent(text: string): Intent {
   // Atalhos numéricos do menu (avaliar antes para evitar falsos positivos)
   if (/^1$/.test(t)) return 'MARGEM'
   if (/^2$/.test(t)) return 'DESCONTOS'
-  if (/^3$/.test(t)) return 'ATENDENTE'
 
   // Ordem de precedência (mais específicos primeiro)
   const order: Array<Exclude<Intent, 'UNKNOWN' | 'STATUS_PROPOSTA' | 'SEGUNDA_VIA'>> = [
