@@ -145,10 +145,8 @@ export async function POST(req: NextRequest) {
               title: 'Como posso ajudar?',
               rows: [
                 { id: '1', title: '💰 Margem disponível', description: 'Consultar sua margem' },
-                { id: '2', title: '�️ Descontos do mês', description: 'Ver parcelas pendentes' },
-                { id: '3', title: '📋 Status da proposta', description: 'Acompanhar contrato' },
-                { id: '4', title: '📄 2ª via', description: 'Boleto / contracheque' },
-                { id: '5', title: '🙋 Falar com atendente', description: 'Atendimento humano' },
+                { id: '2', title: '🗒️ Descontos do mês', description: 'Ver parcelas pendentes' },
+                { id: '3', title: '🙋 Falar com colaboradora', description: 'Atendimento humano' },
               ],
             },
           ],

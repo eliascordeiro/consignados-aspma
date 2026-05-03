@@ -1,5 +1,9 @@
 import { greetingByHour } from './intents'
 
+// Número do atendimento humano da ASPMA (substitui o handoff interno)
+const ATENDENTE_TEL_DISPLAY = '41 98831-8343'
+const ATENDENTE_TEL_LINK = 'https://wa.me/5541988318343'
+
 export const MSG = {
   saudacao: (nomeOpt?: string) => {
     const g = greetingByHour()
@@ -9,10 +13,8 @@ export const MSG = {
       'Posso te ajudar com:',
       '',
       '*1)* 💰 Margem disponível',
-      '*2)* �️ Descontos do mês',
-      '*3)* 📋 Status da proposta',
-      '*4)* 📄 2ª via / comprovante',
-      '*5)* 🙋 Falar com um atendente',
+      '*2)* 🗒️ Descontos do mês',
+      '*3)* 🙋 Falar com uma colaboradora',
       '',
       '_Digite o número da opção ou descreva sua dúvida._',
     ].join('\n')
@@ -41,16 +43,21 @@ export const MSG = {
     return linhas.join('\n')
   },
   socioNaoEncontrado: () =>
-    'Não localizei seu cadastro com esses dados. 🔎\nVou te transferir para um atendente.',
+    `Não localizei seu cadastro com esses dados. 🔎
+Para atendimento humano, fale com uma colaboradora da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
+${ATENDENTE_TEL_LINK}`,
   otpEnviado: () =>
     'Enviei um *código de 6 dígitos* 🔐\nDigite-o aqui para concluir a verificação. _(Validade de 5 minutos)_',
   otpInvalido: (restantes: number) =>
     `Código inválido. ❌ Você ainda tem *${restantes}* tentativa(s).`,
   otpExpirado: () => 'Código expirado. ⏱️ Vamos recomeçar.',
   bloqueado: () =>
-    'Muitas tentativas. 🛑 Por segurança, vou transferir para um atendente.',
+    `Muitas tentativas. 🛑 Por segurança, encerrei esta verificação.
+Fale com uma colaboradora da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
+${ATENDENTE_TEL_LINK}`,
   handoff: () =>
-    'Tudo bem, vou transferir você para um atendente. 🙋\nEm instantes alguém da equipe entra em contato.',
+    `Para ser atendido por uma colaboradora, fale pelo *${ATENDENTE_TEL_DISPLAY}* — é o número onde os humanos da ASPMA atendem. 🙋
+${ATENDENTE_TEL_LINK}`,
   encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
     [
@@ -59,101 +66,13 @@ export const MSG = {
       'Posso te ajudar com:',
       '*1)* Margem disponível',
       '*2)* Descontos do mês',
-      '*3)* Status da proposta',
-      '*4)* 2ª via',
-      '*5)* Falar com atendente',
+      `*3)* Falar com uma colaboradora (*${ATENDENTE_TEL_DISPLAY}*)`,
     ].join('\n'),
   emConstrucao: (assunto: string) =>
-    `O atendimento de "${assunto}" estará disponível em breve. ⚙️\nPosso te transferir para um atendente?`,
+    `O atendimento de "${assunto}" estará disponível em breve. ⚙️
+Para falar com uma colaboradora agora, ligue ou chame no *${ATENDENTE_TEL_DISPLAY}*.
+${ATENDENTE_TEL_LINK}`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
-  segundaViaTipos: () =>
-    [
-      '📄 *2ª via — o que você precisa?*',
-      '',
-      '*1)* ✅ Comprovante de pagamento (parcela quitada)',
-      '*2)* 📋 Espelho do contrato (resumo do empréstimo)',
-      '*3)* 🗒️ Demonstrativo do mês',
-      '',
-      '_Digite o número da opção desejada._',
-    ].join('\n'),
-  comprovantePagamentoVazio: () =>
-    'Você ainda não possui parcelas quitadas registradas. ✅',
-  comprovantePagamentoLista: (itens: Array<{ idx: number; convenio: string; numero: number; total: number; valorPago: number; dataBaixa: string }>) => {
-    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
-    const linhas = ['✅ *Últimas parcelas pagas:*', '']
-    for (const it of itens) {
-      linhas.push(`*${it.idx})* ${it.convenio}`)
-      linhas.push(`   Parcela ${it.numero}/${it.total} · pago ${it.dataBaixa} · ${brl(it.valorPago)}`)
-    }
-    linhas.push('')
-    linhas.push('_Digite o número para ver o detalhe da parcela._')
-    linhas.push('_Para o PDF do comprovante, fale com um atendente (digite *atendente*)._')
-    return linhas.join('\n')
-  },
-  comprovanteDetalhe: (item: { convenio: string; numero: number; total: number; valor: number; valorPago: number; dataVenc: string; dataBaixa: string }) => {
-    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
-    return [
-      '✅ *Comprovante de pagamento*',
-      '',
-      `📌 Convênio: *${item.convenio}*`,
-      `🔢 Parcela: *${item.numero}/${item.total}*`,
-      `💰 Valor: ${brl(item.valor)}`,
-      `💵 Valor pago: ${brl(item.valorPago)}`,
-      `📅 Vencimento: ${item.dataVenc}`,
-      `✔️ Data do pagamento: ${item.dataBaixa}`,
-      '',
-      '_Para receber o comprovante em PDF, digite *atendente*._',
-      '_Digite *menu* para outras opções._',
-    ].join('\n')
-  },
-  contratosVazio: () =>
-    'Você não possui contratos ativos no momento. ℹ️',
-  contratosLista: (itens: Array<{ idx: number; convenio: string; numeroVenda: number; qtd: number; valorParcela: number; valorTotal: number; dataEmissao: string; pagas: number }>) => {
-    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
-    const linhas = ['📋 *Seus contratos ativos:*', '']
-    for (const it of itens) {
-      linhas.push(`*${it.idx})* ${it.convenio} — Venda #${it.numeroVenda}`)
-      linhas.push(`   ${it.qtd}x ${brl(it.valorParcela)} · total ${brl(it.valorTotal)}`)
-      linhas.push(`   Emitida em ${it.dataEmissao} · ${it.pagas}/${it.qtd} pagas`)
-    }
-    linhas.push('')
-    linhas.push('_Digite o número para ver o espelho do contrato._')
-    return linhas.join('\n')
-  },
-  contratoEspelho: (item: {
-    convenio: string
-    numeroVenda: number
-    dataEmissao: string
-    qtd: number
-    valorParcela: number
-    valorTotal: number
-    pagas: number
-    proximas: Array<{ numero: number; dataVenc: string; valor: number }>
-  }) => {
-    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
-    const linhas = [
-      '📋 *Espelho do contrato*',
-      '',
-      `📌 Convênio: *${item.convenio}*`,
-      `🔢 Venda nº: *${item.numeroVenda}*`,
-      `📅 Emitida em: ${item.dataEmissao}`,
-      '',
-      `💳 Parcelas: ${item.qtd}x ${brl(item.valorParcela)}`,
-      `💰 Valor total: ${brl(item.valorTotal)}`,
-      `✔️ Pagas: ${item.pagas}/${item.qtd}`,
-    ]
-    if (item.proximas.length > 0) {
-      linhas.push('')
-      linhas.push('*Próximas parcelas:*')
-      for (const p of item.proximas) {
-        linhas.push(`• ${p.numero}/${item.qtd} · ${p.dataVenc} · ${brl(p.valor)}`)
-      }
-    }
-    linhas.push('')
-    linhas.push('_Para receber o contrato em PDF, digite *atendente*._')
-    linhas.push('_Digite *menu* para outras opções._')
-    return linhas.join('\n')
-  },
   descontosVazio: (nomeOpt?: string) => {
     const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
     return `✅ Tudo em dia${nome}! Não há parcelas pendentes no momento.`

@@ -86,19 +86,15 @@ export function detectIntent(text: string): Intent {
   // Atalhos numéricos do menu (avaliar antes para evitar falsos positivos)
   if (/^1$/.test(t)) return 'MARGEM'
   if (/^2$/.test(t)) return 'DESCONTOS'
-  if (/^3$/.test(t)) return 'STATUS_PROPOSTA'
-  if (/^4$/.test(t)) return 'SEGUNDA_VIA'
-  if (/^5$/.test(t)) return 'ATENDENTE'
+  if (/^3$/.test(t)) return 'ATENDENTE'
 
   // Ordem de precedência (mais específicos primeiro)
-  const order: Array<Exclude<Intent, 'UNKNOWN'>> = [
+  const order: Array<Exclude<Intent, 'UNKNOWN' | 'STATUS_PROPOSTA' | 'SEGUNDA_VIA'>> = [
     'ATENDENTE',
     'CANCELAR',
     'MENU',
     'AGRADECIMENTO',
     'SIMULAR',
-    'SEGUNDA_VIA',
-    'STATUS_PROPOSTA',
     'DESCONTOS',
     'MARGEM',
     'HORARIO',
