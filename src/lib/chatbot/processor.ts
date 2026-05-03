@@ -314,7 +314,7 @@ function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): 
     '',
     'O que deseja fazer agora?',
     '1) Ver descontos do mês',
-    '2) Falar com uma colaboradora (*41 98831-8343*)',
+    '2) Falar com atendente (*41 98831-8343*)',
     '3) Encerrar',
   ]
   return linhas.join('\n')

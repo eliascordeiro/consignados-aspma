@@ -14,7 +14,7 @@ export const MSG = {
       '',
       '*1)* 💰 Margem disponível',
       '*2)* 🗒️ Descontos do mês',
-      '*3)* 🙋 Falar com uma colaboradora',
+      '*3)* 🙋 Falar com atendente',
       '',
       '_Digite o número da opção ou descreva sua dúvida._',
     ].join('\n')
@@ -44,7 +44,7 @@ export const MSG = {
   },
   socioNaoEncontrado: () =>
     `Não localizei seu cadastro com esses dados. 🔎
-Para atendimento humano, fale com uma colaboradora da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
+Para atendimento humano, fale com um atendente da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
 ${ATENDENTE_TEL_LINK}`,
   otpEnviado: () =>
     'Enviei um *código de 6 dígitos* 🔐\nDigite-o aqui para concluir a verificação. _(Validade de 5 minutos)_',
@@ -53,10 +53,10 @@ ${ATENDENTE_TEL_LINK}`,
   otpExpirado: () => 'Código expirado. ⏱️ Vamos recomeçar.',
   bloqueado: () =>
     `Muitas tentativas. 🛑 Por segurança, encerrei esta verificação.
-Fale com uma colaboradora da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
+Fale com um atendente da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
 ${ATENDENTE_TEL_LINK}`,
   handoff: () =>
-    `Para ser atendido por uma colaboradora, fale pelo *${ATENDENTE_TEL_DISPLAY}* — é o número onde os humanos da ASPMA atendem. 🙋
+    `Para falar com um atendente, chame pelo *${ATENDENTE_TEL_DISPLAY}* — é o número onde os humanos da ASPMA atendem. 🙋
 ${ATENDENTE_TEL_LINK}`,
   encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
@@ -66,11 +66,11 @@ ${ATENDENTE_TEL_LINK}`,
       'Posso te ajudar com:',
       '*1)* Margem disponível',
       '*2)* Descontos do mês',
-      `*3)* Falar com uma colaboradora (*${ATENDENTE_TEL_DISPLAY}*)`,
+      `*3)* Falar com atendente (*${ATENDENTE_TEL_DISPLAY}*)`,
     ].join('\n'),
   emConstrucao: (assunto: string) =>
     `O atendimento de "${assunto}" estará disponível em breve. ⚙️
-Para falar com uma colaboradora agora, ligue ou chame no *${ATENDENTE_TEL_DISPLAY}*.
+Para falar com um atendente agora, ligue ou chame no *${ATENDENTE_TEL_DISPLAY}*.
 ${ATENDENTE_TEL_LINK}`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
   descontosVazio: (nomeOpt?: string) => {
