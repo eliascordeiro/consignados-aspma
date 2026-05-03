@@ -30,7 +30,23 @@ export async function POST(req: NextRequest) {
   req.nextUrl.searchParams.forEach((v, k) => { queryObj[k] = v })
 
   let body: any = null
-  try { body = rawText ? JSON.parse(rawText) : null } catch { body = null }
+  try {
+    if (rawText) {
+      const ct = (req.headers.get('content-type') || '').toLowerCase()
+      if (ct.includes('application/x-www-form-urlencoded') || (rawText.includes('=') && !rawText.trim().startsWith('{'))) {
+        // WhatsGW envia form-urlencoded
+        const params = new URLSearchParams(rawText)
+        body = {} as Record<string, any>
+        params.forEach((v, k) => { body[k] = v })
+        // Tenta parsear additional_infos como JSON aninhado
+        if (typeof body.additional_infos === 'string') {
+          try { body.additional_infos = JSON.parse(body.additional_infos) } catch {}
+        }
+      } else {
+        body = JSON.parse(rawText)
+      }
+    }
+  } catch { body = null }
 
   pushDebug({
     receivedAt: new Date().toISOString(),
@@ -89,12 +105,19 @@ export async function POST(req: NextRequest) {
 
   // Ignora eventos que não são mensagens de texto recebidas
   const eventType = body?.event || body?.type || body?.data?.event || 'message'
-  const fromMe = body?.from_me === true || body?.fromMe === true || body?.data?.from_me === true
+  const direction = String(body?.message_direction || body?.direction || '').toLowerCase()
+  const fromMe =
+    body?.from_me === true ||
+    body?.fromMe === true ||
+    body?.data?.from_me === true ||
+    direction === 'sent' ||
+    body?.additional_infos?.key?.fromMe === true
   const isInbound = !fromMe && (
     eventType === 'message' ||
     eventType === 'webhookReceived' ||
     eventType === 'messageReceived' ||
     eventType === 'NewMessage' ||
+    direction === 'received' ||
     !!text
   )
 
