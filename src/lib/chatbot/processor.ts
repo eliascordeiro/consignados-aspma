@@ -188,32 +188,113 @@ async function findSocioByCpf(cpf: string) {
   })
 }
 
-async function consultarMargemSocio(socio: { matricula: string | null; cpf: string | null }) {
-  if (!socio.matricula || !socio.cpf) return null
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000'
+// ============================================================
+// Consulta de margem — mesma lógica da página Nova Venda
+// Tipo 3 ou 4 = cálculo local (limite - descontos do mês)
+// Outros tipos = Zetra PHP, fallback para valor do banco
+// ============================================================
+
+function formatCpfZetra(cpf: string): string {
+  const d = onlyDigits(cpf)
+  if (d.length !== 11) return cpf
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+}
+
+function calcularMesReferenciaChatbot(diaCorte = 9): { mes: number; ano: number } {
+  const hoje = new Date()
+  if (hoje.getDate() > diaCorte) {
+    // Próximo mês
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
+    return { mes: d.getMonth() + 1, ano: d.getFullYear() }
+  }
+  return { mes: hoje.getMonth() + 1, ano: hoje.getFullYear() }
+}
+
+async function consultarMargemSocio(socioId: string): Promise<{ margem: number; fonte: string } | null> {
   try {
-    const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/zetra/consultar-margem`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ matricula: socio.matricula, cpf: socio.cpf, valorParcela: '100.00' }),
+    const socio = await db.socio.findFirst({
+      where: { id: socioId },
+      select: {
+        id: true, matricula: true, cpf: true, tipo: true,
+        limite: true, margemConsig: true,
+        empresa: { select: { diaCorte: true } },
+      },
     })
-    const data = await res.json().catch(() => null)
-    if (!res.ok || !data?.success) return null
-    return {
-      margem: Number(data.margem || 0),
-      detalhes: data.detalhes,
+    if (!socio) return null
+
+    // ── TIPO 3 ou 4: cálculo local ──────────────────────────
+    if (socio.tipo === '3' || socio.tipo === '4') {
+      const dc = calcularMesReferenciaChatbot(socio.empresa?.diaCorte ?? 9)
+      const descontos = await db.parcela.aggregate({
+        _sum: { valor: true },
+        where: {
+          venda: { socioId: socio.id, ativo: true, cancelado: false },
+          OR: [{ baixa: '' }, { baixa: null }, { baixa: 'N' }],
+          dataVencimento: {
+            gte: new Date(dc.ano, dc.mes - 1, 1),
+            lt: new Date(dc.ano, dc.mes, 1),
+          },
+        },
+      })
+      const margem = Number(socio.limite || 0) - Number(descontos._sum.valor || 0)
+      return { margem, fonte: 'local' }
     }
+
+    // ── Outros tipos: Zetra PHP ──────────────────────────────
+    const matricula = socio.matricula || ''
+    const cpf = formatCpfZetra(socio.cpf || '')
+    if (!matricula || !cpf) {
+      return { margem: Number(socio.margemConsig || 0), fonte: 'banco' }
+    }
+
+    const ZETRA_BASE_URL = process.env.ZETRA_BASE_URL || 'http://200.98.112.240/aspma/php/zetra_desktop'
+    const params = new URLSearchParams({
+      cliente: 'ASPMA', convenio: 'ASPMA-ARAUCARIA',
+      usuario: 'aspma_xml', senha: 'dcc0bd05',
+      matricula, cpf, valorParcela: '100.00',
+    })
+    const zetraUrl = `${ZETRA_BASE_URL}/consultaMargemZetra.php?${params}`
+
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), 8000)
+    const res = await fetch(zetraUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+      signal: ctrl.signal,
+    })
+    clearTimeout(t)
+
+    if (res.ok) {
+      const xml = await res.text()
+
+      // Verifica falha zetra
+      const sucessoTag = xml.match(/<ns13:sucesso>([^<]*)<\/ns13:sucesso>/)
+      if (sucessoTag?.[1] === 'false') {
+        // Zetra retornou erro explícito — usa fallback
+        return { margem: Number(socio.margemConsig || 0), fonte: 'fallback' }
+      }
+
+      const margemTag = xml.match(/<ns6:valorMargem[^>]*>([^<]+)<\/ns6:valorMargem>/)
+      if (margemTag?.[1]) {
+        const m = parseFloat(margemTag[1])
+        if (!isNaN(m)) return { margem: m, fonte: 'zetra' }
+      }
+    }
+
+    // Fallback para valor salvo no banco
+    return { margem: Number(socio.margemConsig || 0), fonte: 'fallback' }
   } catch (e) {
     console.error('[chatbot] erro consultar margem:', e)
     return null
   }
 }
 
-function formatMargemReply(socioNome: string, margem: number): string {
+function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): string {
   const linhas = [
     `Olá, *${socioNome.split(' ')[0]}*! Aqui estão seus dados:`,
     '',
-    `💰 *Margem disponível:* ${brl(margem)}`,
+    `💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`,
     '',
     'O que deseja fazer agora?',
     '1) Simular crédito',
@@ -415,14 +496,15 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AUTHENTICATED')
         return { reply, nextState: 'HANDOFF', handoff: true }
       }
-      const margem = await consultarMargemSocio({ matricula: socio.matricula, cpf: socio.cpf })
+      const margem = await consultarMargemSocio(socio.id)
       if (!margem) {
         await openHandoff(session.id, 'MARGEM_API_FAIL')
         const reply = 'Não consegui consultar sua margem agora. Vou te transferir para um atendente.'
         await logOutgoing(session.id, reply, 'MARGEM')
         return { reply, nextState: 'HANDOFF', handoff: true }
       }
-      const reply = formatMargemReply(socio.nome || 'sócio', margem.margem)
+      const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
+      const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
       await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
       await logOutgoing(session.id, reply, 'MARGEM')
       return { reply, nextState: 'ANSWERED', handoff: false }
