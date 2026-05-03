@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
         sent = await sendWhatsAppListButtons(String(phone), result.reply, {
           buttonText: 'Ver opções',
           title: 'ASPMA Consignados',
-          footer: 'Cooperativa de Crédito',
+          footer: 'ASPMA Consignados',
           sections: [
             {
               title: 'Como posso ajudar?',
