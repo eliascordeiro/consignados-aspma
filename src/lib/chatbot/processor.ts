@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { sendWhatsApp } from '@/lib/whatsgw'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import { brl, isValidCpf, maskCpf, normalizePhoneE164BR, onlyDigits, parseBirthDate, sameDateUTC, sha256Hex } from './util'
+import { brl, isValidCpf, normalizePhoneE164BR, onlyDigits, parseBirthDate, sameDateUTC } from './util'
 import { detectIntent } from './intents'
 import { MSG } from './messages'
 import { groqChat } from './groq'
@@ -176,15 +176,34 @@ async function verifyOtp(sessionId: string, input: string): Promise<{ ok: boolea
   return { ok: false, remaining, expired: false }
 }
 
-async function findSocioByCpf(cpf: string) {
-  const c = onlyDigits(cpf)
-  // Tenta achar por cpf cru ou formatado
-  const formatted = `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`
-  return db.socio.findFirst({
-    where: {
-      ativo: true,
-      OR: [{ cpf: c }, { cpf: formatted }],
-    },
+type SocioBasic = {
+  id: string
+  nome: string
+  matricula: string | null
+  empresa: { nome: string; diaCorte: number } | null
+}
+
+/**
+ * Busca sócios por CPF (11 dígitos) ou por matrícula.
+ * Retorna array para permitir tratar múltiplos cadastros com o mesmo CPF.
+ */
+async function findSociosByIdentifier(input: string): Promise<SocioBasic[]> {
+  const digits = onlyDigits(input)
+  if (digits.length === 11) {
+    // CPF — busca todas as matrículas ativas vinculadas
+    const formatted = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+    return db.socio.findMany({
+      where: { ativo: true, OR: [{ cpf: digits }, { cpf: formatted }] },
+      select: { id: true, nome: true, matricula: true, empresa: { select: { nome: true, diaCorte: true } } },
+      take: 10,
+    })
+  }
+  // Matrícula
+  const mat = input.trim()
+  return db.socio.findMany({
+    where: { ativo: true, matricula: mat },
+    select: { id: true, nome: true, matricula: true, empresa: { select: { nome: true, diaCorte: true } } },
+    take: 5,
   })
 }
 
@@ -311,9 +330,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
   const session = await getOrCreateSession(input.phone)
   const intent = detectIntent(text)
 
-  // Para estados guiados (coleta de CPF, data, OTP) usa o estado como tag de intent
-  // para que a busca posterior do CPF não colida com outras msgs 'UNKNOWN'
-  const guidedStates = ['AWAITING_CPF', 'AWAITING_BIRTHDATE', 'OTP_SENT']
+  // Para estados guiados (coleta de CPF, escolha de matrícula, data, OTP) usa o estado como tag de intent
+  const guidedStates = ['AWAITING_CPF', 'AWAITING_MATRICULA_CHOICE', 'AWAITING_BIRTHDATE', 'OTP_SENT']
   const logIntent = guidedStates.includes(session.state) ? session.state : intent
 
   // Idempotência: se já registramos esse provider_message_id, não responde de novo
@@ -333,7 +351,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     await logOutgoing(session.id, reply, 'CANCELAR')
     return { reply, nextState: 'CLOSED', handoff: false }
   }
-  if (intent === 'MENU' && session.state !== 'AWAITING_CPF' && session.state !== 'AWAITING_BIRTHDATE' && session.state !== 'OTP_SENT') {
+  if (intent === 'MENU' && !guidedStates.includes(session.state)) {
     await setState(session.id, { state: 'AWAITING_INTENT' })
     const nome = await getSessionSocioName(session.id)
     const reply = MSG.saudacao(nome)
@@ -342,12 +360,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
   }
 
   // Saudação simples (oi, bom dia, etc.) — não-bloqueia fluxos guiados
-  if (
-    intent === 'SAUDACAO' &&
-    session.state !== 'AWAITING_CPF' &&
-    session.state !== 'AWAITING_BIRTHDATE' &&
-    session.state !== 'OTP_SENT'
-  ) {
+  if (intent === 'SAUDACAO' && !guidedStates.includes(session.state)) {
     await setState(session.id, { state: 'AWAITING_INTENT' })
     const nome = await getSessionSocioName(session.id)
     const reply = MSG.saudacao(nome)
@@ -356,12 +369,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
   }
 
   // Agradecimento (obrigado, valeu, etc.)
-  if (
-    intent === 'AGRADECIMENTO' &&
-    session.state !== 'AWAITING_CPF' &&
-    session.state !== 'AWAITING_BIRTHDATE' &&
-    session.state !== 'OTP_SENT'
-  ) {
+  if (intent === 'AGRADECIMENTO' && !guidedStates.includes(session.state)) {
     const reply = MSG.agradecer()
     await logOutgoing(session.id, reply, 'AGRADECIMENTO')
     return { reply, nextState: session.state, handoff: false }
@@ -374,7 +382,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     case 'HANDOFF': {
       if (intent === 'MARGEM') {
         await setState(session.id, { state: 'AWAITING_CPF', lastIntent: 'MARGEM' })
-        const reply = MSG.pedirCpf()
+        const reply = MSG.pedirCpfOuMatricula()
         await logOutgoing(session.id, reply, 'MARGEM')
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
       }
@@ -409,15 +417,70 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     }
 
     case 'AWAITING_CPF': {
-      if (!isValidCpf(text)) {
+      const digits = onlyDigits(text)
+      const isCpf = digits.length === 11
+
+      // Valida dígito verificador somente quando parece CPF
+      if (isCpf && !isValidCpf(text)) {
         const reply = MSG.cpfInvalido()
         await logOutgoing(session.id, reply, 'AWAITING_CPF')
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
       }
-      const cpfDigits = onlyDigits(text)
-      await setState(session.id, { cpfHash: sha256Hex(cpfDigits), state: 'AWAITING_BIRTHDATE' })
+      // Entrada muito curta para ser matrícula
+      if (!isCpf && text.trim().length < 3) {
+        const reply = MSG.pedirCpfOuMatricula()
+        await logOutgoing(session.id, reply, 'AWAITING_CPF')
+        return { reply, nextState: 'AWAITING_CPF', handoff: false }
+      }
+
+      const socios = await findSociosByIdentifier(text)
+
+      if (socios.length === 0) {
+        const reply = isCpf ? MSG.cpfNaoEncontrado() : MSG.matriculaNaoEncontrada()
+        await logOutgoing(session.id, reply, 'AWAITING_CPF')
+        return { reply, nextState: 'AWAITING_CPF', handoff: false }
+      }
+
+      if (socios.length > 1) {
+        // Múltiplas matrículas para o mesmo CPF — pede escolha
+        const candidates = socios.map((s) => s.id).join(',')
+        await setState(session.id, { cpfHash: `CANDIDATES:${candidates}`, state: 'AWAITING_MATRICULA_CHOICE' })
+        const reply = MSG.escolherMatricula(
+          socios.map((s) => ({ matricula: s.matricula, nome: s.nome, empresa: s.empresa?.nome ?? null }))
+        )
+        await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
+        return { reply, nextState: 'AWAITING_MATRICULA_CHOICE', handoff: false }
+      }
+
+      // Exatamente 1 resultado — avança para data de nascimento
+      await setState(session.id, { socioId: socios[0].id, cpfHash: null, state: 'AWAITING_BIRTHDATE' })
       const reply = MSG.pedirNascimento()
-      await logOutgoing(session.id, `[CPF informado: ${maskCpf(cpfDigits)}] ` + reply, 'AWAITING_CPF')
+      await logOutgoing(session.id, reply, 'AWAITING_CPF')
+      return { reply, nextState: 'AWAITING_BIRTHDATE', handoff: false }
+    }
+
+    case 'AWAITING_MATRICULA_CHOICE': {
+      // Recupera a lista de candidatos salva no campo cpfHash como "CANDIDATES:id1,id2,..."
+      const fresh = await db.chatSession.findUnique({ where: { id: session.id } })
+      const raw = fresh?.cpfHash || ''
+      if (!raw.startsWith('CANDIDATES:')) {
+        // Estado inválido — reinicia coleta
+        await setState(session.id, { state: 'AWAITING_CPF', cpfHash: null })
+        const reply = MSG.pedirCpfOuMatricula()
+        await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
+        return { reply, nextState: 'AWAITING_CPF', handoff: false }
+      }
+      const candidates = raw.replace('CANDIDATES:', '').split(',').filter(Boolean)
+      const choice = parseInt(text.trim(), 10)
+      if (isNaN(choice) || choice < 1 || choice > candidates.length) {
+        const reply = `Por favor, responda com um número entre *1* e *${candidates.length}*.`
+        await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
+        return { reply, nextState: 'AWAITING_MATRICULA_CHOICE', handoff: false }
+      }
+      const chosenId = candidates[choice - 1]
+      await setState(session.id, { socioId: chosenId, cpfHash: null, state: 'AWAITING_BIRTHDATE' })
+      const reply = MSG.pedirNascimento()
+      await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
       return { reply, nextState: 'AWAITING_BIRTHDATE', handoff: false }
     }
 
@@ -428,37 +491,19 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
         return { reply, nextState: 'AWAITING_BIRTHDATE', handoff: false }
       }
-      // Carrega cpfHash da sessão e tenta localizar o sócio
-      const fresh = await db.chatSession.findUnique({ where: { id: session.id } })
-      if (!fresh?.cpfHash) {
-        await setState(session.id, { state: 'AWAITING_CPF' })
-        const reply = MSG.pedirCpf()
-        await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
-        return { reply, nextState: 'AWAITING_CPF', handoff: false }
-      }
-      // Busca a mensagem de CPF pela tag específica 'AWAITING_CPF' (não 'UNKNOWN')
-      // Isso evita colisão com a mensagem de data de nascimento que também seria UNKNOWN
-      const lastCpfMsg = await db.chatMessage.findFirst({
-        where: { sessionId: session.id, direction: 'in', intent: 'AWAITING_CPF' },
-        orderBy: { createdAt: 'asc' },
+      // O socioId já foi definido na etapa AWAITING_CPF ou AWAITING_MATRICULA_CHOICE
+      // Não precisamos mais recuperar CPF por hash — apenas carregamos o sócio vinculado
+      const freshSession = await db.chatSession.findUnique({
+        where: { id: session.id },
+        include: { socio: true },
       })
-      const cpfCandidate = lastCpfMsg?.textBody ? onlyDigits(lastCpfMsg.textBody) : ''
-      // Confirma que bate com o hash salvo na sessão
-      if (!cpfCandidate || sha256Hex(cpfCandidate) !== fresh.cpfHash) {
-        // Hash não bate — CPF logado antes da correção ou inconsistência: reinicia
-        await setState(session.id, { state: 'AWAITING_CPF', cpfHash: null })
-        const reply = MSG.pedirCpf()
+      const socio = freshSession?.socio
+      if (!socio) {
+        // Sessão perdeu o vínculo — reinicia
+        await setState(session.id, { state: 'AWAITING_CPF', cpfHash: null, socioId: null })
+        const reply = MSG.pedirCpfOuMatricula()
         await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
-      }
-
-      const socio = await findSocioByCpf(cpfCandidate)
-      if (!socio) {
-        console.warn(`[chatbot] AWAITING_BIRTHDATE: sócio não encontrado para CPF ${maskCpf(cpfCandidate)}`)
-        await openHandoff(session.id, 'AUTH_FAILED')
-        const reply = MSG.socioNaoEncontrado()
-        await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
-        return { reply, nextState: 'HANDOFF', handoff: true }
       }
       if (!socio.dataNascimento) {
         console.warn(`[chatbot] AWAITING_BIRTHDATE: sócio ${socio.id} sem dataNascimento — não pode autenticar`)
@@ -476,8 +521,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         return { reply, nextState: 'HANDOFF', handoff: true }
       }
 
-      // Vincula sócio à sessão e envia OTP
-      await setState(session.id, { socioId: socio.id, state: 'OTP_SENT' })
+      // Autenticado — envia OTP (socioId já está vinculado na sessão)
+      await setState(session.id, { state: 'OTP_SENT' })
       await createAndSendOtp(session.id, normalizePhoneE164BR(input.phone))
       const reply = MSG.otpEnviado()
       await logOutgoing(session.id, reply, 'OTP_SENT')
@@ -488,7 +533,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       const v = await verifyOtp(session.id, text)
       if (v.expired) {
         await setState(session.id, { state: 'AWAITING_CPF', cpfHash: null, socioId: null })
-        const reply = MSG.otpExpirado() + '\n' + MSG.pedirCpf()
+        const reply = MSG.otpExpirado() + '\n' + MSG.pedirCpfOuMatricula()
         await logOutgoing(session.id, reply, 'OTP_SENT')
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
       }
