@@ -323,6 +323,139 @@ function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): 
   return linhas.join('\n')
 }
 
+// ============================================================
+// Descontos do sócio — agrupa parcelas em aberto por mês
+// (mesma lógica da página /portal/desconto)
+// ============================================================
+const MESES_NOMES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+
+type DescontoItem = { numero: number; totalParc: number; convenio: string; valor: number; venc: string }
+type DescontoMes = {
+  nomeSocio: string
+  mesKey: number // YYYY*100 + MM
+  mesLabel: string // ex: "Maio / 2026"
+  total: number
+  itens: DescontoItem[]
+  outrosMeses: string[] // ex: ['05/2026', '06/2026']
+  vazio: boolean
+}
+
+async function consultarDescontosSocio(socioId: string, mesKeyAlvo?: number): Promise<DescontoMes | null> {
+  try {
+    const tresAnosAtras = new Date()
+    tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+
+    const socio = await db.socio.findFirst({
+      where: { id: socioId },
+      select: {
+        nome: true,
+        vendas: {
+          where: { ativo: true, cancelado: false, dataEmissao: { gte: tresAnosAtras } },
+          select: {
+            id: true,
+            numeroVenda: true,
+            quantidadeParcelas: true,
+            convenio: { select: { razao_soc: true } },
+            parcelas: {
+              select: { id: true, numeroParcela: true, dataVencimento: true, valor: true, baixa: true },
+              orderBy: { numeroParcela: 'asc' },
+            },
+          },
+        },
+      },
+    })
+    if (!socio) return null
+
+    // Agrupa parcelas em aberto por mês de vencimento
+    const map = new Map<number, DescontoItem[]>()
+    for (const venda of socio.vendas) {
+      const conv = venda.convenio?.razao_soc || `Empréstimo #${venda.numeroVenda}`
+      for (const p of venda.parcelas) {
+        if (p.baixa === 'S') continue
+        if (!p.dataVencimento) continue
+        const d = new Date(p.dataVencimento)
+        const key = d.getUTCFullYear() * 100 + (d.getUTCMonth() + 1)
+        const venc = `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
+        if (!map.has(key)) map.set(key, [])
+        map.get(key)!.push({
+          numero: p.numeroParcela,
+          totalParc: venda.quantidadeParcelas,
+          convenio: conv,
+          valor: Number(p.valor),
+          venc,
+        })
+      }
+    }
+
+    const meses = [...map.keys()].sort((a, b) => a - b)
+    if (meses.length === 0) {
+      return { nomeSocio: socio.nome, mesKey: 0, mesLabel: '', total: 0, itens: [], outrosMeses: [], vazio: true }
+    }
+
+    // Determina mês alvo: o solicitado, ou o atual/próximo, ou o último
+    let mesKey: number
+    if (mesKeyAlvo && map.has(mesKeyAlvo)) {
+      mesKey = mesKeyAlvo
+    } else {
+      const hoje = new Date()
+      const keyHoje = hoje.getFullYear() * 100 + (hoje.getMonth() + 1)
+      mesKey = meses.find((k) => k >= keyHoje) ?? meses[meses.length - 1]
+    }
+
+    const itens = (map.get(mesKey) || []).sort((a, b) => a.numero - b.numero)
+    const total = itens.reduce((s, i) => s + i.valor, 0)
+    const ano = Math.floor(mesKey / 100)
+    const mes = mesKey % 100
+    const mesLabel = `${MESES_NOMES[mes - 1]} / ${ano}`
+    const outrosMeses = meses
+      .filter((k) => k !== mesKey)
+      .map((k) => `${String(k % 100).padStart(2, '0')}/${Math.floor(k / 100)}`)
+      .slice(0, 6) // limita listagem
+
+    return { nomeSocio: socio.nome, mesKey, mesLabel, total, itens, outrosMeses, vazio: false }
+  } catch (e) {
+    console.error('[chatbot] erro consultar descontos:', e)
+    return null
+  }
+}
+
+function parseMesAnoInput(text: string): number | null {
+  const m = text.trim().match(/^(\d{1,2})[\/\-](\d{4})$/)
+  if (!m) return null
+  const mes = parseInt(m[1], 10)
+  const ano = parseInt(m[2], 10)
+  if (mes < 1 || mes > 12 || ano < 2000 || ano > 2100) return null
+  return ano * 100 + mes
+}
+
+async function entregarDescontos(
+  sessionId: string,
+  socioId: string,
+  socioNome: string,
+  mesKeyAlvo?: number
+): Promise<{ reply: string }> {
+  const dados = await consultarDescontosSocio(socioId, mesKeyAlvo)
+  if (!dados) {
+    return { reply: 'Não consegui consultar seus descontos agora. Tente novamente em instantes.' }
+  }
+  if (dados.vazio) {
+    return { reply: MSG.descontosVazio(socioNome) }
+  }
+  return {
+    reply: MSG.descontosMes({
+      nome: socioNome,
+      mesLabel: dados.mesLabel,
+      total: dados.total,
+      itens: dados.itens,
+      outrosMeses: dados.outrosMeses,
+    }),
+  }
+}
+
+
 export async function processMessage(input: ProcessInput): Promise<ProcessResult> {
   const text = (input.text || '').trim()
   if (!text) return { reply: null, nextState: 'NEW', handoff: false, ignored: true }
@@ -381,9 +514,41 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     case 'CLOSED':
     case 'HANDOFF': {
       if (intent === 'MARGEM') {
+        // Se já autenticado nesta sessão, pula direto
+        if (session.socioId && session.authLevel === 'L2') {
+          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+          const socio = fresh?.socio
+          if (socio) {
+            const margem = await consultarMargemSocio(socio.id)
+            if (margem) {
+              const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
+              const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
+              await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
+              await logOutgoing(session.id, reply, 'MARGEM')
+              return { reply, nextState: 'ANSWERED', handoff: false }
+            }
+          }
+        }
         await setState(session.id, { state: 'AWAITING_CPF', lastIntent: 'MARGEM' })
         const reply = MSG.pedirCpfOuMatricula()
         await logOutgoing(session.id, reply, 'MARGEM')
+        return { reply, nextState: 'AWAITING_CPF', handoff: false }
+      }
+      if (intent === 'DESCONTOS') {
+        // Se já autenticado, atende direto
+        if (session.socioId && session.authLevel === 'L2') {
+          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+          const socio = fresh?.socio
+          if (socio) {
+            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+            await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+            await logOutgoing(session.id, reply, 'DESCONTOS')
+            return { reply, nextState: 'ANSWERED', handoff: false }
+          }
+        }
+        await setState(session.id, { state: 'AWAITING_CPF', lastIntent: 'DESCONTOS' })
+        const reply = MSG.pedirCpfOuMatricula()
+        await logOutgoing(session.id, reply, 'DESCONTOS')
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
       }
       if (intent === 'STATUS_PROPOSTA' || intent === 'SEGUNDA_VIA' || intent === 'HORARIO') {
@@ -549,7 +714,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         return { reply, nextState: 'OTP_SENT', handoff: false }
       }
 
-      // Autenticado → busca margem
+      // Autenticado → entrega conforme última intenção (MARGEM ou DESCONTOS)
       await setState(session.id, { state: 'AUTHENTICATED', authLevel: 'L2' })
       const fresh = await db.chatSession.findUnique({
         where: { id: session.id },
@@ -562,6 +727,15 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AUTHENTICATED')
         return { reply, nextState: 'HANDOFF', handoff: true }
       }
+
+      if (fresh?.lastIntent === 'DESCONTOS') {
+        const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+        await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+        await logOutgoing(session.id, reply, 'DESCONTOS')
+        return { reply, nextState: 'ANSWERED', handoff: false }
+      }
+
+      // Default: margem
       const margem = await consultarMargemSocio(socio.id)
       if (!margem) {
         await openHandoff(session.id, 'MARGEM_API_FAIL')
@@ -577,7 +751,47 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     }
 
     case 'ANSWERED': {
-      // Atalhos pós-resposta
+      // Reaproveita autenticação para atender outras intents sem novo OTP
+      if (intent === 'MARGEM' && session.socioId && session.authLevel === 'L2') {
+        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+        const socio = fresh?.socio
+        if (socio) {
+          const margem = await consultarMargemSocio(socio.id)
+          if (margem) {
+            const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
+            const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
+            await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
+            await logOutgoing(session.id, reply, 'MARGEM')
+            return { reply, nextState: 'ANSWERED', handoff: false }
+          }
+        }
+      }
+      if (intent === 'DESCONTOS' && session.socioId && session.authLevel === 'L2') {
+        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+        const socio = fresh?.socio
+        if (socio) {
+          const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+          await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+          await logOutgoing(session.id, reply, 'DESCONTOS')
+          return { reply, nextState: 'ANSWERED', handoff: false }
+        }
+      }
+
+      // Navegação por mês quando última resposta foi de DESCONTOS
+      if (session.lastIntent === 'DESCONTOS' && session.socioId) {
+        const mesKey = parseMesAnoInput(text)
+        if (mesKey) {
+          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+          const socio = fresh?.socio
+          if (socio) {
+            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
+            await logOutgoing(session.id, reply, 'DESCONTOS')
+            return { reply, nextState: 'ANSWERED', handoff: false }
+          }
+        }
+      }
+
+      // Atalhos numéricos pós-resposta (mantém compatibilidade com o rodapé do formatMargemReply)
       if (/^\s*1\s*$/.test(text)) {
         const reply = MSG.emConstrucao('Simulação de crédito') + '\n\n' + MSG.fallback()
         await logOutgoing(session.id, reply, 'ANSWERED')

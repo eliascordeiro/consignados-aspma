@@ -3,6 +3,7 @@
  */
 export type Intent =
   | 'MARGEM'
+  | 'DESCONTOS'
   | 'STATUS_PROPOSTA'
   | 'SEGUNDA_VIA'
   | 'HORARIO'
@@ -69,6 +70,7 @@ const SYN: Record<Exclude<Intent, 'UNKNOWN'>, string[]> = {
   CANCELAR: ['cancelar', 'sair', 'encerrar', 'parar', 'tchau', 'fim', 'ate logo', 'ate mais'],
   MENU: ['menu', 'opcoes', 'opcao', 'ajuda', 'help', 'comecar', 'inicio', 'voltar'],
   MARGEM: ['margem', 'saldo', 'disponivel', 'limite', 'consignavel', 'espaco', 'capacidade', 'quanto posso'],
+  DESCONTOS: ['desconto', 'descontos', 'parcela', 'parcelas', 'mensalidade', 'mensalidades', 'cobranca', 'cobrancas', 'divida', 'dividas', 'debito', 'debitos', 'pagar', 'pagamento', 'pagamentos', 'devo', 'pendencia', 'pendencias', 'meu desconto', 'meus descontos'],
   STATUS_PROPOSTA: ['proposta', 'propostas', 'status', 'andamento', 'venda', 'contrato', 'pedido', 'analise', 'aprovado', 'liberado'],
   SEGUNDA_VIA: ['boleto', 'comprovante', 'recibo', 'extrato', 'contracheque', 'holerite', 'demonstrativo', 'segunda via', '2a via', '2 via'],
   HORARIO: ['horario', 'atendimento', 'funcionamento', 'aberto', 'endereco', 'telefone', 'localizacao'],
@@ -83,9 +85,10 @@ export function detectIntent(text: string): Intent {
 
   // Atalhos numéricos do menu (avaliar antes para evitar falsos positivos)
   if (/^1$/.test(t)) return 'MARGEM'
-  if (/^2$/.test(t)) return 'STATUS_PROPOSTA'
-  if (/^3$/.test(t)) return 'SEGUNDA_VIA'
-  if (/^4$/.test(t)) return 'ATENDENTE'
+  if (/^2$/.test(t)) return 'DESCONTOS'
+  if (/^3$/.test(t)) return 'STATUS_PROPOSTA'
+  if (/^4$/.test(t)) return 'SEGUNDA_VIA'
+  if (/^5$/.test(t)) return 'ATENDENTE'
 
   // Ordem de precedência (mais específicos primeiro)
   const order: Array<Exclude<Intent, 'UNKNOWN'>> = [
@@ -96,6 +99,7 @@ export function detectIntent(text: string): Intent {
     'SIMULAR',
     'SEGUNDA_VIA',
     'STATUS_PROPOSTA',
+    'DESCONTOS',
     'MARGEM',
     'HORARIO',
     'SAUDACAO',

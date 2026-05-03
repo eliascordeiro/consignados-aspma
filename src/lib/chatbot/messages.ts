@@ -9,9 +9,10 @@ export const MSG = {
       'Posso te ajudar com:',
       '',
       '*1)* 💰 Margem disponível',
-      '*2)* 📋 Status da proposta',
-      '*3)* 📄 2ª via / comprovante',
-      '*4)* 🙋 Falar com um atendente',
+      '*2)* �️ Descontos do mês',
+      '*3)* 📋 Status da proposta',
+      '*4)* 📄 2ª via / comprovante',
+      '*5)* 🙋 Falar com um atendente',
       '',
       '_Digite o número da opção ou descreva sua dúvida._',
     ].join('\n')
@@ -57,11 +58,45 @@ export const MSG = {
       '',
       'Posso te ajudar com:',
       '*1)* Margem disponível',
-      '*2)* Status da proposta',
-      '*3)* 2ª via',
-      '*4)* Falar com atendente',
+      '*2)* Descontos do mês',
+      '*3)* Status da proposta',
+      '*4)* 2ª via',
+      '*5)* Falar com atendente',
     ].join('\n'),
   emConstrucao: (assunto: string) =>
     `O atendimento de "${assunto}" estará disponível em breve. ⚙️\nPosso te transferir para um atendente?`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
+  descontosVazio: (nomeOpt?: string) => {
+    const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
+    return `✅ Tudo em dia${nome}! Não há parcelas pendentes no momento.`
+  },
+  descontosMes: (args: {
+    nome: string
+    mesLabel: string
+    total: number
+    itens: Array<{ numero: number; totalParc: number; convenio: string; valor: number; venc: string }>
+    outrosMeses: string[] // ex: ['05/2026', '06/2026', ...]
+  }) => {
+    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+    const linhas: string[] = [
+      `🗒️ *Descontos – ${args.mesLabel}*`,
+      `👤 ${args.nome.split(' ')[0]}`,
+      '',
+      `💰 *Total do mês:* ${brl(args.total)}`,
+      `📄 ${args.itens.length} parcela${args.itens.length !== 1 ? 's' : ''}`,
+      '',
+    ]
+    for (const it of args.itens) {
+      linhas.push(`• *${it.numero}/${it.totalParc}* — ${it.convenio}`)
+      linhas.push(`   ${brl(it.valor)} · venc. ${it.venc}`)
+    }
+    if (args.outrosMeses.length > 0) {
+      linhas.push('')
+      linhas.push('_Para ver outro mês, digite no formato MM/AAAA._')
+      linhas.push(`_Disponíveis: ${args.outrosMeses.join(', ')}_`)
+    }
+    linhas.push('')
+    linhas.push('_Digite *menu* para outras opções._')
+    return linhas.join('\n')
+  },
 }
