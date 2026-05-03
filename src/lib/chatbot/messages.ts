@@ -66,6 +66,94 @@ export const MSG = {
   emConstrucao: (assunto: string) =>
     `O atendimento de "${assunto}" estará disponível em breve. ⚙️\nPosso te transferir para um atendente?`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
+  segundaViaTipos: () =>
+    [
+      '📄 *2ª via — o que você precisa?*',
+      '',
+      '*1)* ✅ Comprovante de pagamento (parcela quitada)',
+      '*2)* 📋 Espelho do contrato (resumo do empréstimo)',
+      '*3)* 🗒️ Demonstrativo do mês',
+      '',
+      '_Digite o número da opção desejada._',
+    ].join('\n'),
+  comprovantePagamentoVazio: () =>
+    'Você ainda não possui parcelas quitadas registradas. ✅',
+  comprovantePagamentoLista: (itens: Array<{ idx: number; convenio: string; numero: number; total: number; valorPago: number; dataBaixa: string }>) => {
+    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+    const linhas = ['✅ *Últimas parcelas pagas:*', '']
+    for (const it of itens) {
+      linhas.push(`*${it.idx})* ${it.convenio}`)
+      linhas.push(`   Parcela ${it.numero}/${it.total} · pago ${it.dataBaixa} · ${brl(it.valorPago)}`)
+    }
+    linhas.push('')
+    linhas.push('_Digite o número para ver o detalhe da parcela._')
+    linhas.push('_Para o PDF do comprovante, fale com um atendente (digite *atendente*)._')
+    return linhas.join('\n')
+  },
+  comprovanteDetalhe: (item: { convenio: string; numero: number; total: number; valor: number; valorPago: number; dataVenc: string; dataBaixa: string }) => {
+    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+    return [
+      '✅ *Comprovante de pagamento*',
+      '',
+      `📌 Convênio: *${item.convenio}*`,
+      `🔢 Parcela: *${item.numero}/${item.total}*`,
+      `💰 Valor: ${brl(item.valor)}`,
+      `💵 Valor pago: ${brl(item.valorPago)}`,
+      `📅 Vencimento: ${item.dataVenc}`,
+      `✔️ Data do pagamento: ${item.dataBaixa}`,
+      '',
+      '_Para receber o comprovante em PDF, digite *atendente*._',
+      '_Digite *menu* para outras opções._',
+    ].join('\n')
+  },
+  contratosVazio: () =>
+    'Você não possui contratos ativos no momento. ℹ️',
+  contratosLista: (itens: Array<{ idx: number; convenio: string; numeroVenda: number; qtd: number; valorParcela: number; valorTotal: number; dataEmissao: string; pagas: number }>) => {
+    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+    const linhas = ['📋 *Seus contratos ativos:*', '']
+    for (const it of itens) {
+      linhas.push(`*${it.idx})* ${it.convenio} — Venda #${it.numeroVenda}`)
+      linhas.push(`   ${it.qtd}x ${brl(it.valorParcela)} · total ${brl(it.valorTotal)}`)
+      linhas.push(`   Emitida em ${it.dataEmissao} · ${it.pagas}/${it.qtd} pagas`)
+    }
+    linhas.push('')
+    linhas.push('_Digite o número para ver o espelho do contrato._')
+    return linhas.join('\n')
+  },
+  contratoEspelho: (item: {
+    convenio: string
+    numeroVenda: number
+    dataEmissao: string
+    qtd: number
+    valorParcela: number
+    valorTotal: number
+    pagas: number
+    proximas: Array<{ numero: number; dataVenc: string; valor: number }>
+  }) => {
+    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+    const linhas = [
+      '📋 *Espelho do contrato*',
+      '',
+      `📌 Convênio: *${item.convenio}*`,
+      `🔢 Venda nº: *${item.numeroVenda}*`,
+      `📅 Emitida em: ${item.dataEmissao}`,
+      '',
+      `💳 Parcelas: ${item.qtd}x ${brl(item.valorParcela)}`,
+      `💰 Valor total: ${brl(item.valorTotal)}`,
+      `✔️ Pagas: ${item.pagas}/${item.qtd}`,
+    ]
+    if (item.proximas.length > 0) {
+      linhas.push('')
+      linhas.push('*Próximas parcelas:*')
+      for (const p of item.proximas) {
+        linhas.push(`• ${p.numero}/${item.qtd} · ${p.dataVenc} · ${brl(p.valor)}`)
+      }
+    }
+    linhas.push('')
+    linhas.push('_Para receber o contrato em PDF, digite *atendente*._')
+    linhas.push('_Digite *menu* para outras opções._')
+    return linhas.join('\n')
+  },
   descontosVazio: (nomeOpt?: string) => {
     const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
     return `✅ Tudo em dia${nome}! Não há parcelas pendentes no momento.`
