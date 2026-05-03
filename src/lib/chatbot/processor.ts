@@ -311,8 +311,13 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
   const session = await getOrCreateSession(input.phone)
   const intent = detectIntent(text)
 
+  // Para estados guiados (coleta de CPF, data, OTP) usa o estado como tag de intent
+  // para que a busca posterior do CPF não colida com outras msgs 'UNKNOWN'
+  const guidedStates = ['AWAITING_CPF', 'AWAITING_BIRTHDATE', 'OTP_SENT']
+  const logIntent = guidedStates.includes(session.state) ? session.state : intent
+
   // Idempotência: se já registramos esse provider_message_id, não responde de novo
-  const isNew = await logIncoming(session.id, input.providerMessageId, input.provider || 'whatsgw', text, intent)
+  const isNew = await logIncoming(session.id, input.providerMessageId, input.provider || 'whatsgw', text, logIntent)
   if (!isNew) return { reply: null, nextState: session.state, handoff: false, ignored: true }
 
   // Comandos globais sempre disponíveis
@@ -431,16 +436,16 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
       }
-      // Localiza pelo cpf informado pelo usuário (recuperado da última msg in com intent AWAITING_CPF? — armazenamos cpfHash, não cpf cru)
-      // Estratégia: o CPF cru não foi guardado; usamos a última mensagem inbound do usuário que era CPF.
+      // Busca a mensagem de CPF pela tag específica 'AWAITING_CPF' (não 'UNKNOWN')
+      // Isso evita colisão com a mensagem de data de nascimento que também seria UNKNOWN
       const lastCpfMsg = await db.chatMessage.findFirst({
-        where: { sessionId: session.id, direction: 'in', intent: 'UNKNOWN' },
-        orderBy: { createdAt: 'desc' },
+        where: { sessionId: session.id, direction: 'in', intent: 'AWAITING_CPF' },
+        orderBy: { createdAt: 'asc' },
       })
       const cpfCandidate = lastCpfMsg?.textBody ? onlyDigits(lastCpfMsg.textBody) : ''
-      // Confirma que bate com o hash
+      // Confirma que bate com o hash salvo na sessão
       if (!cpfCandidate || sha256Hex(cpfCandidate) !== fresh.cpfHash) {
-        // Recomeça a coleta
+        // Hash não bate — CPF logado antes da correção ou inconsistência: reinicia
         await setState(session.id, { state: 'AWAITING_CPF', cpfHash: null })
         const reply = MSG.pedirCpf()
         await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
@@ -448,7 +453,23 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       }
 
       const socio = await findSocioByCpf(cpfCandidate)
-      if (!socio || !socio.dataNascimento || !sameDateUTC(socio.dataNascimento, dt)) {
+      if (!socio) {
+        console.warn(`[chatbot] AWAITING_BIRTHDATE: sócio não encontrado para CPF ${maskCpf(cpfCandidate)}`)
+        await openHandoff(session.id, 'AUTH_FAILED')
+        const reply = MSG.socioNaoEncontrado()
+        await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
+        return { reply, nextState: 'HANDOFF', handoff: true }
+      }
+      if (!socio.dataNascimento) {
+        console.warn(`[chatbot] AWAITING_BIRTHDATE: sócio ${socio.id} sem dataNascimento — não pode autenticar`)
+        await openHandoff(session.id, 'AUTH_FAILED')
+        const reply = MSG.socioNaoEncontrado()
+        await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
+        return { reply, nextState: 'HANDOFF', handoff: true }
+      }
+      const dateMatch = sameDateUTC(socio.dataNascimento, dt)
+      console.log(`[chatbot] AWAITING_BIRTHDATE: socioId=${socio.id} db=${socio.dataNascimento.toISOString()} input=${dt.toISOString()} match=${dateMatch}`)
+      if (!dateMatch) {
         await openHandoff(session.id, 'AUTH_FAILED')
         const reply = MSG.socioNaoEncontrado()
         await logOutgoing(session.id, reply, 'AWAITING_BIRTHDATE')
