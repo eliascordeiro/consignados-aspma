@@ -16,7 +16,8 @@ export const MSG = {
       '*2)* Descontos do mês',
       '',
       `Atendente: *${ATENDENTE_TEL_DISPLAY}*`,
-      '_Digite o número da opção ou descreva sua dúvida._',
+      '',
+      '_Digite o número da opção._',
     ].join('\n')
   },
   pedirCpf: () => 'Para consultar seus dados, informe seu *CPF* (apenas números) ou sua *matrícula*.',
