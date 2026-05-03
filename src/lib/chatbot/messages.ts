@@ -56,8 +56,7 @@ ${ATENDENTE_TEL_LINK}`,
 Fale com um atendente da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
 ${ATENDENTE_TEL_LINK}`,
   handoff: () =>
-    `Para falar com um atendente, chame pelo *${ATENDENTE_TEL_DISPLAY}* — é o número onde os humanos da ASPMA atendem. 🙋
-${ATENDENTE_TEL_LINK}`,
+    `Para falar com um atendente, chame pelo *${ATENDENTE_TEL_DISPLAY}*. 🙋\n${ATENDENTE_TEL_LINK}`,
   encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
     [
