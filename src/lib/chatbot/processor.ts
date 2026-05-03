@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { sendWhatsApp } from '@/lib/whatsgw'
+
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { brl, isValidCpf, normalizePhoneE164BR, onlyDigits, parseBirthDate, sameDateUTC } from './util'
@@ -133,7 +133,7 @@ function generateOtpCode(): string {
   return String(crypto.randomInt(0, 1_000_000)).padStart(6, '0')
 }
 
-async function createAndSendOtp(sessionId: string, phoneE164: string): Promise<void> {
+async function createAndSendOtp(sessionId: string): Promise<string> {
   // Invalida OTPs anteriores não consumidos
   await db.chatOtp.updateMany({
     where: { sessionId, consumedAt: null },
@@ -149,10 +149,7 @@ async function createAndSendOtp(sessionId: string, phoneE164: string): Promise<v
       expiresAt: new Date(Date.now() + OTP_TTL_MS),
     },
   })
-  await sendWhatsApp(
-    phoneE164,
-    `🔐 Seu código de verificação ASPMA é *${code}*. Validade: 5 minutos. Não compartilhe com ninguém.`
-  )
+  return code
 }
 
 async function verifyOtp(sessionId: string, input: string): Promise<{ ok: boolean; remaining: number; expired: boolean }> {
@@ -316,7 +313,7 @@ function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): 
     `💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`,
     '',
     'O que deseja fazer agora?',
-    '1) Simular crédito',
+    '1) Ver descontos do mês',
     '2) Falar com uma colaboradora (*41 98831-8343*)',
     '3) Encerrar',
   ]
@@ -691,8 +688,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
 
       // Autenticado — envia OTP (socioId já está vinculado na sessão)
       await setState(session.id, { state: 'OTP_SENT' })
-      await createAndSendOtp(session.id, normalizePhoneE164BR(input.phone))
-      const reply = MSG.otpEnviado()
+      const otpCode = await createAndSendOtp(session.id)
+      const reply = `🔐 Seu código ASPMA é *${otpCode}*. Digite-o aqui para continuar. _(Válido por 5 minutos. Não compartilhe.)_`
       await logOutgoing(session.id, reply, 'OTP_SENT')
       return { reply, nextState: 'OTP_SENT', handoff: false }
     }
@@ -796,7 +793,17 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
 
       // Atalhos numéricos pós-resposta (mantém compatibilidade com o rodapé do formatMargemReply)
       if (/^\s*1\s*$/.test(text)) {
-        const reply = MSG.emConstrucao('Simulação de crédito') + '\n\n' + MSG.fallback()
+        if (session.socioId) {
+          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+          const socio = fresh?.socio
+          if (socio) {
+            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+            await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+            await logOutgoing(session.id, reply, 'DESCONTOS')
+            return { reply, nextState: 'ANSWERED', handoff: false }
+          }
+        }
+        const reply = MSG.fallback()
         await logOutgoing(session.id, reply, 'ANSWERED')
         return { reply, nextState: 'AWAITING_INTENT', handoff: false }
       }
