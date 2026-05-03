@@ -210,6 +210,7 @@ export async function POST(req: NextRequest) {
 
     // Se foi fornecido email, criar user para o convênio poder fazer login
     // O user é criado sem senha válida — o convênio deve usar "Criar/Redefinir Senha"
+    // Se não houver email, o convênio fica vinculado ao manager (apenas para fins de visibilidade do dono)
     let convenioUserId: string = managerUserId
     if (data.email) {
       const emailLower = data.email.trim().toLowerCase()
@@ -219,7 +220,14 @@ export async function POST(req: NextRequest) {
       const existingUser = await db.users.findUnique({ where: { email: emailLower } })
 
       if (existingUser) {
-        // Reutiliza o user existente (pode ser de cadastro anterior)
+        // NUNCA reusar ADMIN/MANAGER como user de convênio (poderia sobrescrever email/senha do gestor)
+        if (existingUser.role !== 'USER') {
+          return NextResponse.json(
+            { error: 'Este email pertence a um usuário administrador. Escolha um email diferente.' },
+            { status: 400 }
+          )
+        }
+        // Reutiliza o user USER existente (pode ser de cadastro anterior)
         convenioUserId = existingUser.id
       } else {
         // Cria user sem senha válida — senha bloqueada com sentinel
