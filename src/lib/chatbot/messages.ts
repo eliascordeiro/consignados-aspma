@@ -76,7 +76,7 @@ ${ATENDENTE_TEL_LINK}`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
   descontosVazio: (nomeOpt?: string) => {
     const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
-    return `✅ Tudo em dia${nome}! Não há parcelas pendentes no momento.
+    return `🔎 Não foram encontrados descontos com base na sua pesquisa${nome}.
 
 Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`
   },
