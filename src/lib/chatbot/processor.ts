@@ -316,7 +316,7 @@ function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): 
     '1) Ver descontos do mês',
     '2) Encerrar',
     '',
-    'Falar com atendente: *41 98831-8343*',
+    'Falar com atendente: https://wa.me/5541988318343',
   ]
   return linhas.join('\n')
 }
