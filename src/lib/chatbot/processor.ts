@@ -420,13 +420,43 @@ async function consultarDescontosSocio(socioId: string, mesKeyAlvo?: number): Pr
   }
 }
 
+const MESES_MAP: Record<string, number> = {
+  janeiro: 1, jan: 1,
+  fevereiro: 2, fev: 2,
+  'março': 3, marco: 3, mar: 3,
+  abril: 4, abr: 4,
+  maio: 5, mai: 5,
+  junho: 6, jun: 6,
+  julho: 7, jul: 7,
+  agosto: 8, ago: 8,
+  setembro: 9, set: 9,
+  outubro: 10, out: 10,
+  novembro: 11, nov: 11,
+  dezembro: 12, dez: 12,
+}
+
 function parseMesAnoInput(text: string): number | null {
-  const m = text.trim().match(/^(\d{1,2})[\/\-](\d{4})$/)
-  if (!m) return null
-  const mes = parseInt(m[1], 10)
-  const ano = parseInt(m[2], 10)
-  if (mes < 1 || mes > 12 || ano < 2000 || ano > 2100) return null
-  return ano * 100 + mes
+  const t = text.trim().toLowerCase()
+
+  // Formato numérico: MM/YYYY ou MM-YYYY (exato)
+  const mNum = t.match(/^(\d{1,2})[\/\-](\d{4})$/)
+  if (mNum) {
+    const mes = parseInt(mNum[1], 10)
+    const ano = parseInt(mNum[2], 10)
+    if (mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100) return ano * 100 + mes
+  }
+
+  // Nome do mês em português presente na frase (ex: "descontos de janeiro" ou "janeiro/2025")
+  for (const [nome, mes] of Object.entries(MESES_MAP)) {
+    const re = new RegExp(`\\b${nome}\\b(?:[\\s\\/\\-]+(\\d{4}))?`)
+    const mNome = t.match(re)
+    if (mNome) {
+      const ano = mNome[1] ? parseInt(mNome[1], 10) : new Date().getFullYear()
+      if (ano >= 2000 && ano <= 2100) return ano * 100 + mes
+    }
+  }
+
+  return null
 }
 
 async function entregarDescontos(
@@ -543,7 +573,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
           const socio = fresh?.socio
           if (socio) {
-            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+            const mesKey = parseMesAnoInput(text) ?? undefined
+            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
             await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
             await logOutgoing(session.id, reply, 'DESCONTOS')
             return { reply, nextState: 'ANSWERED', handoff: false }
@@ -802,7 +833,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
         const socio = fresh?.socio
         if (socio) {
-          const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+          const mesKey = parseMesAnoInput(text) ?? undefined
+          const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
           await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
           await logOutgoing(session.id, reply, 'DESCONTOS')
           return { reply, nextState: 'ANSWERED', handoff: false }
