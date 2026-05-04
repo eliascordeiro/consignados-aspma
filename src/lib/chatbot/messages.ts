@@ -15,7 +15,7 @@ export const MSG = {
       '*1)* Margem disponível',
       '*2)* Descontos do mês',
       '',
-      `Atendente: *${ATENDENTE_TEL_DISPLAY}*`,
+      `Atendente: ${ATENDENTE_TEL_LINK}`,
       '',
       '_Digite o número da opção._',
     ].join('\n')
@@ -45,7 +45,7 @@ export const MSG = {
   },
   socioNaoEncontrado: () =>
     `Não localizei seu cadastro com esses dados. 🔎
-Para atendimento humano, fale com um atendente da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
+Para atendimento humano, fale com um atendente da ASPMA:
 ${ATENDENTE_TEL_LINK}`,
   otpEnviado: () =>
     'Enviei um *código de 6 dígitos* 🔐\nDigite-o aqui para concluir a verificação. _(Validade de 5 minutos)_',
@@ -54,10 +54,10 @@ ${ATENDENTE_TEL_LINK}`,
   otpExpirado: () => 'Código expirado. ⏱️ Vamos recomeçar.',
   bloqueado: () =>
     `Muitas tentativas. 🛑 Por segurança, encerrei esta verificação.
-Fale com um atendente da ASPMA pelo *${ATENDENTE_TEL_DISPLAY}*.
+Fale com um atendente da ASPMA:
 ${ATENDENTE_TEL_LINK}`,
   handoff: () =>
-    `Para falar com um atendente, chame pelo *${ATENDENTE_TEL_DISPLAY}*. 🙋\n${ATENDENTE_TEL_LINK}`,
+    `Para falar com um atendente: 🙋\n${ATENDENTE_TEL_LINK}`,
   encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
     [
@@ -67,16 +67,18 @@ ${ATENDENTE_TEL_LINK}`,
       '*1)* Margem disponível',
       '*2)* Descontos do mês',
       '',
-      `Atendente: *${ATENDENTE_TEL_DISPLAY}*`,
+      `Atendente: ${ATENDENTE_TEL_LINK}`,
     ].join('\n'),
   emConstrucao: (assunto: string) =>
     `O atendimento de "${assunto}" estará disponível em breve. ⚙️
-Para falar com um atendente agora, ligue ou chame no *${ATENDENTE_TEL_DISPLAY}*.
+Para falar com um atendente agora:
 ${ATENDENTE_TEL_LINK}`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
   descontosVazio: (nomeOpt?: string) => {
     const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
-    return `✅ Tudo em dia${nome}! Não há parcelas pendentes no momento.`
+    return `✅ Tudo em dia${nome}! Não há parcelas pendentes no momento.
+
+Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`
   },
   descontosMes: (args: {
     nome: string
@@ -105,6 +107,8 @@ ${ATENDENTE_TEL_LINK}`,
     }
     linhas.push('')
     linhas.push('_Digite *menu* para outras opções._')
+    linhas.push('')
+    linhas.push(`Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`)
     return linhas.join('\n')
   },
 }
