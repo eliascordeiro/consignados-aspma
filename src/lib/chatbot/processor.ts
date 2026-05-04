@@ -314,8 +314,9 @@ function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): 
     '',
     'O que deseja fazer agora?',
     '1) Ver descontos do mês',
-    '2) Falar com atendente (*41 98831-8343*)',
-    '3) Encerrar',
+    '2) Encerrar',
+    '',
+    'Falar com atendente: *41 98831-8343*',
   ]
   return linhas.join('\n')
 }
@@ -751,6 +752,37 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     }
 
     case 'ANSWERED': {
+      // Atalhos numéricos pós-resposta — verificados ANTES dos intents para evitar conflito
+      // (detectIntent('1') retorna MARGEM e detectIntent('2') retorna DESCONTOS, o que causaria
+      // re-exibição de margem/descontos em vez de navegar pelo menu pós-resposta)
+      if (/^\s*1\s*$/.test(text)) {
+        if (session.socioId) {
+          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+          const socio = fresh?.socio
+          if (socio) {
+            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
+            await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+            await logOutgoing(session.id, reply, 'DESCONTOS')
+            return { reply, nextState: 'ANSWERED', handoff: false }
+          }
+        }
+        const reply = MSG.fallback()
+        await logOutgoing(session.id, reply, 'ANSWERED')
+        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+      }
+      if (/^\s*2\s*$/.test(text)) {
+        await setState(session.id, { state: 'CLOSED' })
+        const reply = MSG.encerrar()
+        await logOutgoing(session.id, reply, 'ANSWERED')
+        return { reply, nextState: 'CLOSED', handoff: false }
+      }
+      if (/^\s*3\s*$/.test(text)) {
+        await setState(session.id, { state: 'CLOSED' })
+        const reply = MSG.encerrar()
+        await logOutgoing(session.id, reply, 'ANSWERED')
+        return { reply, nextState: 'CLOSED', handoff: false }
+      }
+
       // Reaproveita autenticação para atender outras intents sem novo OTP
       if (intent === 'MARGEM' && session.socioId && session.authLevel === 'L2') {
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
@@ -791,34 +823,6 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         }
       }
 
-      // Atalhos numéricos pós-resposta (mantém compatibilidade com o rodapé do formatMargemReply)
-      if (/^\s*1\s*$/.test(text)) {
-        if (session.socioId) {
-          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
-          const socio = fresh?.socio
-          if (socio) {
-            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
-            await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-            await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState: 'ANSWERED', handoff: false }
-          }
-        }
-        const reply = MSG.fallback()
-        await logOutgoing(session.id, reply, 'ANSWERED')
-        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
-      }
-      if (/^\s*2\s*$/.test(text)) {
-        const reply = MSG.handoff()
-        await setState(session.id, { state: 'AWAITING_INTENT' })
-        await logOutgoing(session.id, reply, 'ANSWERED')
-        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
-      }
-      if (/^\s*3\s*$/.test(text)) {
-        await setState(session.id, { state: 'CLOSED' })
-        const reply = MSG.encerrar()
-        await logOutgoing(session.id, reply, 'ANSWERED')
-        return { reply, nextState: 'CLOSED', handoff: false }
-      }
       // Outras intenções recomeçam fluxo
       await setState(session.id, { state: 'AWAITING_INTENT' })
       const reply = MSG.fallback()
