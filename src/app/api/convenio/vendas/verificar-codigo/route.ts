@@ -90,7 +90,9 @@ export async function POST(request: NextRequest) {
     
     mensagem += `Seu código de verificação é:\n\n*${codigo}*\n\n`
     mensagem += `✅ Válido por 10 minutos\n`
-    mensagem += `⚠️ Não compartilhe este código`
+    mensagem += `⚠️ Não compartilhe este código\n\n`
+    mensagem += `💡 *Sabia que você pode consultar sua margem disponível e extrato de descontos direto por aqui?*\n`
+    mensagem += `Basta enviar uma mensagem para este número e nosso assistente virtual te atende na hora.`
 
     const payload = {
       apikey: apiKey,
