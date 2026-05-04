@@ -123,7 +123,9 @@ export async function POST(request: NextRequest) {
     mensagem += `📆 *Início do Desconto:* ${formatarMesAno(inicioDesconto)}\n`
     mensagem += `📆 *Fim do Desconto:* ${formatarMesAno(fimDesconto)}\n\n`
     mensagem += `💳 *Limite Disponível por Parcela:* R$ ${limiteDisponivel.toFixed(2).replace('.', ',')}\n\n`
-    mensagem += `Em caso de dúvidas, entre em contato com a ASPMA.`
+    mensagem += `Em caso de dúvidas, entre em contato com a ASPMA.\n\n`
+    mensagem += `💡 *Sabia que você pode consultar sua margem disponível e extrato de descontos direto por aqui?*\n`
+    mensagem += `Basta enviar uma mensagem para este número e nosso assistente virtual te atende na hora.`
 
     const payload = {
       apikey: apiKey,
