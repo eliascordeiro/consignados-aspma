@@ -318,18 +318,96 @@ async function consultarMargemSocio(socioId: string): Promise<{ margem: number; 
 }
 
 function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): string {
-  const linhas = [
-    `Olá, *${socioNome.split(' ')[0]}*! Aqui estão seus dados:`,
+  return [
+    `Ol\u00e1, *${socioNome.split(' ')[0]}*! \ud83d\udc4b`,
     '',
-    `💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`,
+    `\ud83d\udcb0 *Margem dispon\u00edvel:* ${brl(margem)}${fonteLabel}`,
     '',
-    'O que deseja fazer agora?',
-    '1) Ver descontos do mês',
-    '2) Encerrar',
-    '',
-    'Falar com atendente: https://wa.me/5541988318343',
+    '\ud83d\udc47 Toque no bot\u00e3o abaixo para mais op\u00e7\u00f5es.',
+  ].join('\n')
+}
+
+// ============================================================
+// Menus interativos (List Buttons) — IDs canônicos das ações
+// ============================================================
+// IDs usados nas List Buttons; o handler em ANSWERED os reconhece
+const ACT = {
+  DESCONTOS: 'ACT:DESCONTOS',
+  MARGEM: 'ACT:MARGEM',
+  OUTRO_MES: 'ACT:OUTRO_MES',
+  ATENDENTE: 'ACT:ATENDENTE',
+  ENCERRAR: 'ACT:ENCERRAR',
+} as const
+
+function buildMenuInicialList(): InteractiveListPayload {
+  return {
+    buttonText: 'Ver opções',
+    title: 'ASPMA Consignados',
+    footer: 'ASPMA Consignados',
+    sections: [
+      {
+        title: 'Como posso ajudar?',
+        rows: [
+          { id: ACT.MARGEM, title: '💰 Margem disponível', description: 'Consultar sua margem' },
+          { id: ACT.DESCONTOS, title: '🗒️ Descontos do mês', description: 'Ver parcelas pendentes' },
+          { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
+        ],
+      },
+    ],
+  }
+}
+
+function buildPostMargemList(): InteractiveListPayload {
+  return {
+    buttonText: 'O que deseja?',
+    title: 'Próximos passos',
+    footer: 'ASPMA Consignados',
+    sections: [
+      {
+        title: 'Mais opções',
+        rows: [
+          { id: ACT.DESCONTOS, title: '🗒️ Ver descontos do mês', description: 'Suas parcelas pendentes' },
+          { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
+          { id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' },
+        ],
+      },
+    ],
+  }
+}
+
+function buildPostDescontosList(temOutrosMeses: boolean): InteractiveListPayload {
+  const rows: Array<{ id: string; title: string; description?: string }> = [
+    { id: ACT.MARGEM, title: '💰 Ver margem disponível', description: 'Consultar sua margem' },
+    { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
+    { id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' },
   ]
-  return linhas.join('\n')
+  if (temOutrosMeses) {
+    rows.unshift({ id: ACT.OUTRO_MES, title: '📅 Ver outro mês', description: 'Escolher outro período' })
+  }
+  return {
+    buttonText: 'O que deseja?',
+    title: 'Próximos passos',
+    footer: 'ASPMA Consignados',
+    sections: [{ title: 'Mais opções', rows }],
+  }
+}
+
+function buildEscolherMatriculaList(
+  socios: Array<{ id: string; matricula: string | null; nome: string; empresa?: { nome: string | null } | null }>
+): InteractiveListPayload {
+  const rows = socios.slice(0, 10).map((s, i) => {
+    const mat = s.matricula || '(sem matrícula)'
+    const emp = s.empresa?.nome ? ` — ${s.empresa.nome}` : ''
+    const title = `Mat. ${mat}`.slice(0, 24)
+    const description = `${s.nome}${emp}`.slice(0, 72)
+    return { id: `MAT:${i + 1}`, title, description }
+  })
+  return {
+    buttonText: 'Escolher matrícula',
+    title: 'Suas matrículas',
+    footer: 'ASPMA Consignados',
+    sections: [{ title: 'Selecione', rows }],
+  }
 }
 
 // ============================================================
@@ -475,13 +553,13 @@ async function entregarDescontos(
   socioId: string,
   socioNome: string,
   mesKeyAlvo?: number
-): Promise<{ reply: string }> {
+): Promise<{ reply: string; temOutrosMeses: boolean; vazio: boolean }> {
   const dados = await consultarDescontosSocio(socioId, mesKeyAlvo)
   if (!dados) {
-    return { reply: 'Não consegui consultar seus descontos agora. Tente novamente em instantes.' }
+    return { reply: 'Não consegui consultar seus descontos agora. Tente novamente em instantes.', temOutrosMeses: false, vazio: true }
   }
   if (dados.vazio) {
-    return { reply: MSG.descontosVazio(socioNome) }
+    return { reply: MSG.descontosVazio(socioNome), temOutrosMeses: false, vazio: true }
   }
   return {
     reply: MSG.descontosMes({
@@ -491,6 +569,8 @@ async function entregarDescontos(
       itens: dados.itens,
       outrosMeses: dados.outrosMeses,
     }),
+    temOutrosMeses: dados.outrosMeses.length > 0,
+    vazio: false,
   }
 }
 
@@ -546,9 +626,9 @@ async function perguntarMesDescontos(
     return { reply: MSG.descontosVazio(socioNome), nextState: 'ANSWERED' }
   }
   if (meses.length === 1) {
-    const { reply } = await entregarDescontos(sessionId, socioId, socioNome, meses[0].key)
+    const { reply, temOutrosMeses, vazio } = await entregarDescontos(sessionId, socioId, socioNome, meses[0].key)
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-    return { reply, nextState: 'ANSWERED' }
+    return { reply, nextState: 'ANSWERED', interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses) }
   }
   // Múltiplos meses → salva no cpfHash e aguarda escolha
   await setState(sessionId, {
@@ -601,7 +681,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     await setState(session.id, { state: 'AWAITING_INTENT' })
     const reply = MSG.handoff()
     await logOutgoing(session.id, reply, 'ATENDENTE')
-    return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+    return { reply, nextState: 'AWAITING_INTENT', handoff: false, interactiveList: buildMenuInicialList() }
   }
   if (intent === 'CANCELAR') {
     await setState(session.id, { state: 'CLOSED' })
@@ -614,7 +694,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     const nome = await getSessionSocioName(session.id)
     const reply = MSG.saudacao(nome)
     await logOutgoing(session.id, reply, 'MENU')
-    return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true }
+    return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true, interactiveList: buildMenuInicialList() }
   }
 
   // Saudação simples (oi, bom dia, etc.) — não-bloqueia fluxos guiados
@@ -623,7 +703,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     const nome = await getSessionSocioName(session.id)
     const reply = MSG.saudacao(nome)
     await logOutgoing(session.id, reply, 'SAUDACAO')
-    return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true }
+    return { reply, nextState: 'AWAITING_INTENT', handoff: false, menu: true, interactiveList: buildMenuInicialList() }
   }
 
   // Agradecimento (obrigado, valeu, etc.)
@@ -650,7 +730,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
               const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
               await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
               await logOutgoing(session.id, reply, 'MARGEM')
-              return { reply, nextState: 'ANSWERED', handoff: false }
+              return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
             }
           }
         }
@@ -729,14 +809,18 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       }
 
       if (socios.length > 1) {
-        // Múltiplas matrículas para o mesmo CPF — pede escolha
+        // Múltiplas matrículas para o mesmo CPF — pede escolha via List Buttons
         const candidates = socios.map((s) => s.id).join(',')
         await setState(session.id, { cpfHash: `CANDIDATES:${candidates}`, state: 'AWAITING_MATRICULA_CHOICE' })
-        const reply = MSG.escolherMatricula(
-          socios.map((s) => ({ matricula: s.matricula, nome: s.nome, empresa: s.empresa?.nome ?? null }))
-        )
+        const sociosShort = socios.map((s) => ({ matricula: s.matricula, nome: s.nome, empresa: s.empresa?.nome ?? null }))
+        const reply = MSG.escolherMatricula(sociosShort)
         await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
-        return { reply, nextState: 'AWAITING_MATRICULA_CHOICE', handoff: false }
+        return {
+          reply,
+          nextState: 'AWAITING_MATRICULA_CHOICE',
+          handoff: false,
+          interactiveList: buildEscolherMatriculaList(socios),
+        }
       }
 
       // Exatamente 1 resultado — avança para data de nascimento
@@ -758,13 +842,41 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         return { reply, nextState: 'AWAITING_CPF', handoff: false }
       }
       const candidates = raw.replace('CANDIDATES:', '').split(',').filter(Boolean)
-      const choice = parseInt(text.trim(), 10)
-      if (isNaN(choice) || choice < 1 || choice > candidates.length) {
-        const reply = `Por favor, responda com um número entre *1* e *${candidates.length}*.`
+
+      // Aceita 3 formatos: id 'MAT:N', número direto 'N', ou título 'Mat. <numero>' (WhatsGW envia o título)
+      let chosenIdx: number | null = null
+      const t = text.trim()
+      const idMatch = t.match(/^MAT:(\d+)$/i)
+      if (idMatch) {
+        const n = parseInt(idMatch[1], 10)
+        if (n >= 1 && n <= candidates.length) chosenIdx = n - 1
+      }
+      if (chosenIdx === null) {
+        const n = parseInt(t, 10)
+        if (!isNaN(n) && n >= 1 && n <= candidates.length) chosenIdx = n - 1
+      }
+      if (chosenIdx === null) {
+        // Tenta casar pela matrícula presente no título "Mat. 12345"
+        const matMatch = t.match(/(\d{3,})/)
+        if (matMatch) {
+          const matSearched = matMatch[1]
+          const sociosCands = await db.socio.findMany({
+            where: { id: { in: candidates } },
+            select: { id: true, matricula: true },
+          })
+          const idxFound = candidates.findIndex((cid) => {
+            const s = sociosCands.find((x) => x.id === cid)
+            return s?.matricula && s.matricula === matSearched
+          })
+          if (idxFound >= 0) chosenIdx = idxFound
+        }
+      }
+      if (chosenIdx === null) {
+        const reply = `Por favor, toque em uma das opções do menu acima ou responda com um número entre *1* e *${candidates.length}*.`
         await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
         return { reply, nextState: 'AWAITING_MATRICULA_CHOICE', handoff: false }
       }
-      const chosenId = candidates[choice - 1]
+      const chosenId = candidates[chosenIdx]
       await setState(session.id, { socioId: chosenId, cpfHash: null, state: 'AWAITING_BIRTHDATE' })
       const reply = MSG.pedirNascimento()
       await logOutgoing(session.id, reply, 'AWAITING_MATRICULA_CHOICE')
@@ -868,7 +980,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
       await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
       await logOutgoing(session.id, reply, 'MARGEM')
-      return { reply, nextState: 'ANSWERED', handoff: false }
+      return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
     }
 
     case 'AWAITING_MES_CHOICE': {
@@ -919,44 +1031,100 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
         return { reply, nextState: 'AWAITING_INTENT', handoff: false }
       }
-      const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', chosenKey)
+      const { reply, temOutrosMeses, vazio } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', chosenKey)
       await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS', cpfHash: null })
       await logOutgoing(session.id, reply, 'DESCONTOS')
-      return { reply, nextState: 'ANSWERED', handoff: false }
+      return {
+        reply,
+        nextState: 'ANSWERED',
+        handoff: false,
+        interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses),
+      }
     }
 
     case 'ANSWERED': {
-      // Atalhos numéricos pós-resposta — verificados ANTES dos intents para evitar conflito
-      // (detectIntent('1') retorna MARGEM e detectIntent('2') retorna DESCONTOS, o que causaria
-      // re-exibição de margem/descontos em vez de navegar pelo menu pós-resposta)
-      if (/^\s*1\s*$/.test(text)) {
-        if (session.socioId) {
-          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
-          const socio = fresh?.socio
-          if (socio) {
-            const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
-            await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState, handoff: false, interactiveList }
-          }
+      // ============================================================
+      // Roteamento por botões da List Buttons (ids ACT:* OU título,
+      // pois o WhatsGW envia o título do item ao invés do id).
+      // Também mantém atalhos numéricos como fallback para quem digita.
+      // ============================================================
+      const tt = text.trim()
+      const tNorm = tt.toLowerCase().replace(/[\s\.\,]+/g, '')
+
+      const isAct = (idAct: string, ...titulos: string[]) => {
+        if (tt.toUpperCase() === idAct) return true
+        for (const titulo of titulos) {
+          const tnorm = titulo.toLowerCase().replace(/[\s\.\,]+/g, '')
+          if (tNorm === tnorm) return true
+          // remove emojis e tenta de novo
+          const tStripped = tnorm.replace(/[^a-zà-ÿ0-9]/g, '')
+          const xStripped = tNorm.replace(/[^a-zà-ÿ0-9]/g, '')
+          if (tStripped && tStripped === xStripped) return true
         }
-        const reply = MSG.fallback()
-        await logOutgoing(session.id, reply, 'ANSWERED')
-        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+        return false
       }
-      if (/^\s*2\s*$/.test(text)) {
-        await setState(session.id, { state: 'CLOSED' })
-        const reply = MSG.encerrar()
-        await logOutgoing(session.id, reply, 'ANSWERED')
-        return { reply, nextState: 'CLOSED', handoff: false }
-      }
-      if (/^\s*3\s*$/.test(text)) {
+
+      const wantsDescontos = isAct(ACT.DESCONTOS, 'Ver descontos do mês', '🗒️ Ver descontos do mês', '🗒️ Descontos do mês', 'Descontos do mês') || /^\s*1\s*$/.test(tt)
+      const wantsOutroMes = isAct(ACT.OUTRO_MES, 'Ver outro mês', '📅 Ver outro mês')
+      const wantsMargem = isAct(ACT.MARGEM, 'Ver margem disponível', '💰 Ver margem disponível', '💰 Margem disponível', 'Margem disponível')
+      const wantsAtendente = isAct(ACT.ATENDENTE, 'Falar com atendente', '🙋 Falar com atendente')
+      const wantsEncerrar = isAct(ACT.ENCERRAR, 'Encerrar atendimento', '👋 Encerrar atendimento') || /^\s*(2|3)\s*$/.test(tt)
+
+      // 1) Encerrar tem prioridade máxima
+      if (wantsEncerrar) {
         await setState(session.id, { state: 'CLOSED' })
         const reply = MSG.encerrar()
         await logOutgoing(session.id, reply, 'ANSWERED')
         return { reply, nextState: 'CLOSED', handoff: false }
       }
 
-      // Reaproveita autenticação para atender outras intents sem novo OTP
+      // 2) Falar com atendente — entrega link e mantém menu acessível
+      if (wantsAtendente) {
+        await setState(session.id, { state: 'AWAITING_INTENT' })
+        const reply = MSG.handoff()
+        await logOutgoing(session.id, reply, 'ATENDENTE')
+        return { reply, nextState: 'AWAITING_INTENT', handoff: false, interactiveList: buildMenuInicialList() }
+      }
+
+      // 3) Ver outro mês — reabre o menu de meses
+      if (wantsOutroMes && session.socioId) {
+        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+        const socio = fresh?.socio
+        if (socio) {
+          const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+          await logOutgoing(session.id, reply, 'DESCONTOS')
+          return { reply, nextState, handoff: false, interactiveList }
+        }
+      }
+
+      // 4) Ver descontos — abre menu de meses
+      if (wantsDescontos && session.socioId && session.authLevel === 'L2') {
+        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+        const socio = fresh?.socio
+        if (socio) {
+          const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+          await logOutgoing(session.id, reply, 'DESCONTOS')
+          return { reply, nextState, handoff: false, interactiveList }
+        }
+      }
+
+      // 5) Ver margem (reaproveita autenticação)
+      if (wantsMargem && session.socioId && session.authLevel === 'L2') {
+        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+        const socio = fresh?.socio
+        if (socio) {
+          const margem = await consultarMargemSocio(socio.id)
+          if (margem) {
+            const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
+            const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
+            await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
+            await logOutgoing(session.id, reply, 'MARGEM')
+            return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
+          }
+        }
+      }
+
+      // Reaproveita autenticação também para intents detectadas por linguagem natural
       if (intent === 'MARGEM' && session.socioId && session.authLevel === 'L2') {
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
         const socio = fresh?.socio
@@ -967,7 +1135,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
             const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
             await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
             await logOutgoing(session.id, reply, 'MARGEM')
-            return { reply, nextState: 'ANSWERED', handoff: false }
+            return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
           }
         }
       }
@@ -981,32 +1149,37 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         }
       }
 
-      // Navegação por mês quando última resposta foi de DESCONTOS
+      // Navegação por mês direto digitado ("05/2026", "abril")
       if (session.lastIntent === 'DESCONTOS' && session.socioId) {
         const mesKey = parseMesAnoInput(text)
         if (mesKey) {
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
           const socio = fresh?.socio
           if (socio) {
-            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
+            const { reply, temOutrosMeses, vazio } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
             await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState: 'ANSWERED', handoff: false }
+            return {
+              reply,
+              nextState: 'ANSWERED',
+              handoff: false,
+              interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses),
+            }
           }
         }
       }
 
-      // Outras intenções recomeçam fluxo
+      // Outras intents — volta ao menu inicial com lista interativa
       await setState(session.id, { state: 'AWAITING_INTENT' })
       const reply = MSG.fallback()
       await logOutgoing(session.id, reply, 'ANSWERED')
-      return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+      return { reply, nextState: 'AWAITING_INTENT', handoff: false, interactiveList: buildMenuInicialList() }
     }
 
     default: {
       await setState(session.id, { state: 'AWAITING_INTENT' })
       const reply = MSG.fallback()
       await logOutgoing(session.id, reply, intent)
-      return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+      return { reply, nextState: 'AWAITING_INTENT', handoff: false, interactiveList: buildMenuInicialList() }
     }
   }
 }
