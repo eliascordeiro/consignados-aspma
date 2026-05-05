@@ -484,6 +484,71 @@ async function entregarDescontos(
 }
 
 // ============================================================
+// Menu interativo de escolha de mês para descontos
+// ============================================================
+
+async function getMesesDisponiveis(socioId: string): Promise<Array<{ key: number; label: string }> | null> {
+  try {
+    const tresAnosAtras = new Date()
+    tresAnosAtras.setFullYear(tresAnosAtras.getFullYear() - 3)
+    const socio = await db.socio.findFirst({
+      where: { id: socioId },
+      select: {
+        vendas: {
+          where: { ativo: true, cancelado: false, dataEmissao: { gte: tresAnosAtras } },
+          select: { parcelas: { select: { dataVencimento: true, baixa: true } } },
+        },
+      },
+    })
+    if (!socio) return null
+    const keys = new Set<number>()
+    for (const venda of socio.vendas) {
+      for (const p of venda.parcelas) {
+        if (p.baixa === 'S' || !p.dataVencimento) continue
+        const d = new Date(p.dataVencimento)
+        keys.add(d.getUTCFullYear() * 100 + (d.getUTCMonth() + 1))
+      }
+    }
+    // Mais recente primeiro
+    return [...keys]
+      .sort((a, b) => b - a)
+      .map((k) => ({ key: k, label: `${MESES_NOMES[(k % 100) - 1]} / ${Math.floor(k / 100)}` }))
+  } catch {
+    return null
+  }
+}
+
+/** Exibe menu de meses (se houver mais de 1) ou entrega diretamente.
+ *  Gerencia o setState internamente — o chamador só precisa logOutgoing e retornar. */
+async function perguntarMesDescontos(
+  sessionId: string,
+  socioId: string,
+  socioNome: string
+): Promise<{ reply: string; nextState: string }> {
+  const meses = await getMesesDisponiveis(socioId)
+  if (!meses) {
+    await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+    return { reply: 'Não consegui consultar seus descontos agora. Tente novamente em instantes.', nextState: 'ANSWERED' }
+  }
+  if (meses.length === 0) {
+    await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+    return { reply: MSG.descontosVazio(socioNome), nextState: 'ANSWERED' }
+  }
+  if (meses.length === 1) {
+    const { reply } = await entregarDescontos(sessionId, socioId, socioNome, meses[0].key)
+    await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+    return { reply, nextState: 'ANSWERED' }
+  }
+  // Múltiplos meses → salva no cpfHash e aguarda escolha
+  await setState(sessionId, {
+    state: 'AWAITING_MES_CHOICE',
+    lastIntent: 'DESCONTOS',
+    cpfHash: `MESES_CHOICE:${meses.map((m) => m.key).join(',')}`,
+  })
+  return { reply: MSG.escolherMes(meses), nextState: 'AWAITING_MES_CHOICE' }
+}
+
+// ============================================================
 // (Bloco "2ª via" removido — feature descontinuada)
 // ============================================================
 
@@ -496,7 +561,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
   const intent = detectIntent(text)
 
   // Para estados guiados (coleta de CPF, escolha de matrícula, data, OTP) usa o estado como tag de intent
-  const guidedStates = ['AWAITING_CPF', 'AWAITING_MATRICULA_CHOICE', 'AWAITING_BIRTHDATE', 'OTP_SENT']
+  const guidedStates = ['AWAITING_CPF', 'AWAITING_MATRICULA_CHOICE', 'AWAITING_BIRTHDATE', 'OTP_SENT', 'AWAITING_MES_CHOICE']
   const logIntent = guidedStates.includes(session.state) ? session.state : intent
 
   // Idempotência: se já registramos esse provider_message_id, não responde de novo
@@ -573,11 +638,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
           const socio = fresh?.socio
           if (socio) {
-            const mesKey = parseMesAnoInput(text) ?? undefined
-            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
-            await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+            const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
             await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState: 'ANSWERED', handoff: false }
+            return { reply, nextState, handoff: false }
           }
         }
         await setState(session.id, { state: 'AWAITING_CPF', lastIntent: 'DESCONTOS' })
@@ -761,10 +824,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       }
 
       if (fresh?.lastIntent === 'DESCONTOS') {
-        const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
-        await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+        const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
         await logOutgoing(session.id, reply, 'DESCONTOS')
-        return { reply, nextState: 'ANSWERED', handoff: false }
+        return { reply, nextState, handoff: false }
       }
 
       // Default: margem
@@ -782,6 +844,36 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       return { reply, nextState: 'ANSWERED', handoff: false }
     }
 
+    case 'AWAITING_MES_CHOICE': {
+      const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+      const raw = fresh?.cpfHash || ''
+      if (!raw.startsWith('MESES_CHOICE:')) {
+        await setState(session.id, { state: 'AWAITING_INTENT', cpfHash: null })
+        const reply = MSG.fallback()
+        await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
+        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+      }
+      const mesKeys = raw.replace('MESES_CHOICE:', '').split(',').filter(Boolean).map(Number)
+      const choice = parseInt(text.trim(), 10)
+      if (isNaN(choice) || choice < 1 || choice > mesKeys.length) {
+        const reply = `Por favor, responda com um número entre *1* e *${mesKeys.length}*.`
+        await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
+        return { reply, nextState: 'AWAITING_MES_CHOICE', handoff: false }
+      }
+      const chosenKey = mesKeys[choice - 1]
+      const socio = fresh?.socio
+      if (!socio) {
+        await setState(session.id, { state: 'AWAITING_INTENT', cpfHash: null })
+        const reply = MSG.fallback()
+        await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
+        return { reply, nextState: 'AWAITING_INTENT', handoff: false }
+      }
+      const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', chosenKey)
+      await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS', cpfHash: null })
+      await logOutgoing(session.id, reply, 'DESCONTOS')
+      return { reply, nextState: 'ANSWERED', handoff: false }
+    }
+
     case 'ANSWERED': {
       // Atalhos numéricos pós-resposta — verificados ANTES dos intents para evitar conflito
       // (detectIntent('1') retorna MARGEM e detectIntent('2') retorna DESCONTOS, o que causaria
@@ -791,10 +883,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
           const socio = fresh?.socio
           if (socio) {
-            const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio')
-            await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+            const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
             await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState: 'ANSWERED', handoff: false }
+            return { reply, nextState, handoff: false }
           }
         }
         const reply = MSG.fallback()
@@ -833,11 +924,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
         const socio = fresh?.socio
         if (socio) {
-          const mesKey = parseMesAnoInput(text) ?? undefined
-          const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
-          await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+          const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
           await logOutgoing(session.id, reply, 'DESCONTOS')
-          return { reply, nextState: 'ANSWERED', handoff: false }
+          return { reply, nextState, handoff: false }
         }
       }
 

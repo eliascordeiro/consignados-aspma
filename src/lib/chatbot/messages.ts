@@ -102,13 +102,22 @@ Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`
     }
     if (args.outrosMeses.length > 0) {
       linhas.push('')
-      linhas.push('_Para ver outro mês, digite no formato MM/AAAA._')
-      linhas.push(`_Disponíveis: ${args.outrosMeses.join(', ')}_`)
+      linhas.push(`_Outros meses: ${args.outrosMeses.join(' · ')}_`)
     }
     linhas.push('')
-    linhas.push('_Digite *menu* para outras opções._')
+    linhas.push('*1)* Ver outro mês   *2)* Encerrar')
     linhas.push('')
     linhas.push(`Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`)
+    return linhas.join('\n')
+  },
+  escolherMes: (meses: Array<{ label: string }>) => {
+    const linhas = [
+      '📅 *Escolha o mês para ver os descontos:*',
+      '',
+    ]
+    meses.forEach((m, i) => linhas.push(`*${i + 1})* ${m.label}`))
+    linhas.push('')
+    linhas.push('_Digite o número do mês desejado._')
     return linhas.join('\n')
   },
 }
