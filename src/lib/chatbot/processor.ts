@@ -630,29 +630,57 @@ async function perguntarMesDescontos(
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
     return { reply, nextState: 'ANSWERED', interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses) }
   }
-  // Múltiplos meses → salva no cpfHash e aguarda escolha
+  // Múltiplos meses → salva TODOS no cpfHash + página atual e aguarda escolha
+  // Formato: "MESES_CHOICE:<page>|<key1>,<key2>,..."
   await setState(sessionId, {
     state: 'AWAITING_MES_CHOICE',
     lastIntent: 'DESCONTOS',
-    cpfHash: `MESES_CHOICE:${meses.map((m) => m.key).join(',')}`,
+    cpfHash: `MESES_CHOICE:0|${meses.map((m) => m.key).join(',')}`,
   })
-  // Lista interativa do WhatsApp (até 10 itens — com rolagem nativa)
-  const interactiveList: InteractiveListPayload = {
-    buttonText: 'Escolher mês',
-    title: 'Descontos por mês',
-    footer: 'ASPMA Consignados',
-    sections: [
-      {
-        title: 'Meses disponíveis',
-        rows: meses.slice(0, 10).map((m, i) => ({
-          id: String(i + 1),
-          title: m.label,
-          description: 'Toque para ver os descontos',
-        })),
-      },
-    ],
+  return {
+    reply: MSG.escolherMes(meses),
+    nextState: 'AWAITING_MES_CHOICE',
+    interactiveList: buildMesesPageList(meses, 0),
   }
-  return { reply: MSG.escolherMes(meses), nextState: 'AWAITING_MES_CHOICE', interactiveList }
+}
+
+// WhatsApp List Buttons aceitam no máximo 10 linhas — paginamos com 9 meses + "Próximos meses ▶"
+const MESES_PAGE_SIZE = 9
+
+function buildMesesPageList(meses: Array<{ key: number; label: string }>, page: number): InteractiveListPayload {
+  const totalPages = Math.max(1, Math.ceil(meses.length / MESES_PAGE_SIZE))
+  const safePage = Math.max(0, Math.min(page, totalPages - 1))
+  const start = safePage * MESES_PAGE_SIZE
+  const slice = meses.slice(start, start + MESES_PAGE_SIZE)
+  const rows: Array<{ id: string; title: string; description?: string }> = slice.map((m, i) => ({
+    id: `MES:${start + i + 1}`,
+    title: m.label,
+    description: 'Toque para ver os descontos',
+  }))
+  if (totalPages > 1 && safePage < totalPages - 1) {
+    rows.push({
+      id: `MES_PG:${safePage + 1}`,
+      title: '➡️ Próximos meses',
+      description: `Mostrar mais ${Math.min(MESES_PAGE_SIZE, meses.length - (safePage + 1) * MESES_PAGE_SIZE)} meses`,
+    })
+  } else if (totalPages > 1 && safePage > 0) {
+    // Última página → permite voltar
+    rows.push({
+      id: `MES_PG:0`,
+      title: '🔁 Voltar ao início',
+      description: 'Recomeçar pela página inicial',
+    })
+  }
+  const titulo =
+    totalPages > 1
+      ? `Descontos · página ${safePage + 1}/${totalPages}`
+      : 'Descontos por mês'
+  return {
+    buttonText: 'Escolher mês',
+    title: titulo,
+    footer: 'ASPMA Consignados',
+    sections: [{ title: 'Meses disponíveis', rows }],
+  }
 }
 
 // ============================================================
@@ -992,23 +1020,68 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
         return { reply, nextState: 'AWAITING_INTENT', handoff: false }
       }
-      const mesKeys = raw.replace('MESES_CHOICE:', '').split(',').filter(Boolean).map(Number)
+      // Formato: "MESES_CHOICE:<page>|<key1>,<key2>,..." (compatível com formato antigo sem '|')
+      const payload = raw.replace('MESES_CHOICE:', '')
+      let currentPage = 0
+      let keysCsv = payload
+      if (payload.includes('|')) {
+        const [pStr, kStr] = payload.split('|', 2)
+        const p = parseInt(pStr, 10)
+        if (!isNaN(p)) currentPage = p
+        keysCsv = kStr || ''
+      }
+      const mesKeys = keysCsv.split(',').filter(Boolean).map(Number)
+      const meses = mesKeys.map((k) => ({ key: k, label: `${MESES_NOMES[(k % 100) - 1]} / ${Math.floor(k / 100)}` }))
+      const totalPages = Math.max(1, Math.ceil(meses.length / MESES_PAGE_SIZE))
 
-      // Tenta resolver a escolha de várias formas:
-      // 1) número direto (id da lista: "1", "2", ...)
-      // 2) título da lista ("Maio / 2026", "Maio/2026", "maio 2026")
-      // 3) parseMesAnoInput (MM/AAAA, "abril", etc.)
+      const tt = text.trim()
+
+      // 1) Comando de paginação (id "MES_PG:<n>" ou título "Próximos meses" / "Voltar ao início")
+      const pgMatch = tt.match(/^MES_PG:(\d+)$/i)
+      const norm = (s: string) => s.toLowerCase().replace(/[\s\/\.\,]+/g, '').replace(/[^a-z\u00e0-\u00ff0-9]/g, '')
+      const ttN = norm(tt)
+      let nextPage: number | null = null
+      if (pgMatch) {
+        nextPage = parseInt(pgMatch[1], 10)
+      } else if (ttN.includes('proximosmeses') || ttN.includes('proxima')) {
+        nextPage = currentPage + 1
+      } else if (ttN.includes('voltaraoinicio') || ttN === 'voltar') {
+        nextPage = 0
+      }
+      if (nextPage !== null && !isNaN(nextPage)) {
+        const safe = Math.max(0, Math.min(nextPage, totalPages - 1))
+        await setState(session.id, {
+          state: 'AWAITING_MES_CHOICE',
+          lastIntent: 'DESCONTOS',
+          cpfHash: `MESES_CHOICE:${safe}|${mesKeys.join(',')}`,
+        })
+        const reply = MSG.escolherMes(meses)
+        await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
+        return { reply, nextState: 'AWAITING_MES_CHOICE', handoff: false, interactiveList: buildMesesPageList(meses, safe) }
+      }
+
+      // 2) Tenta resolver a escolha de várias formas:
+      // a) id "MES:N" (1-based dentro do array mesKeys)
+      // b) número direto ("1", "2", ...) — relativo à PÁGINA atual
+      // c) título da lista ("Maio / 2026", "Maio/2026", "maio 2026")
+      // d) parseMesAnoInput (MM/AAAA, "abril", etc.)
       let chosenKey: number | undefined
-      const choice = parseInt(text.trim(), 10)
-      if (!isNaN(choice) && choice >= 1 && choice <= mesKeys.length) {
-        chosenKey = mesKeys[choice - 1]
+      const idMatch = tt.match(/^MES:(\d+)$/i)
+      if (idMatch) {
+        const n = parseInt(idMatch[1], 10)
+        if (n >= 1 && n <= mesKeys.length) chosenKey = mesKeys[n - 1]
       }
       if (!chosenKey) {
-        const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '').replace(/\//g, '')
-        const tNorm = norm(text)
+        const choice = parseInt(tt, 10)
+        if (!isNaN(choice) && choice >= 1 && choice <= MESES_PAGE_SIZE) {
+          const idx = currentPage * MESES_PAGE_SIZE + (choice - 1)
+          if (idx < mesKeys.length) chosenKey = mesKeys[idx]
+        }
+      }
+      if (!chosenKey) {
         for (const k of mesKeys) {
           const label = `${MESES_NOMES[(k % 100) - 1]} / ${Math.floor(k / 100)}`
-          if (norm(label) === tNorm || norm(label).startsWith(tNorm) || tNorm.startsWith(norm(label))) {
+          if (norm(label) === ttN || norm(label).startsWith(ttN) || ttN.startsWith(norm(label))) {
             chosenKey = k
             break
           }
@@ -1020,9 +1093,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       }
 
       if (!chosenKey) {
-        const reply = `Por favor, toque em uma das opções do menu acima ou responda com um número entre *1* e *${mesKeys.length}*.`
+        const reply = `Por favor, toque em uma das opções do menu acima ou responda com um número entre *1* e *${Math.min(MESES_PAGE_SIZE, mesKeys.length - currentPage * MESES_PAGE_SIZE)}*.`
         await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
-        return { reply, nextState: 'AWAITING_MES_CHOICE', handoff: false }
+        return { reply, nextState: 'AWAITING_MES_CHOICE', handoff: false, interactiveList: buildMesesPageList(meses, currentPage) }
       }
       const socio = fresh?.socio
       if (!socio) {
