@@ -134,7 +134,15 @@ export async function POST(req: NextRequest) {
     })
     if (result.reply) {
       let sent = { success: false } as { success: boolean; error?: string }
-      if (result.menu) {
+      if (result.interactiveList) {
+        // Lista interativa customizada (ex.: escolha de mês para descontos)
+        sent = await sendWhatsAppListButtons(String(phone), result.reply, {
+          buttonText: result.interactiveList.buttonText || 'Escolher',
+          title: result.interactiveList.title || 'ASPMA Consignados',
+          footer: result.interactiveList.footer || 'ASPMA Consignados',
+          sections: result.interactiveList.sections,
+        })
+      } else if (result.menu) {
         // Tenta enviar como List Buttons (interativo); se o plano do WhatsGW não suportar, faz fallback
         sent = await sendWhatsAppListButtons(String(phone), result.reply, {
           buttonText: 'Ver opções',

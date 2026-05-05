@@ -32,12 +32,23 @@ export type ProcessInput = {
   provider?: string
 }
 
+export type InteractiveListPayload = {
+  sections: Array<{
+    title: string
+    rows: Array<{ id: string; title: string; description?: string }>
+  }>
+  buttonText?: string
+  title?: string
+  footer?: string
+}
+
 export type ProcessResult = {
   reply: string | null
   nextState: string
   handoff: boolean
   ignored?: boolean
-  menu?: boolean // sinaliza ao webhook que pode enviar como List Buttons
+  menu?: boolean // sinaliza ao webhook que pode enviar como List Buttons (menu inicial)
+  interactiveList?: InteractiveListPayload // payload customizado para List Buttons (ex.: meses)
 }
 
 function newExpiry() {
@@ -524,7 +535,7 @@ async function perguntarMesDescontos(
   sessionId: string,
   socioId: string,
   socioNome: string
-): Promise<{ reply: string; nextState: string }> {
+): Promise<{ reply: string; nextState: string; interactiveList?: InteractiveListPayload }> {
   const meses = await getMesesDisponiveis(socioId)
   if (!meses) {
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
@@ -545,7 +556,23 @@ async function perguntarMesDescontos(
     lastIntent: 'DESCONTOS',
     cpfHash: `MESES_CHOICE:${meses.map((m) => m.key).join(',')}`,
   })
-  return { reply: MSG.escolherMes(meses), nextState: 'AWAITING_MES_CHOICE' }
+  // Lista interativa do WhatsApp (até 10 itens — com rolagem nativa)
+  const interactiveList: InteractiveListPayload = {
+    buttonText: 'Escolher mês',
+    title: 'Descontos por mês',
+    footer: 'ASPMA Consignados',
+    sections: [
+      {
+        title: 'Meses disponíveis',
+        rows: meses.slice(0, 10).map((m, i) => ({
+          id: String(i + 1),
+          title: m.label,
+          description: 'Toque para ver os descontos',
+        })),
+      },
+    ],
+  }
+  return { reply: MSG.escolherMes(meses), nextState: 'AWAITING_MES_CHOICE', interactiveList }
 }
 
 // ============================================================
@@ -638,9 +665,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
           const socio = fresh?.socio
           if (socio) {
-            const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+            const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
             await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState, handoff: false }
+            return { reply, nextState, handoff: false, interactiveList }
           }
         }
         await setState(session.id, { state: 'AWAITING_CPF', lastIntent: 'DESCONTOS' })
@@ -824,9 +851,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
       }
 
       if (fresh?.lastIntent === 'DESCONTOS') {
-        const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+        const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
         await logOutgoing(session.id, reply, 'DESCONTOS')
-        return { reply, nextState, handoff: false }
+        return { reply, nextState, handoff: false, interactiveList }
       }
 
       // Default: margem
@@ -883,9 +910,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
           const socio = fresh?.socio
           if (socio) {
-            const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+            const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
             await logOutgoing(session.id, reply, 'DESCONTOS')
-            return { reply, nextState, handoff: false }
+            return { reply, nextState, handoff: false, interactiveList }
           }
         }
         const reply = MSG.fallback()
@@ -924,9 +951,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
         const socio = fresh?.socio
         if (socio) {
-          const { reply, nextState } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+          const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
           await logOutgoing(session.id, reply, 'DESCONTOS')
-          return { reply, nextState, handoff: false }
+          return { reply, nextState, handoff: false, interactiveList }
         }
       }
 
