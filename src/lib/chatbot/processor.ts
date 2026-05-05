@@ -881,13 +881,37 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         return { reply, nextState: 'AWAITING_INTENT', handoff: false }
       }
       const mesKeys = raw.replace('MESES_CHOICE:', '').split(',').filter(Boolean).map(Number)
+
+      // Tenta resolver a escolha de várias formas:
+      // 1) número direto (id da lista: "1", "2", ...)
+      // 2) título da lista ("Maio / 2026", "Maio/2026", "maio 2026")
+      // 3) parseMesAnoInput (MM/AAAA, "abril", etc.)
+      let chosenKey: number | undefined
       const choice = parseInt(text.trim(), 10)
-      if (isNaN(choice) || choice < 1 || choice > mesKeys.length) {
-        const reply = `Por favor, responda com um número entre *1* e *${mesKeys.length}*.`
+      if (!isNaN(choice) && choice >= 1 && choice <= mesKeys.length) {
+        chosenKey = mesKeys[choice - 1]
+      }
+      if (!chosenKey) {
+        const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '').replace(/\//g, '')
+        const tNorm = norm(text)
+        for (const k of mesKeys) {
+          const label = `${MESES_NOMES[(k % 100) - 1]} / ${Math.floor(k / 100)}`
+          if (norm(label) === tNorm || norm(label).startsWith(tNorm) || tNorm.startsWith(norm(label))) {
+            chosenKey = k
+            break
+          }
+        }
+      }
+      if (!chosenKey) {
+        const parsed = parseMesAnoInput(text)
+        if (parsed && mesKeys.includes(parsed)) chosenKey = parsed
+      }
+
+      if (!chosenKey) {
+        const reply = `Por favor, toque em uma das opções do menu acima ou responda com um número entre *1* e *${mesKeys.length}*.`
         await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
         return { reply, nextState: 'AWAITING_MES_CHOICE', handoff: false }
       }
-      const chosenKey = mesKeys[choice - 1]
       const socio = fresh?.socio
       if (!socio) {
         await setState(session.id, { state: 'AWAITING_INTENT', cpfHash: null })
