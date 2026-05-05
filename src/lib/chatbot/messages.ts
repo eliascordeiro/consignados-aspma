@@ -110,14 +110,7 @@ Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`
     linhas.push(`Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`)
     return linhas.join('\n')
   },
-  escolherMes: (meses: Array<{ label: string }>) => {
-    const linhas = [
-      '📅 *Escolha o mês para ver os descontos:*',
-      '',
-    ]
-    meses.forEach((m, i) => linhas.push(`*${i + 1})* ${m.label}`))
-    linhas.push('')
-    linhas.push('_Digite o número do mês desejado._')
-    return linhas.join('\n')
+  escolherMes: (_meses: Array<{ label: string }>) => {
+    return '📅 Toque no botão abaixo e escolha o mês desejado para ver seus descontos.'
   },
 }
