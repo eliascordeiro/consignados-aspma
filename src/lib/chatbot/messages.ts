@@ -71,7 +71,7 @@ ${ATENDENTE_TEL_LINK}`,
     linhas.push('')
     linhas.push('📅 Para consultar outro mês, digite no formato *MM/AAAA* (ex: _04/2026_) ou toque no botão abaixo.')
     linhas.push('')
-    linhas.push(`Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`)
+    linhas.push(`🙋 _Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}_`)
     return linhas.join('\n')
   },
   descontosMes: (args: {
@@ -102,6 +102,8 @@ ${ATENDENTE_TEL_LINK}`,
     linhas.push('')
     linhas.push('📅 _Para outro mês, toque no botão ou digite *MM/AAAA* (ex: 04/2026)._')
     linhas.push('👇 Toque no botão abaixo para mais opções.')
+    linhas.push('')
+    linhas.push(`🙋 _Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}_`)
     return linhas.join('\n')
   },
   escolherMes: (_meses: Array<{ label: string }>) => {
