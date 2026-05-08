@@ -55,11 +55,22 @@ ${ATENDENTE_TEL_LINK}`,
 Para falar com um atendente agora:
 ${ATENDENTE_TEL_LINK}`,
   agradecer: () => 'Por nada! 😊 Posso te ajudar em mais alguma coisa? Digite *menu* para ver as opções.',
-  descontosVazio: (nomeOpt?: string) => {
-    const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
-    return `🔎 Não foram encontrados descontos com base na sua pesquisa${nome}.
-
-Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`
+  descontosVazio: (nomeOpt?: string, margem?: number | null, fonteLabel = '') => {
+    const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
+    const primeiroNome = nomeOpt ? nomeOpt.split(' ')[0] : ''
+    const linhas: string[] = []
+    if (typeof margem === 'number') {
+      linhas.push(`💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`)
+      linhas.push('━━━━━━━━━━━━━━━━━━')
+    }
+    if (primeiroNome) {
+      linhas.push(`👤 Olá, *${primeiroNome}*!`)
+      linhas.push('')
+    }
+    linhas.push('🎉 Você está em dia — *nenhum desconto pendente* foi encontrado.')
+    linhas.push('')
+    linhas.push(`Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`)
+    return linhas.join('\n')
   },
   descontosMes: (args: {
     nome: string
@@ -67,16 +78,21 @@ Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`
     total: number
     itens: Array<{ numero: number; totalParc: number; convenio: string; valor: number; venc: string }>
     outrosMeses: string[] // ex: ['05/2026', '06/2026', ...]
+    margem?: number | null
+    fonteMargemLabel?: string
   }) => {
     const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
-    const linhas: string[] = [
-      `🗒️ *Descontos – ${args.mesLabel}*`,
-      `👤 ${args.nome.split(' ')[0]}`,
-      '',
-      `💰 *Total do mês:* ${brl(args.total)}`,
-      `📄 ${args.itens.length} parcela${args.itens.length !== 1 ? 's' : ''}`,
-      '',
-    ]
+    const linhas: string[] = []
+    // Header: margem disponível sempre em destaque
+    if (typeof args.margem === 'number') {
+      linhas.push(`💰 *Margem disponível:* ${brl(args.margem)}${args.fonteMargemLabel || ''}`)
+      linhas.push('━━━━━━━━━━━━━━━━━━')
+    }
+    linhas.push(`👤 *${args.nome.split(' ')[0]}* · ${args.mesLabel}`)
+    linhas.push('')
+    linhas.push(`🗒️ *Descontos do mês:* ${brl(args.total)}`)
+    linhas.push(`📄 ${args.itens.length} parcela${args.itens.length !== 1 ? 's' : ''} pendente${args.itens.length !== 1 ? 's' : ''}`)
+    linhas.push('')
     for (const it of args.itens) {
       linhas.push(`• *${it.numero}/${it.totalParc}* — ${it.convenio}`)
       linhas.push(`   ${brl(it.valor)} · venc. ${it.venc}`)

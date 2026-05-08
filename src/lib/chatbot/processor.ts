@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import { brl, isValidCpf, normalizePhoneE164BR, onlyDigits, parseBirthDate, sameDateUTC } from './util'
+import { isValidCpf, normalizePhoneE164BR, onlyDigits, parseBirthDate, sameDateUTC } from './util'
 import { detectIntent } from './intents'
 import { MSG } from './messages'
 import { groqChat } from './groq'
@@ -317,14 +317,10 @@ async function consultarMargemSocio(socioId: string): Promise<{ margem: number; 
   }
 }
 
-function formatMargemReply(socioNome: string, margem: number, fonteLabel = ''): string {
-  return [
-    `Ol\u00e1, *${socioNome.split(' ')[0]}*! \ud83d\udc4b`,
-    '',
-    `\ud83d\udcb0 *Margem dispon\u00edvel:* ${brl(margem)}${fonteLabel}`,
-    '',
-    '\ud83d\udc47 Toque no bot\u00e3o abaixo para mais op\u00e7\u00f5es.',
-  ].join('\n')
+function fonteMargemLabel(fonte: string): string {
+  if (fonte === 'fallback') return ' _(estimado)_'
+  if (fonte === 'banco') return ' _(salvo)_'
+  return ''
 }
 
 // ============================================================
@@ -348,27 +344,8 @@ function buildMenuInicialList(): InteractiveListPayload {
       {
         title: 'Como posso ajudar?',
         rows: [
-          { id: ACT.MARGEM, title: '💰 Margem disponível', description: 'Consultar sua margem' },
-          { id: ACT.DESCONTOS, title: '🗒️ Descontos do mês', description: 'Ver parcelas pendentes' },
+          { id: ACT.DESCONTOS, title: '💰 Margem e descontos', description: 'Margem disponível e parcelas do mês' },
           { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
-        ],
-      },
-    ],
-  }
-}
-
-function buildPostMargemList(): InteractiveListPayload {
-  return {
-    buttonText: 'O que deseja?',
-    title: 'Próximos passos',
-    footer: 'ASPMA Consignados',
-    sections: [
-      {
-        title: 'Mais opções',
-        rows: [
-          { id: ACT.DESCONTOS, title: '🗒️ Ver descontos do mês', description: 'Suas parcelas pendentes' },
-          { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
-          { id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' },
         ],
       },
     ],
@@ -376,14 +353,12 @@ function buildPostMargemList(): InteractiveListPayload {
 }
 
 function buildPostDescontosList(temOutrosMeses: boolean): InteractiveListPayload {
-  const rows: Array<{ id: string; title: string; description?: string }> = [
-    { id: ACT.MARGEM, title: '💰 Ver margem disponível', description: 'Consultar sua margem' },
-    { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
-    { id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' },
-  ]
+  const rows: Array<{ id: string; title: string; description?: string }> = []
   if (temOutrosMeses) {
-    rows.unshift({ id: ACT.OUTRO_MES, title: '📅 Ver outro mês', description: 'Escolher outro período' })
+    rows.push({ id: ACT.OUTRO_MES, title: '📅 Ver outro mês', description: 'Escolher outro período' })
   }
+  rows.push({ id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' })
+  rows.push({ id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' })
   return {
     buttonText: 'O que deseja?',
     title: 'Próximos passos',
@@ -554,12 +529,19 @@ async function entregarDescontos(
   socioNome: string,
   mesKeyAlvo?: number
 ): Promise<{ reply: string; temOutrosMeses: boolean; vazio: boolean }> {
-  const dados = await consultarDescontosSocio(socioId, mesKeyAlvo)
+  // Busca margem e descontos em paralelo para entregar uma única mensagem completa
+  const [dados, margemRes] = await Promise.all([
+    consultarDescontosSocio(socioId, mesKeyAlvo),
+    consultarMargemSocio(socioId),
+  ])
+  const margem = margemRes?.margem ?? null
+  const fonteLabel = margemRes ? fonteMargemLabel(margemRes.fonte) : ''
+
   if (!dados) {
-    return { reply: 'Não consegui consultar seus descontos agora. Tente novamente em instantes.', temOutrosMeses: false, vazio: true }
+    return { reply: 'Não consegui consultar seus dados agora. Tente novamente em instantes.', temOutrosMeses: false, vazio: true }
   }
   if (dados.vazio) {
-    return { reply: MSG.descontosVazio(socioNome), temOutrosMeses: false, vazio: true }
+    return { reply: MSG.descontosVazio(socioNome, margem, fonteLabel), temOutrosMeses: false, vazio: true }
   }
   return {
     reply: MSG.descontosMes({
@@ -568,6 +550,8 @@ async function entregarDescontos(
       total: dados.total,
       itens: dados.itens,
       outrosMeses: dados.outrosMeses,
+      margem,
+      fonteMargemLabel: fonteLabel,
     }),
     temOutrosMeses: dados.outrosMeses.length > 0,
     vazio: false,
@@ -623,12 +607,14 @@ async function perguntarMesDescontos(
   }
   if (meses.length === 0) {
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-    return { reply: MSG.descontosVazio(socioNome), nextState: 'ANSWERED' }
+    const margemRes = await consultarMargemSocio(socioId)
+    const reply = MSG.descontosVazio(socioNome, margemRes?.margem ?? null, margemRes ? fonteMargemLabel(margemRes.fonte) : '')
+    return { reply, nextState: 'ANSWERED', interactiveList: buildPostDescontosList(false) }
   }
   if (meses.length === 1) {
     const { reply, temOutrosMeses, vazio } = await entregarDescontos(sessionId, socioId, socioNome, meses[0].key)
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-    return { reply, nextState: 'ANSWERED', interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses) }
+    return { reply, nextState: 'ANSWERED', interactiveList: buildPostDescontosList(!vazio && temOutrosMeses) }
   }
   // Múltiplos meses → salva TODOS no cpfHash + página atual e aguarda escolha
   // Formato: "MESES_CHOICE:<page>|<key1>,<key2>,..."
@@ -746,28 +732,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
     case 'AWAITING_INTENT':
     case 'CLOSED':
     case 'HANDOFF': {
-      if (intent === 'MARGEM') {
-        // Se já autenticado nesta sessão, pula direto
-        if (session.socioId && session.authLevel === 'L2') {
-          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
-          const socio = fresh?.socio
-          if (socio) {
-            const margem = await consultarMargemSocio(socio.id)
-            if (margem) {
-              const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
-              const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
-              await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
-              await logOutgoing(session.id, reply, 'MARGEM')
-              return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
-            }
-          }
-        }
-        await setState(session.id, { state: 'AWAITING_CPF', lastIntent: 'MARGEM' })
-        const reply = MSG.pedirCpfOuMatricula()
-        await logOutgoing(session.id, reply, 'MARGEM')
-        return { reply, nextState: 'AWAITING_CPF', handoff: false }
-      }
-      if (intent === 'DESCONTOS') {
+      // MARGEM e DESCONTOS compartilham o mesmo fluxo unificado
+      // (uma única mensagem com a margem no topo e os descontos do mês)
+      if (intent === 'MARGEM' || intent === 'DESCONTOS') {
         // Se já autenticado, atende direto
         if (session.socioId && session.authLevel === 'L2') {
           const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
@@ -990,25 +957,10 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         return { reply, nextState: 'HANDOFF', handoff: true }
       }
 
-      if (fresh?.lastIntent === 'DESCONTOS') {
-        const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
-        await logOutgoing(session.id, reply, 'DESCONTOS')
-        return { reply, nextState, handoff: false, interactiveList }
-      }
-
-      // Default: margem
-      const margem = await consultarMargemSocio(socio.id)
-      if (!margem) {
-        await openHandoff(session.id, 'MARGEM_API_FAIL')
-        const reply = 'Não consegui consultar sua margem agora. Vou te transferir para um atendente.'
-        await logOutgoing(session.id, reply, 'MARGEM')
-        return { reply, nextState: 'HANDOFF', handoff: true }
-      }
-      const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
-      const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
-      await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
-      await logOutgoing(session.id, reply, 'MARGEM')
-      return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
+      // Após autenticação, sempre entrega o fluxo unificado: margem no topo + descontos do mês
+      const { reply, nextState, interactiveList } = await perguntarMesDescontos(session.id, socio.id, socio.nome || 'sócio')
+      await logOutgoing(session.id, reply, 'DESCONTOS')
+      return { reply, nextState, handoff: false, interactiveList }
     }
 
     case 'AWAITING_MES_CHOICE': {
@@ -1111,7 +1063,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         reply,
         nextState: 'ANSWERED',
         handoff: false,
-        interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses),
+        interactiveList: buildPostDescontosList(!vazio && temOutrosMeses),
       }
     }
 
@@ -1137,8 +1089,9 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         return false
       }
 
-      const wantsDescontos = isAct(ACT.DESCONTOS, 'Ver descontos do mês', '🗒️ Ver descontos do mês', '🗒️ Descontos do mês', 'Descontos do mês') || /^\s*1\s*$/.test(tt)
+      const wantsDescontos = isAct(ACT.DESCONTOS, 'Margem e descontos', '💰 Margem e descontos', 'Ver descontos do mês', '🗒️ Ver descontos do mês', '🗒️ Descontos do mês', 'Descontos do mês') || /^\s*1\s*$/.test(tt)
       const wantsOutroMes = isAct(ACT.OUTRO_MES, 'Ver outro mês', '📅 Ver outro mês')
+      // Margem agora é entregue junto com os descontos no mesmo fluxo
       const wantsMargem = isAct(ACT.MARGEM, 'Ver margem disponível', '💰 Ver margem disponível', '💰 Margem disponível', 'Margem disponível')
       const wantsAtendente = isAct(ACT.ATENDENTE, 'Falar com atendente', '🙋 Falar com atendente')
       const wantsEncerrar = isAct(ACT.ENCERRAR, 'Encerrar atendimento', '👋 Encerrar atendimento') || /^\s*(2|3)\s*$/.test(tt)
@@ -1170,8 +1123,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         }
       }
 
-      // 4) Ver descontos — abre menu de meses
-      if (wantsDescontos && session.socioId && session.authLevel === 'L2') {
+      // 4) Ver descontos / Ver margem — fluxo unificado (margem no header + parcelas do mês)
+      if ((wantsDescontos || wantsMargem) && session.socioId && session.authLevel === 'L2') {
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
         const socio = fresh?.socio
         if (socio) {
@@ -1181,38 +1134,8 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         }
       }
 
-      // 5) Ver margem (reaproveita autenticação)
-      if (wantsMargem && session.socioId && session.authLevel === 'L2') {
-        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
-        const socio = fresh?.socio
-        if (socio) {
-          const margem = await consultarMargemSocio(socio.id)
-          if (margem) {
-            const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
-            const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
-            await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
-            await logOutgoing(session.id, reply, 'MARGEM')
-            return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
-          }
-        }
-      }
-
-      // Reaproveita autenticação também para intents detectadas por linguagem natural
-      if (intent === 'MARGEM' && session.socioId && session.authLevel === 'L2') {
-        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
-        const socio = fresh?.socio
-        if (socio) {
-          const margem = await consultarMargemSocio(socio.id)
-          if (margem) {
-            const fonteLabel = margem.fonte === 'fallback' ? ' _(estimado)_' : margem.fonte === 'banco' ? ' _(salvo)_' : ''
-            const reply = formatMargemReply(socio.nome || 'sócio', margem.margem, fonteLabel)
-            await setState(session.id, { state: 'ANSWERED', lastIntent: 'MARGEM' })
-            await logOutgoing(session.id, reply, 'MARGEM')
-            return { reply, nextState: 'ANSWERED', handoff: false, interactiveList: buildPostMargemList() }
-          }
-        }
-      }
-      if (intent === 'DESCONTOS' && session.socioId && session.authLevel === 'L2') {
+      // Reaproveita autenticação para intents detectadas por linguagem natural (margem ou descontos)
+      if ((intent === 'MARGEM' || intent === 'DESCONTOS') && session.socioId && session.authLevel === 'L2') {
         const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
         const socio = fresh?.socio
         if (socio) {
@@ -1235,7 +1158,7 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
               reply,
               nextState: 'ANSWERED',
               handoff: false,
-              interactiveList: vazio ? buildPostMargemList() : buildPostDescontosList(temOutrosMeses),
+              interactiveList: buildPostDescontosList(!vazio && temOutrosMeses),
             }
           }
         }
