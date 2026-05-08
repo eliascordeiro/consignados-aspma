@@ -69,6 +69,8 @@ ${ATENDENTE_TEL_LINK}`,
     }
     linhas.push('🎉 Você está em dia — *nenhum desconto pendente* foi encontrado.')
     linhas.push('')
+    linhas.push('📅 Para consultar outro mês, digite no formato *MM/AAAA* (ex: _04/2026_) ou toque no botão abaixo.')
+    linhas.push('')
     linhas.push(`Dúvidas? Fale com um atendente: ${ATENDENTE_TEL_LINK}`)
     return linhas.join('\n')
   },
@@ -97,11 +99,8 @@ ${ATENDENTE_TEL_LINK}`,
       linhas.push(`• *${it.numero}/${it.totalParc}* — ${it.convenio}`)
       linhas.push(`   ${brl(it.valor)} · venc. ${it.venc}`)
     }
-    if (args.outrosMeses.length > 0) {
-      linhas.push('')
-      linhas.push(`_Outros meses disponíveis: ${args.outrosMeses.join(' · ')}_`)
-    }
     linhas.push('')
+    linhas.push('📅 _Para outro mês, toque no botão ou digite *MM/AAAA* (ex: 04/2026)._')
     linhas.push('👇 Toque no botão abaixo para mais opções.')
     return linhas.join('\n')
   },

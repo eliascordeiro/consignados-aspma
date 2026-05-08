@@ -367,6 +367,38 @@ function buildPostDescontosList(temOutrosMeses: boolean): InteractiveListPayload
   }
 }
 
+/**
+ * Monta o menu flutuante pós-descontos:
+ * — Meses posteriores ao mês atual (todos) + até 5 meses anteriores
+ * — Botões de ação (atendente / encerrar)
+ * — Footer lembra o usuário do atalho MM/AAAA
+ */
+function buildMesesNavList(
+  meses: Array<{ key: number; label: string }>, // sorted DESC (mais recente primeiro)
+  currentKey: number
+): InteractiveListPayload {
+  // Posteriores ao mês atual (reverse → mais próximo primeiro)
+  const future = meses.filter((m) => m.key > currentKey).reverse().slice(0, 3)
+  // Até 5 anteriores (já desc → mais recente primeiro)
+  const previous = meses.filter((m) => m.key < currentKey).slice(0, 5)
+  const navMeses = [...future, ...previous]
+
+  const rows: Array<{ id: string; title: string; description?: string }> = navMeses.map((m) => ({
+    id: `MES:${m.key}`,
+    title: m.label,
+    description: 'Ver descontos deste mês',
+  }))
+  rows.push({ id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' })
+  rows.push({ id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' })
+
+  return {
+    buttonText: 'Opções',
+    title: navMeses.length > 0 ? 'Outros meses / Ações' : 'Ações',
+    footer: 'Digite MM/AAAA para buscar qualquer mês',
+    sections: [{ title: navMeses.length > 0 ? 'Outros meses disponíveis' : 'Ações', rows }],
+  }
+}
+
 function buildEscolherMatriculaList(
   socios: Array<{ id: string; matricula: string | null; nome: string; empresa?: { nome: string | null } | null }>
 ): InteractiveListPayload {
@@ -594,7 +626,9 @@ async function getMesesDisponiveis(socioId: string): Promise<Array<{ key: number
 }
 
 /** Exibe menu de meses (se houver mais de 1) ou entrega diretamente.
- *  Gerencia o setState internamente — o chamador só precisa logOutgoing e retornar. */
+/** Entrega descontos do mês atual imediatamente (sem perguntar qual mês),
+ *  com margem disponível no header.  O menu flutuante traz os 5 meses
+ *  anteriores + posteriores para navegação posterior. */
 async function perguntarMesDescontos(
   sessionId: string,
   socioId: string,
@@ -603,31 +637,24 @@ async function perguntarMesDescontos(
   const meses = await getMesesDisponiveis(socioId)
   if (!meses) {
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-    return { reply: 'Não consegui consultar seus descontos agora. Tente novamente em instantes.', nextState: 'ANSWERED' }
+    return { reply: 'Não consegui consultar seus dados agora. Tente novamente em instantes.', nextState: 'ANSWERED' }
   }
+
+  // Chave do mês de referência (padrão diaCorte=9)
+  const dc = calcularMesReferenciaChatbot(9)
+  const currentKey = dc.ano * 100 + dc.mes
+
   if (meses.length === 0) {
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
     const margemRes = await consultarMargemSocio(socioId)
     const reply = MSG.descontosVazio(socioNome, margemRes?.margem ?? null, margemRes ? fonteMargemLabel(margemRes.fonte) : '')
-    return { reply, nextState: 'ANSWERED', interactiveList: buildPostDescontosList(false) }
+    return { reply, nextState: 'ANSWERED', interactiveList: buildMesesNavList([], currentKey) }
   }
-  if (meses.length === 1) {
-    const { reply, temOutrosMeses, vazio } = await entregarDescontos(sessionId, socioId, socioNome, meses[0].key)
-    await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-    return { reply, nextState: 'ANSWERED', interactiveList: buildPostDescontosList(!vazio && temOutrosMeses) }
-  }
-  // Múltiplos meses → salva TODOS no cpfHash + página atual e aguarda escolha
-  // Formato: "MESES_CHOICE:<page>|<key1>,<key2>,..."
-  await setState(sessionId, {
-    state: 'AWAITING_MES_CHOICE',
-    lastIntent: 'DESCONTOS',
-    cpfHash: `MESES_CHOICE:0|${meses.map((m) => m.key).join(',')}`,
-  })
-  return {
-    reply: MSG.escolherMes(meses),
-    nextState: 'AWAITING_MES_CHOICE',
-    interactiveList: buildMesesPageList(meses, 0),
-  }
+
+  // Entrega mês atual direto — sem perguntar qual mês
+  const { reply } = await entregarDescontos(sessionId, socioId, socioNome)
+  await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+  return { reply, nextState: 'ANSWERED', interactiveList: buildMesesNavList(meses, currentKey) }
 }
 
 // WhatsApp List Buttons aceitam no máximo 10 linhas — paginamos com 9 meses + "Próximos meses ▶"
@@ -1056,14 +1083,17 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         await logOutgoing(session.id, reply, 'AWAITING_MES_CHOICE')
         return { reply, nextState: 'AWAITING_INTENT', handoff: false }
       }
-      const { reply, temOutrosMeses, vazio } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', chosenKey)
+      const { reply } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', chosenKey)
       await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS', cpfHash: null })
       await logOutgoing(session.id, reply, 'DESCONTOS')
+      const dc2 = calcularMesReferenciaChatbot(9)
+      const currentKey2 = dc2.ano * 100 + dc2.mes
+      const mesesNav = await getMesesDisponiveis(socio.id)
       return {
         reply,
         nextState: 'ANSWERED',
         handoff: false,
-        interactiveList: buildPostDescontosList(!vazio && temOutrosMeses),
+        interactiveList: buildMesesNavList(mesesNav || [], currentKey2),
       }
     }
 
@@ -1145,21 +1175,31 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         }
       }
 
-      // Navegação por mês direto digitado ("05/2026", "abril")
-      if (session.lastIntent === 'DESCONTOS' && session.socioId) {
-        const mesKey = parseMesAnoInput(text)
-        if (mesKey) {
-          const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
-          const socio = fresh?.socio
-          if (socio) {
-            const { reply, temOutrosMeses, vazio } = await entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKey)
-            await logOutgoing(session.id, reply, 'DESCONTOS')
-            return {
-              reply,
-              nextState: 'ANSWERED',
-              handoff: false,
-              interactiveList: buildPostDescontosList(!vazio && temOutrosMeses),
-            }
+      // Navegação por mês: botão MES:<key> do nav list  OU  texto "MM/AAAA" / nome do mês
+      const mesKeyFromBtn = text.trim().match(/^MES:(\d{5,6})$/i)
+      const mesKeyChosen = mesKeyFromBtn
+        ? parseInt(mesKeyFromBtn[1], 10)
+        : session.lastIntent === 'DESCONTOS' && session.socioId
+          ? parseMesAnoInput(text)
+          : null
+
+      if (mesKeyChosen && session.socioId && session.authLevel === 'L2') {
+        const fresh = await db.chatSession.findUnique({ where: { id: session.id }, include: { socio: true } })
+        const socio = fresh?.socio
+        if (socio) {
+          const [{ reply }, meses] = await Promise.all([
+            entregarDescontos(session.id, socio.id, socio.nome || 'sócio', mesKeyChosen),
+            getMesesDisponiveis(socio.id),
+          ])
+          const dc = calcularMesReferenciaChatbot(9)
+          const currentKey = dc.ano * 100 + dc.mes
+          await setState(session.id, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
+          await logOutgoing(session.id, reply, 'DESCONTOS')
+          return {
+            reply,
+            nextState: 'ANSWERED',
+            handoff: false,
+            interactiveList: buildMesesNavList(meses || [], currentKey),
           }
         }
       }
