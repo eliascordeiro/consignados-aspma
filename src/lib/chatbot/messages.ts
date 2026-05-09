@@ -64,6 +64,7 @@ ${ATENDENTE_TEL_LINK}`,
     if (primeiroNome) linhas.push(`Olá, *${primeiroNome}*!`)
     if (typeof margem === 'number') {
       linhas.push(`💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`)
+      linhas.push('')
     }
     linhas.push('🎉 Você está em dia — *nenhum desconto pendente* foi encontrado.')
     linhas.push('')
@@ -87,6 +88,7 @@ ${ATENDENTE_TEL_LINK}`,
     if (typeof args.margem === 'number') {
       linhas.push(`Olá, *${args.nome.split(' ')[0]}*!`)
       linhas.push(`💰 *Margem disponível:* ${brl(args.margem)}${args.fonteMargemLabel || ''}`)
+      linhas.push('')
     } else {
       linhas.push(`Olá, *${args.nome.split(' ')[0]}*!`)
     }
