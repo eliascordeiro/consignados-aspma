@@ -63,7 +63,6 @@ ${ATENDENTE_TEL_LINK}`,
     const linhas: string[] = []
     if (typeof margem === 'number') {
       linhas.push(`💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`)
-      linhas.push('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬')
     }
     if (primeiroNome) {
       linhas.push(`👤 Olá, *${primeiroNome}*!`)
@@ -90,7 +89,6 @@ ${ATENDENTE_TEL_LINK}`,
     // Header: margem disponível sempre em destaque
     if (typeof args.margem === 'number') {
       linhas.push(`💰 *Margem disponível:* ${brl(args.margem)}${args.fonteMargemLabel || ''}`)
-      linhas.push('━━━━━━━━━━━━━━━━━━')
     }
     linhas.push(`👤 *${args.nome.split(' ')[0]}* · ${args.mesLabel}`)
     linhas.push('')
