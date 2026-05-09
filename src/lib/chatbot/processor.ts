@@ -531,27 +531,26 @@ const MESES_MAP: Record<string, number> = {
 }
 
 function parseMesAnoInput(text: string): number | null {
+  // Aceita SOMENTE o formato rígido MM/AAAA (ex: 04/2026)
+  const m = text.trim().match(/^(\d{2})\/(\d{4})$/)
+  if (!m) return null
+  const mes = parseInt(m[1], 10)
+  const ano = parseInt(m[2], 10)
+  if (mes < 1 || mes > 12) return null
+  if (ano < 2000 || ano > 2100) return null
+  return ano * 100 + mes
+}
+
+/** Detecta uma tentativa do usuário de digitar um mês/ano (mesmo que inválido).
+ *  Usado para rejeitar entradas que se parecem com data mas não respeitam o formato MM/AAAA. */
+function looksLikeMesAttempt(text: string): boolean {
   const t = text.trim().toLowerCase()
-
-  // Formato numérico: MM/YYYY ou MM-YYYY (exato)
-  const mNum = t.match(/^(\d{1,2})[\/\-](\d{4})$/)
-  if (mNum) {
-    const mes = parseInt(mNum[1], 10)
-    const ano = parseInt(mNum[2], 10)
-    if (mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100) return ano * 100 + mes
+  if (/^\d{1,2}\s*[\/\-\.]\s*\d{2,4}$/.test(t)) return true
+  if (/^\d{4,8}$/.test(t)) return true
+  for (const nome of Object.keys(MESES_MAP)) {
+    if (new RegExp(`\\b${nome}\\b`).test(t)) return true
   }
-
-  // Nome do mês em português presente na frase (ex: "descontos de janeiro" ou "janeiro/2025")
-  for (const [nome, mes] of Object.entries(MESES_MAP)) {
-    const re = new RegExp(`\\b${nome}\\b(?:[\\s\\/\\-]+(\\d{4}))?`)
-    const mNome = t.match(re)
-    if (mNome) {
-      const ano = mNome[1] ? parseInt(mNome[1], 10) : new Date().getFullYear()
-      if (ano >= 2000 && ano <= 2100) return ano * 100 + mes
-    }
-  }
-
-  return null
+  return false
 }
 
 async function entregarDescontos(
@@ -1200,6 +1199,26 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
             handoff: false,
             interactiveList: buildMesesNavList(meses || [], currentKey),
           }
+        }
+      }
+
+      // Se o usuário tentou digitar uma data mas fora do formato rígido MM/AAAA → rejeita
+      if (
+        session.lastIntent === 'DESCONTOS' &&
+        session.socioId &&
+        !mesKeyFromBtn &&
+        looksLikeMesAttempt(tt)
+      ) {
+        const reply = '❌ Formato inválido.\n\n📅 Para consultar outro mês, digite *exatamente* no formato *MM/AAAA*\n_Exemplo:_ *04/2026*'
+        await logOutgoing(session.id, reply, 'ANSWERED')
+        const dc = calcularMesReferenciaChatbot(9)
+        const currentKey = dc.ano * 100 + dc.mes
+        const meses = await getMesesDisponiveis(session.socioId)
+        return {
+          reply,
+          nextState: 'ANSWERED',
+          handoff: false,
+          interactiveList: buildMesesNavList(meses || [], currentKey),
         }
       }
 
