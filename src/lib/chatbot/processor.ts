@@ -345,7 +345,6 @@ function buildMenuInicialList(): InteractiveListPayload {
         title: 'Como posso ajudar?',
         rows: [
           { id: ACT.DESCONTOS, title: 'Margem e descontos', description: 'Margem disponível e parcelas do mês' },
-          { id: ACT.ATENDENTE, title: 'Falar com atendente', description: 'Atendimento humano' },
         ],
       },
     ],

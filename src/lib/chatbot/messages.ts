@@ -13,6 +13,8 @@ export const MSG = {
       'Sou o assistente virtual da *ASPMA Consignados*.',
       '',
       'Toque no botão abaixo e escolha como posso te ajudar.',
+      '',
+      `🙋 _Prefere atendimento humano? Fale com um atendente: ${ATENDENTE_TEL_LINK}_`,
     ].join('\n')
   },
   pedirCpf: () => 'Para consultar seus dados, informe seu *CPF* (apenas números) ou sua *matrícula*.',
