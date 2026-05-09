@@ -9,12 +9,12 @@ export const MSG = {
     const g = greetingByHour()
     const nome = nomeOpt ? `, *${nomeOpt.split(' ')[0]}*` : ''
     return [
-      `${g}${nome}! 👋`,
+      `${g}${nome}!`,
       'Sou o assistente virtual da *ASPMA Consignados*.',
       '',
       'Toque no botão abaixo e escolha como posso te ajudar.',
       '',
-      `🙋 _Prefere atendimento humano? Fale com um atendente: ${ATENDENTE_TEL_LINK}_`,
+      `_Prefere atendimento humano? Fale com um atendente: ${ATENDENTE_TEL_LINK}_`,
     ].join('\n')
   },
   pedirCpf: () => 'Para consultar seus dados, informe seu *CPF* (apenas números) ou sua *matrícula*.',
@@ -28,7 +28,7 @@ export const MSG = {
   pedirNascimento: () => 'Agora informe sua *data de nascimento*.\nFormatos aceitos: *DD/MM/AAAA* ou *DDMMAAAA* (ex: 15/08/1985 ou 15081985).',
   nascimentoInvalido: () => 'Data inválida. ❌ Use *DD/MM/AAAA* ou *DDMMAAAA* (ex: 15/08/1985 ou 15081985).',
   escolherMatricula: (_socios: Array<{ matricula: string | null; nome: string; empresa: string | null }>) => {
-    return '📋 Encontrei mais de um cadastro para este CPF.\nToque no botão abaixo e escolha sua matrícula.'
+    return 'Encontrei mais de um cadastro para este CPF.\nToque no botão abaixo e escolha sua matrícula.'
   },
   socioNaoEncontrado: () =>
     `Não localizei seu cadastro com esses dados. 🔎
@@ -44,11 +44,11 @@ ${ATENDENTE_TEL_LINK}`,
 Fale com um atendente da ASPMA:
 ${ATENDENTE_TEL_LINK}`,
   handoff: () =>
-    `Para falar com um atendente: 🙋\n${ATENDENTE_TEL_LINK}`,
+    `Para falar com um atendente:\n${ATENDENTE_TEL_LINK}`,
   encerrar: () => 'Atendimento encerrado. Sempre que precisar, é só chamar! 👋',
   fallback: () =>
     [
-      'Não entendi sua mensagem. 🤔',
+      'Não entendi sua mensagem.',
       '',
       'Toque no botão abaixo para ver as opções disponíveis.',
     ].join('\n'),
@@ -63,7 +63,7 @@ ${ATENDENTE_TEL_LINK}`,
     const linhas: string[] = []
     if (typeof margem === 'number') {
       linhas.push(`💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`)
-      linhas.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      linhas.push('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬')
     }
     if (primeiroNome) {
       linhas.push(`👤 Olá, *${primeiroNome}*!`)
