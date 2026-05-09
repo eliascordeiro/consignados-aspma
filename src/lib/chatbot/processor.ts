@@ -344,8 +344,8 @@ function buildMenuInicialList(): InteractiveListPayload {
       {
         title: 'Como posso ajudar?',
         rows: [
-          { id: ACT.DESCONTOS, title: '💰 Margem e descontos', description: 'Margem disponível e parcelas do mês' },
-          { id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' },
+          { id: ACT.DESCONTOS, title: 'Margem e descontos', description: 'Margem disponível e parcelas do mês' },
+          { id: ACT.ATENDENTE, title: 'Falar com atendente', description: 'Atendimento humano' },
         ],
       },
     ],
@@ -355,10 +355,10 @@ function buildMenuInicialList(): InteractiveListPayload {
 function buildPostDescontosList(temOutrosMeses: boolean): InteractiveListPayload {
   const rows: Array<{ id: string; title: string; description?: string }> = []
   if (temOutrosMeses) {
-    rows.push({ id: ACT.OUTRO_MES, title: '📅 Ver outro mês', description: 'Escolher outro período' })
+    rows.push({ id: ACT.OUTRO_MES, title: 'Ver outro mês', description: 'Escolher outro período' })
   }
-  rows.push({ id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' })
-  rows.push({ id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' })
+  rows.push({ id: ACT.ATENDENTE, title: 'Falar com atendente', description: 'Atendimento humano' })
+  rows.push({ id: ACT.ENCERRAR, title: 'Encerrar atendimento', description: 'Finalizar conversa' })
   return {
     buttonText: 'O que deseja?',
     title: 'Próximos passos',
@@ -379,8 +379,8 @@ function buildMesesNavList(
 ): InteractiveListPayload {
   // Posteriores ao mês atual (reverse → mais próximo primeiro)
   const future = meses.filter((m) => m.key > currentKey).reverse().slice(0, 3)
-  // Até 5 anteriores (já desc → mais recente primeiro)
-  const previous = meses.filter((m) => m.key < currentKey).slice(0, 5)
+  // Até 3 anteriores (já desc → mais recente primeiro)
+  const previous = meses.filter((m) => m.key < currentKey).slice(0, 3)
   const navMeses = [...future, ...previous]
 
   const rows: Array<{ id: string; title: string; description?: string }> = navMeses.map((m) => ({
@@ -388,12 +388,11 @@ function buildMesesNavList(
     title: m.label,
     description: 'Ver descontos deste mês',
   }))
-  rows.push({ id: ACT.ATENDENTE, title: '🙋 Falar com atendente', description: 'Atendimento humano' })
-  rows.push({ id: ACT.ENCERRAR, title: '👋 Encerrar atendimento', description: 'Finalizar conversa' })
+  rows.push({ id: ACT.ENCERRAR, title: 'Encerrar atendimento', description: 'Finalizar conversa' })
 
   return {
     buttonText: 'Opções',
-    title: navMeses.length > 0 ? 'Outros meses / Ações' : 'Ações',
+    title: '',
     footer: 'Digite MM/AAAA para buscar qualquer mês',
     sections: [{ title: navMeses.length > 0 ? 'Outros meses disponíveis' : 'Ações', rows }],
   }
@@ -673,14 +672,14 @@ function buildMesesPageList(meses: Array<{ key: number; label: string }>, page: 
   if (totalPages > 1 && safePage < totalPages - 1) {
     rows.push({
       id: `MES_PG:${safePage + 1}`,
-      title: '➡️ Próximos meses',
+      title: 'Proximos meses',
       description: `Mostrar mais ${Math.min(MESES_PAGE_SIZE, meses.length - (safePage + 1) * MESES_PAGE_SIZE)} meses`,
     })
   } else if (totalPages > 1 && safePage > 0) {
     // Última página → permite voltar
     rows.push({
       id: `MES_PG:0`,
-      title: '🔁 Voltar ao início',
+      title: 'Voltar ao inicio',
       description: 'Recomeçar pela página inicial',
     })
   }

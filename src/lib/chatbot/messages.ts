@@ -92,7 +92,7 @@ ${ATENDENTE_TEL_LINK}`,
     }
     linhas.push(`👤 *${args.nome.split(' ')[0]}* · ${args.mesLabel}`)
     linhas.push('')
-    linhas.push(`🗒️ *Descontos do mês:* ${brl(args.total)}`)
+    linhas.push(`� *Descontos do mês:* ${brl(args.total)}`)
     linhas.push(`📄 ${args.itens.length} parcela${args.itens.length !== 1 ? 's' : ''} pendente${args.itens.length !== 1 ? 's' : ''}`)
     linhas.push('')
     for (const it of args.itens) {
