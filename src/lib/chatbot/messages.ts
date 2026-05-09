@@ -61,12 +61,9 @@ ${ATENDENTE_TEL_LINK}`,
     const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
     const primeiroNome = nomeOpt ? nomeOpt.split(' ')[0] : ''
     const linhas: string[] = []
+    if (primeiroNome) linhas.push(`Olá, *${primeiroNome}*!`)
     if (typeof margem === 'number') {
       linhas.push(`💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`)
-    }
-    if (primeiroNome) {
-      linhas.push(`👤 Olá, *${primeiroNome}*!`)
-      linhas.push('')
     }
     linhas.push('🎉 Você está em dia — *nenhum desconto pendente* foi encontrado.')
     linhas.push('')
@@ -86,11 +83,14 @@ ${ATENDENTE_TEL_LINK}`,
   }) => {
     const brl = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v))
     const linhas: string[] = []
-    // Header: margem disponível sempre em destaque
+    // Header: saudação com nome
     if (typeof args.margem === 'number') {
+      linhas.push(`Olá, *${args.nome.split(' ')[0]}*!`)
       linhas.push(`💰 *Margem disponível:* ${brl(args.margem)}${args.fonteMargemLabel || ''}`)
+    } else {
+      linhas.push(`Olá, *${args.nome.split(' ')[0]}*!`)
     }
-    linhas.push(`👤 *${args.nome.split(' ')[0]}* · ${args.mesLabel}`)
+    linhas.push(`📅 *${args.mesLabel}*`)
     linhas.push('')
     linhas.push(`� *Descontos do mês:* ${brl(args.total)}`)
     linhas.push(`📄 ${args.itens.length} parcela${args.itens.length !== 1 ? 's' : ''} pendente${args.itens.length !== 1 ? 's' : ''}`)
