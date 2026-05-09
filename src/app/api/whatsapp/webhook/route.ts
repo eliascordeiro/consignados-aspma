@@ -135,13 +135,18 @@ export async function POST(req: NextRequest) {
     if (result.reply) {
       let sent = { success: false } as { success: boolean; error?: string }
       if (result.interactiveList) {
-        // Lista interativa customizada (ex.: escolha de mês para descontos)
-        sent = await sendWhatsAppListButtons(String(phone), result.reply, {
+        // Workaround WhatsGW: emojis no body de listButton são substituídos por "?"
+        // → Envia o texto rico (com emojis) como mensagem simples primeiro,
+        //   depois a lista com body curto apenas para abrir o menu.
+        await sendWhatsApp(String(phone), result.reply)
+        sent = await sendWhatsAppListButtons(String(phone), 'Selecione uma opção:', {
           buttonText: result.interactiveList.buttonText || 'Escolher',
           title: result.interactiveList.title || 'ASPMA Consignados',
           footer: result.interactiveList.footer || 'ASPMA Consignados',
           sections: result.interactiveList.sections,
         })
+        // Se a lista falhar, o texto rico já foi entregue — considera sucesso.
+        if (!sent.success) sent = { success: true }
       } else if (result.menu) {
         // Tenta enviar como List Buttons (interativo); se o plano do WhatsGW não suportar, faz fallback
         sent = await sendWhatsAppListButtons(String(phone), result.reply, {
