@@ -61,7 +61,7 @@ ${ATENDENTE_TEL_LINK}`,
     const linhas: string[] = []
     if (typeof margem === 'number') {
       linhas.push(`💰 *Margem disponível:* ${brl(margem)}${fonteLabel}`)
-      linhas.push('━━━━━━━━━━━━━━━━━━')
+      linhas.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     }
     if (primeiroNome) {
       linhas.push(`👤 Olá, *${primeiroNome}*!`)
