@@ -135,8 +135,13 @@ export async function POST(req: NextRequest) {
     if (result.reply) {
       let sent = { success: false } as { success: boolean; error?: string }
       if (result.interactiveList) {
-        // Envia somente o texto rico (lista interativa removida — navegação por MM/AAAA)
-        sent = await sendWhatsApp(String(phone), result.reply)
+        // Lista interativa customizada (menus de navegação)
+        sent = await sendWhatsAppListButtons(String(phone), result.reply, {
+          buttonText: result.interactiveList.buttonText || 'Escolher',
+          title: result.interactiveList.title || 'ASPMA Consignados',
+          footer: result.interactiveList.footer || 'ASPMA Consignados',
+          sections: result.interactiveList.sections,
+        })
       } else if (result.menu) {
         // Tenta enviar como List Buttons (interativo); se o plano do WhatsGW não suportar, faz fallback
         sent = await sendWhatsAppListButtons(String(phone), result.reply, {

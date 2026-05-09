@@ -646,13 +646,13 @@ async function perguntarMesDescontos(
     await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
     const margemRes = await consultarMargemSocio(socioId)
     const reply = MSG.descontosVazio(socioNome, margemRes?.margem ?? null, margemRes ? fonteMargemLabel(margemRes.fonte) : '')
-    return { reply, nextState: 'ANSWERED', interactiveList: buildMesesNavList([], currentKey) }
+    return { reply, nextState: 'ANSWERED' }
   }
 
   // Entrega mês atual direto — sem perguntar qual mês
   const { reply } = await entregarDescontos(sessionId, socioId, socioNome)
   await setState(sessionId, { state: 'ANSWERED', lastIntent: 'DESCONTOS' })
-  return { reply, nextState: 'ANSWERED', interactiveList: buildMesesNavList(meses, currentKey) }
+  return { reply, nextState: 'ANSWERED' }
 }
 
 // WhatsApp List Buttons aceitam no máximo 10 linhas — paginamos com 9 meses + "Próximos meses ▶"
@@ -1091,7 +1091,6 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
         reply,
         nextState: 'ANSWERED',
         handoff: false,
-        interactiveList: buildMesesNavList(mesesNav || [], currentKey2),
       }
     }
 
@@ -1197,7 +1196,6 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
             reply,
             nextState: 'ANSWERED',
             handoff: false,
-            interactiveList: buildMesesNavList(meses || [], currentKey),
           }
         }
       }
@@ -1218,7 +1216,6 @@ export async function processMessage(input: ProcessInput): Promise<ProcessResult
           reply,
           nextState: 'ANSWERED',
           handoff: false,
-          interactiveList: buildMesesNavList(meses || [], currentKey),
         }
       }
 
