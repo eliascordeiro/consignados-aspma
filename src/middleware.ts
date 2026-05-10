@@ -37,9 +37,32 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ── Portal da Empresa (Consignatária) ────────────────────────────────────
+  if (pathname.startsWith('/empresa')) {
+    // Rotas públicas
+    const publicEmpresaRoutes = ['/empresa/login', '/empresa/bloqueado']
+    if (publicEmpresaRoutes.some(r => pathname.startsWith(r))) {
+      return NextResponse.next({ request: { headers: requestHeaders } })
+    }
+
+    const token = request.cookies.get('empresa_session')?.value
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    try {
+      await jwtVerify(token, JWT_SECRET)
+      return NextResponse.next({ request: { headers: requestHeaders } })
+    } catch {
+      const response = NextResponse.redirect(new URL('/login', request.url))
+      response.cookies.delete('empresa_session')
+      return response
+    }
+  }
+
   return NextResponse.next({ request: { headers: requestHeaders } })
 }
 
 export const config = {
-  matcher: ['/portal/:path*', '/convenio/:path*'],
+  matcher: ['/portal/:path*', '/convenio/:path*', '/empresa/:path*'],
 }

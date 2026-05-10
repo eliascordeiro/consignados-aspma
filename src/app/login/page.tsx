@@ -24,6 +24,13 @@ async function redirectAfterLogin() {
     window.location.href = "/convenio/dashboard"
     return
   }
+  // Empresa (consignatária)
+  const empresaCheck = await fetch("/api/empresa/check")
+  const empresaData = await empresaCheck.json()
+  if (empresaData?.isEmpresa) {
+    window.location.href = "/empresa/dashboard"
+    return
+  }
   if (session?.user?.role === "ADMIN") {
     window.location.href = "/dashboard"
   } else if (session?.user?.role === "MANAGER" || session?.user?.role === "USER") {
@@ -207,7 +214,26 @@ export default function LoginPage() {
           } catch { /* ignora erro de rede */ }
         }
 
-        // 4. Verificar se convênio está inativo (login falhou porque convênio foi desativado)
+        // 4. Tentar autenticar como Empresa (consignatária)
+        //    — empresa não usa NextAuth; tem sessão própria via /api/empresa/auth/login
+        try {
+          const empresaRes = await fetch('/api/empresa/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, senha: password }),
+          })
+          if (empresaRes.ok) {
+            window.location.href = '/empresa/dashboard'
+            return
+          }
+          if (empresaRes.status === 403) {
+            // Empresa inativa
+            window.location.href = '/empresa/bloqueado'
+            return
+          }
+        } catch { /* ignora erro de rede */ }
+
+        // 5. Verificar se convênio está inativo (login falhou porque convênio foi desativado)
         try {
           const inativoRes = await fetch(
             `/api/convenio/check-ativo?login=${encodeURIComponent(login)}`
@@ -219,7 +245,7 @@ export default function LoginPage() {
           }
         } catch { /* ignora erro de rede */ }
 
-        // 5. Credenciais genuinamente inválidas
+        // 6. Credenciais genuinamente inválidas
         setError("Usuário ou senha inválidos")
       } else {
         await redirectAfterLogin()

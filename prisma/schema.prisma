@@ -166,6 +166,11 @@ model Empresa {
   cidade    String?
   uf        String?
   ativo     Boolean   @default(true)
+  // Acesso ao Portal da Consignatária
+  senha            String?
+  senhaChangedAt   DateTime?
+  resetToken       String?
+  resetTokenExpiry DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   socios    Socio[]

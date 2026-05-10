@@ -26,8 +26,15 @@ export async function POST(request: NextRequest) {
         })
       : null
 
+    // Buscar empresa (consignatária) pela tabela empresas
+    const empresa = (!user && !convenio)
+      ? await prisma.empresa.findFirst({
+          where: { email: { equals: email, mode: 'insensitive' } },
+        })
+      : null
+
     // Se não encontrou em nenhuma tabela, informa ao usuário para entrar em contato
-    if (!user && !convenio) {
+    if (!user && !convenio && !empresa) {
       return NextResponse.json(
         { error: "email_nao_encontrado" },
         { status: 404 }
@@ -48,6 +55,12 @@ export async function POST(request: NextRequest) {
       // Salvar token no convênio
       await prisma.convenio.update({
         where: { id: convenio.id },
+        data: { resetToken, resetTokenExpiry },
+      })
+    } else if (empresa) {
+      // Salvar token na empresa (consignatária)
+      await prisma.empresa.update({
+        where: { id: empresa.id },
         data: { resetToken, resetTokenExpiry },
       })
     }

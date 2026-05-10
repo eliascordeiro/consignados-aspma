@@ -88,6 +88,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Senha redefinida com sucesso!" })
     }
 
+    // Buscar empresa (consignatária) pelo token
+    const empresa = await prisma.empresa.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: { gte: new Date() },
+      },
+    })
+
+    if (empresa) {
+      console.log("   Empresa encontrada:", `${empresa.nome} (id:${empresa.id})`)
+      await prisma.empresa.update({
+        where: { id: empresa.id },
+        data: {
+          senha: password,
+          resetToken: null,
+          resetTokenExpiry: null,
+          senhaChangedAt: new Date(),
+        },
+      })
+      console.log("   ✅ Senha da empresa atualizada com sucesso!")
+      return NextResponse.json({ message: "Senha redefinida com sucesso!" })
+    }
+
     console.log("   ❌ Token inválido ou expirado")
     return NextResponse.json(
       { error: "Token inválido ou expirado" },
