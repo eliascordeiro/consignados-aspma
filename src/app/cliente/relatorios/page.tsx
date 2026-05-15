@@ -83,6 +83,16 @@ export default function RelatoriosPage() {
   const [conveniosConsigRel, setConveniosConsigRel] = useState<Convenio[]>([]);
   const [convenioConsigRelId, setConvenioConsigRelId] = useState('');
 
+  // Multi-seleção de convênios (modal Débitos de Sócios) — quando sócio e convênio
+  // estão vazios e há uma consignatária escolhida, o usuário pode marcar/desmarcar
+  // os convênios que serão incluídos no relatório.
+  const [conveniosTodos, setConveniosTodos] = useState<Convenio[]>([]);
+  const [conveniosTodosCarregados, setConveniosTodosCarregados] = useState(false);
+  const [loadingConveniosTodos, setLoadingConveniosTodos] = useState(false);
+  const [conveniosSelecionadosIds, setConveniosSelecionadosIds] = useState<Set<number>>(new Set());
+  const [showMultiConveniosPanel, setShowMultiConveniosPanel] = useState(false);
+  const [filtroMultiConvenios, setFiltroMultiConvenios] = useState('');
+
   // ── Estado Impressões Gerais — Averbação ───────────────────────────────────
   const [showAverbacaoModal, setShowAverbacaoModal] = useState(false);
   const [searchSocioAverbacao, setSearchSocioAverbacao] = useState('');
@@ -501,6 +511,93 @@ export default function RelatoriosPage() {
     setConveniosConsigRel([]);
   };
 
+  // ── Multi-seleção de convênios (modal Débitos de Sócios) ─────────────────
+  const carregarTodosConvenios = async () => {
+    if (conveniosTodosCarregados || loadingConveniosTodos) return;
+    setLoadingConveniosTodos(true);
+    try {
+      const response = await fetch('/api/convenios?limit=10000');
+      if (response.ok) {
+        const data = await response.json();
+        const lista: Convenio[] = (data.data || data) as Convenio[];
+        if (Array.isArray(lista)) {
+          // Ordena por código numérico, depois razão social
+          const ordenados = [...lista].sort((a, b) => {
+            const na = parseInt(a.codigo || '0', 10);
+            const nb = parseInt(b.codigo || '0', 10);
+            if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+            return (a.razao_soc || '').localeCompare(b.razao_soc || '');
+          });
+          setConveniosTodos(ordenados);
+          // Pré-seleciona TODOS
+          setConveniosSelecionadosIds(new Set(ordenados.map((c) => c.id)));
+          setConveniosTodosCarregados(true);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar convênios:', error);
+    } finally {
+      setLoadingConveniosTodos(false);
+    }
+  };
+
+  const usaMultiConvenios =
+    !!consigRelId &&
+    consigRelId !== '' &&
+    !filtrosConsigRel.socioMatricula &&
+    !convenioConsigRelId;
+
+  // Carrega lista de convênios automaticamente quando a multi-seleção fica disponível
+  useEffect(() => {
+    if (showConsigRelModal && usaMultiConvenios && !conveniosTodosCarregados) {
+      carregarTodosConvenios();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showConsigRelModal, usaMultiConvenios]);
+
+  const toggleConvenioSelecionado = (id: number) => {
+    setConveniosSelecionadosIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const marcarTodosConvenios = () => {
+    setConveniosSelecionadosIds(new Set(conveniosTodos.map((c) => c.id)));
+  };
+
+  const desmarcarTodosConvenios = () => {
+    setConveniosSelecionadosIds(new Set());
+  };
+
+  const conveniosFiltradosMulti = conveniosTodos.filter((c) => {
+    const termo = filtroMultiConvenios.trim().toLowerCase();
+    if (!termo) return true;
+    return (
+      (c.codigo || '').toLowerCase().includes(termo) ||
+      (c.razao_soc || '').toLowerCase().includes(termo) ||
+      (c.fantasia || '').toLowerCase().includes(termo)
+    );
+  });
+
+  /**
+   * Retorna o parâmetro convenioIds para anexar à query do relatório
+   * apenas quando o usuário fez uma seleção parcial (subset) na lista.
+   * - Se nenhum convênio: bloqueia (devolve null)
+   * - Se todos selecionados: omite (sem filtro = comportamento original)
+   * - Se subset: retorna IDs separados por vírgula
+   */
+  const getConvenioIdsParam = (): string | null | undefined => {
+    if (!usaMultiConvenios || !conveniosTodosCarregados) return undefined;
+    if (conveniosSelecionadosIds.size === 0) {
+      alert('Selecione ao menos um convênio para gerar o relatório.');
+      return null;
+    }
+    if (conveniosSelecionadosIds.size === conveniosTodos.length) return undefined;
+    return Array.from(conveniosSelecionadosIds).join(',');
+  };
+
   const gerarRelatorioPDF = async () => {
     if (!filtros.mesAno) {
       alert('Selecione o período (Mês-Ano)');
@@ -687,6 +784,8 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioPDFConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    const convenioIdsParam = getConvenioIdsParam();
+    if (convenioIdsParam === null) return;
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -698,6 +797,7 @@ export default function RelatoriosPage() {
         apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
         ...(convenioConsigRelId && { convenioId: convenioConsigRelId }),
+        ...(convenioIdsParam && { convenioIds: convenioIdsParam }),
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
       setProgressConsigRel(30);
@@ -727,6 +827,8 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioExcelConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    const convenioIdsParam = getConvenioIdsParam();
+    if (convenioIdsParam === null) return;
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -738,6 +840,7 @@ export default function RelatoriosPage() {
         apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
         ...(convenioConsigRelId && { convenioId: convenioConsigRelId }),
+        ...(convenioIdsParam && { convenioIds: convenioIdsParam }),
         ...(consigRelId && consigRelId !== 'todas' && { empresaId: consigRelId }),
       });
       setProgressConsigRel(30);
@@ -767,6 +870,8 @@ export default function RelatoriosPage() {
 
   const gerarRelatorioCSVConsig = async () => {
     if (!filtrosConsigRel.mesAno) { alert('Selecione o período (Mês-Ano)'); return; }
+    const convenioIdsParam = getConvenioIdsParam();
+    if (convenioIdsParam === null) return;
     setLoadingConsigRel(true);
     setProgressConsigRel(10);
     try {
@@ -778,6 +883,7 @@ export default function RelatoriosPage() {
         apenasPositivos: 'true',
         socioMatricula: filtrosConsigRel.socioMatricula,
         ...(convenioConsigRelId && { convenioId: convenioConsigRelId }),
+        ...(convenioIdsParam && { convenioIds: convenioIdsParam }),
         delimiter: csvOptions.delimiter,
         encoding: csvOptions.encoding,
         includeHeader: csvOptions.includeHeader.toString(),
@@ -1708,6 +1814,117 @@ export default function RelatoriosPage() {
                     </select>
                   )}
                 </div>
+
+                {/* Multi-seleção de convênios — disponível somente quando sócio e
+                    convênio estão vazios e há uma consignatária selecionada */}
+                {usaMultiConvenios && (
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setShowMultiConveniosPanel((s) => !s)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 bg-muted/40 hover:bg-muted transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">
+                            Convênios incluídos
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {loadingConveniosTodos
+                              ? 'Carregando convênios...'
+                              : conveniosTodosCarregados
+                                ? `${conveniosSelecionadosIds.size} de ${conveniosTodos.length} selecionados`
+                                : 'Clique para personalizar'}
+                          </div>
+                        </div>
+                      </div>
+                      <svg className={`w-4 h-4 text-muted-foreground transition-transform ${showMultiConveniosPanel ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {showMultiConveniosPanel && (
+                      <div className="p-3 space-y-2 bg-background">
+                        {loadingConveniosTodos ? (
+                          <div className="flex items-center gap-2 py-3">
+                            <svg className="w-4 h-4 animate-spin text-emerald-500" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            <span className="text-sm text-muted-foreground">Carregando lista de convênios...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <input
+                                type="text"
+                                value={filtroMultiConvenios}
+                                onChange={(e) => setFiltroMultiConvenios(e.target.value)}
+                                placeholder="Filtrar lista (código ou nome)..."
+                                className="flex-1 px-3 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={marcarTodosConvenios}
+                                  className="px-2.5 py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors"
+                                >
+                                  Marcar todos
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={desmarcarTodosConvenios}
+                                  className="px-2.5 py-1.5 text-xs font-medium bg-background border border-border hover:bg-muted text-foreground rounded-md transition-colors"
+                                >
+                                  Desmarcar
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="max-h-64 overflow-y-auto border border-border rounded-md divide-y divide-border">
+                              {conveniosFiltradosMulti.length === 0 ? (
+                                <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                                  Nenhum convênio encontrado.
+                                </div>
+                              ) : (
+                                conveniosFiltradosMulti.map((conv) => {
+                                  const checked = conveniosSelecionadosIds.has(conv.id);
+                                  return (
+                                    <label
+                                      key={conv.id}
+                                      className="flex items-center gap-2 px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer transition-colors"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={() => toggleConvenioSelecionado(conv.id)}
+                                        className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-gray-300"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-sm text-foreground truncate">
+                                          <span className="font-semibold">{conv.codigo}</span>
+                                          <span className="text-muted-foreground"> — {conv.razao_soc}</span>
+                                        </div>
+                                      </div>
+                                    </label>
+                                  );
+                                })
+                              )}
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+                              Apenas os convênios marcados serão incluídos no relatório.
+                              Por padrão, todos vêm marcados.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {/* Período e Agrupamento */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>

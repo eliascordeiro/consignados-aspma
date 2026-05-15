@@ -95,6 +95,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const mesAno = searchParams.get('mesAno'); // formato: YYYY-MM
     const convenioId = searchParams.get('convenioId');
+    const convenioIdsParam = searchParams.get('convenioIds'); // múltiplos IDs separados por vírgula
+    const convenioIds = convenioIdsParam
+      ? convenioIdsParam
+          .split(',')
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => Number.isFinite(n) && n > 0)
+      : [];
     const socioMatricula = searchParams.get('socioMatricula');
     const agrupaPor = searchParams.get('agrupaPor') || 'socio'; // 'socio' ou 'convenio'
     const formato = searchParams.get('formato') || 'pdf'; // 'pdf' ou 'excel'
@@ -164,6 +171,9 @@ export async function GET(request: NextRequest) {
 
     if (convenioId) {
       vendaFilter.convenio = { id: parseInt(convenioId) };
+      hasVendaFilter = true;
+    } else if (convenioIds.length > 0) {
+      vendaFilter.convenio = { id: { in: convenioIds } };
       hasVendaFilter = true;
     }
 
@@ -252,7 +262,7 @@ export async function GET(request: NextRequest) {
     // Agrupar por sócio ou convênio
     if (agrupaPor === 'convenio') {
       const gruposConvenio = agruparPorConvenio(parcelas);
-      const isRelatorioGeral = !convenioId; // Relatório geral quando não há filtro de convênio
+      const isRelatorioGeral = !convenioId && convenioIds.length === 0; // Relatório geral quando não há filtro de convênio
       
       if (formato === 'pdf') {
         const pdfBuffer = await gerarPDFConvenio(gruposConvenio, mes, ano, isRelatorioGeral);
@@ -297,7 +307,7 @@ export async function GET(request: NextRequest) {
       const gruposConsignataria = agruparPorConsignataria(parcelas);
 
       if (formato === 'pdf') {
-        const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano, !!convenioId);
+        const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano, !!convenioId || convenioIds.length > 0);
         return new NextResponse(pdfBuffer, {
           headers: {
             'Content-Type': 'application/pdf',
