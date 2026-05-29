@@ -149,11 +149,9 @@ export async function PUT(
 
     // Sync email changes to the linked users record
     const newEmail = data.email ? data.email.trim().toLowerCase() : null
-    const oldEmail = existing.email ? existing.email.trim().toLowerCase() : null
 
     if (!newEmail && existing.userId) {
-      // Email foi removido — bloquear ou excluir o usuário vinculado
-      // Mas APENAS se o user vinculado for USER (nunca mexer em ADMIN/MANAGER)
+      // Email foi removido — desativar/excluir o usuário vinculado (somente USER)
       const linkedUser = await db.users.findUnique({
         where: { id: existing.userId },
         select: { role: true },
@@ -168,8 +166,7 @@ export async function PUT(
       }
       ;(dataToSave as Record<string, unknown>).userId = null
     } else if (newEmail) {
-      // Verifica se o vínculo atual já está correto.
-      // Reparar SEMPRE que: userId nulo, vinculado a ADMIN/MANAGER, ou email do USER diverge.
+      // Verificar se o vínculo atual já está correto
       const linkedUser = existing.userId
         ? await db.users.findUnique({
             where: { id: existing.userId },
@@ -183,67 +180,23 @@ export async function PUT(
         linkedEmail === newEmail
 
       if (!linkOk) {
-      if (existing.userId && linkedUser) {
+        // Localizar ou criar o usuário alvo para este email
+        const targetUser = await db.users.findUnique({ where: { email: newEmail } })
 
-        if (linkedUser && linkedUser.role !== 'USER') {
-          // Vinculado a um ADMIN/MANAGER (provavelmente o próprio manager dono)
-          // Não altera o email do manager — cria/reusa um USER próprio para o convênio
-          const existingTarget = await db.users.findUnique({ where: { email: newEmail } })
-          if (existingTarget && existingTarget.role !== 'USER') {
-            return NextResponse.json(
-              { error: 'Este email pertence a um usuário administrador. Escolha um email diferente.' },
-              { status: 400 }
-            )
-          }
-          let convenioUserId: string
-          if (existingTarget) {
-            convenioUserId = existingTarget.id
-          } else {
-            const nomeUser = (data.fantasia || data.razao_soc || 'Convênio').trim()
-            const newUser = await db.users.create({
-              data: {
-                email: newEmail,
-                name: nomeUser,
-                password: `!${randomBytes(32).toString('hex')}`,
-                role: 'USER',
-                active: true,
-                createdById: session.user!.id,
-              },
-            })
-            convenioUserId = newUser.id
-          }
-          ;(dataToSave as Record<string, unknown>).userId = convenioUserId
-        } else {
-          // Vinculado a USER — atualiza o email se não estiver em uso por outro
-          const emailTaken = await db.users.findFirst({
-            where: { email: newEmail, NOT: { id: existing.userId } },
-          })
-          if (emailTaken) {
-            return NextResponse.json(
-              { error: 'Este email já está em uso por outro cadastro. Escolha um email diferente.' },
-              { status: 400 }
-            )
-          }
-          await db.users.update({
-            where: { id: existing.userId },
-            data: { email: newEmail },
-          })
+        if (targetUser && targetUser.role !== 'USER') {
+          // Email pertence a ADMIN/MANAGER — não permitido
+          return NextResponse.json(
+            { error: 'Este email pertence a um usuário administrador. Escolha um email diferente.' },
+            { status: 400 }
+          )
         }
-      } else {
-        // No linked user yet — create one with a sentinel password
-        const nomeUser = (data.fantasia || data.razao_soc || 'Convênio').trim()
-        let convenioUserId: string | null = null
-        const existingUser = await db.users.findUnique({ where: { email: newEmail } })
-        if (existingUser) {
-          // Não vincular a ADMIN/MANAGER
-          if (existingUser.role !== 'USER') {
-            return NextResponse.json(
-              { error: 'Este email pertence a um usuário administrador. Escolha um email diferente.' },
-              { status: 400 }
-            )
-          }
-          convenioUserId = existingUser.id
+
+        let convenioUserId: string
+        if (targetUser) {
+          // Reusar o USER já existente com este email (evita duplicata)
+          convenioUserId = targetUser.id
         } else {
+          const nomeUser = (data.fantasia || data.razao_soc || 'Convênio').trim()
           const newUser = await db.users.create({
             data: {
               email: newEmail,
@@ -256,10 +209,19 @@ export async function PUT(
           })
           convenioUserId = newUser.id
         }
-        // Attach userId so this block is only reached once
+
+        // Limpar usuário antigo se for diferente do novo alvo (somente USER)
+        if (existing.userId && existing.userId !== convenioUserId && linkedUser?.role === 'USER') {
+          const vendasCount = await db.venda.count({ where: { convenioId: id } })
+          if (vendasCount === 0) {
+            await db.users.delete({ where: { id: existing.userId } }).catch(() => null)
+          } else {
+            await db.users.update({ where: { id: existing.userId }, data: { active: false } }).catch(() => null)
+          }
+        }
+
         ;(dataToSave as Record<string, unknown>).userId = convenioUserId
       }
-      } // end if (!linkOk)
     }
 
     const convenio = await db.convenio.update({

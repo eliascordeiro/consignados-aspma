@@ -351,7 +351,7 @@ export default function NovoFuncionarioPage() {
                     <label className={labelCls}>Setor</label>
                     <select value={formData.codTipo} onChange={(e) => set('codTipo', e.target.value)} className={selectCls}>
                       <option value="">Selecione o setor</option>
-                      {setores.map((s) => <option key={s.id} value={s.codigo}>{s.setores || s.codigo}</option>)}
+                      {setores.filter((s, idx, arr) => arr.findIndex(x => x.codigo === s.codigo) === idx).map((s) => <option key={s.codigo} value={s.codigo}>{s.setores || s.codigo}</option>)}
                     </select>
                   </div>
                 </div>
