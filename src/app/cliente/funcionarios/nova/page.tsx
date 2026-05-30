@@ -10,7 +10,7 @@ import { ChevronLeft } from 'lucide-react';
 
 interface Empresa { id: number; nome: string }
 interface Classe { id: number; classe: string }
-interface Setor { id: number; codigo: string; setores: string | null }
+interface Tipo { codigo: number; tipo: string }
 
 type Tab = 'pessoais' | 'profissionais' | 'financeiros' | 'outros';
 
@@ -24,7 +24,7 @@ export default function NovoFuncionarioPage() {
   const [activeTab, setActiveTab] = useState<Tab>('pessoais');
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [classes, setClasses] = useState<Classe[]>([]);
-  const [setores, setSetores] = useState<Setor[]>([]);
+  const [tipos, setTipos] = useState<Tipo[]>([]);
 
   const [formData, setFormData] = useState({
     nome: '', cpf: '', rg: '', matricula: '', empresaId: '',
@@ -45,7 +45,7 @@ export default function NovoFuncionarioPage() {
       if (d) setEmpresas(d.data || d);
     });
     fetch('/api/classes').then(r => r.ok ? r.json() : null).then(d => { if (d) setClasses(d); });
-    fetch('/api/setores').then(r => r.ok ? r.json() : null).then(d => { if (d) setSetores(d); });
+    fetch('/api/tipos').then(r => r.ok ? r.json() : null).then(d => { if (d) setTipos(d); });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -348,10 +348,10 @@ export default function NovoFuncionarioPage() {
                     <input type="date" value={formData.dataExclusao} onChange={(e) => set('dataExclusao', e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Setor</label>
+                    <label className={labelCls}>Tipo</label>
                     <select value={formData.codTipo} onChange={(e) => set('codTipo', e.target.value)} className={selectCls}>
-                      <option value="">Selecione o setor</option>
-                      {setores.filter((s, idx, arr) => arr.findIndex(x => x.codigo === s.codigo) === idx).map((s) => <option key={s.codigo} value={s.codigo}>{s.setores || s.codigo}</option>)}
+                      <option value="">Selecione o tipo</option>
+                      {tipos.map((t) => <option key={t.codigo} value={t.codigo.toString()}>{t.tipo}</option>)}
                     </select>
                   </div>
                 </div>

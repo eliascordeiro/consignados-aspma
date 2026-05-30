@@ -7,6 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Matricula {
+  matriculaAntiga Int @id @map("matricula_antiga")
+  matriculaAtual  Int @map("matricula_atual")
+
+  @@index([matriculaAtual])
+  @@map("matriculas")
+}
+
 model consignados {
   id             String           @id
   userId         String
@@ -405,6 +413,13 @@ model Setor {
   users   users   @relation(fields: [userId], references: [id])
   
   @@map("setores")
+}
+
+model Tipo {
+  codigo Int    @id
+  tipo   String @db.VarChar(15)
+
+  @@map("tipos")
 }
 
 model ChatSession {
