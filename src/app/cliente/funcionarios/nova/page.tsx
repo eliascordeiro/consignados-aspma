@@ -348,9 +348,9 @@ export default function NovoFuncionarioPage() {
                     <input type="date" value={formData.dataExclusao} onChange={(e) => set('dataExclusao', e.target.value)} className={inputCls} />
                   </div>
                   <div>
-                    <label className={labelCls}>Tipo</label>
+                    <label className={labelCls}>Categoria</label>
                     <select value={formData.codTipo} onChange={(e) => set('codTipo', e.target.value)} className={selectCls}>
-                      <option value="">Selecione o tipo</option>
+                      <option value="">Selecione a categoria</option>
                       {tipos.map((t) => <option key={t.codigo} value={t.codigo.toString()}>{t.tipo}</option>)}
                     </select>
                   </div>

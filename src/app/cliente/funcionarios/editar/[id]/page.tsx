@@ -402,9 +402,9 @@ export default function EditarFuncionarioPage() {
                     </select>
                   </div>
                   <div>
-                    <label className={labelCls}>Tipo</label>
+                    <label className={labelCls}>Categoria</label>
                     <select value={formData.codTipo} onChange={(e) => set('codTipo', e.target.value)} disabled={!canEdit} className={canEdit ? selectCls : disabledCls}>
-                      <option value="">Selecione o tipo</option>
+                      <option value="">Selecione a categoria</option>
                       {tipos.map((t) => <option key={t.codigo} value={t.codigo.toString()}>{t.tipo}</option>)}
                     </select>
                   </div>
