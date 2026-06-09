@@ -260,7 +260,7 @@ export default function RelatoriosPage() {
           [
             p.venda.numeroVenda,
             format(new Date(p.venda.dataEmissao.slice(0, 10) + 'T12:00:00'), 'dd/MM/yyyy'),
-            `${p.numeroParcela}/${p.venda.quantidadeParcelas}`,
+            `="${p.numeroParcela}/${p.venda.quantidadeParcelas}"`,
             format(new Date(p.dataVencimento), 'MM/yyyy'),
             Number(p.valor).toFixed(2).replace('.', ','),
             `"${p.venda.socio}"`,
