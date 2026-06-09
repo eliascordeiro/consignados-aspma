@@ -41,6 +41,9 @@ interface VendasPeriodoData {
     vendasCanceladas: number
     valorRecebido: number
     valorAReceber: number
+    descontoPorParcela: number
+    totalDesconto: number
+    valorLiquido: number
   }
   vendasPorDia: Array<{ data: string; quantidade: number; valor: number }>
   vendas: Array<{
@@ -220,11 +223,18 @@ export default function RelatoriosPage() {
     const bom = '\uFEFF'
     if (tipo === 'vendas' && vendasData) {
       const linhas = [
-        ['Relatório de Vendas do Período', '', '', '', '', '', '', ''].join(';'),
-        [`Período: ${dataInicio} a ${dataFim}`, '', '', '', '', '', '', ''].join(';'),
-        [`Total de Vendas: ${vendasData.resumo.totalVendas}`, `Valor Total: R$ ${vendasData.resumo.valorTotal.toFixed(2).replace('.', ',')}`, '', '', '', '', '', ''].join(';'),
-        ['', '', '', '', '', '', '', ''].join(';'),
-        ['Nº Venda', 'Data', 'Sócio', 'Matrícula', 'Valor Total', 'Parcelas', 'Valor Parcela', 'Status'].join(';'),
+        ['Relatório de Vendas do Período', '', '', '', '', '', '', '', ''].join(';'),
+        [`Período: ${dataInicio} a ${dataFim}`, '', '', '', '', '', '', '', ''].join(';'),
+        [
+          `Total de Vendas: ${vendasData.resumo.totalVendas}`,
+          `Valor Total: R$ ${vendasData.resumo.valorTotal.toFixed(2).replace('.', ',')}`,
+          `A Receber (Bruto): R$ ${vendasData.resumo.valorAReceber.toFixed(2).replace('.', ',')}`,
+          vendasData.resumo.descontoPorParcela > 0 ? `Desconto: ${vendasData.resumo.descontoPorParcela}% = R$ ${vendasData.resumo.totalDesconto.toFixed(2).replace('.', ',')}` : '',
+          vendasData.resumo.descontoPorParcela > 0 ? `A Receber (Líquido): R$ ${vendasData.resumo.valorLiquido.toFixed(2).replace('.', ',')}` : '',
+          '', '', '', ''
+        ].join(';'),
+        ['', '', '', '', '', '', '', '', ''].join(';'),
+        ['Nº Venda', 'Data', 'Sócio', 'Matrícula', 'Valor Total', 'Parcelas', 'Valor Parcela', 'Status', 'Desconto (%)'].join(';'),
         ...vendasData.vendas.map(v =>
           [
             v.numeroVenda,
@@ -235,6 +245,7 @@ export default function RelatoriosPage() {
             v.quantidadeParcelas,
             v.valorParcela.toFixed(2).replace('.', ','),
             v.status === 'ativa' ? 'Ativa' : 'Cancelada',
+            vendasData.resumo.descontoPorParcela > 0 ? vendasData.resumo.descontoPorParcela.toFixed(2).replace('.', ',') + '%' : '0%',
           ].join(';')
         ),
       ]
@@ -246,16 +257,17 @@ export default function RelatoriosPage() {
       link.click()
     } else if (tipo === 'parcelas' && parcelasData) {
       const linhas = [
-        ['Relatório de Parcelas a Receber', '', '', '', '', '', '', '', ''].join(';'),
-        [`Mês: ${mesVencimento}`, '', '', '', '', '', '', '', ''].join(';'),
+        ['Relatório de Parcelas a Receber', '', '', '', '', '', '', '', '', ''].join(';'),
+        [`Mês: ${mesVencimento}`, '', '', '', '', '', '', '', '', ''].join(';'),
         [
           `Total: ${parcelasData.resumo.totalParcelas} parcelas`,
           `Bruto: R$ ${parcelasData.resumo.valorTotal.toFixed(2).replace('.', ',')}`,
+          parcelasData.resumo.descontoPorParcela > 0 ? `Desconto: ${parcelasData.resumo.descontoPorParcela}% = R$ ${parcelasData.resumo.totalDesconto.toFixed(2).replace('.', ',')}` : '',
           `Líquido: R$ ${parcelasData.resumo.valorLiquido.toFixed(2).replace('.', ',')}`,
           '', '', '', '', '', ''
         ].join(';'),
-        ['', '', '', '', '', '', '', '', ''].join(';'),
-        ['Nº Venda', 'Data Compra', 'Parcela', 'Vencimento', 'Valor Bruto', 'Sócio', 'Matrícula', 'CPF', 'Status'].join(';'),
+        ['', '', '', '', '', '', '', '', '', ''].join(';'),
+        ['Nº Venda', 'Data Compra', 'Parcela', 'Vencimento', 'Valor Bruto', 'Desconto (%)', 'Valor Líquido', 'Sócio', 'Matrícula', 'Status'].join(';'),
         ...parcelasData.parcelas.map(p =>
           [
             p.venda.numeroVenda,
@@ -263,9 +275,10 @@ export default function RelatoriosPage() {
             `="${p.numeroParcela}/${p.venda.quantidadeParcelas}"`,
             format(new Date(p.dataVencimento), 'MM/yyyy'),
             Number(p.valor).toFixed(2).replace('.', ','),
+            parcelasData.resumo.descontoPorParcela > 0 ? parcelasData.resumo.descontoPorParcela.toFixed(2).replace('.', ',') + '%' : '0%',
+            (Number(p.valor) * (1 - parcelasData.resumo.descontoPorParcela / 100)).toFixed(2).replace('.', ','),
             `"${p.venda.socio}"`,
             p.venda.matricula || '',
-            p.venda.cpf || '',
             p.baixa === 'S' ? 'Paga' : 'Confirmada',
           ].join(';')
         ),
@@ -475,6 +488,31 @@ export default function RelatoriosPage() {
                     <p className="text-xs text-gray-500 mt-1">
                       Ticket médio: {formatCurrency(vendasData.resumo.ticketMedio)}
                     </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">A Receber</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-muted-foreground">Bruto</span>
+                      <span className="text-sm font-medium">{formatCurrency(vendasData.resumo.valorAReceber)}</span>
+                    </div>
+                    {vendasData.resumo.descontoPorParcela > 0 && (
+                      <>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-muted-foreground">Desconto ({vendasData.resumo.descontoPorParcela}%)</span>
+                          <span className="text-sm font-medium text-red-500">- {formatCurrency(vendasData.resumo.totalDesconto)}</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 pt-1 border-t border-border">
+                          <span className="text-xs text-muted-foreground">Líquido</span>
+                          <span className="text-xl font-bold">{formatCurrency(vendasData.resumo.valorLiquido)}</span>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </div>

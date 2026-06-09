@@ -13,6 +13,13 @@ export async function GET(request: NextRequest) {
 
     const convenio = { id: session.convenioId }
 
+    // Buscar desconto do convênio
+    const convenioData = await prisma.convenio.findUnique({
+      where: { id: session.convenioId },
+      select: { desconto: true },
+    })
+    const descontoPorParcela = Number(convenioData?.desconto ?? 0)
+
     const { searchParams } = new URL(request.url)
     const dataInicio = searchParams.get('dataInicio')
     const dataFim = searchParams.get('dataFim')
@@ -130,6 +137,9 @@ export async function GET(request: NextRequest) {
         vendasCanceladas,
         valorRecebido,
         valorAReceber: valorTotal - valorRecebido,
+        descontoPorParcela,
+        totalDesconto: (valorTotal - valorRecebido) * descontoPorParcela / 100,
+        valorLiquido: (valorTotal - valorRecebido) * (1 - descontoPorParcela / 100),
       },
       vendasPorDia: vendasPorDiaArray,
       vendas: vendas.map(v => ({
