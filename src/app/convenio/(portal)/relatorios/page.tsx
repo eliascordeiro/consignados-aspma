@@ -844,16 +844,6 @@ export default function RelatoriosPage() {
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-xs sm:text-sm font-medium">Já Recebido</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{formatCurrency(posicaoData.resumo.totalPago)}</div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-xs sm:text-sm font-medium">Total Geral</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
