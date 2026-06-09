@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
       const pagas = v.parcelas.filter(p => p.baixa === 'S')
       const pendentes = v.parcelas.filter(p => p.baixa !== 'S')
       const valorPago = pagas.reduce((s, p) => s + Number(p.valor), 0)
-      const valorPendente = pendentes.reduce((s, p) => s + Number(p.valor), 0)
+      // Usa valorTotal da venda menos o que foi pago para evitar diferença de arredondamento
+      const valorPendente = Math.max(0, Number(v.valorTotal) - valorPago)
       const proximaParcela = [...pendentes].sort(
         (a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime()
       )[0]
