@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { getDataUserId } from "@/lib/get-data-user-id"
 import { randomBytes } from "crypto"
 import { hasPermission } from "@/lib/permissions"
+import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -229,6 +230,21 @@ export async function PUT(
       data: dataToSave,
     })
 
+    const { ipAddress: ipPut, userAgent: uaPut } = getRequestInfo(req)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: (session.user as any).name || session.user.email || session.user.id,
+      userRole: (session.user as any).role || 'UNKNOWN',
+      action: 'UPDATE',
+      module: 'convenios',
+      entityId: convenio.id.toString(),
+      entityName: convenio.fantasia || convenio.razao_soc,
+      description: `Convênio atualizado: ${convenio.fantasia || convenio.razao_soc}`,
+      metadata: { convenioId: convenio.id, razaoSocial: convenio.razao_soc, email: convenio.email || null },
+      ipAddress: ipPut,
+      userAgent: uaPut,
+    })
+
     return NextResponse.json(convenio)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -307,6 +323,21 @@ export async function DELETE(
 
     await db.convenio.delete({
       where: { id },
+    })
+
+    const { ipAddress: ipDel, userAgent: uaDel } = getRequestInfo(req)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: (session.user as any).name || session.user.email || session.user.id,
+      userRole: (session.user as any).role || 'UNKNOWN',
+      action: 'DELETE',
+      module: 'convenios',
+      entityId: id.toString(),
+      entityName: existing.fantasia || existing.razao_soc,
+      description: `Convênio excluído: ${existing.fantasia || existing.razao_soc}`,
+      metadata: { convenioId: id, razaoSocial: existing.razao_soc, email: existing.email || null },
+      ipAddress: ipDel,
+      userAgent: uaDel,
     })
 
     return NextResponse.json({ success: true })

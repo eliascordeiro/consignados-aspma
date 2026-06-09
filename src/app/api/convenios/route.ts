@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { getDataUserId } from "@/lib/get-data-user-id"
 import { hasPermission } from "@/lib/permissions"
 import { randomBytes } from "crypto"
+import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -259,6 +260,21 @@ export async function POST(req: NextRequest) {
 
     const convenio = await db.convenio.create({
       data: dataToSave,
+    })
+
+    const { ipAddress, userAgent } = getRequestInfo(req)
+    await createAuditLog({
+      userId: session.user.id,
+      userName: (session.user as any).name || session.user.email || session.user.id,
+      userRole: (session.user as any).role || 'UNKNOWN',
+      action: 'CREATE',
+      module: 'convenios',
+      entityId: convenio.id.toString(),
+      entityName: convenio.fantasia || convenio.razao_soc,
+      description: `Convênio criado: ${convenio.fantasia || convenio.razao_soc}${data.email ? ` (usuário de acesso: ${data.email})` : ''}`,
+      metadata: { convenioId: convenio.id, razaoSocial: convenio.razao_soc, email: data.email || null },
+      ipAddress,
+      userAgent,
     })
 
     return NextResponse.json(convenio, { status: 201 })

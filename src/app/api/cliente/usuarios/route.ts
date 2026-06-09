@@ -75,17 +75,26 @@ export async function GET(request: NextRequest) {
     const ownerId = await getRootOwnerId(session.user)
 
     // Excluir users que são logins de convênio (criados automaticamente ao cadastrar convênio com email)
-    const convenioUsers = await prisma.convenio.findMany({
-      where: { userId: { not: null } },
-      select: { userId: true },
+    // Usa dois critérios para cobrir casos onde convenio.userId aponta para o manager (link quebrado):
+    // 1. userId direto vinculado ao convênio
+    // 2. email do user coincide com email de algum convênio
+    const conveniosComEmail = await prisma.convenio.findMany({
+      where: { OR: [{ userId: { not: null } }, { email: { not: null } }] },
+      select: { userId: true, email: true },
     })
-    const convenioUserIds = convenioUsers.map((c) => c.userId!).filter(Boolean)
+    const convenioUserIds = conveniosComEmail.map((c) => c.userId!).filter(Boolean)
+    const convenioEmails = conveniosComEmail.map((c) => c.email?.trim().toLowerCase()).filter(Boolean) as string[]
 
     const users = await prisma.users.findMany({
       where: {
         createdById: ownerId,
         role: "USER",
-        ...(convenioUserIds.length > 0 ? { id: { notIn: convenioUserIds } } : {}),
+        ...(convenioUserIds.length > 0 || convenioEmails.length > 0 ? {
+          NOT: [
+            ...(convenioUserIds.length > 0 ? [{ id: { in: convenioUserIds } }] : []),
+            ...(convenioEmails.length > 0 ? [{ email: { in: convenioEmails } }] : []),
+          ],
+        } : {}),
         OR: search ? [
           { name: { contains: search, mode: "insensitive" } },
           { email: { contains: search, mode: "insensitive" } },
