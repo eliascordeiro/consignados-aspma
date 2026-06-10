@@ -1618,14 +1618,14 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
   ];
 
   // Título
-  worksheet.mergeCells('A1:H1');
+  worksheet.mergeCells('A1:E1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'DÉBITOS POR CONVÊNIO';
   titleCell.font = { bold: true, size: 14 };
   titleCell.alignment = { horizontal: 'center' };
 
   // Período
-  worksheet.mergeCells('A2:H2');
+  worksheet.mergeCells('A2:E2');
   const periodoCell = worksheet.getCell('A2');
   periodoCell.value = `Período: ${mesNomes[mes - 1]}/${ano}`;
   periodoCell.font = { bold: true, size: 11 };
@@ -1637,7 +1637,7 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
   grupos.forEach((grupo) => {
     // Cabeçalho do convênio
     currentRow++;
-    worksheet.mergeCells(`A${currentRow}:H${currentRow}`);
+    worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
     const convenioCell = worksheet.getCell(`A${currentRow}`);
     convenioCell.value = `Convênio: ${grupo.convenioNome}`;
     convenioCell.font = { bold: true, size: 12 };
@@ -1650,14 +1650,14 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
 
     // Dados bancários
     if (grupo.cnpj) {
-      worksheet.mergeCells(`A${currentRow}:H${currentRow}`);
+      worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
       const cnpjCell = worksheet.getCell(`A${currentRow}`);
       cnpjCell.value = `CNPJ: ${grupo.cnpj}`;
       currentRow++;
     }
 
     if (grupo.banco || grupo.agencia || grupo.conta) {
-      worksheet.mergeCells(`A${currentRow}:H${currentRow}`);
+      worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
       const bancarioCell = worksheet.getCell(`A${currentRow}`);
       const dadosBancarios = [
         grupo.banco ? `Banco: ${grupo.banco}` : '',
@@ -1675,9 +1675,6 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
       'Pc',
       'De',
       'Valor',
-      'Total Bruto',
-      'Desconto',
-      'Total Líquido',
     ]);
 
     headerRow.font = { bold: true };
@@ -1689,7 +1686,7 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
     currentRow++;
 
     // Dados
-    grupo.parcelas.forEach((parcela, index) => {
+    grupo.parcelas.forEach((parcela) => {
       const partes = parcela.socio.split(' - ');
       const matricula = partes[0] || '';
       const nome = partes.slice(1).join(' - ') || '';
@@ -1699,58 +1696,49 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
         parcela.pc,
         parcela.de,
         parcela.valor,
-        index === grupo.parcelas.length - 1 ? grupo.total : '',
-        index === grupo.parcelas.length - 1 ? grupo.totalDesconto : '',
-        index === grupo.parcelas.length - 1 ? grupo.totalLiquido : '',
       ]);
 
       // Formatar valor
       row.getCell(5).numFmt = '#,##0.00';
-      
-      // Formatar total
-      if (index === grupo.parcelas.length - 1) {
-        row.getCell(6).numFmt = '#,##0.00';
-        row.getCell(6).font = { bold: true };
-        row.getCell(7).numFmt = '#,##0.00';
-        row.getCell(7).font = { bold: true, color: { argb: 'FFCC0000' } };
-        row.getCell(8).numFmt = '#,##0.00';
-        row.getCell(8).font = { bold: true };
-      }
       currentRow++;
     });
+
+    // Total por convênio
+    const totalConvRow = worksheet.addRow([
+      '',
+      '',
+      '',
+      'Total:',
+      grupo.total,
+    ]);
+    totalConvRow.font = { bold: true };
+    totalConvRow.getCell(4).alignment = { horizontal: 'right' };
+    totalConvRow.getCell(5).numFmt = '#,##0.00';
+    currentRow++;
 
     totalGeral += grupo.total;
     currentRow++; // Espaço entre grupos
   });
 
   // Total Geral
-  const totalDescontoGeralConv = grupos.reduce((s, g) => s + g.totalDesconto, 0);
   const totalRow = worksheet.addRow([
     '',
     '',
     '',
-    '',
-    'TOTAIS:',
+    'TOTAL GERAL:',
     totalGeral,
-    totalDescontoGeralConv,
-    totalGeral - totalDescontoGeralConv,
   ]);
-  totalRow.font = { bold: true };
-  totalRow.getCell(6).numFmt = '#,##0.00';
-  totalRow.getCell(7).numFmt = '#,##0.00';
-  totalRow.getCell(7).font = { bold: true, color: { argb: 'FFCC0000' } };
-  totalRow.getCell(8).numFmt = '#,##0.00';
+  totalRow.font = { bold: true, size: 12 };
+  totalRow.getCell(4).alignment = { horizontal: 'right' };
+  totalRow.getCell(5).numFmt = '#,##0.00';
 
   // Auto-ajustar colunas
   worksheet.columns = [
     { width: 12 }, // Matrícula
     { width: 40 }, // Nome
     { width: 5 },  // Pc
-    { width: 5 },  // De
+    { width: 12 }, // De
     { width: 15 }, // Valor
-    { width: 15 }, // Total Bruto
-    { width: 15 }, // Desconto
-    { width: 15 }, // Total Líquido
   ];
 
   const buffer = await workbook.xlsx.writeBuffer();
