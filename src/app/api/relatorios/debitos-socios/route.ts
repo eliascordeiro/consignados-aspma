@@ -1703,19 +1703,6 @@ async function gerarExcelConvenio(grupos: GrupoConvenio[], mes: number, ano: num
       currentRow++;
     });
 
-    // Total por convênio
-    const totalConvRow = worksheet.addRow([
-      '',
-      '',
-      '',
-      'Total:',
-      grupo.total,
-    ]);
-    totalConvRow.font = { bold: true };
-    totalConvRow.getCell(4).alignment = { horizontal: 'right' };
-    totalConvRow.getCell(5).numFmt = '#,##0.00';
-    currentRow++;
-
     totalGeral += grupo.total;
     currentRow++; // Espaço entre grupos
   });
