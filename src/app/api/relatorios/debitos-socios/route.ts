@@ -261,7 +261,26 @@ export async function GET(request: NextRequest) {
 
     // Agrupar por sócio ou convênio
     if (agrupaPor === 'convenio') {
-      const gruposConvenio = agruparPorConvenio(parcelas);
+      // Busca de-para de matrículas para exibir matrícula correta no relatório por convênio
+      const uniqueNumsConv = [...new Set(
+        parcelas.map((p: any) => parseInt(p.venda.socio.matricula || '')).filter((n: number) => !isNaN(n) && n > 0)
+      )] as number[];
+      const matriculaMapConv = new Map<string, { antiga: number; atual: number }>();
+      if (uniqueNumsConv.length > 0) {
+        try {
+          const mappingsConv = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+            SELECT matricula_antiga, matricula_atual FROM matriculas
+            WHERE matricula_antiga = ANY(${uniqueNumsConv}::integer[])
+               OR matricula_atual  = ANY(${uniqueNumsConv}::integer[])
+          `;
+          for (const m of mappingsConv) {
+            const entry = { antiga: Number(m.matricula_antiga), atual: Number(m.matricula_atual) };
+            matriculaMapConv.set(m.matricula_antiga.toString(), entry);
+            matriculaMapConv.set(m.matricula_atual.toString(), entry);
+          }
+        } catch { /* tabela inexistente ou erro — ignora */ }
+      }
+      const gruposConvenio = agruparPorConvenio(parcelas, matriculaMapConv);
       const isRelatorioGeral = !convenioId && convenioIds.length === 0; // Relatório geral quando não há filtro de convênio
       
       if (formato === 'pdf') {
@@ -304,7 +323,26 @@ export async function GET(request: NextRequest) {
         });
       }
     } else if (agrupaPor === 'consignataria') {
-      const gruposConsignataria = agruparPorConsignataria(parcelas);
+      // Busca de-para de matrículas para exibir matrícula correta no relatório por consignatária
+      const uniqueNumsConsig = [...new Set(
+        parcelas.map((p: any) => parseInt(p.venda.socio.matricula || '')).filter((n: number) => !isNaN(n) && n > 0)
+      )] as number[];
+      const matriculaMapConsig = new Map<string, { antiga: number; atual: number }>();
+      if (uniqueNumsConsig.length > 0) {
+        try {
+          const mappingsConsig = await prisma.$queryRaw<{ matricula_antiga: number; matricula_atual: number }[]>`
+            SELECT matricula_antiga, matricula_atual FROM matriculas
+            WHERE matricula_antiga = ANY(${uniqueNumsConsig}::integer[])
+               OR matricula_atual  = ANY(${uniqueNumsConsig}::integer[])
+          `;
+          for (const m of mappingsConsig) {
+            const entry = { antiga: Number(m.matricula_antiga), atual: Number(m.matricula_atual) };
+            matriculaMapConsig.set(m.matricula_antiga.toString(), entry);
+            matriculaMapConsig.set(m.matricula_atual.toString(), entry);
+          }
+        } catch { /* tabela inexistente ou erro — ignora */ }
+      }
+      const gruposConsignataria = agruparPorConsignataria(parcelas, matriculaMapConsig);
 
       if (formato === 'pdf') {
         const pdfBuffer = await gerarPDFConsignataria(gruposConsignataria, mes, ano, !!convenioId || convenioIds.length > 0);
@@ -1044,7 +1082,7 @@ function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: n
   return Array.from(grupos.values()).map(g => ({ ...g, totalLiquido: g.total - g.totalDesconto }));
 }
 
-function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
+function agruparPorConvenio(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>): GrupoConvenio[] {
   const grupos: Map<number, GrupoConvenio> = new Map();
 
   parcelas.forEach((parcela) => {
@@ -1070,7 +1108,12 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
     }
 
     const grupo = grupos.get(convenioId)!;
-    const socioTexto = `${parcela.venda.socio.matricula || ''} - ${parcela.venda.socio.nome}`;
+    const matriculaRaw = parcela.venda.socio.matricula || '';
+    const info = matriculaMap?.get(matriculaRaw) ?? null;
+    const matriculaExibida = info
+      ? (info.antiga ? info.antiga.toString() : matriculaRaw)
+      : matriculaRaw;
+    const socioTexto = `${matriculaExibida} - ${parcela.venda.socio.nome}`;
     const baixaConv = (parcela.baixa || '').toString().trim();
     grupo.parcelas.push({
       socio: socioTexto,
@@ -1090,7 +1133,7 @@ function agruparPorConvenio(parcelas: any[]): GrupoConvenio[] {
 }
 
 // Agrupamento por Consignatária: inclui parcelas com baixa 'S'/'X' marcando ST = 'BX'
-function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
+function agruparPorConsignataria(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>): GrupoConvenio[] {
   const grupos: Map<number, GrupoConvenio> = new Map();
 
   parcelas.forEach((parcela) => {
@@ -1116,7 +1159,12 @@ function agruparPorConsignataria(parcelas: any[]): GrupoConvenio[] {
     }
 
     const grupo = grupos.get(convenioId)!;
-    const socioTexto = `${parcela.venda.socio.matricula || ''} - ${parcela.venda.socio.nome}`;
+    const matriculaRaw = parcela.venda.socio.matricula || '';
+    const info = matriculaMap?.get(matriculaRaw) ?? null;
+    const matriculaExibida = info
+      ? (info.antiga ? info.antiga.toString() : matriculaRaw)
+      : matriculaRaw;
+    const socioTexto = `${matriculaExibida} - ${parcela.venda.socio.nome}`;
     const baixaVal = (parcela.baixa || '').toString().trim();
     const st = baixaVal !== '' ? 'BX' : '';
 
