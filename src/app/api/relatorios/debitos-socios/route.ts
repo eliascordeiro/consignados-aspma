@@ -861,14 +861,14 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   ];
 
   // Título
-  worksheet.mergeCells('A1:H1');
+  worksheet.mergeCells('A1:I1');
   const titleCell = worksheet.getCell('A1');
   titleCell.value = 'DÉBITOS DE SÓCIOS';
   titleCell.font = { bold: true, size: 14 };
   titleCell.alignment = { horizontal: 'center' };
 
   // Período
-  worksheet.mergeCells('A2:H2');
+  worksheet.mergeCells('A2:I2');
   const periodoCell = worksheet.getCell('A2');
   periodoCell.value = `Período: ${mesNomes[mes - 1]}/${ano}`;
   periodoCell.font = { bold: true, size: 11 };
@@ -878,7 +878,9 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
   const headerRow = worksheet.addRow([
     'Matrícula',
     'Associado',
-    'Conveniado',
+    'Cód.',
+    'Nome Convênio',
+    'Contrato',
     'Pc',
     'De',
     'Valor',
@@ -897,10 +899,26 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
 
   grupos.forEach((grupo) => {
     grupo.parcelas.forEach((parcela, index) => {
+      // Decompõe "118 - BANCO DO BRASIL/FPMA [Contrato: 533]" em 3 partes
+      const convenioStr = parcela.convenio;
+      const contratoMatch = convenioStr.match(/\[Contrato:\s*([^\]]+)\]/);
+      const numContrato = contratoMatch ? contratoMatch[1].trim() : '';
+      const semContrato = convenioStr.replace(/\s*\[Contrato:[^\]]*\]/, '').trim();
+      let codConvenio = '', nomeConvenio = '';
+      const dashIdx = semContrato.indexOf(' - ');
+      if (dashIdx >= 0) {
+        codConvenio = semContrato.substring(0, dashIdx).trim();
+        nomeConvenio = semContrato.substring(dashIdx + 3).trim();
+      } else {
+        nomeConvenio = semContrato;
+      }
+
       const row = worksheet.addRow([
         grupo.matriculaInfo ? grupo.matriculaInfo.antiga.toString() : grupo.matricula,
         grupo.nome,
-        parcela.convenio,
+        codConvenio,
+        nomeConvenio,
+        numContrato,
         parcela.pc,
         parcela.de,
         parcela.valor,
@@ -908,12 +926,12 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
       ]);
 
       // Formatar valor
-      row.getCell(6).numFmt = '#,##0.00';
+      row.getCell(8).numFmt = '#,##0.00';
       
       // Formatar total
       if (index === grupo.parcelas.length - 1) {
-        row.getCell(7).numFmt = '#,##0.00';
-        row.getCell(7).font = { bold: true };
+        row.getCell(9).numFmt = '#,##0.00';
+        row.getCell(9).font = { bold: true };
       }
     });
 
@@ -922,22 +940,21 @@ async function gerarExcel(grupos: GrupoSocio[], mes: number, ano: number): Promi
 
   // Total Geral
   const totalRow = worksheet.addRow([
-    '',
-    '',
-    '',
-    '',
-    '',
+    '', '', '', '', '', '', '',
     'TOTAIS:',
     totalGeral,
   ]);
   totalRow.font = { bold: true };
-  totalRow.getCell(7).numFmt = '#,##0.00';
+  totalRow.getCell(8).alignment = { horizontal: 'right' };
+  totalRow.getCell(9).numFmt = '#,##0.00';
 
   // Auto-ajustar colunas
   worksheet.columns = [
     { width: 12 }, // Matrícula
-    { width: 40 }, // Associado
-    { width: 40 }, // Conveniado
+    { width: 35 }, // Associado
+    { width: 6 },  // Cód.
+    { width: 38 }, // Nome Convênio
+    { width: 12 }, // Contrato
     { width: 5 },  // Pc
     { width: 5 },  // De
     { width: 15 }, // Valor
