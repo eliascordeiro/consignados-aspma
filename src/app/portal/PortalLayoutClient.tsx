@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import ChatWidget from '@/components/chat-widget'
+import { AspmaLogo } from '@/components/aspma-logo'
 
 const navItems = [
   {
@@ -123,17 +124,7 @@ export default function PortalLayoutClient({ children, managerLogo, managerName 
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-emerald-600 text-white sticky top-0 h-screen overflow-y-auto shadow-xl">
         {/* Logo / marca */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-emerald-500/50">
-          {managerLogo ? (
-            <img src={managerLogo} alt="Logo" className="w-10 h-10 rounded-full object-cover shrink-0 bg-white/20" />
-          ) : (
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </div>
-          )}
+          <AspmaLogo size={40} />
           <div>
             <p className="text-xs text-emerald-200 leading-none">Portal do Sócio</p>
             <p className="text-base font-bold leading-tight">{managerName || 'ASPMA'}</p>
@@ -192,17 +183,7 @@ export default function PortalLayoutClient({ children, managerLogo, managerName 
           <div className="pt-safe-top" />
           <div className="flex items-center justify-between px-4 py-2.5">
             <Link href="/portal/dashboard" className="flex items-center gap-2.5 min-w-0 flex-1">
-              {managerLogo ? (
-                <img src={managerLogo} alt="Logo" className="w-9 h-9 rounded-full object-cover bg-white/20 ring-2 ring-white/20 shrink-0" />
-              ) : (
-                <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                </div>
-              )}
+              <AspmaLogo size={36} />
               <div className="min-w-0">
                 <p className="text-[10px] text-emerald-200 leading-none uppercase tracking-wider font-medium">Portal do Sócio</p>
                 <p className="text-sm font-bold leading-tight truncate">{managerName || 'ConsigExpress'}</p>

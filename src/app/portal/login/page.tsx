@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatarCelular } from '@/lib/utils'
 import Link from 'next/link'
+import { AspmaLogo } from '@/components/aspma-logo'
 
 export default function PortalLoginPage() {
   const router = useRouter()
@@ -67,7 +68,13 @@ export default function PortalLoginPage() {
       <div className={`relative z-10 w-full max-w-md transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Logo da Associação */}
         <div className="mb-8 text-center animate-in fade-in slide-in-from-top duration-500">
-          <h1 className="text-3xl font-bold text-white tracking-tight drop-shadow-lg">Portal do Sócio</h1>
+          <div className="flex justify-center mb-4">
+            <div className="p-2 bg-white/20 rounded-full backdrop-blur-sm shadow-xl">
+              <AspmaLogo size={68} variant="inverted" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-white tracking-tight drop-shadow-lg">Portal do Sócio</h1>
+          <p className="text-emerald-100 text-sm mt-1 tracking-widest font-medium">A · S · P · M · A</p>
         </div>
 
         {/* Card de Login */}
