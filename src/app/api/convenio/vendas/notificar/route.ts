@@ -112,20 +112,28 @@ export async function POST(request: NextRequest) {
       return `${meses[data.getMonth()]}/${data.getFullYear()}`
     }
 
+    // Link do Portal do Sócio
+    const appUrl = (process.env.NEXTAUTH_URL || 'https://portal.aspma.com.br').replace(/\/$/, '')
+    const portalUrl = `${appUrl}/portal/login`
+
+    // Pegar o primeiro nome para um tom mais próximo
+    const primeiroNome = socio.nome.trim().split(/\s+/)[0]
+
     // Montar mensagem de confirmação
     const messageCustomId = `venda-confirmacao-${Date.now()}`
     let mensagem = `✅ *ASPMA - Venda Confirmada*\n\n`
-    mensagem += `Olá *${socio.nome}*!\n\n`
-    mensagem += `Sua venda consignada foi criada com sucesso:\n\n`
-    mensagem += `📋 *Número da Venda:* #${venda.numeroVenda}\n`
-    mensagem += `💰 *Valor Total:* R$ ${Number(venda.valorTotal).toFixed(2).replace('.', ',')}\n`
-    mensagem += `📅 *Parcelas:* ${venda.quantidadeParcelas}x de R$ ${Number(venda.valorParcela).toFixed(2).replace('.', ',')}\n`
-    mensagem += `📆 *Início do Desconto:* ${formatarMesAno(inicioDesconto)}\n`
-    mensagem += `📆 *Fim do Desconto:* ${formatarMesAno(fimDesconto)}\n\n`
-    mensagem += `💳 *Limite Disponível por Parcela:* R$ ${limiteDisponivel.toFixed(2).replace('.', ',')}\n\n`
-    mensagem += `Em caso de dúvidas, entre em contato com a ASPMA.\n\n`
-    mensagem += `💡 *Sabia que você pode consultar sua margem disponível e extrato de descontos direto por aqui?*\n`
-    mensagem += `Basta enviar uma mensagem para este número e nosso assistente virtual te atende na hora.`
+    mensagem += `Olá, *${primeiroNome}*! Sua compra consignada foi registrada com sucesso. 🎉\n\n`
+    mensagem += `*Resumo da sua compra*\n`
+    mensagem += `📋 Número da venda: #${venda.numeroVenda}\n`
+    mensagem += `💰 Valor total: R$ ${Number(venda.valorTotal).toFixed(2).replace('.', ',')}\n`
+    mensagem += `📅 Parcelas: ${venda.quantidadeParcelas}x de R$ ${Number(venda.valorParcela).toFixed(2).replace('.', ',')}\n`
+    mensagem += `📆 Descontos de ${formatarMesAno(inicioDesconto)} até ${formatarMesAno(fimDesconto)}\n`
+    mensagem += `💳 Margem disponível por parcela: R$ ${limiteDisponivel.toFixed(2).replace('.', ',')}\n\n`
+    mensagem += `🌐 *Acesse o Portal do Sócio*\n`
+    mensagem += `Acompanhe suas compras, parcelas, descontos e margem disponível quando quiser, direto no seu celular ou computador:\n`
+    mensagem += `${portalUrl}\n\n`
+    mensagem += `🔑 É só entrar com o seu número de celular. No primeiro acesso, você cria a sua senha em poucos segundos.\n\n`
+    mensagem += `Qualquer dúvida, estamos à disposição. Obrigado por confiar na ASPMA! 💚`
 
     const payload = {
       apikey: apiKey,
