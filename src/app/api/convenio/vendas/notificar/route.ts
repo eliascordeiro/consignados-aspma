@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
     mensagem += `Acompanhe suas compras, parcelas, descontos e margem disponível quando quiser, direto no seu celular ou computador:\n`
     mensagem += `${portalUrl}\n\n`
     mensagem += `🔑 É só entrar com o seu número de celular. No primeiro acesso, você cria a sua senha em poucos segundos.\n\n`
+    mensagem += `💬 *Precisa de ajuda?* Basta responder esta mensagem e nosso assistente virtual te atende na hora. Para falar com um atendente humano, é só pedir!\n\n`
     mensagem += `Qualquer dúvida, estamos à disposição. Obrigado por confiar na ASPMA! 💚`
 
     const payload = {
