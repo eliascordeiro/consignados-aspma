@@ -1049,14 +1049,19 @@ function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: n
   const grupos: Map<string, GrupoSocio> = new Map();
 
   parcelas.forEach((parcela) => {
-    // Usar socio.id como chave garante que sócios distintos com mesma matrícula
-    // (ou sem matrícula) não sejam agrupados incorretamente.
-    const socioKey = parcela.venda.socio.id || parcela.venda.socio.matricula || '';
     const matricula = parcela.venda.socio.matricula || '';
+    const info = matriculaMap?.get(matricula) ?? null;
+
+    // Se existe mapeamento de matrícula (ex.: 20119 → 2011901), usa a matrícula
+    // canônica (antiga) como chave para unificar os dois registros do mesmo sócio
+    // no mesmo bloco do relatório. Caso contrário, usa socio.id para evitar
+    // agrupar erroneamente sócios distintos com mesma matrícula ou sem matrícula.
+    const socioKey = info
+      ? info.antiga.toString()
+      : (parcela.venda.socio.id || matricula);
 
     if (!grupos.has(socioKey)) {
       const margemConsignada = margemMap?.get(parcela.venda.socio.id);
-      const info = matriculaMap?.get(matricula) ?? null;
       // Monta string com todas as matrículas (antiga e atual)
       let todasMatriculas = matricula;
       if (info) {
@@ -2280,16 +2285,19 @@ function agruparPorSocioResumo(parcelas: any[], matriculaMap?: Map<string, { ant
   const grupos: Map<string, GrupoSocioResumo> = new Map();
   parcelas.forEach((parcela) => {
     const matricula = parcela.venda.socio.matricula || '';
-    if (!grupos.has(matricula)) {
-      grupos.set(matricula, {
+    const info = matriculaMap?.get(matricula) ?? null;
+    // Usa matrícula canônica (antiga) para unificar registros do mesmo sócio
+    const groupKey = info ? info.antiga.toString() : matricula;
+    if (!grupos.has(groupKey)) {
+      grupos.set(groupKey, {
         matricula,
         nome: parcela.venda.socio.nome,
-        matriculaInfo: matriculaMap?.get(matricula) ?? null,
+        matriculaInfo: info,
         qtdParcelas: 0,
         total: 0,
       });
     }
-    const g = grupos.get(matricula)!;
+    const g = grupos.get(groupKey)!;
     g.qtdParcelas += 1;
     g.total += Number(parcela.valor);
   });
