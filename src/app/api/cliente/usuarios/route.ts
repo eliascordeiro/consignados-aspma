@@ -74,45 +74,32 @@ export async function GET(request: NextRequest) {
 
     const ownerId = await getRootOwnerId(session.user)
 
-    // Construir conjunto de IDs e emails que pertencem a logins de convênio
-    // para excluí-los da listagem de usuários subordinados.
+    // Excluir users que são logins de convênio (criados automaticamente ao cadastrar convênio com email)
+    // Usa dois critérios para cobrir casos onde convenio.userId aponta para o manager (link quebrado):
+    // 1. userId direto vinculado ao convênio
+    // 2. email do user coincide com email de algum convênio
     //
-    // Três fontes de exclusão:
-    // 1. convenio.userId → id direto do user de login do convênio
-    // 2. email dos users cujo id está em convenio.userId (garante match mesmo que email
-    //    de login seja diferente do convenio.email comercial)
-    // 3. convenio.email → email comercial que pode coincidir com um user cadastrado
-    const todosConvenios = await prisma.convenio.findMany({
+    // IMPORTANTE: a exclusão é feita em JS (não via Prisma `NOT { in }`) porque o operador
+    // `in` do Prisma é sensível a maiúsculas/minúsculas. E-mails migrados do MySQL podem ter
+    // casing diferente entre `users.email` e `convenio.email`, fazendo a exclusão por e-mail
+    // falhar silenciosamente e o login de convênio "vazar" para a lista de usuários.
+    const conveniosComEmail = await prisma.convenio.findMany({
       where: { OR: [{ userId: { not: null } }, { email: { not: null } }] },
       select: { userId: true, email: true },
     })
-
-    const convenioUserIds = new Set<string>(
-      todosConvenios.map((c) => c.userId!).filter(Boolean)
+    const convenioUserIdSet = new Set(
+      conveniosComEmail.map((c) => c.userId).filter(Boolean) as string[]
+    )
+    const convenioEmailSet = new Set(
+      conveniosComEmail
+        .map((c) => c.email?.trim().toLowerCase())
+        .filter(Boolean) as string[]
     )
 
-    // Busca os emails reais dos users vinculados como userId de convênio
-    let emailsDeUsersDeConvenio: string[] = []
-    if (convenioUserIds.size > 0) {
-      const usersVinculados = await prisma.users.findMany({
-        where: { id: { in: Array.from(convenioUserIds) } },
-        select: { email: true },
-      })
-      emailsDeUsersDeConvenio = usersVinculados.map((u) => u.email.trim().toLowerCase())
-    }
-
-    // Conjunto final de emails a excluir (case-insensitive)
-    const emailsExcluir = new Set<string>([
-      ...emailsDeUsersDeConvenio,
-      ...todosConvenios.map((c) => c.email?.trim().toLowerCase()).filter(Boolean) as string[],
-    ])
-
-    const users = await prisma.users.findMany({
+    const usersRaw = await prisma.users.findMany({
       where: {
         createdById: ownerId,
         role: "USER",
-        // Exclui pelo id direto (critério mais eficiente no DB)
-        ...(convenioUserIds.size > 0 ? { id: { notIn: Array.from(convenioUserIds) } } : {}),
         OR: search ? [
           { name: { contains: search, mode: "insensitive" } },
           { email: { contains: search, mode: "insensitive" } },
@@ -136,13 +123,14 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Filtragem final em JS (case-insensitive) para cobrir casos onde convenio.userId
-    // aponta para o manager e o user de convênio só é identificável pelo email
-    const usersFinais = users.filter(
-      (u) => !emailsExcluir.has(u.email.trim().toLowerCase())
-    )
+    // Remove logins de convênio (comparação case-insensitive por e-mail)
+    const users = usersRaw.filter((u) => {
+      if (convenioUserIdSet.has(u.id)) return false
+      if (u.email && convenioEmailSet.has(u.email.trim().toLowerCase())) return false
+      return true
+    })
 
-    return NextResponse.json(usersFinais)
+    return NextResponse.json(users)
   } catch (error) {
     console.error("Erro ao buscar usuários:", error)
     return NextResponse.json(
