@@ -93,17 +93,44 @@ export async function GET(req: NextRequest) {
     // USER vê os convênios do seu userId OU convênios globais (userId = null)
     // Inclui também convênios cujo userId pertence a sub-usuários criados pelo mesmo manager
     // (necessário porque ao criar convênio com email, um novo user é criado com createdById=managerUserId)
+    //
+    // IMPORTANTE: USER subordinado HERDA os dados do MANAGER (getDataUserId já resolve
+    // dataUserId para o id do manager). Se o dono dos dados é ADMIN/MANAGER, o USER deve
+    // enxergar exatamente o mesmo conjunto de convênios que o manager — ou seja, acesso
+    // total. Sem isso, uma busca por código (que usa `contains`) retorna convênios
+    // diferentes para o USER e para o MANAGER, pois o convênio buscado pode estar fora
+    // do subconjunto visível ao USER.
     let userFilter: any
     if (session.user?.role === 'ADMIN' || session.user?.role === 'MANAGER') {
       userFilter = {}
     } else {
-      const subUsers = await db.users.findMany({
-        where: { createdById: dataUserId },
-        select: { id: true },
-      })
-      const allUserIds = [dataUserId, ...subUsers.map((u) => u.id)]
-      userFilter = { OR: [{ userId: { in: allUserIds } }, { userId: null }] }
+      // Descobre o role do dono dos dados (manager do qual o USER herda)
+      let ownerHasFullAccess = false
+      if (dataUserId && dataUserId !== session.user.id) {
+        const owner = await db.users.findUnique({
+          where: { id: dataUserId },
+          select: { role: true },
+        })
+        ownerHasFullAccess = owner?.role === 'ADMIN' || owner?.role === 'MANAGER'
+      }
+
+      if (ownerHasFullAccess) {
+        // Herda o acesso total do manager
+        userFilter = {}
+      } else {
+        const subUsers = await db.users.findMany({
+          where: { createdById: dataUserId },
+          select: { id: true },
+        })
+        const allUserIds = [dataUserId, ...subUsers.map((u) => u.id)]
+        userFilter = { OR: [{ userId: { in: allUserIds } }, { userId: null }] }
+      }
     }
+
+    const isOwnerFullAccess =
+      session.user?.role === 'ADMIN' ||
+      session.user?.role === 'MANAGER' ||
+      Object.keys(userFilter).length === 0
 
     const searchFilter = statusFilter !== null
       ? { ativo: statusFilter }
@@ -121,7 +148,7 @@ export async function GET(req: NextRequest) {
           }
         : {}
 
-    const isFullAccess = session.user?.role === 'ADMIN' || session.user?.role === 'MANAGER'
+    const isFullAccess = isOwnerFullAccess
     const where: any = isFullAccess
       ? searchFilter
       : { AND: [userFilter, ...(Object.keys(searchFilter).length ? [searchFilter] : [])] }
