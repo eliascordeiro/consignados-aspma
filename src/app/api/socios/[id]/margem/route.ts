@@ -18,6 +18,18 @@ const ZETRA_CONFIG = {
   senha: 'dcc0bd05',
 };
 
+// Mapeamento de códigos de retorno do ZETRA para mensagens amigáveis
+const ZETRA_COD_RETORNO_MENSAGENS: Record<string, string> = {
+  '357': 'Bloqueio efetuado por ZETRA, contate a ASPMA.',
+};
+
+function traduzirMensagemZetra(codRetorno?: string, mensagemOriginal?: string): string | undefined {
+  if (codRetorno && ZETRA_COD_RETORNO_MENSAGENS[codRetorno]) {
+    return ZETRA_COD_RETORNO_MENSAGENS[codRetorno];
+  }
+  return mensagemOriginal;
+}
+
 function extractXmlValue(startTag: string, endTag: string, xml: string): string | null {
   const startIndex = xml.indexOf(startTag);
   if (startIndex === -1) return null;
@@ -278,7 +290,7 @@ export async function GET(
           margem: 0,
           tipo: 'zetra_erro',
           fonte: 'tempo_real',
-          mensagem: zetraResult.mensagem || 'Erro desconhecido',
+          mensagem: traduzirMensagemZetra(zetraResult.codRetorno, zetraResult.mensagem) || 'Erro desconhecido',
           codRetorno: zetraResult.codRetorno,
         });
       }
