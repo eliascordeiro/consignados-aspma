@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+function formatCpf(cpf: string) {
+  const c = (cpf || '').replace(/\D/g, '');
+  if (c.length !== 11) return cpf;
+  return `${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}-${c.slice(9)}`;
+}
+
 interface Socio {
   id: string;
   nome: string;
@@ -445,7 +451,7 @@ export default function NovaVendaPage() {
                     <div className="text-sm text-muted-foreground">
                       {socio.matricula && <span>Mat: {socio.matricula}</span>}
                       {socio.cpf && socio.matricula && <span> | </span>}
-                      {socio.cpf && <span>CPF: {socio.cpf}</span>}
+                      {socio.cpf && <span>CPF: {formatCpf(socio.cpf)}</span>}
                       {(socio.matricula || socio.cpf) && <span> | </span>}
                       <span>Limite: R$ {parseFloat(socio.limite?.toString() || '0').toFixed(2)}</span>
                     </div>
