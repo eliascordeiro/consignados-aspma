@@ -6,7 +6,7 @@ import { hasPermission } from '@/config/permissions';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Unlock } from 'lucide-react';
 
 interface Convenio {
   id: number;
@@ -19,6 +19,7 @@ interface Convenio {
   banco?: string | null;
   agencia?: string | null;
   ativo: boolean;
+  senhaChangedAt?: string | null;
 }
 
 interface ConveniosResponse {
@@ -38,6 +39,13 @@ function getTipoBadgeCls(libera: string | null | undefined): string {
   return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
 }
 
+// Convênio fica travado (hard lock) após 60+ dias sem renovar a senha de acesso
+function isSenhaHardLocked(senhaChangedAt: string | null | undefined): boolean {
+  if (!senhaChangedAt) return false;
+  const daysElapsed = (Date.now() - new Date(senhaChangedAt).getTime()) / (1000 * 60 * 60 * 24);
+  return daysElapsed >= 60;
+}
+
 async function fetchConvenios({ page = 1, searchTerm }: { page?: number; searchTerm: string }): Promise<ConveniosResponse> {
   const params = new URLSearchParams({ search: searchTerm, page: String(page), limit: '50' });
   const res = await fetch(`/api/convenios?${params}`);
@@ -53,6 +61,7 @@ export default function LocaisPage() {
   const canCreate = hasPermission(userPermissions, 'convenios.create');
   const canEdit = hasPermission(userPermissions, 'convenios.edit');
   const canDelete = hasPermission(userPermissions, 'convenios.delete');
+  const [unlockingId, setUnlockingId] = useState<number | null>(null);
 
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,6 +111,24 @@ export default function LocaisPage() {
       }
     } catch {
       alert('Erro ao excluir convênio');
+    }
+  };
+
+  const handleUnlock = async (id: number, nome: string) => {
+    if (!confirm(`Desbloquear o acesso de "${nome}"? O convênio poderá fazer login e definir uma nova senha.`)) return;
+    setUnlockingId(id);
+    try {
+      const res = await fetch(`/api/convenios/${id}/unlock-senha`, { method: 'POST' });
+      if (res.ok) {
+        refetch();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Erro ao desbloquear convênio');
+      }
+    } catch {
+      alert('Erro ao desbloquear convênio');
+    } finally {
+      setUnlockingId(null);
     }
   };
 
@@ -178,6 +205,7 @@ export default function LocaisPage() {
                   const conv = convenios[virtualRow.index];
                   if (!conv) return null;
                   const nomePrincipal = conv.razao_soc || conv.nome;
+                  const hardLocked = isSenhaHardLocked(conv.senhaChangedAt);
                   return (
                     <div
                       key={conv.id}
@@ -199,9 +227,24 @@ export default function LocaisPage() {
                             <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${conv.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                               {conv.ativo ? 'Ativo' : 'Inativo'}
                             </span>
+                            {hardLocked && (
+                              <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                Travado
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
+                          {canEdit && hardLocked && (
+                            <button
+                              onClick={() => handleUnlock(conv.id, nomePrincipal)}
+                              disabled={unlockingId === conv.id}
+                              title="Desbloquear acesso"
+                              className="p-1.5 rounded hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-600 transition-colors disabled:opacity-50"
+                            >
+                              <Unlock className="h-4 w-4" />
+                            </button>
+                          )}
                           {canEdit && (
                             <Link href={`/cliente/locais/editar/${conv.id}`} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
@@ -234,12 +277,27 @@ export default function LocaisPage() {
                             <span>{conv.banco}{conv.agencia ? ` · Ag: ${conv.agencia}` : ''}</span>
                           ) : '—'}
                         </div>
-                        <div>
+                        <div className="flex items-center gap-1">
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${conv.ativo ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                             {conv.ativo ? 'Ativo' : 'Inativo'}
                           </span>
+                          {hardLocked && (
+                            <span className="text-xs px-2 py-1 rounded-full font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                              Travado
+                            </span>
+                          )}
                         </div>
                         <div className="flex justify-end gap-1">
+                          {canEdit && hardLocked && (
+                            <button
+                              onClick={() => handleUnlock(conv.id, nomePrincipal)}
+                              disabled={unlockingId === conv.id}
+                              title="Desbloquear acesso (senha travada por inatividade)"
+                              className="p-1.5 rounded hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-600 transition-colors disabled:opacity-50"
+                            >
+                              <Unlock className="h-4 w-4" />
+                            </button>
+                          )}
                           {canEdit && (
                             <Link href={`/cliente/locais/editar/${conv.id}`} title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
