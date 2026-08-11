@@ -249,14 +249,14 @@ export default function EditarConvenioPage() {
             {/* Linha 3: Email (acesso ao portal) + Código */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">
-                E-mail de Acesso <span className="text-red-500">*</span>
+                E-mail de Acesso
               </label>
-              <input type="email" required value={formData.email} onChange={(e) => set('email', e.target.value)} disabled={!canEdit}
+              <input type="email" value={formData.email} onChange={(e) => set('email', e.target.value)} disabled={!canEdit}
                 placeholder="email@exemplo.com"
                 className={`w-full border-2 ${!canEdit ? 'border-border bg-muted/50 text-muted-foreground cursor-not-allowed' : 'border-blue-300 dark:border-blue-600 bg-background text-foreground'} rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`} />
               <p className="mt-1.5 text-xs text-blue-600 dark:text-blue-400 flex items-start gap-1">
                 <svg className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                Este e-mail será o login do convênio para acessar o portal.
+                Se preenchido, será o login do convênio no portal. Deixe em branco para usar usuário/senha simples do sistema legado.
               </p>
             </div>
             <div>
