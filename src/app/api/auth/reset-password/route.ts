@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         where: { id: user.id },
         data: {
           password: hashedPassword,
+          active: true, // conclusão do link de acesso sempre reativa a conta
           resetToken: null,
           resetTokenExpiry: null,
           passwordChangedAt: new Date(),
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
           const hashedPassword = await bcrypt.hash(password, 10)
           await prisma.users.update({
             where: { id: linkedUser.id },
-            data: { password: hashedPassword, passwordChangedAt: new Date() },
+            data: { password: hashedPassword, active: true, passwordChangedAt: new Date() },
           })
         }
       }

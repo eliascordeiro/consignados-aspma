@@ -6,6 +6,7 @@ import { getDataUserId } from "@/lib/get-data-user-id"
 import { hasPermission } from "@/lib/permissions"
 import { randomBytes } from "crypto"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { sendConvenioAccessEmail } from "@/lib/email"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -240,6 +241,7 @@ export async function POST(req: NextRequest) {
     // O user é criado sem senha válida — o convênio deve usar "Criar/Redefinir Senha"
     // Se não houver email, o convênio fica vinculado ao manager (apenas para fins de visibilidade do dono)
     let convenioUserId: string = managerUserId
+    let pendingAccessEmail = false
     if (data.email) {
       const emailLower = data.email.trim().toLowerCase()
       const nomeUser = (data.fantasia || data.razao_soc || emailLower).trim()
@@ -255,7 +257,6 @@ export async function POST(req: NextRequest) {
             { status: 400 }
           )
         }
-        // Reutiliza o user USER existente (pode ser de cadastro anterior)
         convenioUserId = existingUser.id
       } else {
         // Cria user sem senha válida — senha bloqueada com sentinel
@@ -273,6 +274,17 @@ export async function POST(req: NextRequest) {
         convenioUserId = newUser.id
         console.log(`[convenios] User criado para convênio: ${emailLower} (id: ${newUser.id})`)
       }
+
+      // Conta fica pendente (inativa + senha inutilizável) até o convênio concluir
+      // o link enviado por email — evita ativar acesso sem o convênio ter definido senha.
+      await db.users.update({
+        where: { id: convenioUserId },
+        data: {
+          active: false,
+          password: `!${randomBytes(32).toString('hex')}`,
+        },
+      })
+      pendingAccessEmail = true
     }
 
     const dataToSave = {
@@ -304,7 +316,14 @@ export async function POST(req: NextRequest) {
       userAgent,
     })
 
-    return NextResponse.json(convenio, { status: 201 })
+    if (pendingAccessEmail && data.email) {
+      const nomeConvenio = convenio.fantasia || convenio.razao_soc
+      sendConvenioAccessEmail(data.email.trim().toLowerCase(), nomeConvenio).catch((err) =>
+        console.error("Erro ao enviar email de acesso na criação do convênio:", err)
+      )
+    }
+
+    return NextResponse.json({ ...convenio, accessEmailSent: pendingAccessEmail }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

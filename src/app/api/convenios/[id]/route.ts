@@ -6,6 +6,7 @@ import { getDataUserId } from "@/lib/get-data-user-id"
 import { randomBytes } from "crypto"
 import { hasPermission } from "@/lib/permissions"
 import { createAuditLog, getRequestInfo } from "@/lib/audit-log"
+import { sendConvenioAccessEmail } from "@/lib/email"
 
 // Função helper para converter o campo libera em tipo
 function getTipoFromLibera(libera: string | null | undefined): string {
@@ -150,6 +151,7 @@ export async function PUT(
 
     // Sync email changes to the linked users record
     const newEmail = data.email ? data.email.trim().toLowerCase() : null
+    let pendingAccessEmail = false
 
     if (!newEmail && existing.userId) {
       // Email foi removido — desativar/excluir o usuário vinculado (somente USER)
@@ -194,7 +196,6 @@ export async function PUT(
 
         let convenioUserId: string
         if (targetUser) {
-          // Reusar o USER já existente com este email (evita duplicata)
           convenioUserId = targetUser.id
         } else {
           const nomeUser = (data.fantasia || data.razao_soc || 'Convênio').trim()
@@ -210,6 +211,18 @@ export async function PUT(
           })
           convenioUserId = newUser.id
         }
+
+        // Toda troca de email invalida o acesso anterior: a conta fica pendente
+        // (inativa + senha inutilizável) até o convênio concluir o link enviado por email.
+        // Isso evita o estado inconsistente de "ativo mas sem poder logar" (ou o oposto).
+        await db.users.update({
+          where: { id: convenioUserId },
+          data: {
+            active: false,
+            password: `!${randomBytes(32).toString('hex')}`,
+          },
+        })
+        pendingAccessEmail = true
 
         // Limpar usuário antigo se for diferente do novo alvo (somente USER)
         if (existing.userId && existing.userId !== convenioUserId && linkedUser?.role === 'USER') {
@@ -245,7 +258,16 @@ export async function PUT(
       userAgent: uaPut,
     })
 
-    return NextResponse.json(convenio)
+    // Envia o email de instruções de acesso sempre que o email de login for alterado.
+    // O acesso só passa a funcionar quando o convênio concluir o link recebido.
+    if (pendingAccessEmail && newEmail) {
+      const nomeConvenio = convenio.fantasia || convenio.razao_soc
+      sendConvenioAccessEmail(newEmail, nomeConvenio).catch((err) =>
+        console.error("Erro ao enviar email de acesso após troca de email:", err)
+      )
+    }
+
+    return NextResponse.json({ ...convenio, accessEmailSent: pendingAccessEmail })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
