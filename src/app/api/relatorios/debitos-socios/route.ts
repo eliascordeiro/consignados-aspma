@@ -222,6 +222,7 @@ export async function GET(request: NextRequest) {
                 id: true,
                 matricula: true,
                 nome: true,
+                cpf: true,
                 empresa: {
                   select: {
                     nome: true,
@@ -1047,48 +1048,62 @@ function gerarCSV(
 
 function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>, margemMap?: Map<string, number>): GrupoSocio[] {
   const grupos: Map<string, GrupoSocio> = new Map();
+  // Rastreia identidade unificada por grupo para montar matrículas e somar margem
+  const socioIdsPorGrupo = new Map<string, Set<any>>();
+  const matriculasPorGrupo = new Map<string, Set<string>>();
 
   parcelas.forEach((parcela) => {
-    const matricula = parcela.venda.socio.matricula || '';
+    const socio = parcela.venda.socio;
+    const matricula = socio.matricula || '';
     const info = matriculaMap?.get(matricula) ?? null;
+    const cpf = (socio.cpf || '').replace(/\D/g, '');
+    // CPF só é usado como chave de identidade se tiver 11 dígitos e não for repetido
+    // (evita unificar pessoas distintas por CPF em branco/lixo como 00000000000)
+    const cpfValido = cpf.length === 11 && !/^(\d)\1{10}$/.test(cpf);
 
-    // Se existe mapeamento de matrícula (ex.: 20119 → 2011901), usa a matrícula
-    // canônica (antiga) como chave para unificar os dois registros do mesmo sócio
-    // no mesmo bloco do relatório. Caso contrário, usa socio.id para evitar
-    // agrupar erroneamente sócios distintos com mesma matrícula ou sem matrícula.
-    const socioKey = info
-      ? info.antiga.toString()
-      : (parcela.venda.socio.id || matricula);
+    // Chave de identidade da MESMA pessoa, em ordem de confiabilidade:
+    // 1) CPF válido — unifica matrículas duplicadas do mesmo sócio (ex.: 1327 e 80141)
+    // 2) matrícula canônica do de-para (antiga)
+    // 3) socio.id  4) matrícula bruta
+    const socioKey = cpfValido
+      ? `cpf:${cpf}`
+      : info
+        ? `mat:${info.antiga}`
+        : socio.id != null
+          ? `id:${socio.id}`
+          : `mat:${matricula}`;
 
     if (!grupos.has(socioKey)) {
-      const margemConsignada = margemMap?.get(parcela.venda.socio.id);
-      // Monta string com todas as matrículas (antiga e atual)
-      let todasMatriculas = matricula;
-      if (info) {
-        const parts: string[] = [];
-        if (info.antiga) parts.push(info.antiga.toString());
-        if (info.atual && info.atual.toString() !== info.antiga.toString()) parts.push(info.atual.toString());
-        if (parts.length > 0) todasMatriculas = parts.join(' / ');
-      }
       grupos.set(socioKey, {
         matricula,
-        nome: parcela.venda.socio.nome,
+        nome: socio.nome,
         matriculaInfo: info,
-        todasMatriculas,
-        empresaNome: parcela.venda.socio.empresa?.nome || '',
-        margemConsignada,
+        todasMatriculas: matricula,
+        empresaNome: socio.empresa?.nome || '',
+        margemConsignada: undefined,
         parcelas: [],
         total: 0,
         totalDesconto: 0,
         totalLiquido: 0,
       });
+      socioIdsPorGrupo.set(socioKey, new Set());
+      matriculasPorGrupo.set(socioKey, new Set());
     }
 
     const grupo = grupos.get(socioKey)!;
+
+    // Acumula identidade (todos os socio.id e todas as matrículas da mesma pessoa)
+    if (socio.id != null) socioIdsPorGrupo.get(socioKey)!.add(socio.id);
+    if (matricula) matriculasPorGrupo.get(socioKey)!.add(matricula);
+    if (info) {
+      if (info.antiga) matriculasPorGrupo.get(socioKey)!.add(info.antiga.toString());
+      if (info.atual) matriculasPorGrupo.get(socioKey)!.add(info.atual.toString());
+    }
+
     const convenioTexto = parcela.venda.convenio
       ? `${parcela.venda.convenio.codigo || ''} - ${parcela.venda.convenio.razao_soc} [Contrato: ${parcela.venda.numeroVenda}]`
       : `Sem convênio [Contrato: ${parcela.venda.numeroVenda}]`;
-    
+
     const baixaSocio = (parcela.baixa || '').toString().trim();
     grupo.parcelas.push({
       convenio: convenioTexto,
@@ -1101,7 +1116,28 @@ function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: n
     grupo.totalDesconto += Number(parcela.valor) * Number(parcela.venda.convenio?.desconto ?? 0) / 100;
   });
 
-  return Array.from(grupos.values()).map(g => ({ ...g, totalLiquido: g.total - g.totalDesconto }));
+  return Array.from(grupos.entries()).map(([key, g]) => {
+    // Lista todas as matrículas da pessoa (ordem numérica), ex.: "1327 / 80141"
+    const mats = Array.from(matriculasPorGrupo.get(key) ?? [])
+      .filter(Boolean)
+      .sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+    const todasMatriculas = mats.length > 0 ? mats.join(' / ') : g.matricula;
+
+    // Margem consignada = soma das margens dos registros (matrículas) da mesma pessoa
+    let margem = 0;
+    let temMargem = false;
+    for (const sid of socioIdsPorGrupo.get(key) ?? []) {
+      const m = margemMap?.get(sid);
+      if (m !== undefined) { margem += m; temMargem = true; }
+    }
+
+    return {
+      ...g,
+      todasMatriculas,
+      margemConsignada: temMargem ? margem : undefined,
+      totalLiquido: g.total - g.totalDesconto,
+    };
+  });
 }
 
 function agruparPorConvenio(parcelas: any[], matriculaMap?: Map<string, { antiga: number; atual: number }>): GrupoConvenio[] {
@@ -2286,8 +2322,14 @@ function agruparPorSocioResumo(parcelas: any[], matriculaMap?: Map<string, { ant
   parcelas.forEach((parcela) => {
     const matricula = parcela.venda.socio.matricula || '';
     const info = matriculaMap?.get(matricula) ?? null;
-    // Usa matrícula canônica (antiga) para unificar registros do mesmo sócio
-    const groupKey = info ? info.antiga.toString() : matricula;
+    const cpf = (parcela.venda.socio.cpf || '').replace(/\D/g, '');
+    const cpfValido = cpf.length === 11 && !/^(\d)\1{10}$/.test(cpf);
+    // Unifica a mesma pessoa: CPF válido > matrícula canônica (de-para) > matrícula
+    const groupKey = cpfValido
+      ? `cpf:${cpf}`
+      : info
+        ? `mat:${info.antiga}`
+        : `mat:${matricula}`;
     if (!grupos.has(groupKey)) {
       grupos.set(groupKey, {
         matricula,
