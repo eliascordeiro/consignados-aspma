@@ -19,6 +19,7 @@ interface User {
   createdAt: string;
   permissions?: string[];
   passwordChangedAt?: string | null;
+  isConvenioOrigin?: boolean;
 }
 
 function getPasswordStatus(passwordChangedAt: string | null | undefined) {
@@ -205,7 +206,7 @@ export default function UsuariosPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          {canEdit && (
+                          {canEdit && !(user.isConvenioOrigin && getPasswordStatus(user.passwordChangedAt).label === 'Pendente') && (
                             <Link href={`/cliente/usuarios/editar/${user.id}`} className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
                             </Link>
@@ -236,7 +237,7 @@ export default function UsuariosPage() {
                           {(() => { const ps = getPasswordStatus(user.passwordChangedAt); return <span className={`text-xs px-2 py-1 rounded-full font-medium ${ps.cls}`}>{ps.label}</span> })()}
                         </div>
                         <div className="flex justify-end gap-1">
-                          {canEdit && (
+                          {canEdit && !(user.isConvenioOrigin && getPasswordStatus(user.passwordChangedAt).label === 'Pendente') && (
                             <Link href={`/cliente/usuarios/editar/${user.id}`} title="Editar" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-muted-foreground transition-colors">
                               <Pencil className="h-4 w-4" />
                             </Link>

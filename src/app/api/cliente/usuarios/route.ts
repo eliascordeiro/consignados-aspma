@@ -96,6 +96,20 @@ export async function GET(request: NextRequest) {
         .filter(Boolean) as string[]
     )
 
+    // Nomes de todos os convênios — usado para identificar contas "órfãs" de convênio
+    // (users criados automaticamente para um e-mail de acesso antigo, já trocado/removido
+    // no convênio, mas que não têm mais vínculo de userId/email atual e por isso não são
+    // removidas pelo filtro acima). Essas contas continuam aparecendo na lista, mas não
+    // devem ser editáveis como um usuário comum do portal.
+    const todosConvenios = await prisma.convenio.findMany({
+      select: { fantasia: true, razao_soc: true },
+    })
+    const convenioNomeSet = new Set<string>()
+    for (const c of todosConvenios) {
+      if (c.fantasia) convenioNomeSet.add(c.fantasia.trim().toLowerCase())
+      if (c.razao_soc) convenioNomeSet.add(c.razao_soc.trim().toLowerCase())
+    }
+
     const usersRaw = await prisma.users.findMany({
       where: {
         createdById: ownerId,
@@ -124,11 +138,16 @@ export async function GET(request: NextRequest) {
     })
 
     // Remove logins de convênio (comparação case-insensitive por e-mail)
-    const users = usersRaw.filter((u) => {
-      if (convenioUserIdSet.has(u.id)) return false
-      if (u.email && convenioEmailSet.has(u.email.trim().toLowerCase())) return false
-      return true
-    })
+    const users = usersRaw
+      .filter((u) => {
+        if (convenioUserIdSet.has(u.id)) return false
+        if (u.email && convenioEmailSet.has(u.email.trim().toLowerCase())) return false
+        return true
+      })
+      .map((u) => ({
+        ...u,
+        isConvenioOrigin: convenioNomeSet.has(u.name.trim().toLowerCase()),
+      }))
 
     return NextResponse.json(users)
   } catch (error) {
