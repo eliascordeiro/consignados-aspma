@@ -14,9 +14,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuário na tabela users
-    const user = await prisma.users.findUnique({
-      where: { email },
+    // Buscar usuário na tabela users (case-insensitive para não perder a conta
+    // de acesso por e-mail quando a capitalização digitada difere da armazenada)
+    const user = await prisma.users.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
     })
 
     // Buscar convênio pela tabela convenio

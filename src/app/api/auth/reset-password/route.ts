@@ -70,19 +70,30 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Se houver usuário vinculado pelo nome, atualiza também com bcrypt
-      if (convenio.usuario) {
-        const linkedUser = await prisma.users.findFirst({
+      // Sincroniza a senha (bcrypt) e reativa a conta de login vinculada.
+      // Prioriza o vínculo por userId (convênios de acesso por e-mail, cujo
+      // users.name é a razão social e não bate com convenio.usuario). Faz
+      // fallback pelo nome legado (convenio.usuario) quando não houver userId.
+      const hashedPassword = await bcrypt.hash(password, 10)
+      let linkedUser = convenio.userId
+        ? await prisma.users.findUnique({
+            where: { id: convenio.userId },
+            select: { id: true, role: true },
+          })
+        : null
+
+      if (!linkedUser && convenio.usuario) {
+        linkedUser = await prisma.users.findFirst({
           where: { name: { equals: convenio.usuario, mode: 'insensitive' } },
           select: { id: true, role: true },
         })
-        if (linkedUser && linkedUser.role !== 'ADMIN' && linkedUser.role !== 'MANAGER') {
-          const hashedPassword = await bcrypt.hash(password, 10)
-          await prisma.users.update({
-            where: { id: linkedUser.id },
-            data: { password: hashedPassword, active: true, passwordChangedAt: new Date() },
-          })
-        }
+      }
+
+      if (linkedUser && linkedUser.role !== 'ADMIN' && linkedUser.role !== 'MANAGER') {
+        await prisma.users.update({
+          where: { id: linkedUser.id },
+          data: { password: hashedPassword, active: true, passwordChangedAt: new Date() },
+        })
       }
 
       console.log("   ✅ Senha do convênio atualizada com sucesso!")
