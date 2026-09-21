@@ -1056,22 +1056,17 @@ function agruparPorSocio(parcelas: any[], matriculaMap?: Map<string, { antiga: n
     const socio = parcela.venda.socio;
     const matricula = socio.matricula || '';
     const info = matriculaMap?.get(matricula) ?? null;
-    const cpf = (socio.cpf || '').replace(/\D/g, '');
-    // CPF só é usado como chave de identidade se tiver 11 dígitos e não for repetido
-    // (evita unificar pessoas distintas por CPF em branco/lixo como 00000000000)
-    const cpfValido = cpf.length === 11 && !/^(\d)\1{10}$/.test(cpf);
 
-    // Chave de identidade da MESMA pessoa, em ordem de confiabilidade:
-    // 1) CPF válido — unifica matrículas duplicadas do mesmo sócio (ex.: 1327 e 80141)
-    // 2) matrícula canônica do de-para (antiga)
-    // 3) socio.id  4) matrícula bruta
-    const socioKey = cpfValido
-      ? `cpf:${cpf}`
-      : info
-        ? `mat:${info.antiga}`
+    // Agrupamento por MATRÍCULA (não por CPF): cada matrícula/vínculo é um grupo próprio,
+    // mesmo quando pertence à mesma pessoa (mesmo CPF). Ex.: 2815 e 4327 ficam separadas.
+    // O de-para (antiga↔atual) apenas consolida a mesma matrícula num único grupo.
+    const socioKey = info
+      ? `mat:${info.antiga}`
+      : matricula
+        ? `mat:${matricula}`
         : socio.id != null
           ? `id:${socio.id}`
-          : `mat:${matricula}`;
+          : `mat:`;
 
     if (!grupos.has(socioKey)) {
       grupos.set(socioKey, {
@@ -2322,14 +2317,12 @@ function agruparPorSocioResumo(parcelas: any[], matriculaMap?: Map<string, { ant
   parcelas.forEach((parcela) => {
     const matricula = parcela.venda.socio.matricula || '';
     const info = matriculaMap?.get(matricula) ?? null;
-    const cpf = (parcela.venda.socio.cpf || '').replace(/\D/g, '');
-    const cpfValido = cpf.length === 11 && !/^(\d)\1{10}$/.test(cpf);
-    // Unifica a mesma pessoa: CPF válido > matrícula canônica (de-para) > matrícula
-    const groupKey = cpfValido
-      ? `cpf:${cpf}`
-      : info
-        ? `mat:${info.antiga}`
-        : `mat:${matricula}`;
+    // Agrupamento por MATRÍCULA (não por CPF): cada matrícula é um grupo próprio,
+    // mesmo pertencendo à mesma pessoa. O de-para (antiga↔atual) apenas consolida
+    // a mesma matrícula. Ex.: 2815 e 4327 ficam separadas.
+    const groupKey = info
+      ? `mat:${info.antiga}`
+      : `mat:${matricula}`;
     if (!grupos.has(groupKey)) {
       grupos.set(groupKey, {
         matricula,
