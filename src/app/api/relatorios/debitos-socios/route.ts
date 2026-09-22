@@ -628,8 +628,10 @@ async function gerarPDF(grupos: GrupoSocio[], mes: number, ano: number): Promise
   let isFirstGroup = true;
 
   grupos.forEach((grupo) => {
-    // Verifica espaço necessário para o grupo (mínimo 40mm)
-    const espacoNecessario = 40;
+    // Espaço necessário = card do sócio + cabeçalho da tabela + pelo menos 1 linha de dado.
+    // Evita desenhar o card/cabeçalho "órfão" no fim da página (sem nenhuma parcela visível).
+    const cardHeightCheck = grupo.empresaNome ? 16 : 12;
+    const espacoNecessario = cardHeightCheck + 3 + 7 + 6 + 10;
     if (y > pageHeight - espacoNecessario) {
       addFooter();
       doc.addPage();
