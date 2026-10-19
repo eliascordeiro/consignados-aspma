@@ -3,11 +3,12 @@ import { redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Users, Store } from "lucide-react"
 import { prisma } from "@/lib/prisma"
+import { getDataUserId } from "@/lib/get-data-user-id"
 
 export default async function ClienteDashboard() {
   const session = await auth()
   
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect("/login")
   }
 
@@ -16,16 +17,17 @@ export default async function ClienteDashboard() {
     redirect("/login")
   }
 
-  // Buscar contagens do banco
+  const dataUserId = await getDataUserId(session)
+
+  // Contar os socios com o mesmo escopo e status da listagem.
   const [totalEmpresas, totalSocios, totalConvenios] = await Promise.all([
     prisma.empresa.count(),
     prisma.socio.count({ 
       where: { 
-        ativo: true,
+        userId: dataUserId,
         OR: [
           { bloqueio: null },
-          { bloqueio: '' },
-          { bloqueio: 'N' },
+          { bloqueio: { not: "X" } },
         ]
       } 
     }),
@@ -61,6 +63,7 @@ export default async function ClienteDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{totalSocios}</div>
             <p className="text-xs text-muted-foreground">Sócios ativos</p>
+            <p className="text-xs text-muted-foreground mt-1">Todas as consignatárias deste gestor</p>
           </CardContent>
         </Card>
 
