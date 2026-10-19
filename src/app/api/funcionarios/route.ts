@@ -28,6 +28,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const search = searchParams.get("search") || ""
     const empresaId = searchParams.get("empresaId")
+    const requestedStatus = searchParams.get("status")
+    if (requestedStatus !== null && requestedStatus !== "active" && requestedStatus !== "inactive") {
+      return NextResponse.json({ error: "Status inválido. Use active ou inactive." }, { status: 400 })
+    }
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "50")
     const skip = (page - 1) * limit
@@ -44,7 +48,7 @@ export async function GET(request: NextRequest) {
     // Detectar se a busca é por status
     let statusFilter: boolean | null = null
     const searchLower = search.toLowerCase().trim()
-    
+
     if (searchLower === 'ativo' || searchLower === 'ativos') {
       statusFilter = true
     } else if (searchLower === 'inativo' || searchLower === 'inativos') {
@@ -126,6 +130,12 @@ export async function GET(request: NextRequest) {
       where.AND.push({ empresaId: parseInt(empresaId) })
     }
 
+    if (requestedStatus === "active") {
+      where.AND.push({ OR: [{ bloqueio: null }, { bloqueio: { not: "X" } }] })
+    } else if (requestedStatus === "inactive") {
+      where.AND.push({ bloqueio: "X" })
+    }
+
     // Filtro por status se detectado na busca (baseado apenas em bloqueio)
     if (statusFilter !== null) {
       if (statusFilter === true) {
@@ -160,6 +170,11 @@ export async function GET(request: NextRequest) {
         nome: true,
         cpf: true,
         matricula: true,
+        telefone: true,
+        celular: true,
+        email: true,
+        funcao: true,
+        lotacao: true,
         empresaId: true,
         empresa: {
           select: {
@@ -175,7 +190,7 @@ export async function GET(request: NextRequest) {
         motivoBloqueio: true,
         motivoExclusao: true,
       },
-      orderBy: { nome: "asc" },
+      orderBy: [{ nome: "asc" }, { id: "asc" }],
       skip,
       take: limit,
     })

@@ -6,7 +6,7 @@ import { hasPermission } from '@/config/permissions';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Download, Pencil, Trash2 } from 'lucide-react';
 
 interface Empresa {
   id: number;
@@ -17,6 +17,12 @@ interface Funcionario {
   id: string;
   nome: string;
   matricula?: string;
+  cpf?: string | null;
+  telefone?: string | null;
+  celular?: string | null;
+  email?: string | null;
+  funcao?: string | null;
+  lotacao?: string | null;
   empresa?: Empresa | null;
   bloqueio?: string | null;
   ativo: boolean;
@@ -32,12 +38,25 @@ interface FuncionariosResponse {
   };
 }
 
-async function fetchFuncionarios({ page = 1, searchTerm, empresaId }: { page?: number; searchTerm: string; empresaId: string }): Promise<FuncionariosResponse> {
+type StatusFilter = 'all' | 'active' | 'inactive';
+
+async function fetchFuncionarios({
+  page = 1,
+  searchTerm,
+  empresaId,
+  status,
+}: {
+  page?: number;
+  searchTerm: string;
+  empresaId: string;
+  status: StatusFilter;
+}): Promise<FuncionariosResponse> {
   const params = new URLSearchParams();
   params.set('page', page.toString());
   params.set('limit', '50');
   if (searchTerm) params.set('search', searchTerm);
   if (empresaId) params.set('empresaId', empresaId);
+  if (status !== 'all') params.set('status', status);
   const response = await fetch(`/api/funcionarios?${params.toString()}`);
   if (!response.ok) throw new Error('Erro ao carregar sócios');
   const json = await response.json();
@@ -45,6 +64,11 @@ async function fetchFuncionarios({ page = 1, searchTerm, empresaId }: { page?: n
     return { data: json, pagination: { page: 1, limit: 50, total: json.length, totalPages: 1 } };
   }
   return json;
+}
+
+function csvCell(value: string | null | undefined): string {
+  const safeValue = (value ?? '').replace(/^[\s\u0000-\u001f]*[=+\-@]/, "'$&");
+  return `"${safeValue.replace(/"/g, '""')}"`;
 }
 
 export default function FuncionariosPage() {
@@ -58,9 +82,11 @@ export default function FuncionariosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [empresaId, setEmpresaId] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('all');
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,6 +96,7 @@ export default function FuncionariosPage() {
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm]);
   useEffect(() => { setCurrentPage(1); }, [empresaId]);
+  useEffect(() => { setCurrentPage(1); }, [status]);
 
   useEffect(() => {
     fetch('/api/consignatarias?limit=1000')
@@ -86,8 +113,8 @@ export default function FuncionariosPage() {
   }, []);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['funcionarios', searchTerm, empresaId, currentPage],
-    queryFn: () => fetchFuncionarios({ page: currentPage, searchTerm, empresaId }),
+    queryKey: ['funcionarios', searchTerm, empresaId, status, currentPage],
+    queryFn: () => fetchFuncionarios({ page: currentPage, searchTerm, empresaId, status }),
     staleTime: 60000,
   });
 
@@ -95,6 +122,44 @@ export default function FuncionariosPage() {
   const pagination = data?.pagination;
   const total = pagination?.total ?? 0;
   const totalPages = pagination?.totalPages ?? 1;
+
+  const exportarCSV = async () => {
+    setIsExporting(true);
+    try {
+      const firstPage = await fetchFuncionarios({ page: 1, searchTerm, empresaId, status });
+      const allFuncionarios = [...firstPage.data];
+      for (let page = 2; page <= firstPage.pagination.totalPages; page += 1) {
+        const result = await fetchFuncionarios({ page, searchTerm, empresaId, status });
+        allFuncionarios.push(...result.data);
+      }
+
+      const headers = ['Matrícula', 'Nome', 'CPF', 'Telefone', 'Celular', 'E-mail', 'Consignatária', 'Status', 'Função', 'Lotação'];
+      const rows = allFuncionarios.map((func) => [
+        func.matricula,
+        func.nome,
+        func.cpf,
+        func.telefone,
+        func.celular,
+        func.email,
+        func.empresa?.nome,
+        func.bloqueio === 'X' ? 'Inativo' : 'Ativo',
+        func.funcao,
+        func.lotacao,
+      ]);
+      const csv = [headers, ...rows].map((row) => row.map(csvCell).join(';')).join('\r\n');
+      const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `socios-${status === 'all' ? 'todos' : status === 'active' ? 'ativos' : 'inativos'}-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Erro ao exportar sócios. Tente novamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const rowVirtualizer = useVirtualizer({
     count: funcionarios.length,
@@ -140,8 +205,8 @@ export default function FuncionariosPage() {
 
       {/* Filters */}
       <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
+          <div className="flex-1 min-w-0 sm:min-w-48">
             <label className="block text-xs font-medium text-muted-foreground mb-1">Buscar</label>
             <input
               type="text"
@@ -164,10 +229,29 @@ export default function FuncionariosPage() {
               ))}
             </select>
           </div>
+          <div className="w-full sm:w-40">
+            <label htmlFor="socios-status" className="block text-xs font-medium text-muted-foreground mb-1">Status</label>
+            <select
+              id="socios-status"
+              value={status}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === 'all' || value === 'active' || value === 'inactive') {
+                  setStatus(value);
+                  setCurrentPage(1);
+                }
+              }}
+              className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+          </div>
           <div className="flex items-end gap-2">
-            {(searchInput || empresaId) && (
+            {(searchInput || empresaId || status !== 'all') && (
               <button
-                onClick={() => { setSearchInput(''); setEmpresaId(''); }}
+                onClick={() => { setSearchInput(''); setEmpresaId(''); setStatus('all'); }}
                 className="px-3 py-2 border border-border rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
               >
                 Limpar
@@ -179,8 +263,20 @@ export default function FuncionariosPage() {
             >
               Atualizar
             </button>
+            <button
+              onClick={exportarCSV}
+              disabled={isExporting || isLoading || isError || searchInput !== searchTerm || total === 0}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Exportar todos os sócios filtrados para CSV, compatível com Excel"
+            >
+              <Download className="h-4 w-4" />
+              {isExporting ? 'Exportando...' : 'Exportar CSV'}
+            </button>
           </div>
         </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          O CSV abre no Excel e inclui todos os sócios dos filtros selecionados, não apenas esta página.
+        </p>
       </div>
 
       {/* Table */}
